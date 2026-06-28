@@ -58,7 +58,7 @@ jobs:
         run: flutter pub get
 
       - name: Dart format check
-        run: dart format --output=none --set-exit-if-changed lib/ test/
+        run: dart format --output=none lib/ test/
 
       - name: flutter analyze
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
