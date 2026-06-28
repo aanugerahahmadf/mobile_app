@@ -34,18 +34,15 @@ jobs:
   ########################################
   lint:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        channel: [stable, beta]
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Flutter ${{ matrix.channel }}
+      - name: Setup Flutter stable
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: ${{ matrix.channel }}
+          channel: stable
           cache: true
 
       - name: Cache Pub
@@ -54,8 +51,8 @@ jobs:
           path: |
             ~/.pub-cache
             .dart_tool
-          key: pub-lint-${{ matrix.channel }}-${{ hashFiles('pubspec.lock') }}
-          restore-keys: pub-lint-${{ matrix.channel }}-
+          key: pub-lint-${{ hashFiles('pubspec.lock') }}
+          restore-keys: pub-lint-
 
       - name: Install dependencies
         run: flutter pub get
@@ -125,9 +122,6 @@ jobs:
           - os: ubuntu-latest
             sdk: stable
             coverage: true
-          - os: ubuntu-latest
-            sdk: beta
-            coverage: false
 
     steps:
       - uses: actions/checkout@v4
