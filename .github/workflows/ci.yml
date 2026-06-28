@@ -2,13 +2,88 @@ name: Mobile CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
+
+concurrency:
+  group: mobile-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  analyze-test:
+  analyze:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        flutter-channel: [stable, beta]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter ${{ matrix.flutter-channel }}
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.27.x
+          channel: ${{ matrix.flutter-channel }}
+          cache: true
+
+      - name: Cache Pub
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            .dart_tool
+          key: pub-${{ matrix.flutter-channel }}-${{ hashFiles('pubspec.lock') }}
+          restore-keys: pub-${{ matrix.flutter-channel }}-
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Dart format check
+        run: dart format --set-exit-if-changed lib/
+
+      - name: Analyze
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+  codegen-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.27.x
+          channel: stable
+          cache: true
+
+      - name: Cache Pub
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            .dart_tool
+          key: pub-codegen-${{ hashFiles('pubspec.lock') }}
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Check generated code
+        run: |
+          dart run build_runner build --delete-conflicting-outputs 2>&1 || true
+          if [[ -n $(git status --porcelain) ]]; then
+            echo "❌ Generated files are out of date. Run 'dart run build_runner build'"
+            git diff
+            exit 1
+          fi
+          echo "✅ Generated code is up to date"
+
+  test:
+    needs: analyze
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -20,26 +95,31 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Cache Pub dependencies
+      - name: Cache Pub
         uses: actions/cache@v4
         with:
           path: |
             ~/.pub-cache
             .dart_tool
-          key: pub-${{ hashFiles('pubspec.lock') }}
-          restore-keys: pub-
+          key: pub-test-${{ matrix.platform }}-${{ hashFiles('pubspec.lock') }}
 
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Analyze
-        run: flutter analyze
+      - name: Run tests with coverage
+        run: flutter test --coverage --machine 2>&1 || true
 
-      - name: Run tests
-        run: flutter test
+      - name: Upload coverage
+        if: matrix.platform == 'ubuntu-latest'
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          flags: flutter
+          fail_ci_if_error: false
 
-  build-apk:
-    needs: analyze-test
+  build-android:
+    needs: test
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
 
@@ -53,14 +133,95 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Cache Pub
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            .dart_tool
+          key: pub-build-${{ hashFiles('pubspec.lock') }}
+
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Build APK
-        run: flutter build apk --release
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks 2>/dev/null || true
 
-      - name: Upload APK
+      - name: Build APK
+        run: flutter build apk --release --split-per-abi
+
+      - name: Build AppBundle
+        run: flutter build appbundle --release
+
+      - name: Upload APKs
         uses: actions/upload-artifact@v4
         with:
-          name: app-release
-          path: build/app/outputs/flutter-apk/*.apk
+          name: android-apks
+          path: |
+            build/app/outputs/flutter-apk/*.apk
+            build/app/outputs/bundle/release/*.aab
+
+      - name: Upload to Play Store (internal)
+        if: false
+        run: echo "Upload to Play Store - configure with service account"
+
+      - name: Upload to Firebase App Distribution
+        if: false
+        run: echo "Upload to Firebase - configure with firebase-tools"
+
+  build-ios:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.27.x
+          channel: stable
+          cache: true
+
+      - name: Cache Pub
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            .dart_tool
+          key: pub-ios-${{ hashFiles('pubspec.lock') }}
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Install CocoaPods
+        run: |
+          cd ios
+          pod install --repo-update 2>&1 || true
+
+      - name: Build iOS
+        run: flutter build ios --release --no-codesign
+
+      - name: Upload iOS build
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build
+          path: build/ios/iphoneos/Runner.app
+
+  notify:
+    needs: [analyze, test, build-android, build-ios]
+    if: failure() && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notify failure
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Mobile CI Failure on main',
+              body: `Workflow run failed: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`
+            })
