@@ -15,6 +15,10 @@ final termsOfServiceProvider = FutureProvider<LegalContent>((ref) {
   return ref.read(legalRepositoryProvider).getTermsOfService();
 });
 
+final weddingDecorationPolicyProvider = FutureProvider<LegalContent>((ref) {
+  return ref.read(legalRepositoryProvider).getWeddingDecorationPolicy();
+});
+
 final helpCenterProvider = FutureProvider<HelpModel>((ref) {
   return ref.read(legalRepositoryProvider).getHelpCenter();
 });

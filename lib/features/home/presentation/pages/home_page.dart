@@ -1,5 +1,4 @@
-﻿import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -165,7 +164,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   else if (_filteredItems.isEmpty)
                     SliverFillRemaining(
                       hasScrollBody: false,
-                      child: Center(child: Text('tidak_ada_produk'.tr(), style: AppTextStyles.bodyMedium)),
+                      child: Center(child: Text('Tidak ada produk tersedia', style: AppTextStyles.bodyMedium)),
                     )
                   else
                     SliverPadding(
@@ -235,12 +234,12 @@ class _HomePageState extends ConsumerState<HomePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'selamat_datang'.tr(),
+                        'Selamat datang,',
                         style: AppTextStyles.labelMedium.copyWith(color: Colors.white70),
                       ),
                       Consumer(builder: (_, ref, _) {
                         final authState = ref.watch(authProvider);
-                        final name = authState is AuthAuthenticated ? authState.user.fullName : 'pengguna'.tr();
+                        final name = authState is AuthAuthenticated ? authState.user.fullName : 'Pengguna';
                         return Text(
                           name,
                           style: AppTextStyles.titleLarge.copyWith(color: Colors.white),
@@ -275,7 +274,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSizes.md, AppSizes.lg, AppSizes.md, AppSizes.sm),
-          child: Text('layanan'.tr(), style: AppTextStyles.titleLarge),
+          child: Text('Layanan', style: AppTextStyles.titleLarge),
         ),
         SizedBox(
           height: 90,
@@ -284,31 +283,31 @@ class _HomePageState extends ConsumerState<HomePage> {
             padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
             children: [
               MenuCard(
-                label: 'paket_bunga'.tr(),
+                label: 'Paket Bunga',
                 icon: Icons.card_giftcard,
                 color: AppColors.categoryColors[0],
                 onTap: () => context.push('/catalog/packages'),
               ),
               MenuCard(
-                label: 'katalog_bunga'.tr(),
+                label: 'Katalog Bunga',
                 icon: Icons.local_florist,
                 color: AppColors.categoryColors[1],
                 onTap: () => context.push('/catalog/products'),
               ),
               MenuCard(
-                label: 'ulasan'.tr(),
+                label: 'Ulasan',
                 icon: Icons.star,
                 color: AppColors.categoryColors[2],
                 onTap: () => context.push('/my-reviews'),
               ),
               MenuCard(
-                label: 'favorit'.tr(),
+                label: 'Favorit',
                 icon: Icons.favorite,
                 color: AppColors.categoryColors[3],
                 onTap: () => context.push('/wishlist'),
               ),
               MenuCard(
-                label: 'cari_gambar'.tr(),
+                label: 'Cari dengan Gambar',
                 icon: Icons.image_search,
                 color: AppColors.categoryColors[4],
                 onTap: () => context.push('/cbir-result'),
@@ -326,7 +325,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSizes.md, AppSizes.sm, AppSizes.md, AppSizes.sm),
-          child: Text('promo_spesial'.tr(), style: AppTextStyles.titleLarge),
+          child: Text('Promo Spesial', style: AppTextStyles.titleLarge),
         ),
         SizedBox(
           height: 140,
@@ -349,10 +348,10 @@ class _HomePageState extends ConsumerState<HomePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('rekomendasi'.tr(), style: AppTextStyles.titleLarge),
+              Text('Rekomendasi', style: AppTextStyles.titleLarge),
               TextButton(
                 onPressed: () => context.push('/catalog'),
-                child: Text('lihat_semua'.tr()),
+                child: Text('Lihat Semua'),
               ),
             ],
           ),

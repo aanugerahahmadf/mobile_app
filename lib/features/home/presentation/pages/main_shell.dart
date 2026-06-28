@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -43,11 +42,11 @@ class _ModernBottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      _BarItem(Icons.home_outlined, Icons.home, 'home'.tr()),
-      _BarItem(Icons.receipt_long_outlined, Icons.receipt_long, 'orders'.tr()),
-      _BarItem(Icons.chat_bubble_outline_rounded, Icons.chat_bubble_rounded, 'chat'.tr()),
-      _BarItem(Icons.shopping_cart_outlined, Icons.shopping_cart, 'cart'.tr()),
-      _BarItem(Icons.person_outline_rounded, Icons.person_rounded, 'profile'.tr()),
+      _BarItem(Icons.home_outlined, Icons.home),
+      _BarItem(Icons.receipt_long_outlined, Icons.receipt_long),
+      _BarItem(Icons.chat_bubble_outline_rounded, Icons.chat_bubble_rounded),
+      _BarItem(Icons.shopping_cart_outlined, Icons.shopping_cart),
+      _BarItem(Icons.person_outline_rounded, Icons.person_rounded),
     ];
 
     return Container(
@@ -108,24 +107,14 @@ class _ModernBottomBar extends StatelessWidget {
                       radius: 13,
                       backgroundImage: CachedNetworkImageProvider(avatarUrl!),
                     )
-                  : Icon(
-                      isSelected ? item.activeIcon : item.icon,
-                      key: ValueKey(isSelected),
-                      size: 24,
-                      color: isSelected ? AppColors.primaryColor : AppColors.textSecondary,
-                    ),
-            ),
-            const SizedBox(height: 2),
-            AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 250),
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-                color: isSelected ? AppColors.primaryColor : AppColors.textSecondary,
+                    : Icon(
+                        isSelected ? item.activeIcon : item.icon,
+                        key: ValueKey(isSelected),
+                        size: 24,
+                        color: isSelected ? AppColors.primaryColor : AppColors.textSecondary,
+                      ),
               ),
-              child: Text(item.label),
-            ),
-          ],
+            ],
         ),
       ),
     );
@@ -167,6 +156,5 @@ class _ModernBottomBar extends StatelessWidget {
 class _BarItem {
   final IconData icon;
   final IconData activeIcon;
-  final String label;
-  _BarItem(this.icon, this.activeIcon, this.label);
+  const _BarItem(this.icon, this.activeIcon);
 }

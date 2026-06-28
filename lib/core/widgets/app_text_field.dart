@@ -3,10 +3,9 @@ import '../constants/app_text_styles.dart';
 
 class AppTextField extends StatelessWidget {
   final String? label;
-  final String? hint;
   final String? errorText;
   final bool obscureText;
-  final Widget? prefixIcon;
+  final bool readOnly;
   final Widget? suffixIcon;
   final TextEditingController? controller;
   final String? Function(String?)? validator;
@@ -19,10 +18,9 @@ class AppTextField extends StatelessWidget {
   const AppTextField({
     super.key,
     this.label,
-    this.hint,
     this.errorText,
     this.obscureText = false,
-    this.prefixIcon,
+    this.readOnly = false,
     this.suffixIcon,
     this.controller,
     this.validator,
@@ -50,24 +48,17 @@ class AppTextField extends StatelessWidget {
         TextFormField(
           controller: controller,
           obscureText: obscureText,
-          validator: validator,
-          onChanged: onChanged,
+          readOnly: readOnly,
+          validator: readOnly ? null : validator,
+          onChanged: readOnly ? null : onChanged,
           keyboardType: keyboardType,
           maxLines: maxLines,
           textInputAction: textInputAction,
           onFieldSubmitted: onFieldSubmitted,
           style: AppTextStyles.bodyLarge,
           decoration: InputDecoration(
-            hintText: hint,
             errorText: errorText,
-            prefixIcon: prefixIcon != null
-                ? Padding(
-                    padding: const EdgeInsets.only(left: 14, right: 8),
-                    child: prefixIcon,
-                  )
-                : null,
             suffixIcon: suffixIcon,
-            prefixIconConstraints: const BoxConstraints(minWidth: 44, minHeight: 24),
           ),
         ),
       ],

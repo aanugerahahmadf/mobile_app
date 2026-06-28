@@ -1,7 +1,5 @@
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
-import 'package:easy_localization/easy_localization.dart';
-
 class BiometricAuthService {
   final LocalAuthentication _localAuth = LocalAuthentication();
 
@@ -23,9 +21,9 @@ class BiometricAuthService {
 
   Future<String> get biometricTypeName async {
     final types = await getAvailableBiometrics();
-    if (types.contains(BiometricType.face)) return 'biometric_face'.tr();
-    if (types.contains(BiometricType.fingerprint)) return 'biometric_fingerprint'.tr();
-    return 'biometric_login'.tr();
+    if (types.contains(BiometricType.face)) return 'Face ID';
+    if (types.contains(BiometricType.fingerprint)) return 'Sidik Jari';
+    return 'Masuk dengan Biometrik';
   }
 
   Future<bool> authenticate({required String reason}) async {

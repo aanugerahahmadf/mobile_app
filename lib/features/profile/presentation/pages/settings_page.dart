@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
@@ -33,16 +32,16 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   Widget build(BuildContext context) {
     final fingerprintEnabled = ref.watch(fingerprintUnlockProvider);
     return Scaffold(
-      appBar: AppBar(title: Text('pengaturan'.tr())),
+      appBar: AppBar(title: Text('Pengaturan')),
       body: Padding(
         padding: const EdgeInsets.all(AppSizes.md),
         child: Column(
           children: [
-            _menuTile(Icons.language, 'bahasa'.tr(), () => context.push('/language')),
-            _menuTile(Icons.notifications_outlined, 'pengaturan_notifikasi'.tr(), () => context.push('/notification-settings')),
-            _menuTile(Icons.privacy_tip_outlined, 'privasi_ketentuan'.tr(), () => context.push('/legal/privacy-term')),
+            _menuTile(Icons.language, 'Bahasa', () => context.push('/language')),
+            _menuTile(Icons.notifications_outlined, 'Pengaturan Notifikasi', () => context.push('/notification-settings')),
+            _menuTile(Icons.privacy_tip_outlined, 'Privasi & Ketentuan', () => context.push('/legal/privacy-term')),
             SizedBox(height: AppSizes.sm),
-            _menuTile(Icons.face_outlined, 'verifikasi_wajah'.tr(), () => context.push('/face-scanner'), subtitle: 'verifikasi_wajah_subtitle'.tr()),
+            _menuTile(Icons.face_outlined, 'Verifikasi Wajah', () => context.push('/face-scanner'), subtitle: 'Scan wajah untuk verifikasi identitas'),
             if (_biometricAvailable) ...[
               const SizedBox(height: AppSizes.sm),
               Card(
@@ -50,8 +49,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 child: SwitchListTile(
                   secondary: Icon(Icons.fingerprint, color: AppColors.primaryColor),
-                  title: Text('buka_kunci_sidik_jari'.tr(), style: AppTextStyles.bodyMedium),
-                  subtitle: Text('buka_kunci_sidik_jari_subtitle'.tr(), style: AppTextStyles.bodySmall),
+                  title: Text('Buka Kunci Sidik Jari', style: AppTextStyles.bodyMedium),
+                  subtitle: Text('Gunakan sidik jari untuk membuka aplikasi', style: AppTextStyles.bodySmall),
                   value: fingerprintEnabled,
                   onChanged: (v) => ref.read(fingerprintUnlockProvider.notifier).setEnabled(v),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

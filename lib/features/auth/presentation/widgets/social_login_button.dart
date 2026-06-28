@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_sizes.dart';
-import '../../../../core/widgets/app_button.dart';
 
 class SocialLoginButton extends StatelessWidget {
   final SocialProvider provider;
@@ -12,19 +10,24 @@ class SocialLoginButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final map = {
-      SocialProvider.google: ('masuk_dengan_google'.tr(), Icons.g_mobiledata),
-    };
-    final (label, icon) = map[provider]!;
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSizes.sm),
-      child: AppButton(
-        label: label,
-        type: ButtonType.outline,
-        icon: icon,
-        onPressed: enabled ? onPressed : null,
-        disabled: !enabled,
+      child: SizedBox(
+        width: double.infinity,
         height: 50,
+        child: OutlinedButton.icon(
+          onPressed: enabled ? onPressed : null,
+          style: OutlinedButton.styleFrom(
+            side: BorderSide(color: Colors.grey.shade300),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            backgroundColor: Colors.white,
+          ),
+          icon: Image.asset('assets/images/Google/google.png', width: 22, height: 22),
+          label: Text(
+            'Lanjutkan dengan Google',
+            style: TextStyle(color: Colors.grey.shade700, fontSize: 15),
+          ),
+        ),
       ),
     );
   }

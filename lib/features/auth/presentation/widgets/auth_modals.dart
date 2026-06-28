@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:easy_localization/easy_localization.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/api/dio_client.dart';
@@ -10,20 +10,30 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/utils/ktp_utils.dart';
+import '../../../../core/utils/passport_utils.dart';
+import '../../../../core/utils/sim_utils.dart';
+import '../../../../core/utils/npwp_utils.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_shimmer.dart';
 import '../../../../core/widgets/app_text_field.dart';
+import '../../../../core/widgets/app_date_picker_field.dart';
+import '../../../../core/widgets/app_country_picker_field.dart';
+import '../../../../core/widgets/app_region_picker_field.dart';
+import '../../../legal/data/models/legal_model.dart';
 import '../../../legal/presentation/providers/legal_provider.dart';
 import '../providers/auth_provider.dart';
 import 'auth_header.dart';
 import 'social_login_button.dart';
 
-enum AgreementMode { wizard, terms, privacy }
+enum AgreementMode { wizard, terms, privacy, weddingPolicy }
 
 void showAgreementModal(BuildContext context, {AgreementMode mode = AgreementMode.wizard, VoidCallback? onAgreed}) {
-  showDialog(
+  showModalBottomSheet(
     context: context,
-    useSafeArea: false,
+    isScrollControlled: true,
+    useSafeArea: true,
+    backgroundColor: Colors.transparent,
     builder: (_) => _AgreementModal(mode: mode, onAgreed: onAgreed),
   );
 }
@@ -43,7 +53,7 @@ class _AgreementModalState extends State<_AgreementModal> {
   @override
   void initState() {
     super.initState();
-    _step = widget.mode == AgreementMode.wizard ? 1 : (widget.mode == AgreementMode.terms ? 1 : 2);
+    _step = widget.mode == AgreementMode.wizard ? 1 : 1;
   }
 
   void _close() => Navigator.of(context).pop();
@@ -51,71 +61,102 @@ class _AgreementModalState extends State<_AgreementModal> {
   @override
   Widget build(BuildContext context) {
     final isWizard = widget.mode == AgreementMode.wizard;
+    final isWedding = widget.mode == AgreementMode.weddingPolicy;
 
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      insetPadding: const EdgeInsets.all(AppSizes.md),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: SizedBox(
-          height: MediaQuery.of(context).size.height * 0.75,
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: AppSizes.md, vertical: AppSizes.md),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border(bottom: BorderSide(color: AppColors.dividerColor)),
-                ),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: _close,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                    const SizedBox(width: AppSizes.sm),
-                    Expanded(
-                      child: Text(
-                        _step == 1 ? 'ketentuan_layanan'.tr() : 'kebijakan_privasi'.tr(),
-                        style: AppTextStyles.titleMedium,
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    if (isWizard)
-                      Text(
-                        _step == 1 ? 'langkah_1_dari_2'.tr() : 'langkah_2_dari_2'.tr(),
-                        style: AppTextStyles.labelSmall,
-                      )
-                    else
-                      const SizedBox(width: 40),
-                  ],
-                ),
+    String title;
+    if (isWedding) {
+      title = 'Kebijakan Aplikasi';
+    } else if (_step == 1) {
+      title = 'Ketentuan Layanan';
+    } else if (_step == 2) {
+      title = 'Kebijakan Privasi';
+    } else {
+      title = 'Kebijakan Aplikasi';
+    }
+
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
+      child: SizedBox(
+        height: MediaQuery.of(context).size.height * 0.75,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.textTertiary.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(2),
               ),
-              Expanded(
-                child: _step == 1
-                    ? _LegalContentView(
-                        provider: termsOfServiceProvider,
-                        isWizard: isWizard,
-                        onNext: isWizard ? () => setState(() => _step = 2) : null,
-                        onClose: !isWizard ? _close : null,
-                      )
-                    : _LegalContentView(
-                        provider: privacyPolicyProvider,
-                        isWizard: isWizard,
-                        onNext: null,
-                        onAgreed: isWizard
-                            ? () {
-                                widget.onAgreed?.call();
-                                _close();
-                              }
-                            : null,
-                        onClose: !isWizard ? _close : null,
-                      ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: AppSizes.md, vertical: AppSizes.md),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: _close,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                  const SizedBox(width: AppSizes.sm),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: AppTextStyles.titleMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(width: 40),
+                ],
               ),
-            ],
-          ),
+            ),
+            Divider(height: 1, color: AppColors.dividerColor),
+            Expanded(
+              child: isWedding
+                  ? _LegalContentView(
+                      provider: weddingDecorationPolicyProvider,
+                      isWizard: false,
+                      onNext: null,
+                      onAgreed: null,
+                      onClose: _close,
+                    )
+                  : (_step == 1
+                      ? _LegalContentView(
+                          provider: termsOfServiceProvider,
+                          isWizard: isWizard,
+                          onNext: isWizard ? () => setState(() => _step = 2) : null,
+                          onClose: !isWizard ? _close : null,
+                        )
+                      : (_step == 2
+                          ? _LegalContentView(
+                              provider: privacyPolicyProvider,
+                              isWizard: isWizard,
+                              onNext: isWizard ? () => setState(() => _step = 3) : null,
+                              onClose: !isWizard ? _close : null,
+                            )
+                          : _LegalContentView(
+                              provider: weddingDecorationPolicyProvider,
+                              isWizard: isWizard,
+                              onNext: null,
+                              onAgreed: isWizard
+                                  ? () {
+                                      widget.onAgreed?.call();
+                                      _close();
+                                    }
+                                  : null,
+                              onClose: !isWizard ? _close : null,
+                            ))),
+            ),
+          ],
         ),
       ),
     );
@@ -123,7 +164,7 @@ class _AgreementModalState extends State<_AgreementModal> {
 }
 
 class _LegalContentView extends ConsumerWidget {
-  final dynamic provider;
+  final FutureProvider<LegalContent> provider;
   final bool isWizard;
   final VoidCallback? onNext;
   final VoidCallback? onAgreed;
@@ -151,14 +192,14 @@ class _LegalContentView extends ConsumerWidget {
             children: [
               const Icon(Icons.error_outline, size: 48, color: AppColors.textSecondary),
               const SizedBox(height: 12),
-              Text('gagal_memuat_halaman'.tr(),
+              Text('Gagal memuat halaman',
                   textAlign: TextAlign.center,
                   style: const TextStyle(fontSize: 14, color: AppColors.textSecondary)),
               const SizedBox(height: 16),
               FilledButton.icon(
                 onPressed: () => ref.invalidate(provider),
                 icon: const Icon(Icons.refresh, size: 18),
-                label: Text('coba_lagi'.tr()),
+                label: Text('Coba Lagi'),
               ),
             ],
           ),
@@ -173,19 +214,40 @@ class _LegalContentView extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(content.title,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                      style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700)),
                   if (content.updatedAt != null) ...[
                     const SizedBox(height: 8),
-                    Text('${'terakhir_diperbarui'.tr()}: ${content.updatedAt}',
-                        style: TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+                    Text('${'Terakhir diperbarui'}: ${content.updatedAt}',
+                        style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary)),
                   ],
                   const SizedBox(height: 16),
-                  Text(
-                    content.content is String
-                        ? content.content as String
-                        : (content.content?['text'] as String? ?? ''),
-                    style: const TextStyle(fontSize: 14, height: 1.6),
-                  ),
+                  if (content.content is List)
+                    ...(content.content as List).map<Widget>((section) {
+                      final heading = section['heading'] as String?;
+                      final body = section['body'] as String?;
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (heading != null)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 4),
+                                child: Text(heading, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold)),
+                              ),
+                            Text(body ?? '', textAlign: TextAlign.justify, style: GoogleFonts.inter(fontSize: 14, height: 1.6)),
+                          ],
+                        ),
+                      );
+                    })
+                  else
+                    Text(
+                      content.content is String
+                          ? content.content as String
+                          : (content.content is Map ? (content.content?['text'] as String? ?? (content.content?['content'] as String? ?? '')) : ''),
+                      textAlign: TextAlign.justify,
+                      style: GoogleFonts.inter(fontSize: 14, height: 1.6),
+                    ),
                 ],
               ),
             ),
@@ -202,21 +264,22 @@ class _LegalContentView extends ConsumerWidget {
                 children: [
                   if (onNext != null)
                     AppButton(
-                      label: 'lanjutkan'.tr(),
+                      label: 'Lanjutkan',
                       onPressed: onNext,
                       type: ButtonType.primary,
                       width: 140,
                     ),
                   if (onAgreed != null)
-                    AppButton(
-                      label: 'saya_mengerti_setuju'.tr(),
-                      onPressed: onAgreed,
-                      type: ButtonType.primary,
-                      width: 200,
+                    Expanded(
+                      child: AppButton(
+                        label: 'Saya Mengerti & Setuju',
+                        onPressed: onAgreed,
+                        type: ButtonType.primary,
+                      ),
                     ),
                   if (onClose != null)
                     AppButton(
-                      label: 'tutup'.tr(),
+                      label: 'Tutup',
                       onPressed: onClose,
                       type: ButtonType.outline,
                       width: 120,
@@ -308,6 +371,7 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
   bool _obscurePassword = true;
   bool _agreeTerms = false;
   bool _rememberMe = false;
+  String _loginType = 'email';
 
   @override
   void dispose() {
@@ -316,20 +380,97 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
     super.dispose();
   }
 
+  String get _loginLabel {
+    switch (_loginType) {
+      case 'nik':
+        return 'Nomer Induk Kependudukan (NIK)';
+      case 'passport':
+        return 'Nomer Passport';
+      case 'sim':
+        return 'Surat Izin Mengemudi (SIM)';
+      case 'npwp':
+        return 'Nomor Pokok Wajib Pajak (NPWP)';
+      case 'username':
+        return 'Username';
+      default:
+        return 'Email';
+    }
+  }
+
+  TextInputType get _loginKeyboardType {
+    switch (_loginType) {
+      case 'nik':
+      case 'npwp':
+        return TextInputType.number;
+      default:
+        return TextInputType.text;
+    }
+  }
+
+  Widget _buildLoginTypeSelector() {
+    final types = ['email', 'username', 'nik', 'passport', 'sim', 'npwp'];
+    final labels = {'email': 'Email', 'username': 'Username', 'nik': 'NIK', 'passport': 'Passport', 'sim': 'SIM', 'npwp': 'NPWP'};
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: types.map((key) {
+        final isSelected = _loginType == key;
+        final label = labels[key]!;
+          return Padding(
+            padding: EdgeInsets.only(left: key == 'email' ? 0 : 4),
+            child: SizedBox(
+              height: 32,
+              child: OutlinedButton(
+            onPressed: () {
+              setState(() {
+                _loginType = key;
+                _emailController.clear();
+              });
+            },
+            style: OutlinedButton.styleFrom(
+              backgroundColor: isSelected ? AppColors.primaryColor : Colors.transparent,
+              side: BorderSide(color: isSelected ? AppColors.primaryColor : AppColors.textTertiary),
+              foregroundColor: isSelected ? Colors.white : AppColors.textSecondary,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+              visualDensity: VisualDensity.compact,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
+          ),
+        ),
+        );
+        }).toList(),
+      ),
+    );
+  }
+
   void _onLogin() {
     if (!_formKey.currentState!.validate()) return;
     if (!_agreeTerms) {
-      _showWarning('setujui_syarat_dulu'.tr());
+      _showWarning('Anda harus menyetujui perjanjian untuk melanjutkan.');
       return;
     }
     if (!_rememberMe) {
-      _showWarning('centang_ingat_saya'.tr());
+      _showWarning('Centang Ingat Saya terlebih dahulu');
       return;
     }
     ref.read(authProvider.notifier).login(
       email: _emailController.text.trim(),
       password: _passwordController.text,
     );
+  }
+
+  Future<void> _onGoogleLogin() async {
+    if (!_agreeTerms) {
+      _showWarning('Anda harus menyetujui perjanjian untuk melanjutkan.');
+      return;
+    }
+    if (!_rememberMe) {
+      _showWarning('Centang Ingat Saya terlebih dahulu');
+      return;
+    }
+    await ref.read(authProvider.notifier).googleLogin();
   }
 
   void _showWarning(String msg) {
@@ -344,11 +485,24 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
 
     ref.listen<AuthState>(authProvider, (_, state) {
       if (state is AuthAuthenticated) {
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('login_berhasil'.tr()), backgroundColor: AppColors.successColor),
-        );
-        context.go('/home');
+        if (state.needsOtp) {
+          Navigator.of(context).pop();
+          GoRouter.of(context).push('/verify-otp', extra: {'email': state.user.email, 'purpose': 'google_register'});
+        } else if (state.needsCompletion) {
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Lengkapi profil Anda'), backgroundColor: AppColors.infoColor),
+          );
+          GoRouter.of(context).push('/edit-profile');
+        } else {
+          final messenger = ScaffoldMessenger.of(context);
+          final router = GoRouter.of(context);
+          Navigator.of(context).pop();
+          messenger.showSnackBar(
+            SnackBar(content: Text('Login berhasil'), backgroundColor: AppColors.successColor),
+          );
+          router.go('/home');
+        }
       } else if (state is AuthError) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(state.message), backgroundColor: AppColors.errorColor),
@@ -363,24 +517,23 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
       child: Form(
         key: _formKey,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            AuthHeader(title: 'selamat_datang'.tr(), subtitle: 'masuk_ke_akun'.tr()),
+            AuthHeader(title: 'Selamat datang,', subtitle: 'Masuk ke akun Anda'),
             const SizedBox(height: AppSizes.lg),
+            _buildLoginTypeSelector(),
+            const SizedBox(height: AppSizes.md),
             AppTextField(
-              label: 'email'.tr(),
-              hint: 'masukkan_email'.tr(),
+              label: _loginLabel,
               controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              validator: Validators.email,
-              prefixIcon: const Icon(Icons.email_outlined),
+              keyboardType: _loginKeyboardType,
             ),
             const SizedBox(height: AppSizes.md),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text('password'.tr(), style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+                Text('Kata Sandi', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
                 TextButton(
                   style: TextButton.styleFrom(
                     padding: EdgeInsets.zero,
@@ -391,17 +544,15 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
                     Navigator.of(context).pop();
                     showForgotPasswordSheet(context);
                   },
-                  child: Text('lupa_password'.tr(), style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primaryColor)),
+                  child: Text('Lupa Password?', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primaryColor)),
                 ),
               ],
             ),
             const SizedBox(height: 4),
             AppTextField(
-              hint: 'masukkan_password'.tr(),
               controller: _passwordController,
               obscureText: _obscurePassword,
               validator: Validators.password,
-              prefixIcon: const Icon(Icons.lock_outlined),
               suffixIcon: IconButton(
                 icon: Icon(_obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
                 onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
@@ -413,7 +564,7 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
             _rememberCheckbox(),
             const SizedBox(height: AppSizes.md),
             AppButton(
-              label: 'sign_in'.tr(),
+              label: 'Masuk',
               loading: isLoading,
               disabled: !_agreeTerms || !_rememberMe,
               onPressed: _onLogin,
@@ -425,24 +576,24 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
                 const Expanded(child: Divider()),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
-                  child: Text('atau'.tr(), style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
+                  child: Text('Atau', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
                 ),
                 const Expanded(child: Divider()),
               ],
             ),
             const SizedBox(height: AppSizes.md),
-            SocialLoginButton(provider: SocialProvider.google, enabled: _agreeTerms && _rememberMe, onPressed: () {}),
+            SocialLoginButton(provider: SocialProvider.google, enabled: _agreeTerms && _rememberMe, onPressed: _onGoogleLogin),
             const SizedBox(height: AppSizes.lg),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('belum_punya_akun'.tr(), style: AppTextStyles.bodyMedium),
+                Text('Belum punya akun?', style: AppTextStyles.bodyMedium),
                 GestureDetector(
                   onTap: () {
                     Navigator.of(context).pop();
                     showSignUpSheet(context);
                   },
-                  child: Text('sign_up'.tr(), style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w600)),
+                  child: Text('Daftar', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w600)),
                 ),
               ],
             ),
@@ -487,15 +638,16 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
               }
             },
             child: RichText(
+              textAlign: TextAlign.justify,
               text: TextSpan(
                 style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
                 children: [
-                  TextSpan(text: '${'saya_menyetujui'.tr()} '),
+                  const TextSpan(text: 'Dengan mencentang Setuju & Bergabung atau Lanjutkan, Anda menyetujui '),
                   WidgetSpan(
                     child: GestureDetector(
                       onTap: () => showAgreementModal(context, mode: AgreementMode.terms),
                       child: Text(
-                        'syarat_ketentuan'.tr(),
+                        'Perjanjian Pengguna',
                         style: AppTextStyles.bodySmall.copyWith(
                           color: AppColors.primaryColor,
                           fontWeight: FontWeight.w600,
@@ -504,12 +656,12 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
                       ),
                     ),
                   ),
-                  const TextSpan(text: ' & '),
+                  const TextSpan(text: ', '),
                   WidgetSpan(
                     child: GestureDetector(
                       onTap: () => showAgreementModal(context, mode: AgreementMode.privacy),
                       child: Text(
-                        'kebijakan_privasi'.tr(),
+                        'Kebijakan Privasi',
                         style: AppTextStyles.bodySmall.copyWith(
                           color: AppColors.primaryColor,
                           fontWeight: FontWeight.w600,
@@ -518,6 +670,21 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
                       ),
                     ),
                   ),
+                  const TextSpan(text: ' dan '),
+                  WidgetSpan(
+                    child: GestureDetector(
+                      onTap: () => showAgreementModal(context, mode: AgreementMode.weddingPolicy),
+                      child: Text(
+                        'Kebijakan Aplikasi',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.primaryColor,
+                          fontWeight: FontWeight.w600,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const TextSpan(text: ' Wedding Flowers Decorasi.'),
                 ],
               ),
             ),
@@ -546,7 +713,7 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
           child: GestureDetector(
             onTap: () => setState(() => _rememberMe = !_rememberMe),
             child: Text(
-              'ingat_saya'.tr(),
+              'Ingat Saya',
               style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
             ),
           ),
@@ -584,6 +751,47 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
   bool _rememberMe = false;
   File? _avatarFile;
   File? _ktpFile;
+  File? _selfieKtpFile;
+  bool _namesLocked = false;
+  String _ocrExtractedName = '';
+  int? _provinceId;
+  int? _cityId;
+  int? _districtId;
+  int? _villageId;
+  String _provinceName = '';
+  String _cityName = '';
+  String _districtName = '';
+  String _villageName = '';
+  String _postalCode = '';
+  String _identityType = 'ktp';
+
+  String get _idLabel {
+    switch (_identityType) {
+      case 'ktp': return 'Nomer Induk Kependudukan (NIK)';
+      case 'passport': return 'Nomer Passport';
+      case 'sim': return 'Surat Izin Mengemudi (SIM)';
+      case 'npwp': return 'Nomor Pokok Wajib Pajak (NPWP)';
+      default: return 'Nomor Identitas';
+    }
+  }
+  String get _idPhotoLabel {
+    switch (_identityType) {
+      case 'ktp': return 'Foto KTP';
+      case 'passport': return 'Foto Passport';
+      case 'sim': return 'Foto SIM';
+      case 'npwp': return 'Foto NPWP';
+      default: return 'Foto Identitas';
+    }
+  }
+  String get _idSelfieLabel {
+    switch (_identityType) {
+      case 'ktp': return 'Foto Selfie + KTP';
+      case 'passport': return 'Foto Selfie + Passport';
+      case 'sim': return 'Foto Selfie + SIM';
+      case 'npwp': return 'Foto Selfie + NPWP';
+      default: return 'Foto Selfie + Identitas';
+    }
+  }
 
   String get _fullName => [
     _firstNameController.text.trim(),
@@ -609,29 +817,189 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
     super.dispose();
   }
 
+  void _showIdentityTypeSheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+              const SizedBox(height: 8),
+              Text('Pilih Jenis Identitas', style: AppTextStyles.titleMedium),
+              const SizedBox(height: 8),
+              ListTile(
+                leading: const Icon(Icons.credit_card),
+                title: Text('Kartu Tanda Kependudukan (KTP)', style: AppTextStyles.bodyMedium),
+                trailing: _identityType == 'ktp' ? Icon(Icons.check, color: AppColors.primaryColor) : null,
+                onTap: () {
+                  setState(() {
+                    _identityType = 'ktp';
+                    _ktpFile = null;
+                    _nikController.clear();
+                    _namesLocked = false;
+                    _ocrExtractedName = '';
+                  });
+                  Navigator.pop(ctx);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.card_travel),
+                title: Text('Passport', style: AppTextStyles.bodyMedium),
+                trailing: _identityType == 'passport' ? Icon(Icons.check, color: AppColors.primaryColor) : null,
+                onTap: () {
+                  setState(() {
+                    _identityType = 'passport';
+                    _ktpFile = null;
+                    _nikController.clear();
+                    _namesLocked = false;
+                    _ocrExtractedName = '';
+                  });
+                  Navigator.pop(ctx);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.drive_eta),
+                title: Text('Surat Izin Mengemudi (SIM)', style: AppTextStyles.bodyMedium),
+                trailing: _identityType == 'sim' ? Icon(Icons.check, color: AppColors.primaryColor) : null,
+                onTap: () {
+                  setState(() {
+                    _identityType = 'sim';
+                    _ktpFile = null;
+                    _nikController.clear();
+                    _namesLocked = false;
+                    _ocrExtractedName = '';
+                  });
+                  Navigator.pop(ctx);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.receipt_long),
+                title: Text('Nomor Pokok Wajib Pajak (NPWP)', style: AppTextStyles.bodyMedium),
+                trailing: _identityType == 'npwp' ? Icon(Icons.check, color: AppColors.primaryColor) : null,
+                onTap: () {
+                  setState(() {
+                    _identityType = 'npwp';
+                    _ktpFile = null;
+                    _nikController.clear();
+                    _namesLocked = false;
+                    _ocrExtractedName = '';
+                  });
+                  Navigator.pop(ctx);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIdentityTypePicker() {
+    final (icon, label) = switch (_identityType) {
+      'ktp' => (Icons.credit_card, 'Kartu Tanda Kependudukan (KTP)'),
+      'passport' => (Icons.card_travel, 'Passport'),
+      'sim' => (Icons.drive_eta, 'Surat Izin Mengemudi (SIM)'),
+      'npwp' => (Icons.receipt_long, 'Nomor Pokok Wajib Pajak (NPWP)'),
+      _ => (Icons.credit_card, 'Pilih Jenis Identitas'),
+    };
+    return GestureDetector(
+      onTap: _showIdentityTypeSheet,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        decoration: BoxDecoration(
+          color: AppColors.secondaryColor.withAlpha(30),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColors.dividerColor),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: AppColors.primaryColor, size: 22),
+            SizedBox(width: AppSizes.md),
+            Expanded(
+              child: Text(
+                label,
+                style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+              ),
+            ),
+            Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _pickImage({required bool isKtp}) async {
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.gallery, maxWidth: isKtp ? 1200 : 512, maxHeight: isKtp ? 800 : 512);
-    if (picked != null) {
-      setState(() {
-        if (isKtp) {
-          _ktpFile = File(picked.path);
-        } else {
-          _avatarFile = File(picked.path);
+    if (isKtp) {
+      final file = await pickKtpPhoto(context);
+      if (file != null) {
+        setState(() => _ktpFile = file);
+        String nik = '';
+        String name = '';
+        if (_identityType == 'ktp') {
+          nik = await extractNikFromKtp(file);
+          name = await extractNameFromKtp(file);
+        } else if (_identityType == 'passport') {
+          nik = await extractPassportNumber(file);
+          name = await extractNameFromPassport(file);
+        } else if (_identityType == 'sim') {
+          nik = await extractSimNumber(file);
+          name = await extractNameFromSim(file);
+        } else if (_identityType == 'npwp') {
+          nik = await extractNpwpNumber(file);
+          name = await extractNameFromNpwp(file);
         }
-      });
+        setState(() {
+          _ocrExtractedName = name;
+          if (nik.isNotEmpty) _nikController.text = nik;
+        });
+        if (name.isNotEmpty) {
+          final parts = splitKtpName(name);
+          setState(() {
+            _firstNameController.text = parts[0];
+            _middleNameController.text = parts[1];
+            _lastNameController.text = parts[2];
+            _namesLocked = true;
+          });
+        }
+      }
+      return;
+    }
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery, maxWidth: 512, maxHeight: 512);
+    if (picked != null) {
+      setState(() => _avatarFile = File(picked.path));
     }
   }
 
-  void _onRegister() {
+  Future<void> _onRegister() async {
     if (!_formKey.currentState!.validate()) return;
     if (!_agreeTerms) {
-      _showWarning('setujui_syarat_dulu'.tr());
+      _showWarning('Anda harus menyetujui perjanjian untuk melanjutkan.');
       return;
     }
     if (!_rememberMe) {
-      _showWarning('centang_ingat_saya'.tr());
+      _showWarning('Centang Ingat Saya terlebih dahulu');
       return;
+    }
+    if (_ktpFile != null) {
+      if (!_namesLocked && _ocrExtractedName.isEmpty) {
+        _showWarning('Nama gagal diverifikasi dari $_idPhotoLabel. Upload ulang dengan foto yang jelas.');
+        return;
+      }
+      if (_ocrExtractedName.isNotEmpty) {
+        final enteredName = _fullName.toUpperCase().replaceAll(RegExp(r'\s+'), ' ');
+        final ocrName = _ocrExtractedName.toUpperCase().replaceAll(RegExp(r'\s+'), ' ');
+        if (!enteredName.contains(ocrName) && !ocrName.contains(enteredName)) {
+          _showWarning('Nama tidak sesuai dengan $_idPhotoLabel');
+          return;
+        }
+      }
     }
     ref.read(authProvider.notifier).register(
       fullName: _fullName,
@@ -641,12 +1009,26 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
       username: _usernameController.text.trim(),
       email: _emailController.text.trim(),
       whatsapp: _whatsappController.text.trim(),
-      nik: _nikController.text.trim(),
+      nik: _identityType == 'ktp' ? _nikController.text.trim() : '',
+      passportNumber: _identityType == 'passport' ? _nikController.text.trim() : null,
+      simNumber: _identityType == 'sim' ? _nikController.text.trim() : null,
+      npwpNumber: _identityType == 'npwp' ? _nikController.text.trim() : null,
+      identityType: _identityType,
       birthPlace: _birthPlaceController.text.trim(),
       birthDate: _birthDateController.text.trim(),
       country: _countryController.text.trim(),
+      provinceId: _provinceId,
+      cityId: _cityId,
+      districtId: _districtId,
+      villageId: _villageId,
+      provinceName: _provinceName,
+      cityName: _cityName,
+      districtName: _districtName,
+      villageName: _villageName,
+      postalCode: _postalCode,
       address: _addressController.text.trim(),
       ktpPhotoPath: _ktpFile?.path,
+      selfiePhotoPath: _selfieKtpFile?.path,
       password: _passwordController.text,
       passwordConfirmation: _confirmPasswordController.text,
     );
@@ -668,9 +1050,9 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
     ];
     final score = checks.where((c) => c).length;
     final (label, color, value) = switch (score) {
-      0 || 1 => ('password_weak'.tr(), AppColors.errorColor, 0.2),
-      2 || 3 => ('password_medium'.tr(), AppColors.warningColor, 0.5),
-      _ => ('password_strong'.tr(), AppColors.successColor, 0.9),
+      0 || 1 => ('Lemah', AppColors.errorColor, 0.2),
+      2 || 3 => ('Sedang', AppColors.warningColor, 0.5),
+      _ => ('Kuat', AppColors.successColor, 0.9),
     };
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -696,11 +1078,13 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
 
     ref.listen<AuthState>(authProvider, (_, state) {
       if (state is AuthAuthenticated) {
+        final messenger = ScaffoldMessenger.of(context);
+        final router = GoRouter.of(context);
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('registrasi_berhasil'.tr()), backgroundColor: AppColors.successColor),
+        messenger.showSnackBar(
+          SnackBar(content: Text('Registrasi berhasil'), backgroundColor: AppColors.successColor),
         );
-        context.go('/home');
+        router.go('/home');
       } else if (state is AuthError) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(state.message), backgroundColor: AppColors.errorColor),
@@ -718,11 +1102,10 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: AppSizes.sm),
-            Center(child: Image.asset('assets/images/logo.png', width: 64, height: 64)),
-            const SizedBox(height: AppSizes.sm),
-            Center(child: Text('daftar_akun'.tr(), style: AppTextStyles.headlineMedium)),
+            Center(child: Text('Daftar Akun', style: AppTextStyles.headlineMedium)),
             const SizedBox(height: AppSizes.xs),
-            Center(child: Text('isi_data_diri'.tr(), style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary))),
+            Center(child: Text('Isi data diri Anda dengan benar', style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary))),
+
             const SizedBox(height: AppSizes.lg),
             Center(
               child: GestureDetector(
@@ -754,29 +1137,25 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
               ),
             ),
             const SizedBox(height: AppSizes.lg),
-            Row(
-              children: [
-                Expanded(flex: 3, child: AppTextField(
-                  label: 'nama_depan'.tr(),
-                  hint: 'masukkan_nama_depan'.tr(),
-                  controller: _firstNameController,
-                  validator: Validators.required,
-                  onChanged: (_) => setState(() {}),
-                )),
-                SizedBox(width: AppSizes.sm),
-                Expanded(flex: 2, child: AppTextField(
-                  label: 'nama_tengah'.tr(),
-                  hint: 'masukkan_nama_tengah'.tr(),
-                  controller: _middleNameController,
-                  onChanged: (_) => setState(() {}),
-                )),
-              ],
+            AppTextField(
+              label: 'Nama Depan',
+              controller: _firstNameController,
+              readOnly: _namesLocked,
+              validator: Validators.required,
+              onChanged: (_) => setState(() {}),
             ),
             SizedBox(height: AppSizes.md),
             AppTextField(
-              label: 'nama_belakang'.tr(),
-              hint: 'masukkan_nama_belakang'.tr(),
+              label: 'Nama Tengah',
+              controller: _middleNameController,
+              readOnly: _namesLocked,
+              onChanged: (_) => setState(() {}),
+            ),
+            SizedBox(height: AppSizes.md),
+            AppTextField(
+              label: 'Nama Belakang',
               controller: _lastNameController,
+              readOnly: _namesLocked,
               validator: Validators.required,
               onChanged: (_) => setState(() {}),
             ),
@@ -793,7 +1172,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
                   SizedBox(width: AppSizes.sm),
                   Expanded(
                     child: Text(
-                      _fullName.isNotEmpty ? _fullName : 'nama_akan_tampil'.tr(),
+                      _fullName.isNotEmpty ? _fullName : 'Nama Anda akan tampil di sini',
                       style: AppTextStyles.bodySmall.copyWith(
                         color: _fullName.isNotEmpty ? AppColors.textPrimary : AppColors.textTertiary,
                       ),
@@ -804,40 +1183,23 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
             ),
             const SizedBox(height: AppSizes.md),
             AppTextField(
-              label: 'username'.tr(),
-              hint: 'masukkan_username'.tr(),
+              label: 'Username',
               controller: _usernameController,
               validator: Validators.required,
             ),
             const SizedBox(height: AppSizes.md),
             AppTextField(
-              label: 'email'.tr(),
-              hint: 'masukkan_email'.tr(),
+              label: 'Email',
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
               validator: Validators.email,
             ),
             const SizedBox(height: AppSizes.md),
-            AppTextField(
-              label: 'whatsapp'.tr(),
-              hint: 'phone_hint'.tr(),
-              controller: _whatsappController,
-              keyboardType: TextInputType.phone,
-              validator: Validators.phone,
-            ),
-            SizedBox(height: AppSizes.md),
-            AppTextField(
-              label: 'nik'.tr(),
-              hint: 'nik_hint'.tr(),
-              controller: _nikController,
-              keyboardType: TextInputType.number,
-              validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'nik_required'.tr();
-                if (v.trim().length != 16) return 'nik_length'.tr();
-                return null;
-              },
-            ),
+            SizedBox(height: AppSizes.lg),
+            Text('Pilih Jenis Identitas', style: AppTextStyles.titleSmall),
             SizedBox(height: AppSizes.sm),
+            _buildIdentityTypePicker(),
+            SizedBox(height: AppSizes.md),
             GestureDetector(
               onTap: () => _pickImage(isKtp: true),
               child: Container(
@@ -865,10 +1227,10 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text('ktp_photo'.tr(), style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+                          Text(_idPhotoLabel, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
                           SizedBox(height: 2),
                           Text(
-                            _ktpFile != null ? 'ktp_photo_uploaded'.tr() : 'ktp_photo_hint'.tr(),
+                            _ktpFile != null ? '$_idPhotoLabel berhasil diupload' : 'Upload $_idPhotoLabel',
                             style: AppTextStyles.bodySmall.copyWith(
                               color: _ktpFile != null ? AppColors.successColor : AppColors.textTertiary,
                             ),
@@ -885,38 +1247,115 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
                 ),
               ),
             ),
+            SizedBox(height: AppSizes.sm),
+            GestureDetector(
+              onTap: () async {
+                final file = await pickKtpPhoto(context);
+                if (file != null) setState(() => _selfieKtpFile = file);
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: _selfieKtpFile != null ? AppColors.successColor.withAlpha(20) : AppColors.secondaryColor.withAlpha(30),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: _selfieKtpFile != null ? AppColors.successColor : AppColors.dividerColor,
+                    width: 1.5,
+                    strokeAlign: BorderSide.strokeAlignInside,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      _selfieKtpFile != null ? Icons.check_circle : Icons.person,
+                      color: _selfieKtpFile != null ? AppColors.successColor : AppColors.textSecondary,
+                      size: 28,
+                    ),
+                    SizedBox(width: AppSizes.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(_idSelfieLabel, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+                          SizedBox(height: 2),
+                          Text(
+                            _selfieKtpFile != null ? '$_idSelfieLabel berhasil diupload' : 'Upload $_idSelfieLabel',
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: _selfieKtpFile != null ? AppColors.successColor : AppColors.textTertiary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (_selfieKtpFile != null)
+                      GestureDetector(
+                        onTap: () => setState(() => _selfieKtpFile = null),
+                        child: Icon(Icons.close, size: 18, color: AppColors.textSecondary),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(height: AppSizes.md),
+            AppTextField(
+              label: _idLabel,
+              controller: _nikController,
+              keyboardType: _identityType == 'ktp' ? TextInputType.number : TextInputType.text,
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return '$_idLabel wajib diisi';
+                if (_identityType == 'ktp' && v.trim().length != 16) return 'NIK harus 16 digit';
+                if (_identityType == 'sim' && v.trim().length < 6) return 'Nomor SIM minimal 6 karakter';
+                if (_identityType == 'npwp' && v.trim().length < 15) return 'Nomor NPWP minimal 15 digit';
+                if (!['ktp', 'sim', 'npwp'].contains(_identityType) && v.trim().length < 6) return '$_idLabel minimal 6 karakter';
+                return null;
+              },
+            ),
             const SizedBox(height: AppSizes.md),
-            Text('data_identitas'.tr(), style: AppTextStyles.titleMedium),
             SizedBox(height: AppSizes.sm),
             AppTextField(
-              label: 'birth_place'.tr(),
-              hint: 'birth_place_hint'.tr(),
+              label: 'Tempat',
               controller: _birthPlaceController,
             ),
             SizedBox(height: AppSizes.md),
-            AppTextField(
-              label: 'birth_date'.tr(),
-              hint: 'birth_date_hint'.tr(),
+            AppDatePickerField(
+              label: 'Tanggal Lahir',
               controller: _birthDateController,
-              keyboardType: TextInputType.datetime,
             ),
             SizedBox(height: AppSizes.md),
-            AppTextField(
-              label: 'country'.tr(),
-              hint: 'country_hint'.tr(),
+            AppCountryPickerField(
+              label: 'Negara',
               controller: _countryController,
+              onChanged: (_) => setState(() {}),
             ),
             SizedBox(height: AppSizes.md),
+            AppRegionPickerField(
+              country: _countryController.text.isEmpty ? null : _countryController.text,
+              onProvinceIdChanged: (id) => _provinceId = id,
+              onCityIdChanged: (id) => _cityId = id,
+              onDistrictIdChanged: (id) => _districtId = id,
+              onVillageIdChanged: (id) => _villageId = id,
+              onProvinceNameChanged: (v) => _provinceName = v,
+              onCityNameChanged: (v) => _cityName = v,
+              onDistrictNameChanged: (v) => _districtName = v,
+              onVillageNameChanged: (v) => _villageName = v,
+              onPostalCodeChanged: (v) => _postalCode = v,
+            ),
             AppTextField(
-              label: 'address'.tr(),
-              hint: 'address_hint'.tr(),
+              label: 'Detail Alamat',
               controller: _addressController,
-              maxLines: 3,
+              maxLines: 2,
+            ),
+            AppTextField(
+              label: 'WhatsApp',
+              controller: _whatsappController,
+              keyboardType: TextInputType.phone,
+              validator: Validators.phone,
             ),
             const SizedBox(height: AppSizes.md),
             AppTextField(
-              label: 'password'.tr(),
-              hint: 'minimal_6_karakter'.tr(),
+              label: 'Kata Sandi',
               controller: _passwordController,
               obscureText: _obscurePassword,
               validator: Validators.password,
@@ -932,8 +1371,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
             ],
             const SizedBox(height: AppSizes.md),
             AppTextField(
-              label: 'konfirmasi_password'.tr(),
-              hint: 'ulangi_password'.tr(),
+              label: 'Konfirmasi Kata Sandi',
               controller: _confirmPasswordController,
               obscureText: _obscureConfirmPassword,
               validator: (v) => Validators.confirmPassword(v, _passwordController.text),
@@ -948,7 +1386,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
             _rememberCheckbox(),
             const SizedBox(height: AppSizes.lg),
             AppButton(
-              label: 'daftar_sekarang'.tr(),
+              label: 'Daftar Sekarang',
               loading: isLoading,
               disabled: !_agreeTerms || !_rememberMe,
               onPressed: _onRegister,
@@ -957,13 +1395,13 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('sudah_punya_akun'.tr(), style: AppTextStyles.bodyMedium),
+                Text('Sudah punya akun?', style: AppTextStyles.bodyMedium),
                 GestureDetector(
                   onTap: () {
                     Navigator.of(context).pop();
                     showSignInSheet(context);
                   },
-                  child: Text('sign_in'.tr(), style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w600)),
+                  child: Text('Masuk', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w600)),
                 ),
               ],
             ),
@@ -1009,15 +1447,16 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
               }
             },
             child: RichText(
+              textAlign: TextAlign.justify,
               text: TextSpan(
                 style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
                 children: [
-                  TextSpan(text: '${'saya_menyetujui'.tr()} '),
+                  const TextSpan(text: 'Dengan mencentang Setuju & Bergabung atau Lanjutkan, Anda menyetujui '),
                   WidgetSpan(
                     child: GestureDetector(
                       onTap: () => showAgreementModal(context, mode: AgreementMode.terms),
                       child: Text(
-                        'syarat_ketentuan'.tr(),
+                        'Perjanjian Pengguna',
                         style: AppTextStyles.bodySmall.copyWith(
                           color: AppColors.primaryColor,
                           fontWeight: FontWeight.w600,
@@ -1026,12 +1465,12 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
                       ),
                     ),
                   ),
-                  const TextSpan(text: ' & '),
+                  const TextSpan(text: ', '),
                   WidgetSpan(
                     child: GestureDetector(
                       onTap: () => showAgreementModal(context, mode: AgreementMode.privacy),
                       child: Text(
-                        'kebijakan_privasi'.tr(),
+                        'Kebijakan Privasi',
                         style: AppTextStyles.bodySmall.copyWith(
                           color: AppColors.primaryColor,
                           fontWeight: FontWeight.w600,
@@ -1040,6 +1479,21 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
                       ),
                     ),
                   ),
+                  const TextSpan(text: ' dan '),
+                  WidgetSpan(
+                    child: GestureDetector(
+                      onTap: () => showAgreementModal(context, mode: AgreementMode.weddingPolicy),
+                      child: Text(
+                        'Kebijakan Aplikasi',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.primaryColor,
+                          fontWeight: FontWeight.w600,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const TextSpan(text: ' Wedding Flowers Decorasi.'),
                 ],
               ),
             ),
@@ -1068,7 +1522,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
           child: GestureDetector(
             onTap: () => setState(() => _rememberMe = !_rememberMe),
             child: Text(
-              'ingat_saya'.tr(),
+              'Ingat Saya',
               style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
             ),
           ),
@@ -1107,13 +1561,13 @@ class _ForgotPasswordSheetContentState extends State<_ForgotPasswordSheetContent
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('reset_dikirim'.tr()), backgroundColor: AppColors.successColor),
+        SnackBar(content: Text('Kode reset telah dikirim ke email Anda'), backgroundColor: AppColors.successColor),
       );
       Navigator.of(context).pop();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('gagal_kirim_reset'.tr()), backgroundColor: AppColors.errorColor),
+        SnackBar(content: Text('Gagal mengirim kode reset. Coba lagi.'), backgroundColor: AppColors.errorColor),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -1130,23 +1584,22 @@ class _ForgotPasswordSheetContentState extends State<_ForgotPasswordSheetContent
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: AppSizes.sm),
-            Text('lupa_password'.tr(), style: AppTextStyles.headlineMedium),
+            Text('Lupa Password?', style: AppTextStyles.headlineMedium),
             const SizedBox(height: AppSizes.xs),
             Text(
-              'masukkan_email_reset'.tr(),
+              'Masukkan email Anda untuk menerima kode reset password',
               style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary),
             ),
             const SizedBox(height: AppSizes.xl),
             AppTextField(
-              label: 'email'.tr(),
-              hint: 'masukkan_email'.tr(),
+              label: 'Email',
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
               validator: Validators.email,
             ),
             const SizedBox(height: AppSizes.xl),
             AppButton(
-              label: 'kirim_kode_reset'.tr(),
+              label: 'Kirim Kode Reset',
               loading: _loading,
               onPressed: _onSendResetCode,
             ),

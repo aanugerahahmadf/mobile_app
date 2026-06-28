@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 
@@ -9,7 +8,7 @@ class AboutPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('tentang_aplikasi'.tr())),
+      appBar: AppBar(title: Text('Tentang Aplikasi')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSizes.md),
         child: Column(
@@ -25,14 +24,14 @@ class AboutPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            Text('tentang_aplikasi'.tr(), style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+            Text('Tentang Aplikasi', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
             Text(
-              'deskripsi_tentang'.tr(),
+              'WeddingApp membantu Anda menemukan dekorasi bunga pernikahan yang sempurna. Jelajahi paket, cari dengan gambar, dan pesan dengan mudah.',
               style: const TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.6),
             ),
             const SizedBox(height: AppSizes.xl),
-            Text('versi'.tr(), style: const TextStyle(fontSize: 14, color: AppColors.textSecondary)),
+            Text('Versi', style: const TextStyle(fontSize: 14, color: AppColors.textSecondary)),
             const SizedBox(height: 4),
             const Text('1.0.0', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
           ],

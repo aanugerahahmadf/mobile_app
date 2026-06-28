@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
+import '../../features/splash/presentation/pages/landing_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
-import '../../features/auth/presentation/pages/sign_in_page.dart';
-import '../../features/auth/presentation/pages/sign_up_page.dart';
 import '../../features/auth/presentation/pages/otp_email_verification_page.dart';
 import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/reset_password_page.dart';
@@ -32,6 +31,7 @@ import '../../features/voucher/data/models/voucher_model.dart';
 import '../../features/catalog/presentation/pages/catalog_combined_page.dart';
 import '../../features/legal/presentation/pages/terms_of_service_page.dart';
 import '../../features/legal/presentation/pages/privacy_policy_page.dart';
+import '../../features/legal/presentation/pages/wedding_policy_page.dart';
 import '../../features/legal/presentation/pages/help_center_page.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -41,10 +41,15 @@ final appRouter = GoRouter(
   initialLocation: '/splash',
   routes: [
     GoRoute(path: '/splash', builder: (_, _) => const SplashPage()),
+    GoRoute(path: '/landing', builder: (_, _) => const LandingPage()),
     GoRoute(path: '/onboarding', builder: (_, _) => const OnboardingPage()),
-    GoRoute(path: '/sign-in', builder: (_, _) => const SignInPage()),
-    GoRoute(path: '/sign-up', builder: (_, _) => const SignUpPage()),
-    GoRoute(path: '/verify-otp', builder: (_, _) => const OtpEmailVerificationPage()),
+    GoRoute(path: '/verify-otp', builder: (_, state) {
+      final extra = state.extra as Map<String, dynamic>?;
+      return OtpEmailVerificationPage(
+        email: extra?['email'] as String?,
+        purpose: (extra?['purpose'] as String?) ?? 'verify_email',
+      );
+    }),
     GoRoute(path: '/forgot-password', builder: (_, _) => const ForgotPasswordPage()),
     GoRoute(path: '/reset-password', builder: (_, _) => const ResetPasswordPage()),
     StatefulShellRoute.indexedStack(
@@ -79,7 +84,13 @@ final appRouter = GoRouter(
       ),
     ),
     GoRoute(path: '/cbir-result', builder: (_, _) => const CbirResultPage()),
-    GoRoute(path: '/checkout', builder: (_, _) => const CheckoutPage()),
+    GoRoute(
+      path: '/checkout',
+      builder: (_, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+        return CheckoutPage(type: extra?['type'] as String?, id: extra?['id'] as String?);
+      },
+    ),
     GoRoute(path: '/order/:id', builder: (_, state) => OrderDetailPage(id: state.pathParameters['id']!)),
     GoRoute(path: '/chat/:id', builder: (_, state) => ChatDetailPage(id: state.pathParameters['id']!)),
     GoRoute(path: '/notifications', builder: (_, _) => const NotificationPage()),
@@ -97,10 +108,17 @@ final appRouter = GoRouter(
     GoRoute(path: '/catalog', builder: (_, _) => const CatalogCombinedPage()),
     GoRoute(path: '/terms-of-service', builder: (_, _) => const TermsOfServicePage()),
     GoRoute(path: '/privacy-policy', builder: (_, _) => const PrivacyPolicyPage()),
+    GoRoute(path: '/wedding-policy', builder: (_, _) => const WeddingPolicyPage()),
     GoRoute(path: '/help-center', builder: (_, _) => const HelpCenterPage()),
     GoRoute(
       path: '/payment/:orderId',
-      builder: (_, state) => MidtransWebviewPage(orderId: state.pathParameters['orderId']!),
+      builder: (_, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+        return MidtransWebviewPage(
+          orderId: state.pathParameters['orderId']!,
+          initialSnapToken: extra?['snap_token'] as String?,
+        );
+      },
     ),
   ],
 );

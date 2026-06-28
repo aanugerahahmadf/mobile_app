@@ -1,6 +1,5 @@
 ﻿import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -91,14 +90,14 @@ class _CbirResultPageState extends ConsumerState<CbirResultPage> {
 
     if (state.error != null && state.results.isEmpty) {
       return AppErrorState(
-        message: state.error ?? 'error_umum'.tr(),
+        message: state.error ?? 'Terjadi kesalahan',
       );
     }
 
     if (state.results.isEmpty && state.uploadedImagePath == null) {
       return AppEmptyState(
-        title: 'cari_gambar'.tr(),
-        subtitle: 'unggah_gambar_cari'.tr(),
+        title: 'Cari dengan Gambar',
+        subtitle: 'Unggah gambar untuk mencari produk serupa',
       );
     }
 
@@ -108,8 +107,8 @@ class _CbirResultPageState extends ConsumerState<CbirResultPage> {
           _buildImageHeader(state),
           Expanded(
             child: AppEmptyState(
-              title: 'hasil_tidak_ditemukan'.tr(),
-              subtitle: 'coba_gambar_lain'.tr(),
+              title: 'Hasil tidak ditemukan',
+              subtitle: 'Coba gambar lain',
             ),
           ),
         ],
@@ -150,9 +149,9 @@ class _CbirResultPageState extends ConsumerState<CbirResultPage> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('hasil_pencarian_serupa'.tr(),
+              Text('Hasil Pencarian Serupa',
                   style: AppTextStyles.titleMedium),
-              Text('item_count'.tr(namedArgs: {'count': '${state.results.length}'}),
+              Text('${state.results.length} item',
                   style: AppTextStyles.bodySmall),
             ],
           ),
@@ -178,7 +177,7 @@ class _CbirResultPageState extends ConsumerState<CbirResultPage> {
                 final (label, value) = _sortOptions[i];
                 final selected = state.sortBy == value;
                 return FilterChip(
-                  label: Text(label.tr(), style: TextStyle(fontSize: 12, fontWeight: selected ? FontWeight.w600 : FontWeight.normal)),
+                  label: Text(label, style: TextStyle(fontSize: 12, fontWeight: selected ? FontWeight.w600 : FontWeight.normal)),
                   selected: selected,
                   onSelected: (_) => notifier.setSortBy(value),
                   selectedColor: AppColors.secondaryColor,
@@ -218,7 +217,7 @@ class _CbirResultPageState extends ConsumerState<CbirResultPage> {
                 ),
               const SizedBox(width: AppSizes.sm),
               FilterChip(
-                label: Text('diskon'.tr(), style: TextStyle(fontSize: 12, fontWeight: state.hasDiscount == true ? FontWeight.w600 : FontWeight.normal)),
+                label: Text('Diskon', style: TextStyle(fontSize: 12, fontWeight: state.hasDiscount == true ? FontWeight.w600 : FontWeight.normal)),
                 selected: state.hasDiscount == true,
                 onSelected: (v) => notifier.setHasDiscount(v),
                 selectedColor: AppColors.secondaryColor,

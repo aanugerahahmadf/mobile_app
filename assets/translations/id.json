@@ -414,7 +414,7 @@
   "password_butuh_huruf_besar": "Kata sandi harus mengandung huruf besar",
   "password_butuh_huruf_kecil": "Kata sandi harus mengandung huruf kecil",
   "password_butuh_angka": "Kata sandi harus mengandung angka",
-  "password_butuh_simbol": "Kata sandi harus mengandung simbol (!@#\$%^&*)",
+  "password_butuh_simbol": "Kata sandi harus mengandung simbol (!@#$%^&*)",
   "password_weak": "Lemah",
   "password_medium": "Sedang",
   "password_strong": "Kuat",
@@ -447,7 +447,15 @@
   "verifikasi_wajah_subtitle": "Scan wajah untuk verifikasi identitas",
   "verifikasi_ulang": "Verifikasi Ulang Wajah",
   "scan_wajah_akurat_hint": "Pastikan wajah terlihat jelas dan pencahayaan cukup",
-  "dekatkan_wajah": "Dekatkan wajah ke kamera"
+  "dekatkan_wajah": "Dekatkan wajah ke kamera",
+  "nama_akan_tampil": "Nama Anda akan tampil di sini",
+  "ktp_photo": "Foto KTP",
+  "ktp_photo_hint": "Upload foto KTP",
+  "ktp_photo_uploaded": "Foto KTP berhasil diupload",
+  "foto_ktp": "Foto KTP",
+  "face_scan": "Verifikasi Wajah",
+  "face_scan_hint": "Scan wajah untuk verifikasi (opsional)",
+  "face_scan_completed": "Wajah terverifikasi",
   "data_identitas": "Data Identitas",
   "birth_place": "Tempat Lahir",
   "birth_place_hint": "Cth: Jakarta",
@@ -455,5 +463,6 @@
   "birth_date_hint": "Cth: 1990-01-01",
   "country": "Negara",
   "country_hint": "Cth: Indonesia",
+  "address": "Alamat",
   "address_hint": "Masukkan alamat lengkap"
 }

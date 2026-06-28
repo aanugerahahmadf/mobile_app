@@ -1,15 +1,14 @@
 ﻿import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
-import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_shimmer.dart';
 import '../../../../core/widgets/app_snackbar.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/widgets/auth_modals.dart';
 import '../providers/profile_provider.dart';
 
@@ -32,12 +31,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('sign_out'.tr()),
-        content: Text('apakah_yakin_keluar'.tr()),
+        title: Text('Keluar'),
+        content: Text('Apakah Anda yakin ingin keluar?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('batal'.tr())),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text('Batal')),
           AppButton(
-            label: 'sign_out'.tr(),
+            label: 'Keluar',
             onPressed: () => Navigator.pop(ctx, true),
             type: ButtonType.primary,
           ),
@@ -45,7 +44,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       ),
     );
     if (confirmed == true) {
-      await const FlutterSecureStorage().delete(key: 'auth_token');
+      await ref.read(authProvider.notifier).logout();
       if (mounted) showSignInSheet(context);
     }
   }
@@ -101,7 +100,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         ),
                         SizedBox(height: AppSizes.md),
                         Text(
-                          userData?['full_name'] as String? ?? 'pengguna'.tr(),
+                          userData?['full_name'] as String? ?? 'Pengguna',
                           style: AppTextStyles.titleLarge.copyWith(color: Colors.white),
                         ),
                         const SizedBox(height: 4),
@@ -125,14 +124,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            _statItem('total_order'.tr(), '${stats['orders_count'] ?? 0}'),
+                            _statItem('Total Order', '${stats['orders_count'] ?? 0}'),
                             GestureDetector(
                               onTap: () => context.push('/wishlist'),
-                              child: _statItem('favorit'.tr(), '${stats['wishlist_count'] ?? 0}'),
+                              child: _statItem('Favorit', '${stats['wishlist_count'] ?? 0}'),
                             ),
                             GestureDetector(
                               onTap: () => context.push('/my-reviews'),
-                              child: _statItem('ulasan'.tr(), '${stats['reviews_count'] ?? 0}'),
+                              child: _statItem('Ulasan', '${stats['reviews_count'] ?? 0}'),
                             ),
                           ],
                         ),
@@ -145,12 +144,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
                     child: Column(
                       children: [
-                        _menuTile(Icons.edit, 'edit_profil'.tr(), () => context.push('/edit-profile')),
-                        _menuTile(Icons.card_giftcard, 'voucher_saya'.tr(), () => context.push('/home')),
-                        _menuTile(Icons.receipt_long, 'riwayat_pesanan'.tr(), () => context.push('/orders')),
-                        _menuTile(Icons.privacy_tip, 'privasi_ketentuan'.tr(), () => AppSnackBar.show(context, 'fitur_segera_hadir'.tr(), type: SnackBarType.info)),
-                        _menuTile(Icons.help, 'pusat_bantuan'.tr(), () => AppSnackBar.show(context, 'fitur_segera_hadir'.tr(), type: SnackBarType.info)),
-                        _menuTile(Icons.logout, 'sign_out'.tr(), _logout, isDestructive: true),
+                        _menuTile(Icons.edit, 'Edit Profil', () => context.push('/edit-profile')),
+                        _menuTile(Icons.card_giftcard, 'Voucher Saya', () => context.push('/home')),
+                        _menuTile(Icons.receipt_long, 'Pesanan Saya', () => context.push('/orders')),
+                        _menuTile(Icons.privacy_tip, 'Privasi & Ketentuan', () => AppSnackBar.show(context, 'Fitur akan segera hadir', type: SnackBarType.info)),
+                        _menuTile(Icons.help, 'Pusat Bantuan', () => AppSnackBar.show(context, 'Fitur akan segera hadir', type: SnackBarType.info)),
+                        _menuTile(Icons.logout, 'Keluar', _logout, isDestructive: true),
                       ],
                     ),
                   ),
@@ -173,9 +172,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
     final missingFields = <String>[
       if (items['nik'] == false) 'NIK',
-      if (items['ktp_photo'] == false) 'foto_ktp'.tr(),
-      if (items['whatsapp'] == false) 'whatsapp'.tr(),
-      if (items['avatar_url'] == false) 'foto_profil'.tr(),
+      if (items['ktp_photo'] == false) 'Foto KTP',
+      if (items['whatsapp'] == false) 'WhatsApp',
+      if (items['avatar_url'] == false) 'foto_profil',
     ];
 
     return Padding(
@@ -191,7 +190,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('kelengkapan_profil'.tr(), style: AppTextStyles.titleSmall),
+                  Text('kelengkapan_profil', style: AppTextStyles.titleSmall),
                   Text('$percent%', style: AppTextStyles.bodyMedium.copyWith(
                     color: percent >= 80 ? Colors.green : (percent >= 50 ? Colors.orange : AppColors.primaryColor),
                     fontWeight: FontWeight.w600,
@@ -212,7 +211,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               ),
               if (missingFields.isNotEmpty) ...[
                 SizedBox(height: AppSizes.sm),
-                Text('lengkapi_data'.tr(), style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
+                Text('lengkapi_data', style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
                 SizedBox(height: 4),
                 Wrap(
                   spacing: 6,
@@ -266,7 +265,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          identityVerified ? 'identitas_terverifikasi'.tr() : 'identitas_belum_terverifikasi'.tr(),
+                          identityVerified ? 'Identitas Terverifikasi' : 'Identitas Belum Terverifikasi',
                           style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                         ),
                         if (identityVerified && selfieUrl != null) ...[
@@ -283,7 +282,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                               SizedBox(width: 6),
                               Flexible(
                                 child: Text(
-                                  'verifikasi_wajah'.tr(),
+                                  'Verifikasi Wajah',
                                   style: AppTextStyles.bodySmall.copyWith(color: Colors.green),
                                 ),
                               ),
@@ -301,7 +300,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       size: 16,
                     ),
                     label: Text(
-                      identityVerified ? 'verifikasi_ulang'.tr() : 'verifikasi_sekarang'.tr(),
+                      identityVerified ? 'Verifikasi Ulang Wajah' : 'Verifikasi Sekarang',
                       style: AppTextStyles.bodySmall,
                     ),
                     style: TextButton.styleFrom(

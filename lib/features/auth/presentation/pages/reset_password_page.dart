@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/api/dio_client.dart';
@@ -10,6 +9,7 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/utils/validators.dart';
+import '../widgets/auth_modals.dart';
 
 class ResetPasswordPage extends StatefulWidget {
   const ResetPasswordPage({super.key});
@@ -46,11 +46,11 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         },
       );
       if (!mounted) return;
-      AppSnackBar.show(context, 'password_berhasil_direset'.tr(), type: SnackBarType.success);
-      context.go('/sign-in');
+      AppSnackBar.show(context, 'Password berhasil direset. Silakan masuk.', type: SnackBarType.success);
+      showSignInSheet(context);
     } catch (e) {
       if (!mounted) return;
-      AppSnackBar.show(context, 'gagal_reset_password'.tr(), type: SnackBarType.error);
+      AppSnackBar.show(context, 'Gagal mereset password. Coba lagi.', type: SnackBarType.error);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -75,16 +75,15 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('reset_password'.tr(), style: AppTextStyles.headlineMedium),
+              Text('Reset Password', style: AppTextStyles.headlineMedium),
               SizedBox(height: AppSizes.xs),
               Text(
-                'buat_password_baru_akun'.tr(),
+                'Buat password baru untuk akun Anda',
                 style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary),
               ),
               SizedBox(height: AppSizes.xl),
               AppTextField(
-                label: 'password_baru'.tr(),
-                hint: 'minimal_6_karakter'.tr(),
+                label: 'Password Baru',
                 controller: _passwordController,
                 obscureText: _obscurePassword,
                 validator: Validators.password,
@@ -95,8 +94,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
               ),
               SizedBox(height: AppSizes.md),
               AppTextField(
-                label: 'konfirmasi_password_baru'.tr(),
-                hint: 'ulangi_password_baru'.tr(),
+                label: 'Konfirmasi Password Baru',
                 controller: _confirmPasswordController,
                 obscureText: _obscureConfirmPassword,
                 validator: (v) => Validators.confirmPassword(v, _passwordController.text),
@@ -107,7 +105,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
               ),
               SizedBox(height: AppSizes.xl),
               AppButton(
-                label: 'reset_password'.tr(),
+                label: 'Reset Password',
                 loading: _loading,
                 onPressed: _onResetPassword,
               ),

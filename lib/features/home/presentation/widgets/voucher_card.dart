@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
@@ -27,7 +26,7 @@ class VoucherCard extends StatelessWidget {
           Text(voucher['description'] as String? ?? '', style: AppTextStyles.bodySmall.copyWith(color: Colors.white70)),
           if (voucher['discount'] != null) ...[
             const SizedBox(height: 8),
-            Text('${'diskon'.tr()} ${voucher['discount']}%', style: AppTextStyles.titleLarge.copyWith(color: Colors.white)),
+            Text('${'Diskon'} ${voucher['discount']}%', style: AppTextStyles.titleLarge.copyWith(color: Colors.white)),
           ],
         ],
       ),

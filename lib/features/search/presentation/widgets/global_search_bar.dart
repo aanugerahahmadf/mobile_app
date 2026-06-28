@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_shadows.dart';
@@ -128,32 +127,32 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
               decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
             ),
             const SizedBox(height: 24),
-            Text('cari_gambar'.tr(),
+            Text('Cari dengan Gambar',
               style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Color(0xFF1A1A2E)),
             ),
             const SizedBox(height: 24),
             _sheetOption(
               icon: Icons.camera_alt_rounded,
-              title: 'kamera'.tr(),
-              subtitle: 'ambil_foto_langsung'.tr(),
+              title: 'Kamera',
+              subtitle: 'Ambil foto langsung',
               onTap: () { context.pop(); _pickImage(ImageSource.camera); },
             ),
             _sheetOption(
               icon: Icons.photo_library,
-              title: 'galeri'.tr(),
-              subtitle: 'pilih_dari_galeri'.tr(),
+              title: 'Galeri',
+              subtitle: 'Pilih dari Galeri',
               onTap: () { context.pop(); _pickImage(ImageSource.gallery); },
             ),
             _sheetOption(
               icon: Icons.folder,
-              title: 'file_manager'.tr(),
-              subtitle: 'pilih_dari_penyimpanan'.tr(),
+              title: 'File Manager',
+              subtitle: 'Pilih dari penyimpanan',
               onTap: () { context.pop(); _pickImage(ImageSource.gallery); },
             ),
             _sheetOption(
               icon: Icons.cloud,
-              title: 'google_drive'.tr(),
-              subtitle: 'pilih_dari_drive'.tr(),
+              title: 'Google Drive',
+              subtitle: 'Pilih file dari Drive',
               onTap: () { context.pop(); _pickImage(ImageSource.gallery); },
             ),
           ],
@@ -202,7 +201,7 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
               controller: _controller,
               focusNode: _focusNode,
               decoration: InputDecoration(
-                hintText: 'search_hint'.tr(),
+                hintText: 'Cari paket bunga...',
                 hintStyle: TextStyle(color: _hintColor, fontWeight: FontWeight.w400),
                 prefixIcon: Icon(Icons.search_rounded, color: _iconColor, size: 22),
                 suffixIcon: _controller.text.isNotEmpty
@@ -410,7 +409,7 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
                         ? Padding(
                             padding: const EdgeInsets.all(20),
                             child: Center(
-                              child: Text('hasil_tidak_ditemukan'.tr(),
+                              child: Text('Hasil tidak ditemukan',
                                 style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                               ),
                             ),

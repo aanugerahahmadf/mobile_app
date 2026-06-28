@@ -1,6 +1,5 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
@@ -56,13 +55,13 @@ class _ReviewListPageState extends ConsumerState<ReviewListPage> {
       setState(() => _showForm = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('ulasan_berhasil_dikirim'.tr())),
+          SnackBar(content: Text('Ulasan berhasil dikirim')),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('gagal_kirim_ulasan'.tr(namedArgs: {'error': e.toString()}))),
+          SnackBar(content: Text('Gagal mengirim ulasan: ${e.toString()}')),
         );
       }
     }
@@ -74,7 +73,7 @@ class _ReviewListPageState extends ConsumerState<ReviewListPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('ulasan'.tr()),
+        title: Text('Ulasan'),
       ),
       body: Column(
         children: [
@@ -82,7 +81,7 @@ class _ReviewListPageState extends ConsumerState<ReviewListPage> {
             Padding(
               padding: const EdgeInsets.all(AppSizes.md),
               child: AppButton(
-                label: 'tulis_ulasan'.tr(),
+                label: 'Tulis Ulasan',
                 icon: Icons.edit,
                 onPressed: () => setState(() => _showForm = true),
                 type: ButtonType.outline,
@@ -96,8 +95,8 @@ class _ReviewListPageState extends ConsumerState<ReviewListPage> {
                     ? Center(child: Text(state.error!, style: AppTextStyles.bodyMedium))
                     : state.reviews.isEmpty
                         ? AppEmptyState(
-                            title: 'tidak_ada_ulasan'.tr(),
-                            subtitle: 'jadi_pertama_ulasan'.tr(),
+                            title: 'Belum ada ulasan',
+                            subtitle: 'Jadilah yang pertama memberikan ulasan',
                             icon: Icons.star_outline,
                           )
                         : RefreshIndicator(
@@ -107,7 +106,7 @@ class _ReviewListPageState extends ConsumerState<ReviewListPage> {
                               itemCount: state.reviews.length,
                               itemBuilder: (context, index) {
                                 final review = state.reviews[index];
-                                final userName = review['user_name'] as String? ?? 'pengguna'.tr();
+                                final userName = review['user_name'] as String? ?? 'Pengguna';
                                 final rating = (review['rating'] as num?)?.toInt() ?? 0;
                                 final comment = review['comment'] as String? ?? '';
                                 final time = review['created_at'] as String? ?? '';
@@ -180,7 +179,7 @@ class _ReviewListPageState extends ConsumerState<ReviewListPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('rating'.tr(), style: AppTextStyles.bodyMedium),
+              Text('Rating', style: AppTextStyles.bodyMedium),
               Row(
                 children: List.generate(
                   5,
@@ -202,7 +201,7 @@ class _ReviewListPageState extends ConsumerState<ReviewListPage> {
           TextField(
             controller: _commentController,
             decoration: InputDecoration(
-              hintText: 'tulis_ulasan_hint'.tr(),
+              hintText: 'Tulis ulasan Anda...',
               border: const OutlineInputBorder(),
             ),
             maxLines: 3,
@@ -212,7 +211,7 @@ class _ReviewListPageState extends ConsumerState<ReviewListPage> {
             children: [
               Expanded(
                 child: AppButton(
-                  label: 'batal'.tr(),
+                  label: 'Batal',
                   onPressed: () => setState(() => _showForm = false),
                   type: ButtonType.outline,
                 ),
@@ -220,7 +219,7 @@ class _ReviewListPageState extends ConsumerState<ReviewListPage> {
               SizedBox(width: AppSizes.sm),
               Expanded(
                 child: AppButton(
-                  label: 'kirim'.tr(),
+                  label: 'Kirim',
                   loading: ref.watch(reviewProvider).submitting,
                   onPressed: _submitReview,
                 ),

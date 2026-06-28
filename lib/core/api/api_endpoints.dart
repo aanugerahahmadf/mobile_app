@@ -9,6 +9,7 @@ class ApiEndpoints {
   static const String resetPassword = '/reset-password';
   static const String sendOtp = '/auth/send-otp';
   static const String verifyOtp = '/auth/verify-otp';
+  static const String googleLogin = '/auth/google';
 
   // User & Profile
   static const String user = '/user';
@@ -75,6 +76,7 @@ class ApiEndpoints {
   // Legal
   static const String legalTerms = '/legal/terms';
   static const String legalPrivacy = '/legal/privacy';
+  static const String legalWeddingPolicy = '/legal/wedding-decoration-policy';
   static const String legalHelp = '/legal/help';
 
   // Wallet
@@ -95,4 +97,20 @@ class ApiEndpoints {
   static String packageReviews(String id) => '/reviews/package/$id';
   static String invoiceDownload(String id) => '/bookings/$id/invoice';
   static String invoiceEmail(String id) => '/bookings/$id/invoice/email';
+
+  // Regions
+  static const String regionProvinces = '/regions/provinces';
+  static String regionCities(String provinceCode) => '/regions/cities/$provinceCode';
+  static String regionDistricts(String cityCode) => '/regions/districts/$cityCode';
+  static String regionVillages(String districtCode) => '/regions/villages/$districtCode';
+
+  // World Regions
+  static const String worldCountries = '/world-regions/countries';
+  static const String worldStates = '/world-regions/states';
+  static const String worldCities = '/world-regions/cities';
+
+  // Geo (GeoNames — full hierarchy for all countries)
+  static const String geoAdmin2 = '/geo/admin2';
+  static const String geoAdmin3 = '/geo/admin3';
+  static const String geoPostalCodes = '/geo/postal-codes';
 }

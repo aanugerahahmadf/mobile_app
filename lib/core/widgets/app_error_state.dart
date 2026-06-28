@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:easy_localization/easy_localization.dart';
 import '../constants/app_text_styles.dart';
 import '../constants/app_colors.dart';
 import 'app_button.dart';
@@ -34,7 +33,7 @@ class AppErrorState extends StatelessWidget {
             Text(message, style: AppTextStyles.bodyLarge, textAlign: TextAlign.center),
             if (onRetry != null) ...[
               const SizedBox(height: 24),
-              AppButton(label: 'coba_lagi'.tr(), onPressed: onRetry, type: ButtonType.outline),
+              AppButton(label: 'Coba Lagi', onPressed: onRetry, type: ButtonType.outline),
             ],
           ],
         ),

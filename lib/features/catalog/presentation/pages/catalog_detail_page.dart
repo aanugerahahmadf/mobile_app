@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
-import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_shimmer.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../core/widgets/app_snackbar.dart';
@@ -60,7 +58,7 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
           ? await repo.getPackageDetail(widget.id)
           : await repo.getProductDetail(widget.id);
       _data = res['data'] as Map<String, dynamic>?;
-      if (_data == null) throw Exception('data_tidak_ditemukan'.tr());
+      if (_data == null) throw Exception('Data tidak ditemukan');
     } catch (e) {
       _error = e.toString();
     }
@@ -76,9 +74,9 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
       );
       if (mounted) {
         if (ok) {
-          AppSnackBar.show(context, 'ditambahkan_ke_keranjang'.tr(), type: SnackBarType.success);
+          AppSnackBar.show(context, 'Ditambahkan ke keranjang', type: SnackBarType.success);
         } else {
-          AppSnackBar.show(context, 'gagal_tambah_keranjang'.tr(), type: SnackBarType.error);
+          AppSnackBar.show(context, 'Gagal menambahkan ke keranjang', type: SnackBarType.error);
         }
       }
     } finally {
@@ -92,9 +90,9 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
       await DioClient.instance.post(ApiEndpoints.wishlistToggle, data: {
         if (widget.type == 'packages') 'package_id': widget.id else 'product_id': widget.id,
       });
-      if (mounted) AppSnackBar.show(context, 'berhasil_diperbarui'.tr(), type: SnackBarType.success);
+      if (mounted) AppSnackBar.show(context, 'Berhasil diperbarui', type: SnackBarType.success);
     } catch (e) {
-      if (mounted) AppSnackBar.show(context, 'gagal_update_favorit'.tr(), type: SnackBarType.error);
+      if (mounted) AppSnackBar.show(context, 'Gagal memperbarui favorit', type: SnackBarType.error);
     }
     if (mounted) setState(() => _favLoading = false);
   }
@@ -116,17 +114,13 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
       }
     } catch (e) {
       if (mounted) {
-        AppSnackBar.show(context, 'gagal_mulai_percakapan'.tr(), type: SnackBarType.error);
+        AppSnackBar.show(context, 'Gagal memulai percakapan', type: SnackBarType.error);
       }
     }
   }
 
-  void _buyNow() async {
-    final ok = await ref.read(cartProvider.notifier).addItem(
-      productId: widget.type == 'products' ? widget.id : null,
-      packageId: widget.type == 'packages' ? widget.id : null,
-    );
-    if (ok && mounted) context.go('/checkout');
+  void _buyNow() {
+    context.push('/checkout', extra: {'type': widget.type, 'id': widget.id});
   }
 
   @override
@@ -198,7 +192,7 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
                 _buildPriceRow(price, discountPrice),
                 SizedBox(height: AppSizes.md),
                 const Divider(),
-                Text('deskripsi'.tr(), style: AppTextStyles.titleMedium),
+                Text('Deskripsi', style: AppTextStyles.titleMedium),
                 SizedBox(height: AppSizes.sm),
                 Text(
                   description,
@@ -210,14 +204,14 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
                   GestureDetector(
                     onTap: () => setState(() => _descExpanded = !_descExpanded),
                     child: Text(
-                      _descExpanded ? 'lebih_sedikit'.tr() : 'selengkapnya'.tr(),
+                      _descExpanded ? 'Lebih sedikit' : 'Selengkapnya',
                       style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primaryColor),
                     ),
                   ),
                 if (features.isNotEmpty) ...[
                   SizedBox(height: AppSizes.md),
                   const Divider(),
-                  Text('fitur'.tr(), style: AppTextStyles.titleMedium),
+                  Text('Fitur', style: AppTextStyles.titleMedium),
                   SizedBox(height: AppSizes.sm),
                   ...features.map((f) => Padding(
                     padding: const EdgeInsets.only(bottom: 4),
@@ -233,7 +227,7 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
                 if (reviews.isNotEmpty) ...[
                   SizedBox(height: AppSizes.md),
                   const Divider(),
-                  Text('ulasan'.tr(), style: AppTextStyles.titleMedium),
+                  Text('Ulasan', style: AppTextStyles.titleMedium),
                   SizedBox(height: AppSizes.sm),
                   ...reviews.map((r) => _buildReviewCard(r)),
                 ],
@@ -298,7 +292,7 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(color: AppColors.errorColor, borderRadius: BorderRadius.circular(8)),
-            child: Text('diskon'.tr(), style: const TextStyle(color: Colors.white, fontSize: 11)),
+            child: Text('Diskon', style: const TextStyle(color: Colors.white, fontSize: 11)),
           ),
       ],
     );
@@ -374,12 +368,11 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
               icon: const Icon(Icons.message_outlined),
               onPressed: _messageAdmin,
             ),
-            const SizedBox(width: AppSizes.sm),
-            Expanded(
-              child: AppButton(
-                label: 'beli_sekarang'.tr(),
-                onPressed: _buyNow,
-              ),
+            const Spacer(),
+            IconButton(
+              icon: const Icon(Icons.shopping_bag_outlined),
+              color: AppColors.primaryColor,
+              onPressed: _buyNow,
             ),
           ],
         ),

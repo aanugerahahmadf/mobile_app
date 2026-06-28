@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
 
@@ -19,20 +18,20 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('pengaturan_notifikasi'.tr())),
+      appBar: AppBar(title: Text('Pengaturan Notifikasi')),
       body: ListView(
         padding: const EdgeInsets.all(AppSizes.md),
         children: [
-          _buildSwitchTile('notifikasi_pesanan'.tr(), 'notifikasi_pesanan_desc'.tr(), _orderUpdates, (v) {
+          _buildSwitchTile('Notifikasi Pesanan', 'Terima notifikasi status pesanan', _orderUpdates, (v) {
             setState(() => _orderUpdates = v);
           }),
-          _buildSwitchTile('notifikasi_promosi'.tr(), 'notifikasi_promosi_desc'.tr(), _promotions, (v) {
+          _buildSwitchTile('Notifikasi Promosi', 'Terima informasi promo dan diskon', _promotions, (v) {
             setState(() => _promotions = v);
           }),
-          _buildSwitchTile('notifikasi_chat'.tr(), 'notifikasi_chat_desc'.tr(), _chatMessages, (v) {
+          _buildSwitchTile('Notifikasi Chat', 'Terima notifikasi pesan baru', _chatMessages, (v) {
             setState(() => _chatMessages = v);
           }),
-          _buildSwitchTile('notifikasi_favorit'.tr(), 'notifikasi_favorit_desc'.tr(), _wishlistAlerts, (v) {
+          _buildSwitchTile('Notifikasi Favorit', 'Terima notifikasi wishlist', _wishlistAlerts, (v) {
             setState(() => _wishlistAlerts = v);
           }),
         ],

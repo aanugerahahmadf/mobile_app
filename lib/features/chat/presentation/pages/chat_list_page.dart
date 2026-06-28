@@ -1,7 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
@@ -35,7 +34,7 @@ class _ChatListPageState extends ConsumerState<ChatListPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('gagal_mulai_percakapan'.tr())),
+          SnackBar(content: Text('Gagal memulai percakapan')),
         );
       }
     }
@@ -46,14 +45,14 @@ class _ChatListPageState extends ConsumerState<ChatListPage> {
     final chatState = ref.watch(chatProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text('pesan'.tr())),
+      appBar: AppBar(title: Text('Pesan')),
       body: chatState is ChatLoading
           ? const Center(child: CircularProgressIndicator())
           : chatState is ChatConversationsLoaded
               ? chatState.conversations.isEmpty
                   ? AppEmptyState(
-                      title: 'tidak_ada_pesan'.tr(),
-                      subtitle: 'belum_ada_percakapan'.tr(),
+                      title: 'Belum ada pesan',
+                      subtitle: 'Belum ada percakapan dengan admin',
                       icon: Icons.chat_outlined,
                     )
                   : RefreshIndicator(
@@ -122,7 +121,7 @@ class _ChatListPageState extends ConsumerState<ChatListPage> {
                           const SizedBox(height: 16),
                           ElevatedButton(
                             onPressed: _startConversation,
-                            child: Text('mulai_chat_admin'.tr()),
+                            child: Text('Mulai Chat dengan Admin'),
                           ),
                         ],
                       ),

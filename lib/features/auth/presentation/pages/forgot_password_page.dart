@@ -1,4 +1,3 @@
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/api/api_endpoints.dart';
@@ -39,11 +38,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         data: {'email': _emailController.text.trim()},
       );
       if (!mounted) return;
-      AppSnackBar.show(context, 'reset_dikirim'.tr(), type: SnackBarType.success);
+      AppSnackBar.show(context, 'Kode reset telah dikirim ke email Anda', type: SnackBarType.success);
       context.go('/reset-password');
     } catch (e) {
       if (!mounted) return;
-      AppSnackBar.show(context, 'gagal_kirim_reset'.tr(), type: SnackBarType.error);
+      AppSnackBar.show(context, 'Gagal mengirim kode reset. Coba lagi.', type: SnackBarType.error);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -68,23 +67,22 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('lupa_password'.tr(), style: AppTextStyles.headlineMedium),
+              Text('Lupa Password?', style: AppTextStyles.headlineMedium),
               SizedBox(height: AppSizes.xs),
               Text(
-                'masukkan_email_reset'.tr(),
+                'Masukkan email Anda untuk menerima kode reset password',
                 style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary),
               ),
               SizedBox(height: AppSizes.xl),
               AppTextField(
-                label: 'email'.tr(),
-                hint: 'masukkan_email'.tr(),
+                label: 'Email',
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 validator: Validators.email,
               ),
               SizedBox(height: AppSizes.xl),
               AppButton(
-                label: 'kirim_kode_reset'.tr(),
+                label: 'Kirim Kode Reset',
                 loading: _loading,
                 onPressed: _onSendResetCode,
               ),

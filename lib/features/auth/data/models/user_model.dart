@@ -15,6 +15,9 @@ class UserModel {
   final String? weddingDate;
   final double balance;
   final bool darkMode;
+  final String? socialId;
+  final String? socialType;
+  final String? emailVerifiedAt;
 
   const UserModel({
     required this.id,
@@ -33,6 +36,9 @@ class UserModel {
     this.weddingDate,
     this.balance = 0,
     this.darkMode = false,
+    this.socialId,
+    this.socialType,
+    this.emailVerifiedAt,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -53,8 +59,13 @@ class UserModel {
       weddingDate: json['wedding_date'] as String?,
       balance: (json['balance'] ?? 0).toDouble(),
       darkMode: json['dark_mode'] as bool? ?? false,
+      socialId: json['social_id'] as String?,
+      socialType: json['social_type'] as String?,
+      emailVerifiedAt: json['email_verified_at'] as String?,
     );
   }
+
+  bool get isEmailVerified => emailVerifiedAt != null && emailVerifiedAt!.isNotEmpty;
 
   Map<String, dynamic> toJson() {
     return {
@@ -74,6 +85,9 @@ class UserModel {
       'wedding_date': weddingDate,
       'balance': balance,
       'dark_mode': darkMode,
+      'social_id': socialId,
+      'social_type': socialType,
+      'email_verified_at': emailVerifiedAt,
     };
   }
 
@@ -94,6 +108,9 @@ class UserModel {
     String? weddingDate,
     double? balance,
     bool? darkMode,
+    String? socialId,
+    String? socialType,
+    String? emailVerifiedAt,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -112,6 +129,9 @@ class UserModel {
       weddingDate: weddingDate ?? this.weddingDate,
       balance: balance ?? this.balance,
       darkMode: darkMode ?? this.darkMode,
+      socialId: socialId ?? this.socialId,
+      socialType: socialType ?? this.socialType,
+      emailVerifiedAt: emailVerifiedAt ?? this.emailVerifiedAt,
     );
   }
 }

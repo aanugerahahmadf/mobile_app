@@ -1,4 +1,4 @@
-import 'package:easy_localization/easy_localization.dart';
+import 'package:intl/intl.dart';
 
 class Formatters {
   static String currency(int amount) {
@@ -30,10 +30,10 @@ class Formatters {
       final now = DateTime.now();
       final diff = now.difference(date);
 
-      if (diff.inMinutes < 1) return 'baru_saja'.tr();
-      if (diff.inMinutes < 60) return 'x_menit_lalu'.tr(namedArgs: {'count': '${diff.inMinutes}'});
-      if (diff.inHours < 24) return 'x_jam_lalu'.tr(namedArgs: {'count': '${diff.inHours}'});
-      if (diff.inDays < 7) return 'x_hari_lalu'.tr(namedArgs: {'count': '${diff.inDays}'});
+      if (diff.inMinutes < 1) return 'Baru saja';
+      if (diff.inMinutes < 60) return '${diff.inMinutes} menit lalu';
+      if (diff.inHours < 24) return '${diff.inHours} jam lalu';
+      if (diff.inDays < 7) return '${diff.inDays} hari lalu';
       return DateFormat('dd MMM', 'id').format(date);
     } catch (_) {
       return dateStr;

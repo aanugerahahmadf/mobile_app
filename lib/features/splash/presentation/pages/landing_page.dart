@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
@@ -92,7 +91,7 @@ class LandingPage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'sign_in'.tr(),
+                    'Masuk',
                     style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: 0.5, color: Colors.white),
                   ),
                   const SizedBox(width: 8),
@@ -114,7 +113,7 @@ class LandingPage extends StatelessWidget {
                 backgroundColor: Colors.white.withValues(alpha: 0.06),
               ),
               child: Text(
-                'sign_up'.tr(),
+                'Daftar',
                 style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, letterSpacing: 0.5),
               ),
             ),

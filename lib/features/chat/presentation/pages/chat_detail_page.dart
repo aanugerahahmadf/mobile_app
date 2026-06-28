@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
@@ -52,7 +51,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
     if (auth is AuthAuthenticated) {
       return auth.user.fullName.isNotEmpty ? auth.user.fullName : auth.user.username;
     }
-    return 'saya'.tr();
+    return 'Saya';
   }
 
   void _scrollToBottom() {
@@ -82,7 +81,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('gagal_mengirim_pesan'.tr())),
+          SnackBar(content: Text('Gagal mengirim pesan')),
         );
       }
     }
@@ -135,7 +134,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(type == 'package' ? 'paket'.tr() : 'produk'.tr(),
+                  Text(type == 'package' ? 'Paket' : 'Produk',
                     style: TextStyle(fontSize: 10, color: AppColors.primaryColor, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 2),
@@ -184,7 +183,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
             children: [
               const Icon(Icons.receipt_long_rounded, size: 16, color: Color(0xFF1565C0)),
               const SizedBox(width: 6),
-              Text('pesanan'.tr(),
+              Text('pesanan',
                 style: const TextStyle(fontSize: 10, color: Color(0xFF1565C0), fontWeight: FontWeight.w600),
               ),
             ],
@@ -249,7 +248,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
     final chatState = ref.watch(chatProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text('chat_dengan_admin'.tr())),
+      appBar: AppBar(title: Text('Chat dengan Admin')),
       body: Column(
         children: [
           Expanded(
@@ -362,7 +361,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
                     child: TextField(
                       controller: _messageController,
                       decoration: InputDecoration(
-                        hintText: 'ketik_pesan'.tr(),
+                        hintText: 'Ketik pesan...',
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(24)),
                       ),

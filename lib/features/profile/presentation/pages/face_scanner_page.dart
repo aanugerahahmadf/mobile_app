@@ -4,7 +4,6 @@ import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
-import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
@@ -229,7 +228,7 @@ class _FaceScannerPageState extends State<FaceScannerPage> with WidgetsBindingOb
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: Text(_captured ? 'konfirmasi_selfie'.tr() : 'scan_wajah'.tr()),
+        title: Text(_captured ? 'Konfirmasi Selfie' : 'Scan Wajah'),
         centerTitle: true,
       ),
       body: _cameraReady
@@ -259,9 +258,9 @@ class _FaceScannerPageState extends State<FaceScannerPage> with WidgetsBindingOb
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  _faceTooSmall ? 'dekatkan_wajah'.tr()
-                      : _faceDetected ? 'wajah_terdeteksi'.tr()
-                      : 'arahkan_wajah_ke_dalam_bingkai'.tr(),
+                  _faceTooSmall ? 'Dekatkan wajah ke kamera'
+                      : _faceDetected ? 'Wajah terdeteksi'
+                      : 'Arahkan wajah ke dalam bingkai oval',
                   style: AppTextStyles.bodySmall.copyWith(color: Colors.white),
                   textAlign: TextAlign.center,
                 ),
@@ -271,7 +270,7 @@ class _FaceScannerPageState extends State<FaceScannerPage> with WidgetsBindingOb
                 TextButton.icon(
                   onPressed: _capturePhoto,
                   icon: const Icon(Icons.camera_alt, color: Colors.white70),
-                  label: Text('ambil_manual'.tr(), style: const TextStyle(color: Colors.white70)),
+                  label: Text('Ambil Manual', style: const TextStyle(color: Colors.white70)),
                 ),
             ],
           ),
@@ -332,7 +331,7 @@ class _FaceScannerPageState extends State<FaceScannerPage> with WidgetsBindingOb
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   icon: const Icon(Icons.refresh),
-                  label: Text('ulangi'.tr()),
+                  label: Text('Ulangi'),
                 ),
               ),
               SizedBox(width: AppSizes.md),
@@ -346,7 +345,7 @@ class _FaceScannerPageState extends State<FaceScannerPage> with WidgetsBindingOb
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   icon: const Icon(Icons.check),
-                  label: Text('gunakan'.tr()),
+                  label: Text('Gunakan'),
                 ),
               ),
             ],

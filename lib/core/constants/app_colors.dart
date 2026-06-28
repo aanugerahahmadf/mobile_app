@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  static const Color primaryColor = Color(0xFFD4537E);
-  static const Color primaryDark = Color(0xFFB83A63);
-  static const Color primaryLight = Color(0xFFF4C0D1);
-  static const Color secondaryColor = Color(0xFFF4C0D1);
-  static const Color accentColor = Color(0xFFBA7517);
+  static const Color primaryColor = Color(0xFF1E3A5F);
+  static const Color primaryDark = Color(0xFF0F2440);
+  static const Color primaryLight = Color(0xFF8BA3C3);
+  static const Color secondaryColor = Color(0xFFF0F2F5);
+  static const Color accentColor = Color(0xFFC9A94E);
   static const Color backgroundColor = Color(0xFFF8F6F7);
   static const Color surfaceColor = Color(0xFFFFFFFF);
   static const Color textPrimary = Color(0xFF1A1A2E);
@@ -23,24 +23,24 @@ class AppColors {
   static const Color overlayColor = Color(0x883B3B4F);
 
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [primaryColor, Color(0xFFE8689A)],
+    colors: [primaryColor, Color(0xFF2C5282)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient primaryGradientH = LinearGradient(
-    colors: [primaryColor, Color(0xFFE8689A)],
+    colors: [primaryColor, Color(0xFF2C5282)],
     begin: Alignment.centerLeft,
     end: Alignment.centerRight,
   );
 
   static const List<Color> categoryColors = [
-    Color(0xFFFFE8EC),
-    Color(0xFFFFF3E0),
-    Color(0xFFE8F5E9),
-    Color(0xFFE3F2FD),
-    Color(0xFFF3E5F5),
-    Color(0xFFFFF8E1),
+    Color(0xFFE8EDF3),
+    Color(0xFFF0ECD8),
+    Color(0xFFE8F0EA),
+    Color(0xFFE3EAF5),
+    Color(0xFFEDE8F3),
+    Color(0xFFF5F0E0),
   ];
 
   static const List<IconData> categoryIcons = [

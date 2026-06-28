@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:open_file/open_file.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shimmer/shimmer.dart';
@@ -51,25 +50,25 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
 
   String _statusLabel(String? status) {
     switch (status) {
-      case 'pending': return 'status_menunggu'.tr();
-      case 'confirmed': return 'status_dikonfirmasi'.tr();
-      case 'preparing': return 'status_diproses'.tr();
-      case 'event_day': return 'status_hari_h'.tr();
-      case 'completed': return 'status_selesai'.tr();
-      case 'cancelled': return 'status_dibatalkan'.tr();
+      case 'pending': return 'Menunggu Konfirmasi';
+      case 'confirmed': return 'Dikonfirmasi';
+      case 'preparing': return 'Diproses';
+      case 'event_day': return 'Hari-H';
+      case 'completed': return 'Selesai';
+      case 'cancelled': return 'Dibatalkan';
       default: return status ?? '-';
     }
   }
 
   String _payStatusLabel(String? status) {
     switch (status) {
-      case 'unpaid': return 'payment_belum_dibayar'.tr();
-      case 'pending': return 'payment_menunggu'.tr();
-      case 'partial': return 'payment_sebagian'.tr();
-      case 'paid': return 'payment_lunas'.tr();
-      case 'failed': return 'payment_gagal'.tr();
-      case 'refunded': return 'payment_dikembalikan'.tr();
-      case 'cancelled': return 'payment_dibatalkan'.tr();
+      case 'unpaid': return 'Belum Dibayar';
+      case 'pending': return 'Menunggu Pembayaran';
+      case 'partial': return 'Dibayar Sebagian';
+      case 'paid': return 'Lunas';
+      case 'failed': return 'Gagal';
+      case 'refunded': return 'Dikembalikan';
+      case 'cancelled': return 'Dibatalkan';
       default: return status ?? '-';
     }
   }
@@ -104,11 +103,11 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
       final repo = OrderRepositoryImpl();
       final path = await repo.downloadInvoice(widget.id);
       if (mounted) {
-        AppSnackBar.show(context, 'invoice_berhasil_diunduh'.tr(), type: SnackBarType.success);
+        AppSnackBar.show(context, 'Invoice berhasil diunduh', type: SnackBarType.success);
         OpenFile.open(path);
       }
     } catch (e) {
-      if (mounted) AppSnackBar.show(context, 'gagal_unduh_invoice'.tr(), type: SnackBarType.error);
+      if (mounted) AppSnackBar.show(context, 'Gagal mengunduh invoice', type: SnackBarType.error);
     }
     if (mounted) setState(() => _pdfLoading = false);
   }
@@ -118,9 +117,9 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
     try {
       final repo = OrderRepositoryImpl();
       await repo.sendInvoiceEmail(widget.id);
-      if (mounted) AppSnackBar.show(context, 'invoice_dikirim_email'.tr(), type: SnackBarType.success);
+      if (mounted) AppSnackBar.show(context, 'Invoice dikirim ke email Anda', type: SnackBarType.success);
     } catch (e) {
-      if (mounted) AppSnackBar.show(context, 'gagal_kirim_email'.tr(), type: SnackBarType.error);
+      if (mounted) AppSnackBar.show(context, 'Gagal mengirim email', type: SnackBarType.error);
     }
     if (mounted) setState(() => _emailLoading = false);
   }
@@ -129,11 +128,7 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
     final orderNumber = _order?['order_number'] ?? widget.id;
     final total = Formatters.currency(_order?['total'] as int? ?? 0);
     final status = _order?['status'] as String? ?? '';
-    final message = 'wa_tanya_pesanan'.tr(namedArgs: {
-      'orderNumber': orderNumber,
-      'status': _statusLabel(status),
-      'total': total,
-    });
+    final message = 'Halo Admin, saya ingin menanyakan pesanan #$orderNumber. Status: ${_statusLabel(status)}. Total: $total.';
 
     final phone = _order?['admin_phone'] as String?;
     final uri = phone != null
@@ -143,7 +138,7 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
     try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (_) {
-      if (mounted) AppSnackBar.show(context, 'gagal_buka_wa'.tr(), type: SnackBarType.error);
+      if (mounted) AppSnackBar.show(context, 'Gagal membuka WhatsApp', type: SnackBarType.error);
     }
   }
 
@@ -151,11 +146,11 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('batalkan_pesanan'.tr()),
-        content: Text('konfirmasi_batal'.tr()),
+        title: Text('Batalkan Pesanan'),
+        content: Text('Yakin ingin membatalkan pesanan ini? Tindakan ini tidak dapat dibatalkan.'),
         actions: [
-          TextButton(onPressed: () => context.pop(false), child: Text('tidak'.tr())),
-          AppButton(label: 'ya_batalkan'.tr(), onPressed: () => context.pop(true), type: ButtonType.text),
+          TextButton(onPressed: () => context.pop(false), child: Text('Tidak')),
+          AppButton(label: 'Ya, Batalkan', onPressed: () => context.pop(true), type: ButtonType.text),
         ],
       ),
     );
@@ -166,11 +161,11 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
       final repo = OrderRepositoryImpl();
       await repo.cancelOrder(widget.id);
       if (mounted) {
-        AppSnackBar.show(context, 'pesanan_dibatalkan'.tr(), type: SnackBarType.success);
+        AppSnackBar.show(context, 'Pesanan dibatalkan', type: SnackBarType.success);
         _loadOrder();
       }
     } catch (e) {
-      if (mounted) AppSnackBar.show(context, 'gagal_batalkan'.tr(), type: SnackBarType.error);
+      if (mounted) AppSnackBar.show(context, 'Gagal membatalkan', type: SnackBarType.error);
     }
     if (mounted) setState(() => _cancelLoading = false);
   }
@@ -178,7 +173,7 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('detail_pesanan'.tr())),
+      appBar: AppBar(title: Text('Detail Pesanan')),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
@@ -200,7 +195,7 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text('${'pesanan_no'.tr()} #${_order!['order_number'] ?? widget.id}', style: AppTextStyles.titleMedium),
+                                    Text('${'Pesanan'} #${_order!['order_number'] ?? widget.id}', style: AppTextStyles.titleMedium),
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                       decoration: BoxDecoration(
@@ -222,19 +217,19 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                                   ],
                                 ),
                                 const SizedBox(height: 8),
-                                _buildInfoRow('tanggal'.tr(), Formatters.date(_order!['created_at'] as String? ?? '')),
-                                _buildInfoRow('lokasi'.tr(), _order!['location_address'] as String? ?? _order!['notes'] as String? ?? '-'),
+                                _buildInfoRow('Tanggal', Formatters.date(_order!['created_at'] as String? ?? '')),
+                                _buildInfoRow('Lokasi', _order!['location_address'] as String? ?? _order!['notes'] as String? ?? '-'),
                                 if (_order!['event_date'] != null)
-                                  _buildInfoRow('tanggal_acara'.tr(), Formatters.date(_order!['event_date'] as String)),
+                                  _buildInfoRow('Tanggal Acara', Formatters.date(_order!['event_date'] as String)),
                                 if (_order!['booking_date'] != null)
-                                  _buildInfoRow('tanggal_booking'.tr(), Formatters.date(_order!['booking_date'] as String)),
-                                _buildInfoRow('pembayaran'.tr(), _payStatusLabel(_order!['payment_status'] as String?)),
+                                  _buildInfoRow('Tanggal Booking', Formatters.date(_order!['booking_date'] as String)),
+                                _buildInfoRow('Pembayaran', _payStatusLabel(_order!['payment_status'] as String?)),
                               ],
                             ),
                           ),
                         ),
                         const SizedBox(height: 12),
-                        Text('item'.tr(), style: AppTextStyles.titleMedium),
+                        Text('Item', style: AppTextStyles.titleMedium),
                         const SizedBox(height: 8),
                         () {
                           final pkg = _order!['package'] as Map<String, dynamic>?;
@@ -242,7 +237,7 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                           final item = pkg ?? prod;
                           if (item == null) return const SizedBox.shrink();
                           final imageUrl = item['image_url'] as String? ?? '';
-                          final name = item['name'] as String? ?? 'item'.tr();
+                          final name = item['name'] as String? ?? 'Item';
                           final price = (item['price'] as num?)?.toDouble() ?? 0;
                           return Card(
                             child: ListTile(
@@ -273,36 +268,36 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                             padding: const EdgeInsets.all(AppSizes.md),
                             child: Column(
                               children: [
-                                _buildPriceRow('subtotal'.tr(), (_order!['total_price'] as num?)?.toInt() ?? 0),
+                                _buildPriceRow('Subtotal', (_order!['total_price'] as num?)?.toInt() ?? 0),
                                 const Divider(),
-                                _buildPriceRow('total'.tr(), (_order!['total_price'] as num?)?.toInt() ?? 0, bold: true),
+                                _buildPriceRow('Total', (_order!['total_price'] as num?)?.toInt() ?? 0, bold: true),
                               ],
                             ),
                           ),
                         ),
                         const SizedBox(height: 16),
-                        Text('aksi'.tr(), style: AppTextStyles.titleMedium),
+                        Text('Aksi', style: AppTextStyles.titleMedium),
                         const SizedBox(height: 8),
-                        _buildActionButton(Icons.picture_as_pdf, 'download_pdf'.tr(), _downloadPdf, loading: _pdfLoading),
-                        _buildActionButton(Icons.email_outlined, 'kirim_email'.tr(), _sendEmail, loading: _emailLoading),
-                        _buildActionButton(Icons.chat_outlined, 'kirim_whatsapp'.tr(), _sendWhatsapp),
+                        _buildActionButton(Icons.picture_as_pdf, 'Download Invoice PDF', _downloadPdf, loading: _pdfLoading),
+                        _buildActionButton(Icons.email_outlined, 'Kirim ke Email (Gmail)', _sendEmail, loading: _emailLoading),
+                        _buildActionButton(Icons.chat_outlined, 'Kirim ke WhatsApp', _sendWhatsapp),
 
                         if (_order!['status'] == 'pending') ...[
                           const SizedBox(height: 8),
                           AppButton(
-                            label: 'bayar_sekarang'.tr(),
+                            label: 'Bayar Sekarang',
                             onPressed: () => context.push('/payment/${widget.id}'),
                           ),
                           const SizedBox(height: 8),
                           AppButton(
-                            label: 'batalkan_pesanan'.tr(),
+                            label: 'Batalkan Pesanan',
                             onPressed: _cancelLoading ? null : _cancelOrder,
                             type: ButtonType.outline,
                           ),
                         ],
                         const SizedBox(height: 8),
                         AppButton(
-                          label: 'chat_admin'.tr(),
+                          label: 'Chat Admin',
                           onPressed: () async {
                             try {
                               final notifier = ref.read(chatProvider.notifier);
@@ -313,7 +308,7 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                             } catch (_) {
                               if (context.mounted) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('gagal_mulai_percakapan'.tr())),
+                                  SnackBar(content: Text('Gagal memulai percakapan')),
                                 );
                               }
                             }

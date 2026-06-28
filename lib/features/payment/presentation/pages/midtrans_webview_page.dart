@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -10,8 +9,9 @@ import '../providers/payment_provider.dart';
 
 class MidtransWebviewPage extends ConsumerStatefulWidget {
   final String orderId;
+  final String? initialSnapToken;
 
-  const MidtransWebviewPage({super.key, required this.orderId});
+  const MidtransWebviewPage({super.key, required this.orderId, this.initialSnapToken});
 
   @override
   ConsumerState<MidtransWebviewPage> createState() => _MidtransWebviewPageState();
@@ -35,13 +35,20 @@ class _MidtransWebviewPageState extends ConsumerState<MidtransWebviewPage> {
   }
 
   Future<void> _initPayment() async {
-    final success = await ref.read(paymentProvider.notifier).initiatePayment(widget.orderId);
-    if (!mounted) return;
+    String? url;
 
-    final state = ref.read(paymentProvider);
-    final url = state.paymentUrl ?? state.snapToken;
+    if (widget.initialSnapToken != null && widget.initialSnapToken!.isNotEmpty) {
+      url = widget.initialSnapToken;
+    } else {
+      final ok = await ref.read(paymentProvider.notifier).initiatePayment(widget.orderId);
+      if (!mounted) return;
+      if (ok) {
+        final state = ref.read(paymentProvider);
+        url = state.paymentUrl ?? state.snapToken;
+      }
+    }
 
-    if (success && url != null) {
+    if (url != null) {
       _controller = WebViewController()
         ..setJavaScriptMode(JavaScriptMode.unrestricted)
         ..setNavigationDelegate(
@@ -53,16 +60,16 @@ class _MidtransWebviewPageState extends ConsumerState<MidtransWebviewPage> {
               final currentUrl = change.url ?? '';
               if (currentUrl.contains('finish') || currentUrl.contains('success')) {
                 _handled = true;
-                _showResultDialog('pembayaran_berhasil'.tr(), 'msg_payment_success'.tr(), Icons.check_circle, AppColors.successColor, true);
+                _showResultDialog('Pembayaran Berhasil', 'Terima kasih! Pembayaran Anda telah diterima. Pesanan sedang diproses.', Icons.check_circle, AppColors.successColor, true);
               } else if (currentUrl.contains('unfinish') || currentUrl.contains('pending')) {
                 _handled = true;
-                _showResultDialog('pembayaran_belum_selesai'.tr(), 'msg_payment_pending'.tr(), Icons.access_time, AppColors.warningColor, false);
+                _showResultDialog('Pembayaran Belum Selesai', 'Pembayaran Anda masih menunggu konfirmasi. Silakan hubungi admin jika perlu bantuan.', Icons.access_time, AppColors.warningColor, false);
               } else if (currentUrl.contains('cancel')) {
                 _handled = true;
-                _showResultDialog('pembayaran_dibatalkan'.tr(), 'msg_payment_cancelled'.tr(), Icons.cancel, AppColors.errorColor, false);
+                _showResultDialog('Pembayaran Dibatalkan', 'Anda membatalkan pembayaran. Anda dapat melakukan pembayaran kapan saja.', Icons.cancel, AppColors.errorColor, false);
               } else if (currentUrl.contains('error') || currentUrl.contains('failed')) {
                 _handled = true;
-                _showResultDialog('pembayaran_gagal'.tr(), 'msg_payment_failed'.tr(), Icons.error, AppColors.errorColor, false);
+                _showResultDialog('Pembayaran Gagal', 'Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi.', Icons.error, AppColors.errorColor, false);
               }
             },
           ),
@@ -91,7 +98,7 @@ class _MidtransWebviewPageState extends ConsumerState<MidtransWebviewPage> {
             Text(message, style: AppTextStyles.bodyMedium, textAlign: TextAlign.center),
             const SizedBox(height: 20),
             AppButton(
-              label: success ? 'lihat_pesanan'.tr() : 'kembali'.tr(),
+              label: success ? 'Lihat Pesanan' : 'Kembali',
               onPressed: () {
                 context.pop();
                 context.pop();
@@ -101,7 +108,7 @@ class _MidtransWebviewPageState extends ConsumerState<MidtransWebviewPage> {
             if (!success) ...[
               const SizedBox(height: 8),
               AppButton(
-                label: 'coba_lagi'.tr(),
+                label: 'Coba Lagi',
                 onPressed: () {
                   context.pop();
                   _handled = false;
@@ -127,13 +134,13 @@ class _MidtransWebviewPageState extends ConsumerState<MidtransWebviewPage> {
           children: [
             const Icon(Icons.error_outline, size: 64, color: AppColors.errorColor),
             const SizedBox(height: 16),
-            Text('pembayaran_gagal'.tr(), style: AppTextStyles.titleLarge.copyWith(fontWeight: FontWeight.w600)),
+            Text('Pembayaran Gagal', style: AppTextStyles.titleLarge.copyWith(fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
-            Text(ref.read(paymentProvider).error ?? 'error_coba_lagi'.tr(), style: AppTextStyles.bodyMedium, textAlign: TextAlign.center),
+            Text(ref.read(paymentProvider).error ?? 'Terjadi kesalahan. Silakan coba lagi.', style: AppTextStyles.bodyMedium, textAlign: TextAlign.center),
             const SizedBox(height: 20),
-            AppButton(label: 'coba_lagi'.tr(), onPressed: () { context.pop(); _initPayment(); }),
+            AppButton(label: 'Coba Lagi', onPressed: () { context.pop(); _initPayment(); }),
             const SizedBox(height: 8),
-            AppButton(label: 'kembali'.tr(), onPressed: () { context.pop(); context.pop(); }, type: ButtonType.text),
+            AppButton(label: 'Kembali', onPressed: () { context.pop(); context.pop(); }, type: ButtonType.text),
           ],
         ),
       ),
@@ -146,18 +153,18 @@ class _MidtransWebviewPageState extends ConsumerState<MidtransWebviewPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('pembayaran'.tr()),
+        title: Text('Pembayaran'),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () {
             showDialog(
               context: context,
               builder: (ctx) => AlertDialog(
-                title: Text('batalkan_pembayaran_konfirmasi'.tr()),
-                content: Text('yakin_tinggalkan_pembayaran'.tr()),
+                title: Text('Batalkan Pembayaran?'),
+                content: Text('Apakah Anda yakin ingin meninggalkan halaman pembayaran?'),
                 actions: [
-                  TextButton(onPressed: () => context.pop(), child: Text('lanjutkan_bayar'.tr())),
-                  TextButton(onPressed: () { context.pop(); context.pop(); }, child: Text('ya_batalkan'.tr())),
+                  TextButton(onPressed: () => context.pop(), child: Text('Lanjutkan Bayar')),
+                  TextButton(onPressed: () { context.pop(); context.pop(); }, child: Text('Ya, Batalkan')),
                 ],
               ),
             );
@@ -175,7 +182,7 @@ class _MidtransWebviewPageState extends ConsumerState<MidtransWebviewPage> {
                       const SizedBox(height: 16),
                       Text(paymentState.error!, style: const TextStyle(color: AppColors.errorColor), textAlign: TextAlign.center),
                       const SizedBox(height: 16),
-                      AppButton(label: 'coba_lagi'.tr(), onPressed: _initPayment, type: ButtonType.outline),
+                      AppButton(label: 'Coba Lagi', onPressed: _initPayment, type: ButtonType.outline),
                     ],
                   ),
                 )

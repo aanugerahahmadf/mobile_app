@@ -6,15 +6,15 @@ import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/widgets/app_shimmer.dart';
 import '../providers/legal_provider.dart';
 
-class PrivacyPolicyPage extends ConsumerWidget {
-  const PrivacyPolicyPage({super.key});
+class WeddingPolicyPage extends ConsumerWidget {
+  const WeddingPolicyPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final async = ref.watch(privacyPolicyProvider);
+    final async = ref.watch(weddingDecorationPolicyProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text('Kebijakan Privasi')),
+      appBar: AppBar(title: Text('Kebijakan Aplikasi')),
       body: async.when(
         loading: () => const Center(child: AppShimmer(width: 200, height: 16)),
         error: (err, _) => Center(
@@ -29,7 +29,7 @@ class PrivacyPolicyPage extends ConsumerWidget {
                     style: const TextStyle(fontSize: 14, color: AppColors.textSecondary)),
                 const SizedBox(height: 16),
                 FilledButton.icon(
-                  onPressed: () => ref.invalidate(privacyPolicyProvider),
+                  onPressed: () => ref.invalidate(weddingDecorationPolicyProvider),
                   icon: const Icon(Icons.refresh, size: 18),
                   label: Text('Coba Lagi'),
                 ),

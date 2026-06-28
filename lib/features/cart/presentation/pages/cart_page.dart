@@ -1,5 +1,4 @@
 ﻿import 'package:cached_network_image/cached_network_image.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -21,7 +20,7 @@ class CartPage extends ConsumerWidget {
     final notifier = ref.read(cartProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(title: Text('cart'.tr())),
+      appBar: AppBar(title: Text('Keranjang')),
       body: cartState.loading
           ? const _CartShimmer()
           : cartState.error != null
@@ -31,12 +30,12 @@ class CartPage extends ConsumerWidget {
                     children: [
                       Text(cartState.error ?? '', style: AppTextStyles.bodyMedium),
                       const SizedBox(height: 16),
-                      AppButton(label: 'coba_lagi'.tr(), onPressed: () => notifier.fetchCart(), type: ButtonType.outline),
+                      AppButton(label: 'Coba Lagi', onPressed: () => notifier.fetchCart(), type: ButtonType.outline),
                     ],
                   ),
                 )
               : cartState.items.isEmpty
-                  ? AppEmptyState(title: 'keranjang_kosong'.tr(), subtitle: 'tidak_ada_item'.tr(), icon: Icons.shopping_cart_outlined)
+                  ? AppEmptyState(title: 'Keranjang belanja kosong', subtitle: 'Tidak ada item di keranjang', icon: Icons.shopping_cart_outlined)
                   : Column(
                       children: [
                         Expanded(
@@ -52,7 +51,7 @@ class CartPage extends ConsumerWidget {
                                 final qty = item['quantity'] as int? ?? 1;
                                 final price = (itemData['price'] as num?)?.toInt() ?? 0;
                                 final imageUrl = (itemData['image_url'] as String?) ?? '';
-                                final name = itemData['name'] as String? ?? 'item'.tr();
+                                final name = itemData['name'] as String? ?? 'Item';
 
                                 return Card(
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -125,13 +124,13 @@ class CartPage extends ConsumerWidget {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text('subtotal'.tr(), style: AppTextStyles.bodyMedium),
+                                    Text('Subtotal', style: AppTextStyles.bodyMedium),
                                     Text(Formatters.currency(cartState.subtotal), style: AppTextStyles.titleMedium),
                                   ],
                                 ),
                                 const SizedBox(height: 8),
                                 AppButton(
-                                  label: 'lanjut_ke_checkout'.tr(),
+                                  label: 'Lanjut ke Checkout',
                                   onPressed: cartState.items.isEmpty ? null : () => context.push('/checkout'),
                                 ),
                               ],

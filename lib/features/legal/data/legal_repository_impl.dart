@@ -24,6 +24,14 @@ class LegalRepositoryImpl implements LegalRepository {
   }
 
   @override
+  Future<LegalContent> getWeddingDecorationPolicy() async {
+    return DioClient.safeCall(() async {
+      final res = await _dio.get(ApiEndpoints.legalWeddingPolicy);
+      return LegalContent.fromJson(res.data);
+    });
+  }
+
+  @override
   Future<HelpModel> getHelpCenter() async {
     return DioClient.safeCall(() async {
       final res = await _dio.get(ApiEndpoints.legalHelp);

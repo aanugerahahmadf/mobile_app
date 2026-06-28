@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../presentation/providers/history_provider.dart';
-import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/utils/formatters.dart';
 
 class HistoryPage extends ConsumerStatefulWidget {
@@ -24,13 +23,13 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
   Widget build(BuildContext context) {
     final state = ref.watch(historyProvider);
     return Scaffold(
-      appBar: AppBar(title: Text('riwayat'.tr())),
+      appBar: AppBar(title: Text('Riwayat')),
       body: state.loading
           ? const Center(child: CircularProgressIndicator())
           : state.error != null
               ? Center(child: Text(state.error!, style: AppTextStyles.bodyMedium))
               : state.items.isEmpty
-                  ? Center(child: Text('belum_ada_riwayat'.tr()))
+                  ? Center(child: Text('Belum ada riwayat'))
                   : ListView.separated(
                       padding: const EdgeInsets.all(16),
                       itemCount: state.items.length,
@@ -42,7 +41,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                             backgroundColor: AppColors.primaryColor,
                             child: Text(item.amount.toStringAsFixed(0), style: const TextStyle(color: Colors.white, fontSize: 12)),
                           ),
-                          title: Text(item.type ?? 'riwayat_transaksi'.tr(), style: AppTextStyles.bodyMedium),
+                          title: Text(item.type ?? 'Riwayat Transaksi', style: AppTextStyles.bodyMedium),
                           subtitle: Text(item.createdAt ?? '', style: AppTextStyles.bodySmall),
                           trailing: Text(
                             Formatters.currency(item.amount.toInt()),

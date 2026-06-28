@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../constants/app_colors.dart';
 import '../utils/formatters.dart';
@@ -63,25 +62,25 @@ class _PaymentResultContent extends StatelessWidget {
 
   String _shareText() {
     final buf = StringBuffer()
-      ..writeln('share_header'.tr())
-      ..writeln('share_order'.tr(namedArgs: {'orderNumber': config.orderId}))
-      ..writeln('share_status'.tr(namedArgs: {'status': config.title}));
+      ..writeln('━─━━─━ INVOICE ━─━━─━')
+      ..writeln('Pesanan #${config.orderId}')
+      ..writeln('Status: ${config.title}');
     if (config.transactionId != null) {
-      buf.writeln('share_transaction_id'.tr(namedArgs: {'id': config.transactionId!}));
+      buf.writeln('ID Transaksi: ${config.transactionId!}');
     }
     if (config.paymentMethod != null) {
-      buf.writeln('share_payment_method'.tr(namedArgs: {'method': config.paymentMethod!}));
+      buf.writeln('Metode: ${config.paymentMethod!}');
     }
     if (config.vaNumber != null) {
-      buf.writeln('${'va_number'.tr()}: ${config.vaNumber}');
+      buf.writeln('${'VA Number'}: ${config.vaNumber}');
     }
     if (config.grossAmount != null) {
-      buf.writeln('share_total'.tr(namedArgs: {'total': Formatters.currency(config.grossAmount!)}));
+      buf.writeln('Total: ${Formatters.currency(config.grossAmount!)}');
     }
     if (config.transactionTime != null) {
-      buf.writeln('share_time'.tr(namedArgs: {'time': Formatters.dateTime(config.transactionTime!)}));
+      buf.writeln('Waktu: ${Formatters.dateTime(config.transactionTime!)}');
     }
-    buf.writeln('share_footer'.tr());
+    buf.writeln('━─━━─━━─━━─━━─━');
     return buf.toString();
   }
 
@@ -124,19 +123,19 @@ class _PaymentResultContent extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('invoice_midtrans'.tr(),
+                  Text('INVOICE MIDTRANS',
                     style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: AppColors.textTertiary, letterSpacing: 1),
                   ),
                   const SizedBox(height: 12),
-                  _receiptRow('id_transaksi'.tr(), config.transactionId ?? '-'),
+                  _receiptRow('ID Transaksi', config.transactionId ?? '-'),
                   if (config.paymentMethod != null)
-                    _receiptRow('metode'.tr(), _methodLabel(config.paymentMethod!)),
+                    _receiptRow('Metode', _methodLabel(config.paymentMethod!)),
                   if (config.vaNumber != null)
-                    _receiptRow('va_number'.tr(), config.vaNumber!),
+                    _receiptRow('VA Number', config.vaNumber!),
                   if (config.grossAmount != null)
-                    _receiptRow('total'.tr(), Formatters.currency(config.grossAmount!)),
+                    _receiptRow('Total', Formatters.currency(config.grossAmount!)),
                   if (config.transactionTime != null)
-                    _receiptRow('waktu_bayar'.tr(), Formatters.dateTime(config.transactionTime!)),
+                    _receiptRow('Waktu Bayar', Formatters.dateTime(config.transactionTime!)),
                 ],
               ),
             ),
@@ -152,14 +151,14 @@ class _PaymentResultContent extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  Text('bagikan_invoice'.tr(), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.textTertiary)),
+                  Text('Bagikan Invoice', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.textTertiary)),
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _shareButton(Icons.email_rounded, const Color(0xFFEA4335), 'kirim_gmail'.tr(), _shareGmail),
-                      _shareButton(Icons.chat_bubble_rounded, const Color(0xFF34B7F1), 'kirim_sms'.tr(), _shareMessages),
-                      _shareButton(Icons.chat_outlined, const Color(0xFF25D366), 'whatsapp'.tr(), _shareWhatsapp),
+                      _shareButton(Icons.email_rounded, const Color(0xFFEA4335), 'Kirim pesan via aplikasi Gmail', _shareGmail),
+                      _shareButton(Icons.chat_bubble_rounded, const Color(0xFF34B7F1), 'Kirim ke Messages (SMS)', _shareMessages),
+                      _shareButton(Icons.chat_outlined, const Color(0xFF25D366), 'WhatsApp', _shareWhatsapp),
                     ],
                   ),
                 ],
@@ -174,7 +173,7 @@ class _PaymentResultContent extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: AppButton(
-              label: 'lihat_pesanan'.tr(),
+              label: 'Lihat Pesanan',
               onPressed: () {
                 context.pop();
                 context.pop();
@@ -187,7 +186,7 @@ class _PaymentResultContent extends StatelessWidget {
             children: [
               Expanded(
                 child: AppButton(
-                  label: 'kembali'.tr(),
+                  label: 'Kembali',
                   onPressed: () {
                     context.pop();
                     context.pop();
@@ -199,7 +198,7 @@ class _PaymentResultContent extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: AppButton(
-                  label: 'coba_lagi'.tr(),
+                  label: 'Coba Lagi',
                   onPressed: () {
                     context.pop();
                     context.push('/payment/${config.orderId}');
@@ -228,7 +227,7 @@ class _PaymentResultContent extends StatelessWidget {
 
   String _methodLabel(String method) {
     switch (method) {
-      case 'bank_transfer': return 'transfer_bank'.tr();
+      case 'bank_transfer': return 'Transfer Bank';
       case 'qris': return 'QRIS';
       case 'gopay': return 'GoPay';
       case 'shopeepay': return 'ShopeePay';

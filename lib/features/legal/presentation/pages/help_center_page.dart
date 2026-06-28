@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/widgets/app_shimmer.dart';
@@ -21,7 +20,7 @@ class _HelpCenterPageState extends ConsumerState<HelpCenterPage> {
     final async = ref.watch(helpCenterProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text('pusat_bantuan'.tr())),
+      appBar: AppBar(title: Text('Pusat Bantuan')),
       body: async.when(
         loading: () => const Center(child: AppShimmer(width: 200, height: 16)),
         error: (err, _) => Center(
@@ -32,13 +31,13 @@ class _HelpCenterPageState extends ConsumerState<HelpCenterPage> {
               children: [
                 const Icon(Icons.error_outline, size: 48, color: AppColors.textSecondary),
                 const SizedBox(height: 12),
-                Text('gagal_memuat_halaman'.tr(), textAlign: TextAlign.center,
+                Text('Gagal memuat halaman', textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 14, color: AppColors.textSecondary)),
                 const SizedBox(height: 16),
                 FilledButton.icon(
                   onPressed: () => ref.invalidate(helpCenterProvider),
                   icon: const Icon(Icons.refresh, size: 18),
-                  label: Text('coba_lagi'.tr()),
+                  label: Text('Coba Lagi'),
                 ),
               ],
             ),

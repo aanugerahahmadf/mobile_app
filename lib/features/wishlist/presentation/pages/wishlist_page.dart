@@ -8,7 +8,6 @@ import '../../../../core/widgets/app_shimmer.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../core/utils/formatters.dart';
-import 'package:easy_localization/easy_localization.dart';
 import '../providers/wishlist_provider.dart';
 
 class WishlistPage extends ConsumerStatefulWidget {
@@ -30,7 +29,7 @@ class _WishlistPageState extends ConsumerState<WishlistPage> {
     final state = ref.watch(wishlistProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text('favorit'.tr())),
+      appBar: AppBar(title: Text('Favorit')),
       body: state.loading
           ? const Center(child: CircularProgressIndicator())
           : state.error != null
@@ -38,8 +37,8 @@ class _WishlistPageState extends ConsumerState<WishlistPage> {
               : state.items.isEmpty
                   ? AppEmptyState(
                       icon: Icons.favorite_border,
-                      title: 'wishlist_kosong'.tr(),
-                      subtitle: 'tambah_favorit_hint'.tr(),
+                      title: 'Belum ada favorit',
+                      subtitle: 'Tambahkan paket atau bunga favorit Anda',
                     )
                   : RefreshIndicator(
                       onRefresh: () => ref.read(wishlistProvider.notifier).fetchWishlist(),

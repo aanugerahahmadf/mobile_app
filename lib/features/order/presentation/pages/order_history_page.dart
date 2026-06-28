@@ -1,5 +1,4 @@
-﻿import 'package:easy_localization/easy_localization.dart';
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -54,12 +53,12 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryPage> with Single
 
   String _statusLabel(String? status) {
     switch (status) {
-      case 'pending': return 'menunggu'.tr();
-      case 'confirmed': return 'status_dikonfirmasi'.tr();
-      case 'preparing': return 'status_diproses'.tr();
-      case 'event_day': return 'status_hari_h'.tr();
-      case 'completed': return 'status_selesai'.tr();
-      case 'cancelled': return 'status_dibatalkan'.tr();
+      case 'pending': return 'Menunggu';
+      case 'confirmed': return 'Dikonfirmasi';
+      case 'preparing': return 'Diproses';
+      case 'event_day': return 'Hari-H';
+      case 'completed': return 'Selesai';
+      case 'cancelled': return 'Dibatalkan';
       default: return status ?? '-';
     }
   }
@@ -81,7 +80,7 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryPage> with Single
     final notifier = ref.read(orderProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(title: Text('riwayat_pesanan'.tr())),
+      appBar: AppBar(title: Text('Pesanan Saya')),
       body: Column(
         children: [
           TabBar(
@@ -90,7 +89,7 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryPage> with Single
             labelColor: AppColors.primaryColor,
             unselectedLabelColor: AppColors.textSecondary,
             indicatorColor: AppColors.primaryColor,
-            tabs: _tabs.map((t) => Tab(text: (t['label'] as String).tr())).toList(),
+            tabs: _tabs.map((t) => Tab(text: (t['label'] as String))).toList(),
           ),
           Expanded(
             child: state.loading
@@ -105,7 +104,7 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryPage> with Single
                 : state.error != null
                     ? Center(child: Text(state.error ?? '', style: AppTextStyles.bodyMedium))
                     : state.orders.isEmpty
-                        ? AppEmptyState(title: 'tidak_ada_pesanan'.tr(), subtitle: 'belum_ada_pesanan'.tr(), icon: Icons.receipt_long_outlined)
+                        ? AppEmptyState(title: 'Tidak Ada Pesanan', subtitle: 'Belum ada pesanan', icon: Icons.receipt_long_outlined)
                         : RefreshIndicator(
                             onRefresh: () => notifier.fetchOrders(status: _activeStatus, refresh: true),
                             child: ListView.builder(
@@ -138,7 +137,7 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryPage> with Single
                                           Row(
                                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
-                                              Text('${'pesanan_no'.tr()} #${order['order_number'] ?? order['id']}', style: AppTextStyles.bodySmall),
+                                              Text('${'Pesanan'} #${order['order_number'] ?? order['id']}', style: AppTextStyles.bodySmall),
                                               Container(
                                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                                 decoration: BoxDecoration(
@@ -169,8 +168,8 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryPage> with Single
                                                 child: Column(
                                                   crossAxisAlignment: CrossAxisAlignment.start,
                                                   children: [
-                                                    Text(firstItem?['name'] as String? ?? 'orders'.tr(), style: AppTextStyles.bodyMedium),
-                                                    Text('item_count'.tr(namedArgs: {'count': '1'}), style: AppTextStyles.bodySmall),
+                                                    Text(firstItem?['name'] as String? ?? 'Pesanan', style: AppTextStyles.bodyMedium),
+                                                    Text('1 item', style: AppTextStyles.bodySmall),
                                                   ],
                                                 ),
                                               ),
@@ -189,14 +188,14 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryPage> with Single
                                               children: [
                                                 Expanded(
                                                   child: AppButton(
-                                                    label: 'bayar'.tr(),
+                                                    label: 'Bayar',
                                                     onPressed: () => context.push('/payment/${order['id']}'),
                                                   ),
                                                 ),
                                                 const SizedBox(width: 12),
                                                 Expanded(
                                                   child: AppButton(
-                                                    label: 'batalkan'.tr(),
+                                                    label: 'Batalkan',
                                                     onPressed: () => notifier.cancelOrder('${order['id']}'),
                                                     type: ButtonType.outline,
                                                   ),

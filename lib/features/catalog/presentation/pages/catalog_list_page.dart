@@ -1,5 +1,4 @@
 ﻿import 'package:flutter/material.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -108,7 +107,7 @@ class _CatalogListPageState extends ConsumerState<CatalogListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.type == 'packages' ? 'paket_pernikahan'.tr() : 'bunga'.tr()),
+        title: Text(widget.type == 'packages' ? 'Paket Pernikahan' : 'Bunga'),
         centerTitle: true,
       ),
       body: Column(
@@ -131,7 +130,7 @@ class _CatalogListPageState extends ConsumerState<CatalogListPage> {
         itemBuilder: (_, i) {
           final (label, value) = _sortOptions[i];
           return FilterChip(
-            label: Text(label.tr()),
+            label: Text(label),
             selected: _selectedSort == value,
             onSelected: (_) {
               setState(() => _selectedSort = value);
@@ -163,8 +162,8 @@ class _CatalogListPageState extends ConsumerState<CatalogListPage> {
 
     if (_items.isEmpty) {
       return AppEmptyState(
-        title: 'tidak_ada_data'.tr(),
-        subtitle: 'belum_ada_item_tersedia'.tr(namedArgs: {'type': widget.type == 'packages' ? 'paket'.tr() : 'bunga'.tr()}),
+        title: 'Tidak ada data',
+        subtitle: widget.type == 'packages' ? 'Belum ada Paket tersedia' : 'Belum ada Bunga tersedia',
       );
     }
 
@@ -193,7 +192,7 @@ class _CatalogListPageState extends ConsumerState<CatalogListPage> {
                     imageUrl: image,
                     name: item['name'] as String? ?? '',
                     price: Formatters.currency(item['price'] as int? ?? 0),
-                    badge: item['discount_price'] != null ? 'diskon'.tr() : null,
+                    badge: item['discount_price'] != null ? 'Diskon' : null,
                     rating: (item['rating'] as num?)?.toDouble(),
                     onTap: () =>
                         context.go('/catalog/${widget.type}/${item['id']}'),

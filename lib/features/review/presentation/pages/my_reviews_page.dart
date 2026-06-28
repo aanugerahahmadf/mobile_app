@@ -1,6 +1,5 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
@@ -29,7 +28,7 @@ class _MyReviewsPageState extends ConsumerState<MyReviewsPage> {
     final state = ref.watch(myReviewsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text('ulasan_saya'.tr())),
+      appBar: AppBar(title: Text('Ulasan Saya')),
       body: state.loading
           ? const Center(child: CircularProgressIndicator())
           : state.error != null
@@ -37,8 +36,8 @@ class _MyReviewsPageState extends ConsumerState<MyReviewsPage> {
               : state.reviews.isEmpty
                   ? AppEmptyState(
                       icon: Icons.star_border,
-                      title: 'tidak_ada_ulasan'.tr(),
-                      subtitle: 'anda_belum_ulasan'.tr(),
+                      title: 'Belum ada ulasan',
+                      subtitle: 'Anda belum memberikan ulasan apapun',
                     )
                   : RefreshIndicator(
                       onRefresh: () => ref.read(myReviewsProvider.notifier).fetchMyReviews(),
@@ -50,7 +49,7 @@ class _MyReviewsPageState extends ConsumerState<MyReviewsPage> {
                           final package = r['package'] as Map<String, dynamic>?;
                           final media = package?['media'] as List? ?? [];
                           final image = media.isNotEmpty ? (media[0] is Map ? media[0]['url'] : '') : '';
-                          final name = package?['name'] as String? ?? 'paket'.tr();
+                          final name = package?['name'] as String? ?? 'Paket';
                           final rating = (r['rating'] as num?)?.toInt() ?? 0;
                           final comment = r['comment'] as String? ?? '';
                           final date = r['created_at'] as String? ?? '';

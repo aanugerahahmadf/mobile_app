@@ -1,6 +1,5 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
@@ -31,12 +30,12 @@ class _NotificationPageState extends ConsumerState<NotificationPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('notifikasi'.tr()),
+        title: Text('Notifikasi'),
         actions: [
           if (state.notifications.any((n) => n['read_at'] == null))
             TextButton(
               onPressed: () => notifier.markAllAsRead(),
-              child: Text('tandai_dibaca'.tr()),
+              child: Text('Tandai Dibaca'),
             ),
         ],
       ),
@@ -46,8 +45,8 @@ class _NotificationPageState extends ConsumerState<NotificationPage> {
               ? Center(child: Text(state.error!, style: AppTextStyles.bodyMedium))
               : state.notifications.isEmpty
                   ? AppEmptyState(
-                      title: 'tidak_ada_notifikasi'.tr(),
-                      subtitle: 'belum_ada_notifikasi_saat_ini'.tr(),
+                      title: 'Belum ada notifikasi',
+                      subtitle: 'Belum ada notifikasi saat ini',
                       icon: Icons.notifications_outlined,
                     )
                   : RefreshIndicator(
@@ -59,7 +58,7 @@ class _NotificationPageState extends ConsumerState<NotificationPage> {
                         itemBuilder: (context, index) {
                           final notif = state.notifications[index];
                           final isRead = notif['read_at'] != null;
-                          final title = notif['title'] as String? ?? 'notifikasi'.tr();
+                          final title = notif['title'] as String? ?? 'Notifikasi';
                           final body = notif['body'] as String? ?? notif['message'] as String? ?? '';
                           final time = notif['created_at'] as String? ?? '';
 

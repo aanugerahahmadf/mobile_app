@@ -8,7 +8,6 @@ import '../../../../core/widgets/app_shimmer.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../providers/voucher_provider.dart';
 import '../../data/models/voucher_model.dart';
-import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/utils/formatters.dart';
 
 class VoucherListPage extends ConsumerStatefulWidget {
@@ -30,7 +29,7 @@ class _VoucherListPageState extends ConsumerState<VoucherListPage> {
     final state = ref.watch(voucherProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text('voucher_saya'.tr())),
+      appBar: AppBar(title: Text('Voucher Saya')),
       body: state.loading
           ? ListView.builder(
               padding: const EdgeInsets.all(AppSizes.md),
@@ -45,8 +44,8 @@ class _VoucherListPageState extends ConsumerState<VoucherListPage> {
               : state.vouchers.isEmpty
                   ? AppEmptyState(
                       icon: Icons.card_giftcard_outlined,
-                      title: 'tidak_ada_voucher'.tr(),
-                      subtitle: 'belum_ada_voucher'.tr(),
+                      title: 'Tidak Ada Voucher',
+                      subtitle: 'Belum ada voucher tersedia',
                     )
                   : RefreshIndicator(
                       onRefresh: () => ref.read(voucherProvider.notifier).fetchVouchers(),
@@ -67,7 +66,7 @@ class _VoucherListPageState extends ConsumerState<VoucherListPage> {
     final id = voucher.id.toString();
 
     final discountLabel = voucher.isPercentage
-        ? 'diskon_persen'.tr(namedArgs: {'discount': '$discount'})
+        ? '$discount% OFF'
         : Formatters.currency(discount);
 
     return Container(
@@ -141,12 +140,12 @@ class _VoucherListPageState extends ConsumerState<VoucherListPage> {
               ),
               const SizedBox(width: AppSizes.sm),
               if (isExpired)
-                Text('kedaluwarsa'.tr(), style: AppTextStyles.labelSmall.copyWith(color: AppColors.textSecondary))
+                Text('Kedaluwarsa', style: AppTextStyles.labelSmall.copyWith(color: AppColors.textSecondary))
               else
                 SizedBox(
                   width: 72,
                   child: AppButton(
-                    label: 'klaim'.tr(),
+                    label: 'Klaim',
                     onPressed: () => _claimVoucher(id),
                     type: ButtonType.primary,
                   ),
@@ -162,7 +161,7 @@ class _VoucherListPageState extends ConsumerState<VoucherListPage> {
     final success = await ref.read(voucherProvider.notifier).claimVoucher(id);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(success ? 'voucher_berhasil_diklaim'.tr() : 'gagal_klaim_voucher'.tr()),
+        content: Text(success ? 'Voucher berhasil diklaim' : 'Gagal mengklaim voucher'),
         backgroundColor: success ? AppColors.successColor : AppColors.errorColor,
       ));
     }

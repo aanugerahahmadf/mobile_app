@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
@@ -19,7 +18,7 @@ class SwitchAccountPage extends ConsumerWidget {
     final user = authState is AuthAuthenticated ? authState.user : null;
 
     return Scaffold(
-      appBar: AppBar(title: Text('ganti_akun'.tr())),
+      appBar: AppBar(title: Text('Ganti Akun')),
       body: ListView(
         padding: const EdgeInsets.all(AppSizes.md),
         children: [
@@ -45,7 +44,7 @@ class SwitchAccountPage extends ConsumerWidget {
             SizedBox(height: AppSizes.lg),
           ],
           AppButton(
-            label: 'tambah_akun'.tr(),
+            label: 'Tambah Akun',
             onPressed: () async {
               await const FlutterSecureStorage().delete(key: 'auth_token');
               if (context.mounted) showSignInSheet(context);
@@ -55,7 +54,7 @@ class SwitchAccountPage extends ConsumerWidget {
           ),
           SizedBox(height: AppSizes.md),
           AppButton(
-            label: 'keluar'.tr(),
+            label: 'Keluar',
             onPressed: () async {
               await ref.read(authProvider.notifier).logout();
               if (context.mounted) showSignInSheet(context);
