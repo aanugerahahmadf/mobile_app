@@ -141,6 +141,9 @@ jobs:
             .dart_tool
           key: pub-test-${{ matrix.os }}-${{ matrix.sdk }}-${{ hashFiles('pubspec.lock') }}
 
+      - name: Create env file
+        run: echo "APP_NAME=wedding" > .env
+
       - name: Install dependencies
         run: flutter pub get
 
