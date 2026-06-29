@@ -18,6 +18,34 @@ class UserModel {
   final String? socialId;
   final String? socialType;
   final String? emailVerifiedAt;
+  final String? nik;
+  final String? passportNumber;
+  final String? simNumber;
+  final String? npwpNumber;
+  final String? birthPlace;
+  final String? birthDate;
+  final String? country;
+  final String? provinceName;
+  final String? cityName;
+  final String? districtName;
+  final String? villageName;
+  final String? postalCode;
+  final String? identityType;
+  final String? identityVerifiedAt;
+  final String? ktpPhoto;
+  final String? ktpPhotoUrl;
+  final String? selfiePhoto;
+  final String? selfiePhotoUrl;
+  final double? budget;
+  final String? themePreference;
+  final String? colorPreference;
+  final String? eventConcept;
+  final String? dreamVenue;
+  final bool activeStatus;
+  final bool isAdmin;
+  final List<String> roles;
+  final String? createdAt;
+  final String? updatedAt;
 
   const UserModel({
     required this.id,
@@ -39,6 +67,34 @@ class UserModel {
     this.socialId,
     this.socialType,
     this.emailVerifiedAt,
+    this.nik,
+    this.passportNumber,
+    this.simNumber,
+    this.npwpNumber,
+    this.birthPlace,
+    this.birthDate,
+    this.country,
+    this.provinceName,
+    this.cityName,
+    this.districtName,
+    this.villageName,
+    this.postalCode,
+    this.identityType,
+    this.identityVerifiedAt,
+    this.ktpPhoto,
+    this.ktpPhotoUrl,
+    this.selfiePhoto,
+    this.selfiePhotoUrl,
+    this.budget,
+    this.themePreference,
+    this.colorPreference,
+    this.eventConcept,
+    this.dreamVenue,
+    this.activeStatus = true,
+    this.isAdmin = false,
+    this.roles = const [],
+    this.createdAt,
+    this.updatedAt,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -62,6 +118,34 @@ class UserModel {
       socialId: json['social_id'] as String?,
       socialType: json['social_type'] as String?,
       emailVerifiedAt: json['email_verified_at'] as String?,
+      nik: json['nik'] as String?,
+      passportNumber: json['passport_number'] as String?,
+      simNumber: json['sim_number'] as String?,
+      npwpNumber: json['npwp_number'] as String?,
+      birthPlace: json['birth_place'] as String?,
+      birthDate: json['birth_date'] as String?,
+      country: json['country'] as String?,
+      provinceName: json['province_name'] as String?,
+      cityName: json['city_name'] as String?,
+      districtName: json['district_name'] as String?,
+      villageName: json['village_name'] as String?,
+      postalCode: json['postal_code'] as String?,
+      identityType: json['identity_type'] as String?,
+      identityVerifiedAt: json['identity_verified_at'] as String?,
+      ktpPhoto: json['ktp_photo'] as String?,
+      ktpPhotoUrl: json['ktp_photo_url'] as String?,
+      selfiePhoto: json['selfie_photo'] as String?,
+      selfiePhotoUrl: json['selfie_photo_url'] as String?,
+      budget: (json['budget'] as num?)?.toDouble(),
+      themePreference: json['theme_preference'] as String?,
+      colorPreference: json['color_preference'] as String?,
+      eventConcept: json['event_concept'] as String?,
+      dreamVenue: json['dream_venue'] as String?,
+      activeStatus: json['active_status'] as bool? ?? true,
+      isAdmin: json['is_admin'] as bool? ?? false,
+      roles: (json['roles'] as List<dynamic>?)?.cast<String>() ?? [],
+      createdAt: json['created_at'] as String?,
+      updatedAt: json['updated_at'] as String?,
     );
   }
 
@@ -88,6 +172,34 @@ class UserModel {
       'social_id': socialId,
       'social_type': socialType,
       'email_verified_at': emailVerifiedAt,
+      'nik': nik,
+      'passport_number': passportNumber,
+      'sim_number': simNumber,
+      'npwp_number': npwpNumber,
+      'birth_place': birthPlace,
+      'birth_date': birthDate,
+      'country': country,
+      'province_name': provinceName,
+      'city_name': cityName,
+      'district_name': districtName,
+      'village_name': villageName,
+      'postal_code': postalCode,
+      'identity_type': identityType,
+      'identity_verified_at': identityVerifiedAt,
+      'ktp_photo': ktpPhoto,
+      'ktp_photo_url': ktpPhotoUrl,
+      'selfie_photo': selfiePhoto,
+      'selfie_photo_url': selfiePhotoUrl,
+      'budget': budget,
+      'theme_preference': themePreference,
+      'color_preference': colorPreference,
+      'event_concept': eventConcept,
+      'dream_venue': dreamVenue,
+      'active_status': activeStatus,
+      'is_admin': isAdmin,
+      'roles': roles,
+      'created_at': createdAt,
+      'updated_at': updatedAt,
     };
   }
 
@@ -111,6 +223,34 @@ class UserModel {
     String? socialId,
     String? socialType,
     String? emailVerifiedAt,
+    String? nik,
+    String? passportNumber,
+    String? simNumber,
+    String? npwpNumber,
+    String? birthPlace,
+    String? birthDate,
+    String? country,
+    String? provinceName,
+    String? cityName,
+    String? districtName,
+    String? villageName,
+    String? postalCode,
+    String? identityType,
+    String? identityVerifiedAt,
+    String? ktpPhoto,
+    String? ktpPhotoUrl,
+    String? selfiePhoto,
+    String? selfiePhotoUrl,
+    double? budget,
+    String? themePreference,
+    String? colorPreference,
+    String? eventConcept,
+    String? dreamVenue,
+    bool? activeStatus,
+    bool? isAdmin,
+    List<String>? roles,
+    String? createdAt,
+    String? updatedAt,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -132,6 +272,34 @@ class UserModel {
       socialId: socialId ?? this.socialId,
       socialType: socialType ?? this.socialType,
       emailVerifiedAt: emailVerifiedAt ?? this.emailVerifiedAt,
+      nik: nik ?? this.nik,
+      passportNumber: passportNumber ?? this.passportNumber,
+      simNumber: simNumber ?? this.simNumber,
+      npwpNumber: npwpNumber ?? this.npwpNumber,
+      birthPlace: birthPlace ?? this.birthPlace,
+      birthDate: birthDate ?? this.birthDate,
+      country: country ?? this.country,
+      provinceName: provinceName ?? this.provinceName,
+      cityName: cityName ?? this.cityName,
+      districtName: districtName ?? this.districtName,
+      villageName: villageName ?? this.villageName,
+      postalCode: postalCode ?? this.postalCode,
+      identityType: identityType ?? this.identityType,
+      identityVerifiedAt: identityVerifiedAt ?? this.identityVerifiedAt,
+      ktpPhoto: ktpPhoto ?? this.ktpPhoto,
+      ktpPhotoUrl: ktpPhotoUrl ?? this.ktpPhotoUrl,
+      selfiePhoto: selfiePhoto ?? this.selfiePhoto,
+      selfiePhotoUrl: selfiePhotoUrl ?? this.selfiePhotoUrl,
+      budget: budget ?? this.budget,
+      themePreference: themePreference ?? this.themePreference,
+      colorPreference: colorPreference ?? this.colorPreference,
+      eventConcept: eventConcept ?? this.eventConcept,
+      dreamVenue: dreamVenue ?? this.dreamVenue,
+      activeStatus: activeStatus ?? this.activeStatus,
+      isAdmin: isAdmin ?? this.isAdmin,
+      roles: roles ?? this.roles,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 }
