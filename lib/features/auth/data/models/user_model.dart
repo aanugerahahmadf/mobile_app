@@ -114,7 +114,7 @@ class UserModel {
       address: json['address'] as String?,
       weddingDate: json['wedding_date'] as String?,
       balance: (json['balance'] ?? 0).toDouble(),
-      darkMode: json['dark_mode'] as bool? ?? false,
+      darkMode: json['dark_mode'] == true || json['dark_mode'] == 1,
       socialId: json['social_id'] as String?,
       socialType: json['social_type'] as String?,
       emailVerifiedAt: json['email_verified_at'] as String?,
