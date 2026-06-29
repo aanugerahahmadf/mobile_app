@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../auth/presentation/widgets/auth_modals.dart';
@@ -9,38 +10,51 @@ class LandingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          Image.asset('assets/images/article/article-4.png', fit: BoxFit.cover),
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.transparent,
-                  Color(0x800F1B33),
-                  Color(0xCC080E1E),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (_, _) => context.go('/onboarding'),
+      child: Scaffold(
+        body: Stack(
+          fit: StackFit.expand,
+          children: [
+            Image.asset('assets/images/article/article-4.png', fit: BoxFit.cover),
+            Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.transparent,
+                    Color(0x800F1B33),
+                    Color(0xCC080E1E),
+                  ],
+                ),
+              ),
+            ),
+            Positioned(top: -100, right: -50, child: _blob(300, AppColors.primaryColor.withValues(alpha: 0.15))),
+            Positioned(bottom: 80, left: -80, child: _blob(240, AppColors.secondaryColor.withValues(alpha: 0.12))),
+            Positioned(top: 240, left: -40, child: _blob(140, AppColors.accentColor.withValues(alpha: 0.08))),
+            Positioned(bottom: 340, right: -30, child: _blob(120, AppColors.infoColor.withValues(alpha: 0.06))),
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 8,
+              left: 8,
+              child: IconButton(
+                onPressed: () => context.go('/onboarding'),
+                icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 22),
+                splashRadius: 20,
+              ),
+            ),
+            SafeArea(
+              child: Column(
+                children: [
+                  const Spacer(flex: 1),
+                  _buildButtons(context),
+                  const SizedBox(height: AppSizes.xxl),
                 ],
               ),
             ),
-          ),
-          Positioned(top: -100, right: -50, child: _blob(300, AppColors.primaryColor.withValues(alpha: 0.15))),
-          Positioned(bottom: 80, left: -80, child: _blob(240, AppColors.secondaryColor.withValues(alpha: 0.12))),
-          Positioned(top: 240, left: -40, child: _blob(140, AppColors.accentColor.withValues(alpha: 0.08))),
-          Positioned(bottom: 340, right: -30, child: _blob(120, AppColors.infoColor.withValues(alpha: 0.06))),
-          SafeArea(
-            child: Column(
-              children: [
-                const Spacer(flex: 1),
-                _buildButtons(context),
-                const SizedBox(height: AppSizes.xxl),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
