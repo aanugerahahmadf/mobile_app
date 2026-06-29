@@ -8,7 +8,8 @@ enum SuggestionType {
   terms,
   privacy,
   helps,
-  histories;
+  histories,
+  weddingPolicy;
 
   String get badgeLabel {
     switch (this) {
@@ -32,6 +33,8 @@ enum SuggestionType {
         return 'bantuan';
       case SuggestionType.histories:
         return 'riwayat';
+      case SuggestionType.weddingPolicy:
+        return 'kebijakan';
     }
   }
 }
@@ -125,6 +128,15 @@ class SearchSuggestion {
           name: json['name'] as String?,
           subtitle: json['title'] as String?,
           routePath: '/help-center',
+        );
+
+      case SuggestionType.weddingPolicy:
+        return SearchSuggestion(
+          type: type,
+          id: id,
+          name: json['name'] as String?,
+          subtitle: json['title'] as String?,
+          routePath: '/wedding-policy',
         );
 
       case SuggestionType.histories:

@@ -272,6 +272,7 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
         return _iconBox(const Color(0xFFFFF8E1), Icons.star_rounded, const Color(0xFFF9A825));
       case SuggestionType.terms:
       case SuggestionType.privacy:
+      case SuggestionType.weddingPolicy:
         return _iconBox(const Color(0xFFF3E5F5), Icons.description_rounded, const Color(0xFF7B1FA2));
       case SuggestionType.helps:
         return _iconBox(const Color(0xFFE0F7FA), Icons.help_outline_rounded, const Color(0xFF00838F));
@@ -311,7 +312,7 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
         if (item.name != null && item.name!.isNotEmpty)
           Text(item.name!,
             style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xFF1A1A2E)),
-            maxLines: item.type == SuggestionType.terms || item.type == SuggestionType.privacy ? 2 : 1,
+            maxLines: item.type == SuggestionType.terms || item.type == SuggestionType.privacy || item.type == SuggestionType.weddingPolicy ? 2 : 1,
             overflow: TextOverflow.ellipsis,
           ),
         if (item.subtitle != null && item.subtitle!.isNotEmpty) ...[
@@ -320,7 +321,7 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
             style: TextStyle(
               fontSize: 11,
               color: AppColors.textSecondary,
-              fontStyle: item.type == SuggestionType.terms || item.type == SuggestionType.privacy ? FontStyle.italic : FontStyle.normal,
+              fontStyle: item.type == SuggestionType.terms || item.type == SuggestionType.privacy || item.type == SuggestionType.weddingPolicy ? FontStyle.italic : FontStyle.normal,
               fontWeight: item.type == SuggestionType.vouchers || item.type == SuggestionType.orders ? FontWeight.w600 : FontWeight.w400,
             ),
             maxLines: 1, overflow: TextOverflow.ellipsis,
@@ -354,6 +355,7 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
         textColor = const Color(0xFFF9A825);
       case SuggestionType.terms:
       case SuggestionType.privacy:
+      case SuggestionType.weddingPolicy:
         bgColor = const Color(0xFFF3E5F5);
         textColor = const Color(0xFF7B1FA2);
       case SuggestionType.helps:

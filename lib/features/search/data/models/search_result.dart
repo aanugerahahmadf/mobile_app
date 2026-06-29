@@ -28,5 +28,6 @@ class SearchResult {
     'privacy': SuggestionType.privacy,
     'helps': SuggestionType.helps,
     'histories': SuggestionType.histories,
+    'wedding_policy': SuggestionType.weddingPolicy,
   };
 }
