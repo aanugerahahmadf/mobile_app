@@ -151,27 +151,9 @@ class _OnboardingSlide extends StatelessWidget {
               children: [
                 const SizedBox(height: 60),
                 Image.asset(
-                  'assets/images/logo-glow.png',
+                  'assets/images/logo.png',
                   width: 100,
                   height: 100,
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Wedding Flowers\nDecorasi',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    letterSpacing: 1.2,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black.withValues(alpha: 0.5),
-                        offset: const Offset(0, 2),
-                        blurRadius: 4,
-                      ),
-                    ],
-                  ),
-                  textAlign: TextAlign.center,
                 ),
                 const Spacer(),
                 Text(
