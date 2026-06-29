@@ -14,6 +14,7 @@ import '../../../../core/utils/ktp_utils.dart';
 import '../../../../core/utils/passport_utils.dart';
 import '../../../../core/utils/sim_utils.dart';
 import '../../../../core/utils/npwp_utils.dart';
+import '../../../../core/utils/country_codes.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_shimmer.dart';
 import '../../../../core/widgets/app_text_field.dart';
@@ -764,6 +765,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
   String _villageName = '';
   String _postalCode = '';
   String _identityType = 'ktp';
+  String _countryCode = '+62';
 
   String get _idLabel {
     switch (_identityType) {
@@ -1008,7 +1010,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
       lastName: _lastNameController.text.trim(),
       username: _usernameController.text.trim(),
       email: _emailController.text.trim(),
-      whatsapp: _whatsappController.text.trim(),
+      whatsapp: '$_countryCode ${_whatsappController.text.trim()}',
       nik: _identityType == 'ktp' ? _nikController.text.trim() : '',
       passportNumber: _identityType == 'passport' ? _nikController.text.trim() : null,
       simNumber: _identityType == 'sim' ? _nikController.text.trim() : null,
@@ -1037,6 +1039,100 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
   void _showWarning(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(msg), backgroundColor: AppColors.warningColor),
+    );
+  }
+
+  Widget _buildPhoneField() {
+    return Row(
+      children: [
+        SizedBox(
+          height: 50,
+          child: OutlinedButton(
+            onPressed: () => _showCountryCodePicker(),
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: AppColors.dividerColor),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+            ),
+            child: Text(_countryCode, style: AppTextStyles.bodyMedium),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: AppTextField(
+            label: 'WhatsApp',
+            controller: _whatsappController,
+            keyboardType: TextInputType.phone,
+            validator: Validators.phone,
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showCountryCodePicker() {
+    final searchController = TextEditingController();
+    final filteredCodes = ValueNotifier(List.of(countryCodes));
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 8),
+                Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: TextField(
+                    controller: searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Cari negara...',
+                      prefixIcon: const Icon(Icons.search, size: 20),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    onChanged: (v) {
+                      setSheetState(() {
+                        filteredCodes.value = countryCodes.where((c) =>
+                          c.name.toLowerCase().contains(v.toLowerCase()) ||
+                          c.dialCode.contains(v)).toList();
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Flexible(
+                  child: ValueListenableBuilder(
+                    valueListenable: filteredCodes,
+                    builder: (_, codes, _) => ListView.separated(
+                      shrinkWrap: true,
+                      itemCount: codes.length,
+                      separatorBuilder: (_, _) => const Divider(height: 1),
+                      itemBuilder: (_, i) => ListTile(
+                        dense: true,
+                        leading: Text(codes[i].flag, style: const TextStyle(fontSize: 22)),
+                        title: Text(codes[i].name, style: AppTextStyles.bodyMedium),
+                        trailing: Text(codes[i].dialCode, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
+                        onTap: () {
+                          setState(() => _countryCode = codes[i].dialCode);
+                          Navigator.pop(ctx);
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
@@ -1347,12 +1443,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
               controller: _addressController,
               maxLines: 2,
             ),
-            AppTextField(
-              label: 'WhatsApp',
-              controller: _whatsappController,
-              keyboardType: TextInputType.phone,
-              validator: Validators.phone,
-            ),
+            _buildPhoneField(),
             const SizedBox(height: AppSizes.md),
             AppTextField(
               label: 'Kata Sandi',
