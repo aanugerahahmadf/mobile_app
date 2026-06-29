@@ -560,9 +560,9 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
               ),
             ),
             const SizedBox(height: AppSizes.md),
-            _agreementCheckbox(),
-            const SizedBox(height: AppSizes.sm),
             _rememberCheckbox(),
+            const SizedBox(height: AppSizes.sm),
+            _agreementCheckbox(),
             const SizedBox(height: AppSizes.md),
             AppButton(
               label: 'Masuk',
@@ -1471,9 +1471,9 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
               ),
             ),
             const SizedBox(height: AppSizes.md),
-            _agreementCheckbox(),
-            const SizedBox(height: AppSizes.sm),
             _rememberCheckbox(),
+            const SizedBox(height: AppSizes.sm),
+            _agreementCheckbox(),
             const SizedBox(height: AppSizes.lg),
             AppButton(
               label: 'Daftar Sekarang',
