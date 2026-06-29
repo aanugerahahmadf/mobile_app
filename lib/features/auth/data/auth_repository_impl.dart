@@ -12,10 +12,10 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl({Dio? dio}) : _dio = dio ?? DioClient.instance;
 
   @override
-  Future<UserModel> login({required String email, required String password}) async {
+  Future<UserModel> login({required String login, required String password}) async {
     final response = await _dio.post(
       ApiEndpoints.login,
-      data: {'email': email, 'password': password},
+      data: {'login': login, 'password': password},
     );
     final token = response.data['token'] as String;
     await _storage.write(key: 'auth_token', value: token);

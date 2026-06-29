@@ -36,12 +36,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   AuthNotifier() : super(const AuthInitial());
 
-  Future<void> login({required String email, required String password}) async {
+  Future<void> login({required String login, required String password}) async {
     state = const AuthLoading();
     try {
       final response = await _dio.post(
         ApiEndpoints.login,
-        data: {'login': email, 'password': password},
+        data: {'login': login, 'password': password},
       );
       final respData = response.data as Map<String, dynamic>? ?? {};
       final inner = respData['data'] as Map<String, dynamic>? ?? respData;

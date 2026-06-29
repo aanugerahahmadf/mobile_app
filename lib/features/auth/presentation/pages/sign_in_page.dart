@@ -41,7 +41,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
       return;
     }
     ref.read(authProvider.notifier).login(
-      email: _emailController.text.trim(),
+      login: _emailController.text.trim(),
       password: _passwordController.text,
     );
   }
