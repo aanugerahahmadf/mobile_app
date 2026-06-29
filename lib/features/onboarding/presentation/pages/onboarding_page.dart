@@ -54,6 +54,21 @@ class _OnboardingPageState extends State<OnboardingPage> {
           ),
           Positioned(
             top: MediaQuery.of(context).padding.top + 8,
+            left: 8,
+            child: _currentPage > 0
+                ? IconButton(
+                    onPressed: () => _pageController.previousPage(
+                      duration: const Duration(milliseconds: 400),
+                      curve: Curves.easeInOut,
+                    ),
+                    icon: const Icon(Icons.arrow_back_ios_new,
+                        color: Colors.white, size: 22),
+                    splashRadius: 20,
+                  )
+                : const SizedBox.shrink(),
+          ),
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 8,
             right: 16,
             child: TextButton(
               onPressed: _onFinish,
