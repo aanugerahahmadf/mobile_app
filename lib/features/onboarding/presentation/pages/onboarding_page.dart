@@ -155,7 +155,7 @@ class _OnboardingSlide extends StatelessWidget {
                   width: 100,
                   height: 100,
                 ),
-                const Spacer(),
+                const SizedBox(height: 24),
                 Text(
                   title,
                   style: TextStyle(
