@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../features/splash/presentation/pages/splash_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../features/splash/presentation/pages/landing_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/auth/presentation/pages/otp_email_verification_page.dart';
@@ -38,9 +38,15 @@ final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 final appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
-  initialLocation: '/splash',
+  initialLocation: '/landing',
+  redirect: (context, state) async {
+    if (state.matchedLocation == '/onboarding') return null;
+    final prefs = await SharedPreferences.getInstance();
+    final onboardingSeen = prefs.getBool('onboarding_seen') ?? false;
+    if (!onboardingSeen) return '/onboarding';
+    return null;
+  },
   routes: [
-    GoRoute(path: '/splash', builder: (_, _) => const SplashPage()),
     GoRoute(path: '/landing', builder: (_, _) => const LandingPage()),
     GoRoute(path: '/onboarding', builder: (_, _) => const OnboardingPage()),
     GoRoute(path: '/verify-otp', builder: (_, state) {

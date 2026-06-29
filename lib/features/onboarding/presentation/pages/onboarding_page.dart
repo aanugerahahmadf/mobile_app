@@ -38,7 +38,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   Future<void> _onFinish() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('onboarding_seen', true);
-    if (mounted) context.go('/splash');
+    if (mounted) context.go('/landing');
   }
 
   @override
