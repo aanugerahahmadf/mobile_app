@@ -1,3 +1,4 @@
+import '../../../../core/utils/number_utils.dart';
 import 'category_model.dart';
 import 'review_model.dart';
 
@@ -71,8 +72,8 @@ class ItemModel {
       name: (json['name'] ?? '') as String,
       slug: (json['slug'] ?? '') as String,
       description: json['description'] as String?,
-      price: (json['price'] ?? 0).toDouble(),
-      discountPrice: (json['discount_price'] as num?)?.toDouble(),
+      price: parseDouble(json['price']),
+      discountPrice: json['discount_price'] != null ? parseDouble(json['discount_price']) : null,
       stock: (json['stock'] ?? 0) as int,
       isActive: json['is_active'] as bool? ?? true,
       isFeatured: json['is_featured'] as bool? ?? false,
@@ -84,8 +85,8 @@ class ItemModel {
       imageUrl: json['image_url'] as String?,
       videoUrl: json['video_url'] as String?,
       media: json['media'] as List<dynamic>?,
-      finalPrice: (json['final_price'] ?? json['price'] ?? 0).toDouble(),
-      averageRating: (json['average_rating'] ?? 0).toDouble(),
+      finalPrice: parseDouble(json['final_price'] ?? json['price']),
+      averageRating: parseDouble(json['average_rating']),
       isWishlisted: json['is_wishlisted'] as bool? ?? false,
       category: json['category'] != null ? CategoryModel.fromJson(json['category'] as Map<String, dynamic>) : null,
       reviews: json['reviews'] != null ? (json['reviews'] as List).map((e) => ReviewModel.fromJson(e as Map<String, dynamic>)).toList() : null,

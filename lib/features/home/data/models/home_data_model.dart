@@ -1,3 +1,4 @@
+import '../../../../core/utils/number_utils.dart';
 import '../../../catalog/data/models/category_model.dart';
 import '../../../catalog/data/models/item_model.dart';
 import '../../../voucher/data/models/voucher_model.dart';
@@ -24,7 +25,7 @@ class UpcomingOrder {
       id: json['id'] as int,
       eventDate: json['event_date'] as String?,
       status: (json['status'] ?? 'pending') as String,
-      totalPrice: (json['total_price'] ?? 0).toDouble(),
+      totalPrice: parseDouble(json['total_price']),
       notes: json['notes'] as String?,
       package: json['package'] != null
           ? ItemModel.fromJson(json['package'] as Map<String, dynamic>)

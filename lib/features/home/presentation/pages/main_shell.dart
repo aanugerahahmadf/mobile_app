@@ -129,11 +129,7 @@ class _ModernBottomBar extends StatelessWidget {
         width: 54,
         height: 54,
         decoration: BoxDecoration(
-          gradient: isSelected ? AppColors.primaryGradient : LinearGradient(
-            colors: [AppColors.primaryColor.withAlpha(204), AppColors.secondaryColor],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: AppColors.primaryColor,
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(

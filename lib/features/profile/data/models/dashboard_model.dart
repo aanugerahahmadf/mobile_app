@@ -1,3 +1,4 @@
+import '../../../../core/utils/number_utils.dart';
 import '../../../auth/data/models/user_model.dart';
 import '../../../order/data/models/order_model.dart';
 
@@ -37,7 +38,7 @@ class DashboardStats {
       paidOrders: (json['paid_orders'] ?? 0) as int,
       wishlistCount: (json['wishlist_count'] ?? 0) as int,
       unreadNotifications: (json['unread_notifications'] ?? 0) as int,
-      totalSpent: (json['total_spent'] ?? 0).toDouble(),
+      totalSpent: parseDouble(json['total_spent']),
     );
   }
 }

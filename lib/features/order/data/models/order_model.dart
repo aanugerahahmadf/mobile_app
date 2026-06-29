@@ -1,3 +1,4 @@
+import '../../../../core/utils/number_utils.dart';
 import '../../../catalog/data/models/item_model.dart';
 
 class OrderModel {
@@ -80,7 +81,7 @@ class OrderModel {
       productId: json['product_id'] as int?,
       title: (json['title'] ?? 'Pesanan') as String,
       orderNumber: (json['order_number'] ?? '') as String,
-      totalPrice: (json['total_price'] ?? 0).toDouble(),
+      totalPrice: parseDouble(json['total_price']),
       status: (json['status'] ?? 'pending') as String,
       paymentStatus: json['payment_status'] as String?,
       bookingDate: json['booking_date'] as String?,
@@ -89,10 +90,10 @@ class OrderModel {
       resourceType: json['resource_type'] as String?,
       quantity: json['quantity'] as int?,
       bookingTime: json['booking_time'] as String?,
-      subtotal: (json['subtotal'] as num?)?.toDouble(),
-      discount: (json['discount'] as num?)?.toDouble(),
-      shippingCost: (json['shipping_cost'] as num?)?.toDouble(),
-      tax: (json['tax'] as num?)?.toDouble(),
+      subtotal: json['subtotal'] != null ? parseDouble(json['subtotal']) : null,
+      discount: json['discount'] != null ? parseDouble(json['discount']) : null,
+      shippingCost: json['shipping_cost'] != null ? parseDouble(json['shipping_cost']) : null,
+      tax: json['tax'] != null ? parseDouble(json['tax']) : null,
       locationAddress: json['location_address'] as String?,
       adminPhone: json['admin_phone'] as String?,
       transactionId: json['transaction_id'] as String?,

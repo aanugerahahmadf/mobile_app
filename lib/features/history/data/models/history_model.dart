@@ -1,3 +1,5 @@
+import '../../../../core/utils/number_utils.dart';
+
 class HistoryModel {
   final int id;
   final int userId;
@@ -32,7 +34,7 @@ class HistoryModel {
       type: json['type'] as String?,
       transactionId: json['transaction_id'] as int?,
       referenceNumber: json['reference_number'] as String?,
-      amount: (json['amount'] ?? 0).toDouble(),
+      amount: parseDouble(json['amount']),
       info: json['info'] as String?,
       status: json['status'] as String?,
       notes: json['notes'] as String?,

@@ -28,12 +28,12 @@ class MenuCard extends StatelessWidget {
         child: Column(
           children: [
             Container(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: bgColor,
                 borderRadius: BorderRadius.circular(18),
               ),
-              child: Icon(icon, color: AppColors.primaryColor, size: 26),
+              child: Icon(icon, color: AppColors.primaryColor, size: 22),
             ),
             const SizedBox(height: 8),
             Text(

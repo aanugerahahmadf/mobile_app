@@ -242,19 +242,7 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
               splashRadius: 22,
             ),
           ),
-          const SizedBox(width: 4),
-          Container(
-            decoration: BoxDecoration(
-              color: _fillColor,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: IconButton(
-              icon: Icon(Icons.notifications_outlined, color: _iconColor, size: 22),
-              onPressed: () => context.push('/notifications'),
-              constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-              splashRadius: 22,
-            ),
-          ),
+
         ],
       ),
     );

@@ -1,3 +1,5 @@
+import '../../../../core/utils/number_utils.dart';
+
 class VoucherModel {
   final int id;
   final String code;
@@ -44,9 +46,9 @@ class VoucherModel {
       id: json['id'] as int,
       code: (json['code'] ?? '') as String,
       description: json['description'] as String?,
-      discountAmount: (json['discount_amount'] ?? 0).toDouble(),
+      discountAmount: parseDouble(json['discount_amount']),
       discountType: (json['discount_type'] ?? 'fixed') as String,
-      minPurchase: (json['min_purchase'] ?? 0).toDouble(),
+      minPurchase: parseDouble(json['min_purchase']),
       expiresAt: json['expires_at'] as String?,
       isActive: json['is_active'] as bool? ?? true,
       isGlobal: json['is_global'] as bool?,

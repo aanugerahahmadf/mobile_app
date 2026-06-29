@@ -1,3 +1,4 @@
+import '../../../../core/utils/number_utils.dart';
 import '../../../catalog/data/models/item_model.dart';
 
 class CbirResultItem {
@@ -16,8 +17,8 @@ class CbirResultItem {
   factory CbirResultItem.fromJson(Map<String, dynamic> json) {
     return CbirResultItem(
       type: (json['type'] ?? 'package') as String,
-      similarity: (json['similarity'] ?? 0).toDouble(),
-      score: (json['score'] ?? 0).toDouble(),
+      similarity: parseDouble(json['similarity']),
+      score: parseDouble(json['score']),
       data: ItemModel.fromJson(json['data'] as Map<String, dynamic>),
     );
   }
@@ -44,7 +45,7 @@ class CbirResult {
       success: json['success'] as bool? ?? false,
       results: resultsList.map((e) => CbirResultItem.fromJson(e as Map<String, dynamic>)).toList(),
       totalResults: (json['total_results'] ?? resultsList.length) as int,
-      queryTimeSeconds: (json['query_time_seconds'] ?? 0).toDouble(),
+      queryTimeSeconds: parseDouble(json['query_time_seconds']),
       message: json['message'] as String?,
     );
   }

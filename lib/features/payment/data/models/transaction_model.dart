@@ -1,3 +1,5 @@
+import '../../../../core/utils/number_utils.dart';
+
 class TransactionModel {
   final int id;
   final int userId;
@@ -46,9 +48,9 @@ class TransactionModel {
       orderId: json['order_id'] as int?,
       type: json['type'] as String?,
       referenceNumber: json['reference_number'] as String?,
-      amount: (json['amount'] ?? 0).toDouble(),
-      adminFee: (json['admin_fee'] ?? 0).toDouble(),
-      totalAmount: (json['total_amount'] ?? 0).toDouble(),
+      amount: parseDouble(json['amount']),
+      adminFee: parseDouble(json['admin_fee']),
+      totalAmount: parseDouble(json['total_amount']),
       paymentGateway: json['payment_gateway'] as String?,
       paymentMethod: json['payment_method'] as String?,
       snapToken: json['snap_token'] as String?,

@@ -147,7 +147,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         _menuTile(Icons.edit, 'Edit Profil', () => context.push('/edit-profile')),
                         _menuTile(Icons.card_giftcard, 'Voucher Saya', () => context.push('/home')),
                         _menuTile(Icons.receipt_long, 'Pesanan Saya', () => context.push('/orders')),
-                        _menuTile(Icons.privacy_tip, 'Privasi & Ketentuan', () => AppSnackBar.show(context, 'Fitur akan segera hadir', type: SnackBarType.info)),
+                        _menuTile(Icons.privacy_tip, 'Privasi & Ketentuan', () => context.push('/legal/privacy-term')),
                         _menuTile(Icons.help, 'Pusat Bantuan', () => AppSnackBar.show(context, 'Fitur akan segera hadir', type: SnackBarType.info)),
                         _menuTile(Icons.logout, 'Keluar', _logout, isDestructive: true),
                       ],

@@ -7,6 +7,7 @@ import '../../../../core/api/dio_client.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/utils/number_utils.dart';
 import '../../../../core/widgets/app_shimmer.dart';
 import '../../../search/presentation/widgets/global_search_bar.dart';
 import '../../../../features/catalog/data/catalog_repository_impl.dart';
@@ -42,7 +43,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       items = items.where((e) => '${e['category_id']}' == _selectedCategoryId).toList();
     }
     if (_hasDiscountOnly) {
-      items = items.where((e) => e['discount_price'] != null && (e['discount_price'] as int) > 0).toList();
+      items = items.where((e) => e['discount_price'] != null && parseDouble(e['discount_price']) > 0).toList();
     }
     if (_minRating > 0) {
       items = items.where((e) => ((e['rating'] as num?)?.toDouble() ?? 0) >= _minRating).toList();
@@ -50,13 +51,13 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     switch (_sortBy) {
       case 'price_asc':
-        items.sort((a, b) => ((a['price'] as int?) ?? 0).compareTo((b['price'] as int?) ?? 0));
+        items.sort((a, b) => parseDouble(a['price']).compareTo(parseDouble(b['price'])));
       case 'price_desc':
-        items.sort((a, b) => ((b['price'] as int?) ?? 0).compareTo((a['price'] as int?) ?? 0));
+        items.sort((a, b) => parseDouble(b['price']).compareTo(parseDouble(a['price'])));
       case 'rating_desc':
         items.sort((a, b) => ((b['rating'] as num?)?.toDouble() ?? 0).compareTo((a['rating'] as num?)?.toDouble() ?? 0));
       case 'most_ordered':
-        items.sort((a, b) => ((b['ordered_count'] as int?) ?? 0).compareTo((a['ordered_count'] as int?) ?? 0));
+        items.sort((a, b) => parseInt(b['ordered_count']).compareTo(parseInt(a['ordered_count'])));
     }
     return items;
   }
@@ -201,23 +202,26 @@ class _HomePageState extends ConsumerState<HomePage> {
       child: Container(
         padding: const EdgeInsets.fromLTRB(AppSizes.md, AppSizes.xxl, AppSizes.md, AppSizes.lg),
         decoration: const BoxDecoration(
-          gradient: AppColors.primaryGradient,
+          color: AppColors.primaryColor,
           borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
         ),
         child: Column(
           children: [
+            const GlobalSearchBar(translucent: true),
+            const SizedBox(height: AppSizes.md),
             Row(
               children: [
                 Consumer(builder: (_, ref, _) {
                   final authState = ref.watch(authProvider);
                   if (authState is AuthAuthenticated) {
                     final u = authState.user;
-                    final avatarUrl = u.avatarUrl ?? u.avatar;
+                    final avatarUrl = u.avatarUrl;
+                    final hasAvatar = avatarUrl != null && (avatarUrl.startsWith('http') || avatarUrl.startsWith('/storage'));
                     return CircleAvatar(
                       radius: 22,
                       backgroundColor: Colors.white,
-                      backgroundImage: avatarUrl != null ? CachedNetworkImageProvider(avatarUrl) : null,
-                      child: avatarUrl == null
+                      backgroundImage: hasAvatar ? CachedNetworkImageProvider(avatarUrl) : null,
+                      child: !hasAvatar
                           ? const Icon(Icons.person, color: AppColors.primaryColor, size: 22)
                           : null,
                     );
@@ -260,8 +264,6 @@ class _HomePageState extends ConsumerState<HomePage> {
                 ),
               ],
             ),
-            const SizedBox(height: AppSizes.md),
-            const GlobalSearchBar(translucent: true),
           ],
         ),
       ),
@@ -356,42 +358,45 @@ class _HomePageState extends ConsumerState<HomePage> {
             ],
           ),
           const SizedBox(height: 8),
-          Row(
-            children: [
-              if (_categories.isNotEmpty)
-                Container(
-                  height: 38,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  decoration: BoxDecoration(
-                    color: AppColors.secondaryColor.withAlpha(30),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: _selectedCategoryId,
-                      hint: const Text('Kategori', style: TextStyle(fontSize: 12)),
-                      isDense: true,
-                      items: [
-                        const DropdownMenuItem(value: null, child: Text('Semua', style: TextStyle(fontSize: 12))),
-                        ..._categories.map((c) => DropdownMenuItem(
-                          value: '${c['id']}',
-                          child: Text('${c['name']}', style: const TextStyle(fontSize: 12)),
-                        )),
-                      ],
-                      onChanged: (v) => setState(() => _selectedCategoryId = v),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                if (_categories.isNotEmpty)
+                  Container(
+                    height: 38,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondaryColor.withAlpha(30),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: _selectedCategoryId,
+                        hint: const Text('Kategori', style: TextStyle(fontSize: 12)),
+                        isDense: true,
+                        items: [
+                          const DropdownMenuItem(value: null, child: Text('Semua', style: TextStyle(fontSize: 12))),
+                          ..._categories.map((c) => DropdownMenuItem(
+                            value: '${c['id']}',
+                            child: Text('${c['name']}', style: const TextStyle(fontSize: 12)),
+                          )),
+                        ],
+                        onChanged: (v) => setState(() => _selectedCategoryId = v),
+                      ),
                     ),
                   ),
+                const SizedBox(width: 6),
+                FilterChip(
+                  label: const Text('Diskon', style: TextStyle(fontSize: 11)),
+                  selected: _hasDiscountOnly,
+                  visualDensity: VisualDensity.compact,
+                  onSelected: (v) => setState(() => _hasDiscountOnly = v),
                 ),
-              const SizedBox(width: 6),
-              FilterChip(
-                label: const Text('Diskon', style: TextStyle(fontSize: 11)),
-                selected: _hasDiscountOnly,
-                visualDensity: VisualDensity.compact,
-                onSelected: (v) => setState(() => _hasDiscountOnly = v),
-              ),
-              const SizedBox(width: 6),
-              _buildRatingChip(),
-            ],
+                const SizedBox(width: 6),
+                _buildRatingChip(),
+              ],
+            ),
           ),
           const SizedBox(height: 6),
           SingleChildScrollView(
