@@ -138,8 +138,8 @@ class _OnboardingSlide extends StatelessWidget {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Colors.black.withValues(alpha: 0.05),
-                Colors.black.withValues(alpha: 0.65),
+                Colors.black.withValues(alpha: 0.55),
+                Colors.black.withValues(alpha: 0.75),
               ],
             ),
           ),
@@ -148,26 +148,64 @@ class _OnboardingSlide extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Spacer(),
+                const SizedBox(height: 60),
+                Image.asset(
+                  'assets/images/logo-glow.png',
+                  width: 100,
+                  height: 100,
+                ),
+                const SizedBox(height: 24),
                 Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
+                  'Wedding Flowers\nDecorasi',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
                     color: Colors.white,
-                    height: 1.3,
+                    letterSpacing: 1.2,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withValues(alpha: 0.5),
+                        offset: const Offset(0, 2),
+                        blurRadius: 4,
+                      ),
+                    ],
                   ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 16),
+                const Spacer(),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    height: 1.3,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withValues(alpha: 0.5),
+                        offset: const Offset(0, 2),
+                        blurRadius: 6,
+                      ),
+                    ],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 14),
                 Text(
                   description,
                   style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.white.withValues(alpha: 0.85),
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white.withValues(alpha: 0.95),
                     height: 1.5,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black.withValues(alpha: 0.4),
+                        offset: const Offset(0, 1),
+                        blurRadius: 4,
+                      ),
+                    ],
                   ),
                   textAlign: TextAlign.center,
                 ),
