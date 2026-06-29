@@ -408,7 +408,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
       return;
     }
     if (!_rememberMe) {
-      AppSnackBar.show(context, 'Centang Ingat Saya terlebih dahulu', type: SnackBarType.warning);
+      AppSnackBar.show(context, 'Centang Ingat Saya untuk melanjutkan', type: SnackBarType.warning);
       return;
     }
     if (_ktpFile != null) {
@@ -763,6 +763,34 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                 ),
               ),
               SizedBox(height: AppSizes.md),
+              // Ingat Saya
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: Checkbox(
+                      value: _rememberMe,
+                      onChanged: (v) => setState(() => _rememberMe = v ?? false),
+                      activeColor: AppColors.primaryColor,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                    ),
+                  ),
+                  SizedBox(width: AppSizes.sm),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => setState(() => _rememberMe = !_rememberMe),
+                      child: Text(
+                        'Ingat Saya',
+                        style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: AppSizes.sm),
+              // Setujui S&K
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -834,32 +862,6 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                         ),
                       ),
                     ),
-                ],
-              ),
-              SizedBox(height: AppSizes.sm),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: Checkbox(
-                      value: _rememberMe,
-                      onChanged: (v) => setState(() => _rememberMe = v ?? false),
-                      activeColor: AppColors.primaryColor,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                    ),
-                  ),
-                  SizedBox(width: AppSizes.sm),
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () => setState(() => _rememberMe = !_rememberMe),
-                      child: Text(
-                        'Ingat Saya',
-                        style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
-                      ),
-                    ),
-                  ),
                 ],
               ),
               SizedBox(height: AppSizes.lg),

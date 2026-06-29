@@ -131,6 +131,27 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                     ),
                   ),
                   const SizedBox(height: AppSizes.md),
+                  // Ingat Saya
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      SizedBox(
+                        width: 24, height: 24,
+                        child: Checkbox(
+                          value: _rememberMe,
+                          onChanged: (v) => setState(() => _rememberMe = v ?? false),
+                          activeColor: AppColors.primaryColor,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: () => setState(() => _rememberMe = !_rememberMe),
+                        child: Text('Ingat Saya', style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSizes.sm),
                   // Setujui S&K
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -216,27 +237,6 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSizes.sm),
-                  // Ingat Saya
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        width: 24, height: 24,
-                        child: Checkbox(
-                          value: _rememberMe,
-                          onChanged: (v) => setState(() => _rememberMe = v ?? false),
-                          activeColor: AppColors.primaryColor,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      GestureDetector(
-                        onTap: () => setState(() => _rememberMe = !_rememberMe),
-                        child: Text('Ingat Saya', style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
                       ),
                     ],
                   ),
