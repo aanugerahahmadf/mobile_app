@@ -15,11 +15,17 @@ class SplashPage extends StatefulWidget {
 
 class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateMixin {
   final _storage = const FlutterSecureStorage();
+  bool _cancelled = false;
 
   @override
   void initState() {
     super.initState();
     _init();
+  }
+
+  void _goBack() {
+    _cancelled = true;
+    context.go('/onboarding');
   }
 
   Future<void> _init() async {
@@ -35,7 +41,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
 
     await completer.future;
 
-    if (!mounted) return;
+    if (!mounted || _cancelled) return;
 
     if (token != null && token.isNotEmpty) {
       final prefs = await SharedPreferences.getInstance();
@@ -93,7 +99,16 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
               ),
             ),
           ),
-          const SafeArea(child: SizedBox.shrink()),
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 8,
+            left: 8,
+            child: IconButton(
+              onPressed: _goBack,
+              icon: const Icon(Icons.arrow_back_ios_new,
+                  color: Colors.white, size: 22),
+              splashRadius: 20,
+            ),
+          ),
         ],
       ),
     );
