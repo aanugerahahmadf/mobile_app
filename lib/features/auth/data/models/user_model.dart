@@ -98,14 +98,29 @@ class UserModel {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    double toDouble(dynamic v) {
+      if (v == null) return 0;
+      if (v is double) return v;
+      if (v is int) return v.toDouble();
+      if (v is String) return double.tryParse(v) ?? 0;
+      return 0;
+    }
+
+    bool toBool(dynamic v) {
+      if (v == null) return false;
+      if (v is bool) return v;
+      if (v is int) return v == 1;
+      return false;
+    }
+
     return UserModel(
-      id: json['id'] as int,
-      fullName: (json['full_name'] ?? json['name'] ?? '') as String,
+      id: json['id'] is int ? json['id'] as int : int.tryParse('${json['id']}') ?? 0,
+      fullName: '${json['full_name'] ?? json['name'] ?? ''}',
       firstName: json['first_name'] as String?,
       midName: json['mid_name'] as String?,
       lastName: json['last_name'] as String?,
-      username: (json['username'] ?? '') as String,
-      email: (json['email'] ?? '') as String,
+      username: '${json['username'] ?? ''}',
+      email: '${json['email'] ?? ''}',
       whatsapp: json['whatsapp'] as String?,
       phone: json['phone'] as String?,
       avatar: json['avatar'] as String?,
@@ -113,8 +128,8 @@ class UserModel {
       gender: json['gender'] as String?,
       address: json['address'] as String?,
       weddingDate: json['wedding_date'] as String?,
-      balance: (json['balance'] ?? 0).toDouble(),
-      darkMode: json['dark_mode'] == true || json['dark_mode'] == 1,
+      balance: toDouble(json['balance']),
+      darkMode: toBool(json['dark_mode']),
       socialId: json['social_id'] as String?,
       socialType: json['social_type'] as String?,
       emailVerifiedAt: json['email_verified_at'] as String?,
@@ -136,13 +151,13 @@ class UserModel {
       ktpPhotoUrl: json['ktp_photo_url'] as String?,
       selfiePhoto: json['selfie_photo'] as String?,
       selfiePhotoUrl: json['selfie_photo_url'] as String?,
-      budget: (json['budget'] as num?)?.toDouble(),
+      budget: toDouble(json['budget']),
       themePreference: json['theme_preference'] as String?,
       colorPreference: json['color_preference'] as String?,
       eventConcept: json['event_concept'] as String?,
       dreamVenue: json['dream_venue'] as String?,
-      activeStatus: json['active_status'] as bool? ?? true,
-      isAdmin: json['is_admin'] as bool? ?? false,
+      activeStatus: toBool(json['active_status']),
+      isAdmin: toBool(json['is_admin']),
       roles: (json['roles'] as List<dynamic>?)?.cast<String>() ?? [],
       createdAt: json['created_at'] as String?,
       updatedAt: json['updated_at'] as String?,
