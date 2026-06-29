@@ -1,8 +1,6 @@
-﻿import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
-import '../constants/app_sizes.dart';
 import 'app_shimmer.dart';
 
 class AppCard extends StatelessWidget {
@@ -34,7 +32,7 @@ class AppCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(AppSizes.cardRadius),
+          borderRadius: BorderRadius.circular(8),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withAlpha(10),
@@ -51,17 +49,22 @@ class AppCard extends StatelessWidget {
                 children: [
                   ClipRRect(
                     borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(AppSizes.cardRadius),
+                      top: Radius.circular(8),
                     ),
-                    child: CachedNetworkImage(
-                      imageUrl: imageUrl,
+                    child: Image.network(
+                      imageUrl,
                       width: double.infinity,
                       fit: BoxFit.cover,
-                      placeholder: (_, _) => const AppShimmer(height: 150),
-                      errorWidget: (_, _, _) => Container(
-                        color: AppColors.shimmerBase,
-                        child: const Icon(Icons.broken_image, color: Colors.grey),
-                      ),
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return const AppShimmer(height: 150);
+                      },
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          color: AppColors.shimmerBase,
+                          child: const Icon(Icons.broken_image, color: Colors.grey),
+                        );
+                      },
                     ),
                   ),
                   if (badge != null)

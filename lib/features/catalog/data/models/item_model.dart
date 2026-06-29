@@ -1,4 +1,5 @@
 import '../../../../core/utils/number_utils.dart';
+import '../../../../core/utils/formatters.dart';
 import 'category_model.dart';
 import 'review_model.dart';
 
@@ -67,24 +68,37 @@ class ItemModel {
 
   factory ItemModel.fromJson(Map<String, dynamic> json) {
     return ItemModel(
-      id: json['id'] as int,
-      categoryId: json['category_id'] as int?,
+      id: parseInt(json['id']),
+      categoryId: parseIntNullable(json['category_id']),
       name: (json['name'] ?? '') as String,
       slug: (json['slug'] ?? '') as String,
       description: json['description'] as String?,
       price: parseDouble(json['price']),
       discountPrice: json['discount_price'] != null ? parseDouble(json['discount_price']) : null,
-      stock: (json['stock'] ?? 0) as int,
+      stock: parseInt(json['stock'] ?? json['stock_count'] ?? 0),
       isActive: json['is_active'] as bool? ?? true,
       isFeatured: json['is_featured'] as bool? ?? false,
       features: json['features'] != null ? (json['features'] as List).cast<String>() : null,
       theme: json['theme'] as String?,
       color: json['color'] as String?,
-      minCapacity: json['min_capacity'] as int?,
-      maxCapacity: json['max_capacity'] as int?,
-      imageUrl: json['image_url'] as String?,
+      minCapacity: parseIntNullable(json['min_capacity']),
+      maxCapacity: parseIntNullable(json['max_capacity']),
+      imageUrl: (json['image'] ?? json['image_url']) != null ? Formatters.imageUrl((json['image'] ?? json['image_url']) as String) : null,
       videoUrl: json['video_url'] as String?,
-      media: json['media'] as List<dynamic>?,
+      media: json['media'] != null
+          ? (json['media'] as List).map((m) {
+              if (m is Map) {
+                final map = Map<String, dynamic>.from(m);
+                // API returns original_url, not url
+                final src = (map['original_url'] as String?)?.isNotEmpty == true
+                    ? map['original_url'] as String
+                    : (map['url'] as String? ?? '');
+                map['url'] = Formatters.imageUrl(src);
+                return map;
+              }
+              return m;
+            }).toList()
+          : null,
       finalPrice: parseDouble(json['final_price'] ?? json['price']),
       averageRating: parseDouble(json['average_rating']),
       isWishlisted: json['is_wishlisted'] as bool? ?? false,

@@ -1,4 +1,4 @@
-﻿import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -126,7 +126,7 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
 
   Future<void> _sendWhatsapp() async {
     final orderNumber = _order?['order_number'] ?? widget.id;
-    final total = Formatters.currency(_order?['total'] as int? ?? 0);
+    final total = Formatters.currency((_order?['total'] as num?)?.toInt() ?? 0);
     final status = _order?['status'] as String? ?? '';
     final message = 'Halo Admin, saya ingin menanyakan pesanan #$orderNumber. Status: ${_statusLabel(status)}. Total: $total.';
 

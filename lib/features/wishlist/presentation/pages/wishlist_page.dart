@@ -1,13 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
-import '../../../../core/widgets/app_shimmer.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_error_state.dart';
-import '../../../../core/utils/formatters.dart';
+import '../../../catalog/presentation/widgets/product_card.dart';
 import '../providers/wishlist_provider.dart';
 
 class WishlistPage extends ConsumerStatefulWidget {
@@ -46,65 +44,44 @@ class _WishlistPageState extends ConsumerState<WishlistPage> {
                         padding: const EdgeInsets.all(AppSizes.md),
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
-                          childAspectRatio: 0.7,
+                          childAspectRatio: 0.61,
                           crossAxisSpacing: 12,
                           mainAxisSpacing: 12,
                         ),
                         itemCount: state.items.length,
                         itemBuilder: (_, i) {
                           final item = state.items[i];
+                          final isPackage = item['package'] != null;
+                          final type = isPackage ? 'packages' : 'products';
                           final pkg = (item['package'] ?? item['product']) as Map<String, dynamic>? ?? {};
-                          final media = pkg['media'] as List? ?? [];
-                          final image = media.isNotEmpty ? (media[0] is Map ? media[0]['url'] : '') : '';
-                          final name = pkg['name'] as String? ?? '';
-                          final price = (pkg['price'] as num?)?.toInt() ?? 0;
 
-                          return Card(
-                            clipBehavior: Clip.antiAlias,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: Stack(
-                                    children: [
-                                      CachedNetworkImage(
-                                        imageUrl: image,
-                                        width: double.infinity,
-                                        fit: BoxFit.cover,
-                                        placeholder: (_, _) => AppShimmer(height: 150),
-                                        errorWidget: (_, _, _) => Container(color: Colors.grey[200], child: const Icon(Icons.broken_image)),
-                                      ),
-                                      Positioned(
-                                        top: 6, right: 6,
-                                        child: GestureDetector(
-                                          onTap: () => ref.read(wishlistProvider.notifier).remove(item),
-                                          child: Container(
-                                            padding: const EdgeInsets.all(4),
-                                            decoration: const BoxDecoration(
-                                              color: Colors.white,
-                                              shape: BoxShape.circle,
-                                            ),
-                                            child: const Icon(Icons.close, size: 16, color: AppColors.errorColor),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
+                          return Stack(
+                            children: [
+                              Positioned.fill(
+                                child: ProductCard(
+                                  item: pkg,
+                                  type: type,
+                                  onTap: () => context.go('/catalog/$type/${pkg['id']}'),
+                                ),
+                              ),
+                              Positioned(
+                                top: 6, right: 6,
+                                child: GestureDetector(
+                                  onTap: () => ref.read(wishlistProvider.notifier).remove(item),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 1)),
+                                      ],
+                                    ),
+                                    child: const Icon(Icons.close, size: 16, color: AppColors.errorColor),
                                   ),
                                 ),
-                                Padding(
-                                  padding: const EdgeInsets.all(8),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(name, style: AppTextStyles.bodyMedium, maxLines: 2, overflow: TextOverflow.ellipsis),
-                                      const SizedBox(height: 4),
-                                      Text(Formatters.currency(price), style: AppTextStyles.titleMedium.copyWith(color: AppColors.primaryColor)),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
+                              ),
+                            ],
                           );
                         },
                       ),

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_sizes.dart';
@@ -77,7 +77,7 @@ class _CatalogCombinedPageState extends ConsumerState<CatalogCombinedPage> {
         padding: const EdgeInsets.all(AppSizes.md),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          childAspectRatio: 0.7,
+          childAspectRatio: 0.61,
           crossAxisSpacing: 12,
           mainAxisSpacing: 12,
         ),

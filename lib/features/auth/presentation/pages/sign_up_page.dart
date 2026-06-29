@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -234,34 +235,61 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
   }
 
   Widget _buildPhoneField() {
-    return AppTextField(
-      label: 'WhatsApp',
-      controller: _whatsappController,
-      keyboardType: TextInputType.phone,
-      validator: Validators.phone,
-      prefix: _buildCountryCodePrefix(),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text('WhatsApp', style: AppTextStyles.titleSmall),
+        ),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Country code button
+            GestureDetector(
+              onTap: _showCountryCodePicker,
+              child: Container(
+                height: 54,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.backgroundColor,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.dividerColor),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _countryCode,
+                      style: AppTextStyles.bodyLarge.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(width: 2),
+                    Icon(Icons.arrow_drop_down, size: 20, color: AppColors.textSecondary),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Phone number field
+            Expanded(
+              child: TextFormField(
+                controller: _whatsappController,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                validator: Validators.phone,
+                style: AppTextStyles.bodyLarge,
+                decoration: const InputDecoration(),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
-  Widget _buildCountryCodePrefix() {
-    return GestureDetector(
-      onTap: () => _showCountryCodePicker(),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8),
-        decoration: BoxDecoration(
-          border: Border(right: BorderSide(color: AppColors.dividerColor)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(_countryCode, style: AppTextStyles.bodyMedium),
-            const SizedBox(width: 2),
-            Icon(Icons.arrow_drop_down, size: 18, color: AppColors.textSecondary),
-          ],
-        ),
-      ),
-    );
-  }
 
   void _showCountryCodePicker() {
     final searchController = TextEditingController();

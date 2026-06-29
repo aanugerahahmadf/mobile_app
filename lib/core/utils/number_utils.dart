@@ -13,3 +13,11 @@ int parseInt(dynamic v, [int defaultValue = 0]) {
   if (v is String) return int.tryParse(v) ?? defaultValue;
   return defaultValue;
 }
+
+int? parseIntNullable(dynamic v) {
+  if (v == null) return null;
+  if (v is int) return v;
+  if (v is double) return v.toInt();
+  if (v is String) return int.tryParse(v);
+  return null;
+}

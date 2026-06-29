@@ -1,13 +1,12 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
-import '../../../../core/widgets/app_card.dart';
+import '../widgets/product_card.dart';
 import '../../../../core/widgets/app_shimmer.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_error_state.dart';
-import '../../../../core/utils/formatters.dart';
 import '../providers/catalog_provider.dart';
 
 class CatalogListPage extends ConsumerStatefulWidget {
@@ -107,7 +106,7 @@ class _CatalogListPageState extends ConsumerState<CatalogListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.type == 'packages' ? 'Paket Pernikahan' : 'Bunga'),
+        title: Text(widget.type == 'packages' ? 'Paket Bunga' : 'Bunga'),
         centerTitle: true,
       ),
       body: Column(
@@ -129,9 +128,15 @@ class _CatalogListPageState extends ConsumerState<CatalogListPage> {
         separatorBuilder: (_, _) => SizedBox(width: AppSizes.sm),
         itemBuilder: (_, i) {
           final (label, value) = _sortOptions[i];
+          final isSelected = _selectedSort == value;
           return FilterChip(
-            label: Text(label),
-            selected: _selectedSort == value,
+            label: Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? AppColors.primaryColor : AppColors.textSecondary,
+              ),
+            ),
+            selected: isSelected,
             onSelected: (_) {
               setState(() => _selectedSort = value);
               _fetchData();
@@ -177,25 +182,17 @@ class _CatalogListPageState extends ConsumerState<CatalogListPage> {
             sliver: SliverGrid(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 0.7,
+                childAspectRatio: 0.61,
                 crossAxisSpacing: AppSizes.md,
                 mainAxisSpacing: AppSizes.md,
               ),
               delegate: SliverChildBuilderDelegate(
                 (_, i) {
-                  final item = _items[i];
-                  final media = item['media'] as List? ?? [];
-                  final image = media.isNotEmpty && media[0] is Map
-                      ? (media[0]['url'] as String? ?? '')
-                      : (item['image'] as String? ?? '');
-                  return AppCard(
-                    imageUrl: image,
-                    name: item['name'] as String? ?? '',
-                    price: Formatters.currency(item['price'] as int? ?? 0),
-                    badge: item['discount_price'] != null ? 'Diskon' : null,
-                    rating: (item['rating'] as num?)?.toDouble(),
+                  return ProductCard(
+                    item: _items[i],
+                    type: widget.type,
                     onTap: () =>
-                        context.go('/catalog/${widget.type}/${item['id']}'),
+                        context.go('/catalog/${widget.type}/${_items[i]['id']}'),
                   );
                 },
                 childCount: _items.length,

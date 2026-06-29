@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 
@@ -20,9 +20,15 @@ class FilterChips extends StatelessWidget {
         separatorBuilder: (_, _) => const SizedBox(width: AppSizes.sm),
         itemBuilder: (_, i) {
           final (label, value) = options[i];
+          final isSelected = selected == value;
           return FilterChip(
-            label: Text(label),
-            selected: selected == value,
+            label: Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? AppColors.primaryColor : AppColors.textSecondary,
+              ),
+            ),
+            selected: isSelected,
             onSelected: (_) => onChanged(value),
             selectedColor: AppColors.secondaryColor,
             checkmarkColor: AppColors.primaryColor,

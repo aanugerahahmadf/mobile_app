@@ -1,3 +1,5 @@
+import '../../../../core/utils/formatters.dart';
+
 class UserModel {
   final int id;
   final String fullName;
@@ -124,7 +126,7 @@ class UserModel {
       whatsapp: json['whatsapp'] as String?,
       phone: json['phone'] as String?,
       avatar: json['avatar'] as String?,
-      avatarUrl: json['avatar_url'] as String?,
+      avatarUrl: json['avatar_url'] != null ? Formatters.imageUrl(json['avatar_url'] as String) : null,
       gender: json['gender'] as String?,
       address: json['address'] as String?,
       weddingDate: json['wedding_date'] as String?,
@@ -148,9 +150,9 @@ class UserModel {
       identityType: json['identity_type'] as String?,
       identityVerifiedAt: json['identity_verified_at'] as String?,
       ktpPhoto: json['ktp_photo'] as String?,
-      ktpPhotoUrl: json['ktp_photo_url'] as String?,
+      ktpPhotoUrl: json['ktp_photo_url'] != null ? Formatters.imageUrl(json['ktp_photo_url'] as String) : null,
       selfiePhoto: json['selfie_photo'] as String?,
-      selfiePhotoUrl: json['selfie_photo_url'] as String?,
+      selfiePhotoUrl: json['selfie_photo_url'] != null ? Formatters.imageUrl(json['selfie_photo_url'] as String) : null,
       budget: toDouble(json['budget']),
       themePreference: json['theme_preference'] as String?,
       colorPreference: json['color_preference'] as String?,

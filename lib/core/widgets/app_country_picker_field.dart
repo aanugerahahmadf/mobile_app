@@ -8,6 +8,7 @@ class AppCountryPickerField extends StatelessWidget {
   final TextEditingController controller;
   final String? Function(String?)? validator;
   final ValueChanged<String>? onChanged;
+  final bool readOnly;
 
   const AppCountryPickerField({
     super.key,
@@ -15,6 +16,7 @@ class AppCountryPickerField extends StatelessWidget {
     required this.controller,
     this.validator,
     this.onChanged,
+    this.readOnly = false,
   });
 
   void _showPicker(BuildContext context) {
@@ -96,26 +98,29 @@ class AppCountryPickerField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: AppTextStyles.titleSmall),
-        const SizedBox(height: 8),
-        GestureDetector(
-          onTap: () => _showPicker(context),
-          child: AbsorbPointer(
-            child: TextFormField(
-              controller: controller,
-              validator: validator,
-              style: AppTextStyles.bodyLarge,
-              decoration: InputDecoration(
-                suffixIcon: Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
-                errorText: null,
+    return Opacity(
+      opacity: readOnly ? 0.6 : 1.0,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: AppTextStyles.titleSmall),
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: readOnly ? null : () => _showPicker(context),
+            child: AbsorbPointer(
+              child: TextFormField(
+                controller: controller,
+                validator: validator,
+                style: AppTextStyles.bodyLarge,
+                decoration: InputDecoration(
+                  suffixIcon: Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                  errorText: null,
+                ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

@@ -84,7 +84,7 @@ class _OtpEmailVerificationPageState extends State<OtpEmailVerificationPage> {
 
       if (mounted) {
         AppSnackBar.show(context, 'Email berhasil diverifikasi', type: SnackBarType.success);
-        if (widget.purpose == 'google_register') {
+        if (widget.purpose == 'google_register' || widget.purpose == 'verify_email') {
           context.pushReplacement('/edit-profile');
         } else {
           showSignInSheet(context);

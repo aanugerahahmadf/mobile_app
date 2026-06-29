@@ -1,4 +1,5 @@
 import 'package:intl/intl.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class Formatters {
   static String currency(int amount) {
@@ -42,5 +43,40 @@ class Formatters {
 
   static String similarity(double score) {
     return '${(score * 100).toStringAsFixed(0)}%';
+  }
+
+  static String imageUrl(String? url) {
+    if (url == null || url.isEmpty) return '';
+
+    String baseHost = 'http://192.168.100.63:8000';
+    try {
+      final apiBaseUrl = dotenv.get('API_BASE_URL', fallback: 'http://192.168.100.63:8000/api');
+      final uri = Uri.parse(apiBaseUrl);
+      baseHost = '${uri.scheme}://${uri.host}:${uri.port}';
+    } catch (_) {}
+
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      try {
+        final parsedUri = Uri.parse(url);
+        final host = parsedUri.host.toLowerCase();
+        
+        final isLocalHost = host == 'localhost' ||
+            host == '127.0.0.1' ||
+            host.startsWith('192.168.') ||
+            host.startsWith('172.') ||
+            host.startsWith('10.');
+            
+        if (isLocalHost) {
+          return '$baseHost${parsedUri.path}${parsedUri.hasQuery ? '?${parsedUri.query}' : ''}';
+        }
+      } catch (_) {}
+      return url;
+    }
+
+    String cleanUrl = url;
+    if (cleanUrl.startsWith('/')) {
+      return '$baseHost$cleanUrl';
+    }
+    return '$baseHost/$cleanUrl';
   }
 }

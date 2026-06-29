@@ -7,6 +7,7 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/widgets/app_shimmer.dart';
 import '../../../../core/widgets/app_error_state.dart';
+import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/api/dio_client.dart';
@@ -169,9 +170,11 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
     final media = (item['media'] as List?)?.cast<Map<String, dynamic>>() ?? [];
     final name = item['name'] as String? ?? '';
     final description = item['description'] as String? ?? '';
-    final price = item['price'] as int? ?? 0;
-    final discountPrice = item['discount_price'] as int?;
-    final rating = (item['rating'] as num?)?.toDouble();
+    final priceRaw = item['final_price'] ?? item['price'];
+    final discountRaw = item['discount_price'];
+    final price = priceRaw is num ? priceRaw.toInt() : (priceRaw is String ? (double.tryParse(priceRaw)?.toInt() ?? 0) : 0);
+    final discountPrice = discountRaw == null ? null : (discountRaw is num ? discountRaw.toInt() : (discountRaw is String ? double.tryParse(discountRaw)?.toInt() : null));
+    final rating = (item['average_rating'] ?? item['rating'] as dynamic) is num ? ((item['average_rating'] ?? item['rating']) as num).toDouble() : null;
     final features = (item['features'] as List?)?.cast<String>() ?? [];
     final reviews = (item['reviews'] as List?)?.cast<Map<String, dynamic>>() ?? [];
 
@@ -248,16 +251,25 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
             controller: _pageController,
             onPageChanged: (i) => setState(() => _currentPage = i),
             itemCount: media.length,
-            itemBuilder: (_, i) => CachedNetworkImage(
-              imageUrl: media[i]['url'] as String? ?? '',
-              width: double.infinity,
-              fit: BoxFit.cover,
-              placeholder: (_, _) => const AppShimmer(height: 300),
-              errorWidget: (_, _, _) => Container(
-                color: Colors.grey[200],
-                child: const Icon(Icons.broken_image, color: Colors.grey),
-              ),
-            ),
+            itemBuilder: (_, i) {
+              final rawSrc = media[i]['url'] as String? ?? media[i]['original_url'] as String? ?? '';
+              final imageSrc = Formatters.imageUrl(rawSrc);
+              return Image.network(
+                imageSrc,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return const AppShimmer(height: 300);
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    color: Colors.grey[200],
+                    child: const Icon(Icons.broken_image, color: Colors.grey),
+                  );
+                },
+              );
+            },
           ),
           Positioned(
             bottom: AppSizes.md, left: 0, right: 0,
@@ -368,11 +380,12 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
               icon: const Icon(Icons.message_outlined),
               onPressed: _messageAdmin,
             ),
-            const Spacer(),
-            IconButton(
-              icon: const Icon(Icons.shopping_bag_outlined),
-              color: AppColors.primaryColor,
-              onPressed: _buyNow,
+            const SizedBox(width: 8),
+            Expanded(
+              child: AppButton(
+                label: 'Checkout',
+                onPressed: _buyNow,
+              ),
             ),
           ],
         ),

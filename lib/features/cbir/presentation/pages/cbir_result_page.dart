@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -237,7 +237,7 @@ class _CbirResultPageState extends ConsumerState<CbirResultPage> {
       padding: const EdgeInsets.all(AppSizes.md),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 0.72,
+        childAspectRatio: 0.63,
         crossAxisSpacing: AppSizes.md,
         mainAxisSpacing: AppSizes.md,
       ),

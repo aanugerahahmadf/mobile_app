@@ -47,7 +47,7 @@ class AppShimmerGrid extends StatelessWidget {
     return SliverGrid(
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: crossAxisCount,
-        childAspectRatio: 0.7,
+        childAspectRatio: 0.61,
         crossAxisSpacing: AppSizes.md,
         mainAxisSpacing: AppSizes.md,
       ),

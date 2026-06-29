@@ -7,12 +7,14 @@ class AppDatePickerField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
   final String? Function(String?)? validator;
+  final bool readOnly;
 
   const AppDatePickerField({
     super.key,
     required this.label,
     required this.controller,
     this.validator,
+    this.readOnly = false,
   });
 
   Future<void> _pickDate(BuildContext context) async {
@@ -33,26 +35,29 @@ class AppDatePickerField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: AppTextStyles.titleSmall),
-        const SizedBox(height: 8),
-        GestureDetector(
-          onTap: () => _pickDate(context),
-          child: AbsorbPointer(
-            child: TextFormField(
-              controller: controller,
-              validator: validator,
-              style: AppTextStyles.bodyLarge,
-              decoration: InputDecoration(
-                suffixIcon: Icon(Icons.calendar_today, size: 18, color: AppColors.textSecondary),
-                errorText: null,
+    return Opacity(
+      opacity: readOnly ? 0.6 : 1.0,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: AppTextStyles.titleSmall),
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: readOnly ? null : () => _pickDate(context),
+            child: AbsorbPointer(
+              child: TextFormField(
+                controller: controller,
+                validator: validator,
+                style: AppTextStyles.bodyLarge,
+                decoration: InputDecoration(
+                  suffixIcon: Icon(Icons.calendar_today, size: 18, color: AppColors.textSecondary),
+                  errorText: null,
+                ),
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

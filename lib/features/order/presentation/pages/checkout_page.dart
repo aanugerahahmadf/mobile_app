@@ -151,7 +151,10 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       if (data != null && data['is_valid'] == true) {
         final total = _getTotalPrice();
         final discType = data['discount_type'] as String? ?? 'fixed';
-        final discValue = (data['discount_amount'] as num?)?.toInt() ?? 0;
+        final discValueRaw = data['discount_amount'];
+        final discValue = discValueRaw is num
+            ? discValueRaw.toInt()
+            : (discValueRaw is String ? (double.tryParse(discValueRaw)?.toInt() ?? 0) : 0);
         final amount = discType == 'percentage' ? (total * discValue ~/ 100) : discValue;
         setState(() {
           _voucherValid = true;
@@ -171,7 +174,10 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
 
   int _getItemPrice() {
     if (_itemData != null) {
-      return (_itemData!['price'] as num?)?.toInt() ?? 0;
+      final priceRaw = _itemData!['price'];
+      return priceRaw is num
+          ? priceRaw.toInt()
+          : (priceRaw is String ? (double.tryParse(priceRaw)?.toInt() ?? 0) : 0);
     }
     return 0;
   }
@@ -189,11 +195,17 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   }
 
   String _getItemImage() {
-    final img = _itemData?['image'] as String?;
-    if (img != null && img.isNotEmpty) return img;
-    final media = (_itemData?['media'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-    if (media.isNotEmpty) return media[0]['url'] as String? ?? '';
-    return '';
+    final media = _itemData?['media'] as List? ?? [];
+    final String rawImage;
+    if (media.isNotEmpty && media[0] is Map) {
+      final m = media[0] as Map;
+      rawImage = (m['url'] as String? ?? '').isNotEmpty
+          ? m['url'] as String
+          : (m['original_url'] as String? ?? '');
+    } else {
+      rawImage = _itemData?['image'] as String? ?? _itemData?['image_url'] as String? ?? '';
+    }
+    return Formatters.imageUrl(rawImage);
   }
 
   void _nextStep() {
@@ -297,40 +309,40 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
 
   Widget _buildStepIndicator() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSizes.md, vertical: AppSizes.md),
+      padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg, vertical: AppSizes.md),
       child: Row(
-        children: List.generate(4, (i) {
-          final isActive = i == _currentStep;
-          final isDone = i < _currentStep;
-          return Expanded(
-            child: Row(
-              children: [
-                if (i > 0)
-                  Expanded(
-                    child: Container(
-                      height: 2,
-                      color: isDone || isActive ? AppColors.primaryColor : Colors.grey[300],
-                    ),
-                  ),
-                Container(
-                  width: 32, height: 32,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isDone || isActive ? AppColors.primaryColor : Colors.grey[300],
-                  ),
-                  child: Center(
-                    child: isDone
-                        ? const Icon(Icons.check, size: 18, color: Colors.white)
-                        : Text('${i + 1}', style: TextStyle(
-                            color: isActive ? Colors.white : Colors.grey[600],
-                            fontSize: 14, fontWeight: FontWeight.w600,
-                          )),
-                  ),
-                ),
-              ],
+        children: [
+          for (int i = 0; i < 4; i++) ...[
+            // Circle indikator step
+            Container(
+              width: 32, height: 32,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: (i <= _currentStep) ? AppColors.primaryColor : Colors.grey[300],
+              ),
+              child: Center(
+                child: (i < _currentStep)
+                    ? const Icon(Icons.check, size: 16, color: Colors.white)
+                    : Text(
+                        '${i + 1}',
+                        style: TextStyle(
+                          color: (i <= _currentStep) ? Colors.white : Colors.grey[600],
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+              ),
             ),
-          );
-        }),
+            // Garis penghubung (hanya jika bukan step terakhir)
+            if (i < 3)
+              Expanded(
+                child: Container(
+                  height: 2,
+                  color: (i < _currentStep) ? AppColors.primaryColor : Colors.grey[300],
+                ),
+              ),
+          ],
+        ],
       ),
     );
   }

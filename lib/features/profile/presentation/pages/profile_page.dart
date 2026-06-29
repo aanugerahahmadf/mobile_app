@@ -1,4 +1,4 @@
-﻿import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,7 +9,6 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_shimmer.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../auth/presentation/widgets/auth_modals.dart';
 import '../providers/profile_provider.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
@@ -45,7 +44,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     );
     if (confirmed == true) {
       await ref.read(authProvider.notifier).logout();
-      if (mounted) showSignInSheet(context);
+      if (mounted) context.go('/landing');
     }
   }
 
@@ -145,7 +144,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     child: Column(
                       children: [
                         _menuTile(Icons.edit, 'Edit Profil', () => context.push('/edit-profile')),
-                        _menuTile(Icons.card_giftcard, 'Voucher Saya', () => context.push('/home')),
+                        _menuTile(Icons.card_giftcard, 'Voucher Saya', () => context.push('/vouchers')),
                         _menuTile(Icons.receipt_long, 'Pesanan Saya', () => context.push('/orders')),
                         _menuTile(Icons.privacy_tip, 'Privasi & Ketentuan', () => context.push('/legal/privacy-term')),
                         _menuTile(Icons.help, 'Pusat Bantuan', () => AppSnackBar.show(context, 'Fitur akan segera hadir', type: SnackBarType.info)),
@@ -164,18 +163,212 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final pState = ref.watch(profileProvider);
     final percent = pState.completionPercent;
     final items = pState.completionItems;
+    final userData = pState.userData;
 
     if (items == null) {
       ref.read(profileProvider.notifier).fetchCompletion();
       return const SizedBox.shrink();
     }
 
-    final missingFields = <String>[
-      if (items['nik'] == false) 'NIK',
-      if (items['ktp_photo'] == false) 'Foto KTP',
-      if (items['whatsapp'] == false) 'WhatsApp',
-      if (items['avatar_url'] == false) 'foto_profil',
-    ];
+    // full_name is derived from first_name + mid_name + last_name (same as Sign Up)
+    final firstName = (userData?['first_name'] as String? ?? '').trim();
+    final midName  = (userData?['mid_name']   as String? ?? '').trim();
+    final lastName = (userData?['last_name']  as String? ?? '').trim();
+    final hasFullName = firstName.isNotEmpty || midName.isNotEmpty || lastName.isNotEmpty;
+
+    // Map all 9 completion items returned by the API backend
+    // API items: full_name, username, whatsapp, avatar_url, email_verified,
+    //            nik, ktp_photo, selfie_photo, identity_verified
+    final missingFields = <_ProfileTask>[];
+    if (!hasFullName) {
+      missingFields.add(const _ProfileTask(
+        key: 'full_name',
+        icon: Icons.person_outline_rounded,
+        label: 'Isi nama depan, tengah & belakang Anda',
+        action: 'Isi',
+        section: 'name',
+      ));
+    }
+    if (items['username'] == false) {
+      missingFields.add(const _ProfileTask(
+        key: 'username',
+        icon: Icons.alternate_email_rounded,
+        label: 'Buat username unik Anda',
+        action: 'Buat',
+        section: 'username',
+      ));
+    }
+    if (items['avatar_url'] == false) {
+      missingFields.add(const _ProfileTask(
+        key: 'avatar_url',
+        icon: Icons.account_circle_outlined,
+        label: 'Unggah foto profil Anda',
+        action: 'Unggah',
+        section: 'avatar',
+      ));
+    }
+    if (items['whatsapp'] == false) {
+      missingFields.add(const _ProfileTask(
+        key: 'whatsapp',
+        icon: Icons.phone_outlined,
+        label: 'Tambahkan nomor WhatsApp aktif',
+        action: 'Tambah',
+        section: 'whatsapp',
+      ));
+    }
+    if (items['email_verified'] == false) {
+      missingFields.add(const _ProfileTask(
+        key: 'email_verified',
+        icon: Icons.mark_email_unread_outlined,
+        label: 'Verifikasi alamat email Anda',
+        action: 'Verifikasi',
+        section: 'username',
+      ));
+    }
+    if (items['nik'] == false) {
+      missingFields.add(const _ProfileTask(
+        key: 'nik',
+        icon: Icons.badge_outlined,
+        label: 'Nomor Identitas (NIK / Passport / SIM / NPWP)',
+        action: 'Isi',
+        section: 'identity',
+      ));
+    }
+
+    // --- Cek field dari userData langsung (tidak ada di completionItems backend) ---
+    final identityVerified = userData?['identity_verified_at'] != null;
+    // Hanya tampilkan field identitas & alamat jika identitas belum terverifikasi
+    if (!identityVerified) {
+      final birthPlace = (userData?['birth_place'] as String? ?? '').trim();
+      if (birthPlace.isEmpty) {
+        missingFields.add(const _ProfileTask(
+          key: 'birth_place',
+          icon: Icons.location_city_outlined,
+          label: 'Isi tempat lahir Anda',
+          action: 'Isi',
+          section: 'identity',
+        ));
+      }
+
+      final birthDate = (userData?['birth_date'] as String? ?? '').trim();
+      if (birthDate.isEmpty) {
+        missingFields.add(const _ProfileTask(
+          key: 'birth_date',
+          icon: Icons.cake_outlined,
+          label: 'Isi tanggal lahir Anda',
+          action: 'Isi',
+          section: 'identity',
+        ));
+      }
+
+      final country = (userData?['country'] as String? ?? '').trim();
+      if (country.isEmpty) {
+        missingFields.add(const _ProfileTask(
+          key: 'country',
+          icon: Icons.flag_outlined,
+          label: 'Pilih negara tempat tinggal Anda',
+          action: 'Pilih',
+          section: 'identity',
+        ));
+      }
+
+      final provinceName = (userData?['province_name'] as String? ?? '').trim();
+      if (provinceName.isEmpty) {
+        missingFields.add(const _ProfileTask(
+          key: 'province',
+          icon: Icons.map_outlined,
+          label: 'Pilih provinsi tempat tinggal Anda',
+          action: 'Pilih',
+          section: 'identity',
+        ));
+      }
+
+      final cityName = (userData?['city_name'] as String? ?? '').trim();
+      if (cityName.isEmpty) {
+        missingFields.add(const _ProfileTask(
+          key: 'city',
+          icon: Icons.location_on_outlined,
+          label: 'Pilih kota / kabupaten Anda',
+          action: 'Pilih',
+          section: 'identity',
+        ));
+      }
+
+      final districtName = (userData?['district_name'] as String? ?? '').trim();
+      if (districtName.isEmpty) {
+        missingFields.add(const _ProfileTask(
+          key: 'district',
+          icon: Icons.holiday_village_outlined,
+          label: 'Pilih kecamatan Anda',
+          action: 'Pilih',
+          section: 'identity',
+        ));
+      }
+
+      final villageName = (userData?['village_name'] as String? ?? '').trim();
+      if (villageName.isEmpty) {
+        missingFields.add(const _ProfileTask(
+          key: 'village',
+          icon: Icons.home_work_outlined,
+          label: 'Pilih kelurahan / desa Anda',
+          action: 'Pilih',
+          section: 'identity',
+        ));
+      }
+
+      final postalCode = (userData?['postal_code'] as String? ?? '').trim();
+      if (postalCode.isEmpty) {
+        missingFields.add(const _ProfileTask(
+          key: 'postal_code',
+          icon: Icons.markunread_mailbox_outlined,
+          label: 'Isi kode pos wilayah Anda',
+          action: 'Isi',
+          section: 'identity',
+        ));
+      }
+
+      final address = (userData?['address'] as String? ?? '').trim();
+      if (address.isEmpty) {
+        missingFields.add(const _ProfileTask(
+          key: 'address',
+          icon: Icons.edit_road_outlined,
+          label: 'Isi detail alamat lengkap Anda',
+          action: 'Isi',
+          section: 'identity',
+        ));
+      }
+    }
+
+    if (items['ktp_photo'] == false) {
+      missingFields.add(const _ProfileTask(
+        key: 'ktp_photo',
+        icon: Icons.credit_card_outlined,
+        label: 'Unggah Foto KTP / Passport / SIM / NPWP',
+        action: 'Unggah',
+        section: 'ktp_photo',
+      ));
+    }
+    if (items['selfie_photo'] == false) {
+      missingFields.add(const _ProfileTask(
+        key: 'selfie_photo',
+        icon: Icons.face_outlined,
+        label: 'Unggah Foto Selfie + Dokumen Identitas (KTP/Passport/SIM/NPWP)',
+        action: 'Unggah',
+        section: 'selfie',
+      ));
+    }
+    if (items['identity_verified'] == false) {
+      missingFields.add(const _ProfileTask(
+        key: 'identity_verified',
+        icon: Icons.face_retouching_natural,
+        label: 'Verifikasi wajah dengan scan selfie Anda',
+        action: 'Scan',
+        section: 'selfie',
+      ));
+    }
+
+    // Jika semua data sudah lengkap, sembunyikan card sepenuhnya
+    if (missingFields.isEmpty) return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
@@ -190,14 +383,19 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('kelengkapan_profil', style: AppTextStyles.titleSmall),
-                  Text('$percent%', style: AppTextStyles.bodyMedium.copyWith(
-                    color: percent >= 80 ? Colors.green : (percent >= 50 ? Colors.orange : AppColors.primaryColor),
-                    fontWeight: FontWeight.w600,
-                  )),
+                  Text('Kelengkapan Profil', style: AppTextStyles.titleSmall),
+                  Text(
+                    '$percent%',
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: percent >= 80
+                          ? Colors.green
+                          : (percent >= 50 ? Colors.orange : AppColors.primaryColor),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ],
               ),
-              SizedBox(height: AppSizes.sm),
+              const SizedBox(height: 8),
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: LinearProgressIndicator(
@@ -205,24 +403,30 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   minHeight: 10,
                   backgroundColor: AppColors.secondaryColor.withAlpha(50),
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    percent >= 80 ? Colors.green : (percent >= 50 ? Colors.orange : AppColors.primaryColor),
+                    percent >= 80
+                        ? Colors.green
+                        : (percent >= 50 ? Colors.orange : AppColors.primaryColor),
                   ),
                 ),
               ),
               if (missingFields.isNotEmpty) ...[
-                SizedBox(height: AppSizes.sm),
-                Text('lengkapi_data', style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
-                SizedBox(height: 4),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 4,
-                  children: missingFields.map((f) => Chip(
-                    label: Text(f, style: const TextStyle(fontSize: 11)),
-                    visualDensity: VisualDensity.compact,
-                    deleteIcon: const Icon(Icons.add, size: 14),
-                    onDeleted: () => context.push('/edit-profile'),
-                  )).toList(),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    const Icon(Icons.info_outline_rounded, size: 14, color: Color(0xFF888888)),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${missingFields.length} data belum dilengkapi',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF555555),
+                      ),
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 10),
+                ...missingFields.map((task) => _buildTaskRow(task)),
               ],
             ],
           ),
@@ -230,6 +434,137 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       ),
     );
   }
+
+  void _navigateToTask(_ProfileTask task) async {
+    switch (task.key) {
+
+      case 'email_verified':
+        // Kirim OTP → halaman verifikasi OTP
+        final userData = ref.read(profileProvider).userData;
+        final email = userData?['email'] as String?;
+        if (email == null || email.isEmpty) {
+          AppSnackBar.show(context, 'Email belum diisi di profil', type: SnackBarType.warning);
+          return;
+        }
+        try {
+          await ref.read(profileProvider.notifier).sendVerifyEmailOtp(email);
+          if (mounted) {
+            context.push('/verify-otp', extra: {'email': email, 'purpose': 'verify_email'});
+          }
+        } catch (e) {
+          if (mounted) {
+            AppSnackBar.show(context, 'Gagal mengirim OTP verifikasi. Coba lagi.', type: SnackBarType.error);
+          }
+        }
+        break;
+
+      case 'identity_verified':
+        // Verifikasi wajah → Face Scanner
+        context.push('/face-scanner');
+        break;
+
+      // Masing-masing field punya halaman tersendiri
+      case 'full_name':
+        context.push('/profile-field', extra: {'key': 'full_name'});
+        break;
+      case 'username':
+        context.push('/profile-field', extra: {'key': 'username'});
+        break;
+      case 'avatar_url':
+        context.push('/profile-field', extra: {'key': 'avatar'});
+        break;
+      case 'whatsapp':
+        context.push('/profile-field', extra: {'key': 'whatsapp'});
+        break;
+      case 'nik':
+        context.push('/profile-field', extra: {'key': 'nik'});
+        break;
+      case 'birth_place':
+      case 'birth_date':
+        // Tempat lahir & tanggal lahir → satu halaman bersama
+        context.push('/profile-field', extra: {'key': 'birth'});
+        break;
+      case 'country':
+        context.push('/profile-field', extra: {'key': 'country'});
+        break;
+      case 'province':
+      case 'city':
+      case 'district':
+      case 'village':
+      case 'postal_code':
+        // Semua wilayah → satu halaman region
+        context.push('/profile-field', extra: {'key': 'region'});
+        break;
+      case 'address':
+        context.push('/profile-field', extra: {'key': 'address'});
+        break;
+      case 'ktp_photo':
+        context.push('/profile-field', extra: {'key': 'ktp_photo'});
+        break;
+      case 'selfie_photo':
+        context.push('/profile-field', extra: {'key': 'selfie'});
+        break;
+
+      default:
+        // Fallback: ke halaman lengkapi profil
+        context.push('/complete-profile', extra: {'section': task.section});
+    }
+  }
+
+  Widget _buildTaskRow(_ProfileTask task) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8F9FA),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFEEEEEE)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(7),
+            decoration: BoxDecoration(
+              color: AppColors.primaryColor.withAlpha(18),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(task.icon, size: 15, color: AppColors.primaryColor),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              task.label,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF1A1A2E),
+              ),
+            ),
+          ),
+          InkWell(
+            onTap: () => _navigateToTask(task),
+            borderRadius: BorderRadius.circular(20),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+              decoration: BoxDecoration(
+                color: AppColors.primaryColor,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                task.action,
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
 
   Widget _buildIdentityVerification(Map<String, dynamic>? userData) {
     final identityVerified = userData?['identity_verified_at'] != null;
@@ -345,3 +680,21 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     );
   }
 }
+
+/// Simple immutable data class representing a pending profile task.
+class _ProfileTask {
+  final String key;
+  final IconData icon;
+  final String label;
+  final String action;
+  final String section;
+
+  const _ProfileTask({
+    required this.key,
+    required this.icon,
+    required this.label,
+    required this.action,
+    required this.section,
+  });
+}
+

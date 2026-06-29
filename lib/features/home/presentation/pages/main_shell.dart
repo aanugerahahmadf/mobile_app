@@ -15,18 +15,30 @@ class MainShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currentIndex = ref.watch(bottomNavIndexProvider);
     final authState = ref.watch(authProvider);
-    final avatarUrl = authState is AuthAuthenticated
+    final rawAvatar = authState is AuthAuthenticated
         ? (authState.user.avatarUrl ?? authState.user.avatar)
         : null;
-    return Scaffold(
-      body: navigationShell,
-      bottomNavigationBar: _ModernBottomBar(
-        currentIndex: currentIndex,
-        avatarUrl: avatarUrl,
-        onTap: (index) {
-          ref.read(bottomNavIndexProvider.notifier).state = index;
-          navigationShell.goBranch(index);
-        },
+    final avatarUrl = rawAvatar != null && (rawAvatar.startsWith('http') || rawAvatar.startsWith('/storage'))
+        ? rawAvatar
+        : null;
+
+    return PopScope(
+      canPop: currentIndex == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+        ref.read(bottomNavIndexProvider.notifier).state = 0;
+        navigationShell.goBranch(0);
+      },
+      child: Scaffold(
+        body: navigationShell,
+        bottomNavigationBar: _ModernBottomBar(
+          currentIndex: currentIndex,
+          avatarUrl: avatarUrl,
+          onTap: (index) {
+            ref.read(bottomNavIndexProvider.notifier).state = index;
+            navigationShell.goBranch(index);
+          },
+        ),
       ),
     );
   }
@@ -75,7 +87,7 @@ class _ModernBottomBar extends StatelessWidget {
               if (isCenter) {
                 return _buildCenterButton(item, isSelected, () => onTap(i));
               }
-              return _buildTab(item, isSelected, isProfile, () => onTap(i));
+              return _buildTab(context, item, isSelected, isProfile, () => onTap(i));
             }),
           ),
         ),
@@ -83,9 +95,10 @@ class _ModernBottomBar extends StatelessWidget {
     );
   }
 
-  Widget _buildTab(_BarItem item, bool isSelected, bool isProfile, VoidCallback onTap) {
+  Widget _buildTab(BuildContext context, _BarItem item, bool isSelected, bool isProfile, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
+      onDoubleTap: isProfile ? () => context.push('/switch-account') : null,
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
@@ -101,20 +114,35 @@ class _ModernBottomBar extends StatelessWidget {
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 250),
               transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
-              child: isProfile && avatarUrl != null
-                  ? CircleAvatar(
+              child: isProfile
+                  ? Container(
                       key: ValueKey('avatar_$isSelected'),
-                      radius: 13,
-                      backgroundImage: CachedNetworkImageProvider(avatarUrl!),
-                    )
-                    : Icon(
-                        isSelected ? item.activeIcon : item.icon,
-                        key: ValueKey(isSelected),
-                        size: 24,
-                        color: isSelected ? AppColors.primaryColor : AppColors.textSecondary,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isSelected ? AppColors.primaryColor : Colors.transparent,
+                          width: 1.5,
+                        ),
                       ),
-              ),
-            ],
+                      child: CircleAvatar(
+                        radius: 12,
+                        backgroundColor: isSelected ? AppColors.primaryColor : Colors.grey[300],
+                        backgroundImage: (avatarUrl != null && avatarUrl!.isNotEmpty)
+                            ? CachedNetworkImageProvider(avatarUrl!)
+                            : null,
+                        child: (avatarUrl == null || avatarUrl!.isEmpty)
+                            ? const Icon(Icons.person, size: 14, color: Colors.white)
+                            : null,
+                      ),
+                    )
+                  : Icon(
+                      isSelected ? item.activeIcon : item.icon,
+                      key: ValueKey(isSelected),
+                      size: 24,
+                      color: isSelected ? AppColors.primaryColor : AppColors.textSecondary,
+                    ),
+            ),
+          ],
         ),
       ),
     );

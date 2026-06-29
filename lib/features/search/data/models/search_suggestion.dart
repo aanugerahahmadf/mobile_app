@@ -1,3 +1,5 @@
+import '../../../../core/utils/formatters.dart';
+
 enum SuggestionType {
   packages,
   products,
@@ -177,10 +179,10 @@ class SearchSuggestion {
     final media = json['media'] as List? ?? [];
     if (media.isNotEmpty && media[0] is Map) {
       final url = (media[0] as Map)['url'];
-      if (url is String && url.isNotEmpty) return url;
+      if (url is String && url.isNotEmpty) return Formatters.imageUrl(url);
     }
     final image = json['image'] as String?;
-    if (image != null && image.isNotEmpty) return image;
+    if (image != null && image.isNotEmpty) return Formatters.imageUrl(image);
     return null;
   }
 

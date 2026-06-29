@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/api/dio_client.dart';
 import '../../data/profile_repository_impl.dart';
 import '../../domain/profile_repository.dart';
 
@@ -202,6 +203,14 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       state = state.copyWith(saving: false, error: e.toString());
       rethrow;
     }
+  }
+
+  /// Mengirim OTP verifikasi email ke [email] via endpoint /auth/send-otp
+  Future<void> sendVerifyEmailOtp(String email) async {
+    await DioClient.instance.post(
+      '/auth/send-otp',
+      data: {'email': email, 'purpose': 'verify_email'},
+    );
   }
 }
 

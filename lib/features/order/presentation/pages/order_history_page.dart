@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -22,12 +22,12 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryPage> with Single
   String? _activeStatus;
 
   final _tabs = [
-    {'label': 'semua', 'status': null},
-    {'label': 'menunggu', 'status': 'pending'},
-    {'label': 'status_dikonfirmasi', 'status': 'confirmed'},
-    {'label': 'status_diproses', 'status': 'preparing'},
-    {'label': 'status_selesai', 'status': 'completed'},
-    {'label': 'status_dibatalkan', 'status': 'cancelled'},
+    {'label': 'Semua', 'status': null},
+    {'label': 'Menunggu', 'status': 'pending'},
+    {'label': 'Dikonfirmasi', 'status': 'confirmed'},
+    {'label': 'Diproses', 'status': 'preparing'},
+    {'label': 'Selesai', 'status': 'completed'},
+    {'label': 'Dibatalkan', 'status': 'cancelled'},
   ];
 
   @override
@@ -176,7 +176,7 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryPage> with Single
                                               Column(
                                                 crossAxisAlignment: CrossAxisAlignment.end,
                                                 children: [
-                                                  Text(Formatters.currency(order['total'] as int? ?? 0), style: AppTextStyles.titleMedium.copyWith(color: AppColors.primaryColor)),
+                                                  Text(Formatters.currency((order['total'] as num?)?.toInt() ?? 0), style: AppTextStyles.titleMedium.copyWith(color: AppColors.primaryColor)),
                                                   Text(Formatters.date(order['created_at'] as String? ?? ''), style: AppTextStyles.bodySmall),
                                                 ],
                                               ),

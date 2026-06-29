@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
@@ -46,8 +46,11 @@ class SwitchAccountPage extends ConsumerWidget {
           AppButton(
             label: 'Tambah Akun',
             onPressed: () async {
-              await const FlutterSecureStorage().delete(key: 'auth_token');
-              if (context.mounted) showSignInSheet(context);
+              await ref.read(authProvider.notifier).logout();
+              if (context.mounted) {
+                context.go('/landing');
+                showSignInSheet(context);
+              }
             },
             type: ButtonType.outline,
             icon: Icons.person_add,
@@ -57,7 +60,9 @@ class SwitchAccountPage extends ConsumerWidget {
             label: 'Keluar',
             onPressed: () async {
               await ref.read(authProvider.notifier).logout();
-              if (context.mounted) showSignInSheet(context);
+              if (context.mounted) {
+                context.go('/landing');
+              }
             },
             type: ButtonType.primary,
             icon: Icons.logout,

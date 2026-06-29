@@ -129,10 +129,17 @@ class _VoucherListPageState extends ConsumerState<VoucherListPage> {
                           ),
                           const SizedBox(width: 8),
                         ],
-                        Text(name, style: AppTextStyles.labelSmall.copyWith(
-                          color: isExpired ? AppColors.textTertiary : Colors.white60,
-                          letterSpacing: 1.5,
-                        )),
+                        Expanded(
+                          child: Text(
+                            name,
+                            style: AppTextStyles.labelSmall.copyWith(
+                              color: isExpired ? AppColors.textTertiary : Colors.white60,
+                              letterSpacing: 1.5,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -148,6 +155,7 @@ class _VoucherListPageState extends ConsumerState<VoucherListPage> {
                     label: 'Klaim',
                     onPressed: () => _claimVoucher(id),
                     type: ButtonType.primary,
+                    padding: EdgeInsets.zero,
                   ),
                 ),
             ],

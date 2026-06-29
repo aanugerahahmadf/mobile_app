@@ -8,6 +8,7 @@ import '../../features/auth/presentation/pages/forgot_password_page.dart';
 import '../../features/auth/presentation/pages/reset_password_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/home/presentation/pages/main_shell.dart';
+import '../../features/auth/presentation/pages/switch_account_page.dart';
 import '../../features/catalog/presentation/pages/catalog_list_page.dart';
 import '../../features/catalog/presentation/pages/catalog_detail_page.dart';
 import '../../features/cbir/presentation/pages/cbir_result_page.dart';
@@ -20,6 +21,8 @@ import '../../features/chat/presentation/pages/chat_detail_page.dart';
 import '../../features/notification/presentation/pages/notification_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/profile/presentation/pages/edit_profile_page.dart';
+import '../../features/profile/presentation/pages/complete_profile_page.dart';
+import '../../features/profile/presentation/pages/profile_field_page.dart';
 import '../../features/profile/presentation/pages/face_scanner_page.dart';
 import '../../features/payment/presentation/pages/midtrans_webview_page.dart';
 import '../../features/review/presentation/pages/my_reviews_page.dart';
@@ -100,7 +103,27 @@ final appRouter = GoRouter(
     GoRoute(path: '/order/:id', builder: (_, state) => OrderDetailPage(id: state.pathParameters['id']!)),
     GoRoute(path: '/chat/:id', builder: (_, state) => ChatDetailPage(id: state.pathParameters['id']!)),
     GoRoute(path: '/notifications', builder: (_, _) => const NotificationPage()),
-    GoRoute(path: '/edit-profile', builder: (_, _) => const EditProfilePage()),
+    GoRoute(
+      path: '/edit-profile',
+      builder: (_, state) {
+        final section = (state.extra as Map<String, dynamic>?)?['section'] as String?;
+        return EditProfilePage(scrollToSection: section);
+      },
+    ),
+    GoRoute(
+      path: '/complete-profile',
+      builder: (_, state) {
+        final section = (state.extra as Map<String, dynamic>?)?['section'] as String?;
+        return CompleteProfilePage(scrollToSection: section);
+      },
+    ),
+    GoRoute(
+      path: '/profile-field',
+      builder: (_, state) {
+        final key = (state.extra as Map<String, dynamic>?)?['key'] as String? ?? 'full_name';
+        return ProfileFieldPage(fieldKey: key);
+      },
+    ),
     GoRoute(path: '/face-scanner', builder: (_, _) => const FaceScannerPage()),
     GoRoute(path: '/my-reviews', builder: (_, _) => const MyReviewsPage()),
     GoRoute(path: '/history', builder: (_, _) => const HistoryPage()),
@@ -116,6 +139,7 @@ final appRouter = GoRouter(
     GoRoute(path: '/privacy-policy', builder: (_, _) => const PrivacyPolicyPage()),
     GoRoute(path: '/wedding-policy', builder: (_, _) => const WeddingPolicyPage()),
     GoRoute(path: '/help-center', builder: (_, _) => const HelpCenterPage()),
+    GoRoute(path: '/switch-account', builder: (_, _) => const SwitchAccountPage()),
     GoRoute(
       path: '/payment/:orderId',
       builder: (_, state) {
