@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/widgets/app_button.dart';
-import '../../../auth/presentation/widgets/auth_modals.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -38,7 +38,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   Future<void> _onFinish() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('onboarding_seen', true);
-    if (mounted) showSignInSheet(context);
+    if (mounted) context.go('/splash');
   }
 
   @override
