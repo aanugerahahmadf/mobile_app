@@ -1043,36 +1043,38 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
   }
 
   Widget _buildPhoneField() {
-    return Row(
-      children: [
-        SizedBox(
-          height: 50,
-          child: OutlinedButton(
-            onPressed: () => _showCountryCodePicker(),
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: AppColors.dividerColor),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-            ),
-            child: Text(_countryCode, style: AppTextStyles.bodyMedium),
-          ),
+    return AppTextField(
+      label: 'WhatsApp',
+      controller: _whatsappController,
+      keyboardType: TextInputType.phone,
+      validator: Validators.phone,
+      prefix: _buildCountryCodePrefix(),
+    );
+  }
+
+  Widget _buildCountryCodePrefix() {
+    return GestureDetector(
+      onTap: () => _showCountryCodePicker(),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8),
+        decoration: BoxDecoration(
+          border: Border(right: BorderSide(color: AppColors.dividerColor)),
         ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: AppTextField(
-            label: 'WhatsApp',
-            controller: _whatsappController,
-            keyboardType: TextInputType.phone,
-            validator: Validators.phone,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(_countryCode, style: AppTextStyles.bodyMedium),
+            const SizedBox(width: 2),
+            Icon(Icons.arrow_drop_down, size: 18, color: AppColors.textSecondary),
+          ],
         ),
-      ],
+      ),
     );
   }
 
   void _showCountryCodePicker() {
     final searchController = TextEditingController();
-    final filteredCodes = ValueNotifier(List.of(countryCodes));
+    List<CountryCode> codes = List.of(countryCodes);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1100,7 +1102,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
                     ),
                     onChanged: (v) {
                       setSheetState(() {
-                        filteredCodes.value = countryCodes.where((c) =>
+                        codes = countryCodes.where((c) =>
                           c.name.toLowerCase().contains(v.toLowerCase()) ||
                           c.dialCode.contains(v)).toList();
                       });
@@ -1109,22 +1111,19 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
                 ),
                 const SizedBox(height: 8),
                 Flexible(
-                  child: ValueListenableBuilder(
-                    valueListenable: filteredCodes,
-                    builder: (_, codes, _) => ListView.separated(
-                      shrinkWrap: true,
-                      itemCount: codes.length,
-                      separatorBuilder: (_, _) => const Divider(height: 1),
-                      itemBuilder: (_, i) => ListTile(
-                        dense: true,
-                        leading: Text(codes[i].flag, style: const TextStyle(fontSize: 22)),
-                        title: Text(codes[i].name, style: AppTextStyles.bodyMedium),
-                        trailing: Text(codes[i].dialCode, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
-                        onTap: () {
-                          setState(() => _countryCode = codes[i].dialCode);
-                          Navigator.pop(ctx);
-                        },
-                      ),
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: codes.length,
+                    separatorBuilder: (_, _) => const Divider(height: 1),
+                    itemBuilder: (_, i) => ListTile(
+                      dense: true,
+                      leading: Text(codes[i].flag, style: const TextStyle(fontSize: 22)),
+                      title: Text(codes[i].name, style: AppTextStyles.bodyMedium),
+                      trailing: Text(codes[i].dialCode, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
+                      onTap: () {
+                        setState(() => _countryCode = codes[i].dialCode);
+                        Navigator.pop(ctx);
+                      },
                     ),
                   ),
                 ),
