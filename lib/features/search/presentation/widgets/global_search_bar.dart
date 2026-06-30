@@ -117,47 +117,45 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (ctx) => SingleChildScrollView(
-        child: Container(
-          padding: const EdgeInsets.only(top: 12, bottom: 32),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 36, height: 4,
-                decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
-              ),
-              const SizedBox(height: 24),
-              Text('Cari dengan Gambar',
-                style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Color(0xFF1A1A2E)),
-              ),
-              const SizedBox(height: 24),
-              _sheetOption(
-                icon: Icons.camera_alt_rounded,
-                title: 'Kamera',
-                subtitle: 'Ambil foto langsung',
-                onTap: () { context.pop(); _pickImage(ImageSource.camera); },
-              ),
-              _sheetOption(
-                icon: Icons.photo_library,
-                title: 'Galeri',
-                subtitle: 'Pilih dari Galeri',
-                onTap: () { context.pop(); _pickImage(ImageSource.gallery); },
-              ),
-              _sheetOption(
-                icon: Icons.folder,
-                title: 'File Manager',
-                subtitle: 'Pilih dari penyimpanan',
-                onTap: () { context.pop(); _pickImage(ImageSource.gallery); },
-              ),
-              _sheetOption(
-                icon: Icons.cloud,
-                title: 'Google Drive',
-                subtitle: 'Pilih file dari Drive',
-                onTap: () { context.pop(); _pickImage(ImageSource.gallery); },
-              ),
-            ],
-          ),
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.only(top: 12, bottom: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 36, height: 4,
+              decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+            ),
+            const SizedBox(height: 24),
+            Text('Cari dengan Gambar',
+              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Color(0xFF1A1A2E)),
+            ),
+            const SizedBox(height: 24),
+            _sheetOption(
+              icon: Icons.camera_alt_rounded,
+              title: 'Kamera',
+              subtitle: 'Ambil foto langsung',
+              onTap: () { context.pop(); _pickImage(ImageSource.camera); },
+            ),
+            _sheetOption(
+              icon: Icons.photo_library,
+              title: 'Galeri',
+              subtitle: 'Pilih dari Galeri',
+              onTap: () { context.pop(); _pickImage(ImageSource.gallery); },
+            ),
+            _sheetOption(
+              icon: Icons.folder,
+              title: 'File Manager',
+              subtitle: 'Pilih dari penyimpanan',
+              onTap: () { context.pop(); _pickImage(ImageSource.gallery); },
+            ),
+            _sheetOption(
+              icon: Icons.cloud,
+              title: 'Google Drive',
+              subtitle: 'Pilih file dari Drive',
+              onTap: () { context.pop(); _pickImage(ImageSource.gallery); },
+            ),
+          ],
         ),
       ),
     );

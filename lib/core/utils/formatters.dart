@@ -48,9 +48,9 @@ class Formatters {
   static String imageUrl(String? url) {
     if (url == null || url.isEmpty) return '';
 
-    String baseHost = 'http://192.168.100.63:8000';
+    String baseHost = 'http://10.0.2.2:8000';
     try {
-      final apiBaseUrl = dotenv.get('API_BASE_URL', fallback: 'http://192.168.100.63:8000/api');
+      final apiBaseUrl = dotenv.get('API_BASE_URL', fallback: 'http://10.0.2.2:8000/api');
       final uri = Uri.parse(apiBaseUrl);
       baseHost = '${uri.scheme}://${uri.host}:${uri.port}';
     } catch (_) {}

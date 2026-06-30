@@ -54,7 +54,7 @@ class ErrorInterceptor extends Interceptor {
 class DioClient {
   static Dio get instance {
     final dio = Dio(BaseOptions(
-      baseUrl: dotenv.get('API_BASE_URL', fallback: 'http://192.168.1.100:8000/api'),
+      baseUrl: dotenv.get('API_BASE_URL', fallback: 'http://10.0.2.2:8000/api'),
       connectTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 30),
       headers: {
