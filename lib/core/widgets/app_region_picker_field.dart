@@ -161,7 +161,7 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
   @override
   void initState() {
     super.initState();
-    _isIndonesia = widget.country == 'Indonesia';
+    _isIndonesia = (widget.country ?? '').trim() == 'Indonesia';
     _fallbackDistrictController.text = widget.initialDistrictName ?? '';
     _fallbackVillageController.text = widget.initialVillageName ?? '';
     _fallbackPostalController.text = widget.initialPostalCode ?? '';
@@ -188,7 +188,7 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
   @override
   void didUpdateWidget(AppRegionPickerField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final nowIndonesia = widget.country == 'Indonesia';
+    final nowIndonesia = (widget.country ?? '').trim() == 'Indonesia';
     final countryChanged = widget.country != oldWidget.country;
 
     if (nowIndonesia != _isIndonesia || countryChanged) {

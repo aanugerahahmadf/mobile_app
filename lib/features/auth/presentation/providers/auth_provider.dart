@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/api/dio_client.dart';
 import '../../data/models/user_model.dart';
@@ -62,7 +63,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> googleLogin() async {
     state = const AuthLoading();
     try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      final GoogleSignInAccount? googleUser = await GoogleSignIn(
+        serverClientId: dotenv.get('GOOGLE_CLIENT_ID'),
+      ).signIn();
       if (googleUser == null) {
         state = const AuthInitial();
         return;
@@ -220,6 +223,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
     } catch (_) {
       state = const AuthInitial();
     }
+  }
+
+  Future<void> refreshUser() async {
+    try {
+      final token = await _storage.read(key: 'auth_token');
+      if (token == null || token.isEmpty) return;
+      final response = await _dio.get(ApiEndpoints.user);
+      final userMap = (response.data as Map<String, dynamic>?)?['data'] as Map<String, dynamic>?;
+      if (userMap == null) return;
+      final user = UserModel.fromJson(userMap);
+      state = AuthAuthenticated(user);
+    } catch (_) {}
   }
 
   Future<void> updateProfile(Map<String, dynamic> data) async {

@@ -13,10 +13,19 @@
           "package_name": "com.example.mobile_app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "125956093579-rcm25oq9bn8cmmv71qdacbdmrfv98j6r.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.mobile_app",
+            "certificate_hash": "a7e14554c6ebc80bb9b723eebdbc2df96078ca2d"
+          }
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyD0o1LaFuIcGTOQrpyMplqbEhPntnKwPFo"
+          "current_key": "AIzaSyD1o1LaFuIcGTOQrpyMplqbEhPntnKwPFo"
         }
       ],
       "services": {

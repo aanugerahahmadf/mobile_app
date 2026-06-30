@@ -36,6 +36,7 @@ import '../../features/legal/presentation/pages/terms_of_service_page.dart';
 import '../../features/legal/presentation/pages/privacy_policy_page.dart';
 import '../../features/legal/presentation/pages/wedding_policy_page.dart';
 import '../../features/legal/presentation/pages/help_center_page.dart';
+import '../../features/legal/presentation/pages/privacy_and_term_page.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -139,6 +140,7 @@ final appRouter = GoRouter(
     GoRoute(path: '/privacy-policy', builder: (_, _) => const PrivacyPolicyPage()),
     GoRoute(path: '/wedding-policy', builder: (_, _) => const WeddingPolicyPage()),
     GoRoute(path: '/help-center', builder: (_, _) => const HelpCenterPage()),
+    GoRoute(path: '/legal/privacy-term', builder: (_, _) => const PrivacyAndTermPage()),
     GoRoute(path: '/switch-account', builder: (_, _) => const SwitchAccountPage()),
     GoRoute(
       path: '/payment/:orderId',

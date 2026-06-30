@@ -132,10 +132,10 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
                       Positioned(
                         top: 8, right: 8,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: AppColors.errorColor,
-                            borderRadius: BorderRadius.circular(5),
+                            borderRadius: BorderRadius.circular(6),
                             boxShadow: [
                               BoxShadow(
                                 color: AppColors.errorColor.withAlpha(70),
@@ -148,7 +148,7 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
                             '-$discountPct%',
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 9,
+                              fontSize: 11,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
@@ -159,16 +159,16 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
                       Positioned(
                         top: 8, left: 8,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: _similarityColor,
-                            borderRadius: BorderRadius.circular(4),
+                            borderRadius: BorderRadius.circular(5),
                           ),
                           child: Text(
                             '${(widget.similarity! * 100).toStringAsFixed(1)}%',
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 9,
+                              fontSize: 10,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
@@ -223,7 +223,7 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
                       Text(
                         name,
                         style: const TextStyle(
-                          fontSize: 11,
+                          fontSize: 12,
                           fontWeight: FontWeight.w600,
                           color: Color(0xFF1A1A2E),
                           height: 1.3,
@@ -238,7 +238,7 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
                           Text(
                             Formatters.currency(price),
                             style: const TextStyle(
-                              fontSize: 12,
+                              fontSize: 13,
                               fontWeight: FontWeight.w700,
                               color: AppColors.primaryColor,
                             ),
@@ -248,7 +248,7 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
                             Text(
                               Formatters.currency(originalPrice),
                               style: const TextStyle(
-                                fontSize: 9,
+                                fontSize: 10,
                                 fontWeight: FontWeight.w400,
                                 color: AppColors.textTertiary,
                                 decoration: TextDecoration.lineThrough,
@@ -260,12 +260,12 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
                             const SizedBox(height: 2),
                             Row(
                               children: [
-                                Icon(Icons.star_rounded, size: 12, color: AppColors.warningColor.withAlpha(200)),
+                                Icon(Icons.star_rounded, size: 13, color: AppColors.warningColor.withAlpha(200)),
                                 const SizedBox(width: 2),
                                 Text(
                                   rating.toStringAsFixed(1),
                                   style: const TextStyle(
-                                    fontSize: 9,
+                                    fontSize: 10,
                                     fontWeight: FontWeight.w500,
                                     color: AppColors.textSecondary,
                                   ),

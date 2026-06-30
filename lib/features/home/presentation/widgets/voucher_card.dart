@@ -3,8 +3,9 @@ import '../../../../core/constants/app_sizes.dart';
 
 class VoucherCard extends StatelessWidget {
   final Map<String, dynamic> voucher;
+  final VoidCallback? onTap;
 
-  const VoucherCard({super.key, required this.voucher});
+  const VoucherCard({super.key, required this.voucher, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -27,10 +28,14 @@ class VoucherCard extends StatelessWidget {
       }
     }
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      height: 124,
-      child: ClipPath(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: SizedBox(
+          height: 124,
+          child: ClipPath(
         clipper: TicketClipper(),
         child: Container(
           decoration: BoxDecoration(
@@ -172,6 +177,8 @@ class VoucherCard extends StatelessWidget {
             ],
           ),
         ),
+        ),
+      ),
       ),
     );
   }

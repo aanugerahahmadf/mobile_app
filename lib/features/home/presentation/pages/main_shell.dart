@@ -15,12 +15,8 @@ class MainShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currentIndex = ref.watch(bottomNavIndexProvider);
     final authState = ref.watch(authProvider);
-    final rawAvatar = authState is AuthAuthenticated
-        ? (authState.user.avatarUrl ?? authState.user.avatar)
-        : null;
-    final avatarUrl = rawAvatar != null && (rawAvatar.startsWith('http') || rawAvatar.startsWith('/storage'))
-        ? rawAvatar
-        : null;
+    final rawAvatar = authState is AuthAuthenticated ? authState.user.avatarUrl : null;
+    final avatarUrl = rawAvatar != null && rawAvatar.isNotEmpty ? rawAvatar : null;
 
     return PopScope(
       canPop: currentIndex == 0,

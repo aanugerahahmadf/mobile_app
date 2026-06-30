@@ -5,6 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:dio/dio.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_shadows.dart';
@@ -111,51 +114,155 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
     }
   }
 
+  Future<void> _pickFromDrive() async {
+    try {
+      final googleUser = await GoogleSignIn(
+        serverClientId: dotenv.get('GOOGLE_CLIENT_ID'),
+        scopes: ['https://www.googleapis.com/auth/drive.readonly'],
+      ).signIn();
+      if (googleUser == null || !mounted) return;
+
+      final auth = await googleUser.authentication;
+      if (auth.accessToken == null) return;
+
+      final response = await Dio().get(
+        'https://www.googleapis.com/drive/v3/files',
+        queryParameters: {
+          'q': "mimeType contains 'image/' and trashed = false",
+          'fields': 'files(id, name, mimeType, thumbnailLink)',
+          'pageSize': '50',
+          'orderBy': 'modifiedTime desc',
+        },
+        options: Options(headers: {'Authorization': 'Bearer ${auth.accessToken}'}),
+      );
+
+      final files = (response.data['files'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+      if (files.isEmpty || !mounted) return;
+
+      final selected = await showModalBottomSheet<String>(
+        context: context,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (ctx) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36, height: 4, margin: const EdgeInsets.only(top: 12),
+                decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: Text('Pilih dari Google Drive',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                ),
+              ),
+              SizedBox(
+                height: MediaQuery.of(ctx).size.height * 0.45,
+                child: ListView.separated(
+                  itemCount: files.length,
+                  separatorBuilder: (_, _) => const Divider(height: 1, indent: 16, endIndent: 16),
+                  itemBuilder: (_, i) {
+                    final f = files[i];
+                    final thumb = f['thumbnailLink'] as String?;
+                    return ListTile(
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: thumb != null
+                            ? CachedNetworkImage(imageUrl: thumb, width: 48, height: 48, fit: BoxFit.cover)
+                            : Container(
+                                width: 48, height: 48,
+                                decoration: BoxDecoration(color: const Color(0xFFE8F5E9), borderRadius: BorderRadius.circular(8)),
+                                child: const Icon(Icons.cloud, color: Color(0xFF4CAF50), size: 24),
+                              ),
+                      ),
+                      title: Text(f['name'] as String? ?? '', maxLines: 1, overflow: TextOverflow.ellipsis),
+                      onTap: () => Navigator.pop(ctx, f['id'] as String?),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      if (selected == null || !mounted) return;
+
+      final imageResponse = await Dio().get(
+        'https://www.googleapis.com/drive/v3/files/$selected?alt=media',
+        options: Options(
+          headers: {'Authorization': 'Bearer ${auth.accessToken}'},
+          responseType: ResponseType.bytes,
+        ),
+      );
+
+      final tempDir = await Directory.systemTemp.createTemp('drive_');
+      final file = File('${tempDir.path}/drive_image.jpg');
+      await file.writeAsBytes(imageResponse.data as List<int>);
+
+      ref.read(cbirProvider.notifier).search(file);
+      if (mounted) context.push('/cbir-result');
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal: $e')),
+        );
+      }
+    }
+  }
+
   void _showPickerOptions() {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (ctx) => Container(
-        padding: const EdgeInsets.only(top: 12, bottom: 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 36, height: 4,
-              decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+      builder: (ctx) => SafeArea(
+        child: SingleChildScrollView(
+          child: Container(
+            padding: const EdgeInsets.only(top: 12, bottom: 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 36, height: 4,
+                  decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+                ),
+                const SizedBox(height: 24),
+                Text('Cari dengan Gambar',
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Color(0xFF1A1A2E)),
+                ),
+                const SizedBox(height: 24),
+                _sheetOption(
+                  icon: Icons.camera_alt_rounded,
+                  title: 'Kamera',
+                  subtitle: 'Ambil foto langsung',
+                  onTap: () { context.pop(); _pickImage(ImageSource.camera); },
+                ),
+                _sheetOption(
+                  icon: Icons.photo_library,
+                  title: 'Galeri',
+                  subtitle: 'Pilih dari Galeri',
+                  onTap: () { context.pop(); _pickImage(ImageSource.gallery); },
+                ),
+                _sheetOption(
+                  icon: Icons.folder,
+                  title: 'File Manager',
+                  subtitle: 'Pilih dari penyimpanan',
+                  onTap: () { context.pop(); _pickImage(ImageSource.gallery); },
+                ),
+                _sheetOption(
+                  icon: Icons.cloud,
+                  title: 'Google Drive',
+                  subtitle: 'Pilih file dari Drive',
+                  onTap: () { context.pop(); _pickFromDrive(); },
+                ),
+              ],
             ),
-            const SizedBox(height: 24),
-            Text('Cari dengan Gambar',
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Color(0xFF1A1A2E)),
-            ),
-            const SizedBox(height: 24),
-            _sheetOption(
-              icon: Icons.camera_alt_rounded,
-              title: 'Kamera',
-              subtitle: 'Ambil foto langsung',
-              onTap: () { context.pop(); _pickImage(ImageSource.camera); },
-            ),
-            _sheetOption(
-              icon: Icons.photo_library,
-              title: 'Galeri',
-              subtitle: 'Pilih dari Galeri',
-              onTap: () { context.pop(); _pickImage(ImageSource.gallery); },
-            ),
-            _sheetOption(
-              icon: Icons.folder,
-              title: 'File Manager',
-              subtitle: 'Pilih dari penyimpanan',
-              onTap: () { context.pop(); _pickImage(ImageSource.gallery); },
-            ),
-            _sheetOption(
-              icon: Icons.cloud,
-              title: 'Google Drive',
-              subtitle: 'Pilih file dari Drive',
-              onTap: () { context.pop(); _pickImage(ImageSource.gallery); },
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -188,9 +295,25 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
   Color get _iconColor => widget.translucent ? Colors.white.withAlpha(170) : AppColors.textSecondary;
   Color get _fillColor => widget.translucent ? Colors.white.withAlpha(40) : const Color(0xFFF5F5F5);
 
+  Widget _buildImageButton() {
+    return Container(
+      decoration: BoxDecoration(
+        color: _fillColor,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: IconButton(
+        icon: Icon(Icons.camera_alt_rounded, color: _iconColor, size: 22),
+        onPressed: _showPickerOptions,
+        constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+        splashRadius: 22,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final vPadding = widget.compact ? 0.0 : 2.0;
+    final cbirState = ref.watch(cbirProvider);
 
     return Padding(
       padding: EdgeInsets.symmetric(vertical: vPadding),
@@ -203,7 +326,47 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
               decoration: InputDecoration(
                 hintText: 'Cari paket bunga...',
                 hintStyle: TextStyle(color: _hintColor, fontWeight: FontWeight.w400),
-                prefixIcon: Icon(Icons.search_rounded, color: _iconColor, size: 22),
+                prefixIconConstraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                prefixIcon: cbirState.uploadedImagePath != null
+                    ? GestureDetector(
+                        onTap: _showPickerOptions,
+                        child: Padding(
+                          padding: const EdgeInsets.all(4),
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.file(
+                                  File(cbirState.uploadedImagePath!),
+                                  width: 40,
+                                  height: 40,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, _, _) => Icon(Icons.broken_image, color: _iconColor, size: 28),
+                                ),
+                              ),
+                              Positioned(
+                                top: -6, right: -6,
+                                child: GestureDetector(
+                                  onTap: () => ref.read(cbirProvider.notifier).reset(),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(2),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withAlpha(180),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(Icons.close_rounded, size: 14, color: Colors.white),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    : Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Icon(Icons.search_rounded, size: 24, color: _iconColor),
+                      ),
                 suffixIcon: _controller.text.isNotEmpty
                     ? IconButton(
                         icon: Icon(Icons.close_rounded, color: _iconColor, size: 20),
@@ -230,18 +393,7 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
             ),
           ),
           const SizedBox(width: 8),
-          Container(
-            decoration: BoxDecoration(
-              color: _fillColor,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: IconButton(
-              icon: Icon(Icons.camera_alt_rounded, color: _iconColor, size: 22),
-              onPressed: _showPickerOptions,
-              constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-              splashRadius: 22,
-            ),
-          ),
+          _buildImageButton(),
 
         ],
       ),

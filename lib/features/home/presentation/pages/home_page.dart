@@ -8,7 +8,6 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/utils/number_utils.dart';
-import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/app_shimmer.dart';
 import '../../../search/presentation/widgets/global_search_bar.dart';
 import '../../../../features/catalog/data/catalog_repository_impl.dart';
@@ -47,7 +46,10 @@ class _HomePageState extends ConsumerState<HomePage> {
       items = items.where((e) => e['discount_price'] != null && parseDouble(e['discount_price']) > 0).toList();
     }
     if (_minRating > 0) {
-      items = items.where((e) => ((e['rating'] as num?)?.toDouble() ?? 0) >= _minRating).toList();
+      items = items.where((e) {
+        final rating = (e['average_rating'] ?? e['rating'] as dynamic) is num ? ((e['average_rating'] ?? e['rating']) as num).toDouble() : null;
+        return rating != null && rating.round() == _minRating.toInt();
+      }).toList();
     }
 
     switch (_sortBy) {
@@ -56,7 +58,11 @@ class _HomePageState extends ConsumerState<HomePage> {
       case 'price_desc':
         items.sort((a, b) => parseDouble(b['price']).compareTo(parseDouble(a['price'])));
       case 'rating_desc':
-        items.sort((a, b) => ((b['rating'] as num?)?.toDouble() ?? 0).compareTo((a['rating'] as num?)?.toDouble() ?? 0));
+        items.sort((a, b) {
+          final ra = (a['average_rating'] ?? a['rating'] as dynamic) is num ? ((a['average_rating'] ?? a['rating']) as num).toDouble() : 0;
+          final rb = (b['average_rating'] ?? b['rating'] as dynamic) is num ? ((b['average_rating'] ?? b['rating']) as num).toDouble() : 0;
+          return rb.compareTo(ra);
+        });
       case 'most_ordered':
         items.sort((a, b) => parseInt(b['ordered_count']).compareTo(parseInt(a['ordered_count'])));
     }
@@ -216,10 +222,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   final authState = ref.watch(authProvider);
                   if (authState is AuthAuthenticated) {
                     final u = authState.user;
-                    final rawAvatar = u.avatarUrl ?? u.avatar;
-                    final avatarUrl = rawAvatar != null && rawAvatar.isNotEmpty
-                        ? Formatters.imageUrl(rawAvatar)
-                        : null;
+                    final avatarUrl = u.avatarUrl;
                     final hasAvatar = avatarUrl != null && avatarUrl.isNotEmpty;
                     return CircleAvatar(
                       radius: 22,
@@ -338,7 +341,10 @@ class _HomePageState extends ConsumerState<HomePage> {
           child: PageView.builder(
             controller: _pageController,
             itemCount: vouchers.length,
-            itemBuilder: (context, index) => VoucherCard(voucher: vouchers[index]),
+            itemBuilder: (context, index) => VoucherCard(
+              voucher: vouchers[index],
+              onTap: () => context.push('/vouchers/${vouchers[index]['id']}', extra: vouchers[index]),
+            ),
           ),
         ),
       ],
@@ -422,13 +428,14 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-  void _showRatingFilterDialog() {
-    showModalBottomSheet(
+  Future<void> _showRatingFilterDialog() async {
+    final result = await showModalBottomSheet<double>(
       context: context,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (context) {
+      builder: (ctx) {
+        final current = _minRating;
         return SafeArea(
           child: SingleChildScrollView(
             child: Column(
@@ -442,85 +449,51 @@ class _HomePageState extends ConsumerState<HomePage> {
                   ),
                 ),
                 const Divider(height: 1),
-                _buildRatingOption(0, 'Semua Rating'),
-                _buildRatingOption(5.0, '5 Bintang'),
-                _buildRatingOption(4.0, '4 Bintang'),
-                _buildRatingOption(3.0, '3 Bintang'),
-                _buildRatingOption(2.0, '2 Bintang'),
-                _buildRatingOption(1.0, '1 Bintang'),
+                _buildRatingOption(0, ctx, current),
+                _buildRatingOption(5.0, ctx, current),
+                _buildRatingOption(4.0, ctx, current),
+                _buildRatingOption(3.0, ctx, current),
+                _buildRatingOption(2.0, ctx, current),
+                _buildRatingOption(1.0, ctx, current),
               ],
             ),
           ),
         );
       },
     );
+    if (result != null && mounted) {
+      setState(() { _minRating = result; });
+    }
   }
 
-  Widget _buildRatingOption(double val, String label) {
-    final isSelected = _minRating == val;
-    
-    Widget titleWidget;
-    if (val == 0) {
-      titleWidget = Text(
-        label,
-        style: TextStyle(
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          color: isSelected ? AppColors.primaryColor : Colors.black87,
-        ),
-      );
-    } else {
-      titleWidget = Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: List.generate(
-              val.toInt(),
-              (index) => const Padding(
-                padding: EdgeInsets.only(right: 2),
-                child: Icon(Icons.star_rounded, color: Colors.amber, size: 18),
-              ),
-            ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            val == 5.0 ? '(Sempurna)' : 'ke atas',
-            style: TextStyle(
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              color: isSelected ? AppColors.primaryColor : Colors.black87,
-            ),
-          ),
-        ],
-      );
-    }
+  Widget _buildRatingOption(double val, BuildContext sheetContext, double current) {
+    final isSelected = current == val;
 
     return ListTile(
       dense: true,
-      title: titleWidget,
+      title: val == 0
+          ? Text('Semua Rating', style: TextStyle(fontSize: 14, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal, color: isSelected ? AppColors.primaryColor : Colors.black87))
+          : Row(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(5, (i) {
+                final starIdx = i + 1;
+                return Icon(
+                  starIdx <= val ? Icons.star_rounded : Icons.star_border_rounded,
+                  size: 22,
+                  color: starIdx <= val ? Colors.amber : Colors.grey.shade300,
+                );
+              }),
+            ),
       trailing: isSelected ? const Icon(Icons.check_circle, color: AppColors.primaryColor, size: 20) : null,
-      onTap: () {
-        setState(() {
-          _minRating = val;
-        });
-        Navigator.pop(context);
-      },
+      onTap: () => Navigator.pop(sheetContext, val),
     );
   }
 
   Widget _buildRatingChip() {
     final hasFilter = _minRating > 0;
-    // Tampilkan simbol bintang berwarna kuning sesuai dengan rating minimal yang dipilih
-    final labelText = hasFilter ? '★' * _minRating.toInt() : 'Rating';
     return FilterChip(
-      avatar: Icon(Icons.star_rounded, size: 14, color: hasFilter ? Colors.amber : AppColors.textSecondary),
-      label: Text(
-        labelText,
-        style: TextStyle(
-          fontSize: 11,
-          color: hasFilter ? Colors.amber : AppColors.textSecondary,
-          fontWeight: hasFilter ? FontWeight.bold : FontWeight.normal,
-        ),
-      ),
+      avatar: Icon(Icons.star_rounded, size: 16, color: hasFilter ? Colors.amber : AppColors.textSecondary),
+      label: Text('Rating', style: TextStyle(fontSize: 11, color: hasFilter ? Colors.amber : AppColors.textSecondary)),
       selected: hasFilter,
       visualDensity: VisualDensity.compact,
       onSelected: (_) => _showRatingFilterDialog(),

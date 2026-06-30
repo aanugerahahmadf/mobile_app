@@ -32,7 +32,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
       'avatar': await MultipartFile.fromFile(filePath),
     });
     final response = await _dio.post(ApiEndpoints.profileAvatar, data: formData);
-    return ((response.data as Map<String, dynamic>?)?['avatar_url'] as String?) ?? '';
+    return ((response.data as Map<String, dynamic>?)?['data']?['avatar_url'] as String?) ?? '';
   }
 
   @override

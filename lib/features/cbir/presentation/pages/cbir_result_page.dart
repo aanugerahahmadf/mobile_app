@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/widgets/app_shimmer.dart';
 import '../../../../core/widgets/app_empty_state.dart';
@@ -25,10 +24,10 @@ class CbirResultPage extends ConsumerStatefulWidget {
 class _CbirResultPageState extends ConsumerState<CbirResultPage> {
   static const _sortOptions = [
     ('Kemiripan', null),
-    ('Harga: Terendah', 'price_asc'),
-    ('Harga: Tertinggi', 'price_desc'),
+    ('Harga Terendah', 'price_asc'),
+    ('Harga Tertinggi', 'price_desc'),
     ('Terbaru', 'newest'),
-    ('Rating Tertinggi', 'rating_desc'),
+    ('Rating', 'rating_desc'),
   ];
 
   List<Map<String, dynamic>> _categories = [];
@@ -102,61 +101,17 @@ class _CbirResultPageState extends ConsumerState<CbirResultPage> {
     }
 
     if (state.results.isEmpty) {
-      return Column(
-        children: [
-          _buildImageHeader(state),
-          Expanded(
-            child: AppEmptyState(
-              title: 'Hasil tidak ditemukan',
-              subtitle: 'Coba gambar lain',
-            ),
-          ),
-        ],
+      return AppEmptyState(
+        title: 'Hasil tidak ditemukan',
+        subtitle: 'Coba gambar lain',
       );
     }
 
     return Column(
       children: [
-        _buildImageHeader(state),
         _buildFilters(state),
         Expanded(child: _buildResultsGrid(context, state)),
       ],
-    );
-  }
-
-  Widget _buildImageHeader(CbirState state) {
-    if (state.uploadedImagePath == null) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSizes.md, AppSizes.sm, AppSizes.md, 0),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: Image.file(
-              File(state.uploadedImagePath!),
-              width: 56,
-              height: 56,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => Container(
-                width: 56,
-                height: 56,
-                color: Colors.grey[200],
-                child: const Icon(Icons.broken_image, color: Colors.grey),
-              ),
-            ),
-          ),
-          SizedBox(width: AppSizes.md),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Hasil Pencarian Serupa',
-                  style: AppTextStyles.titleMedium),
-              Text('${state.results.length} item',
-                  style: AppTextStyles.bodySmall),
-            ],
-          ),
-        ],
-      ),
     );
   }
 
@@ -176,13 +131,18 @@ class _CbirResultPageState extends ConsumerState<CbirResultPage> {
               itemBuilder: (_, i) {
                 final (label, value) = _sortOptions[i];
                 final selected = state.sortBy == value;
-                return FilterChip(
-                  label: Text(label, style: TextStyle(fontSize: 12, fontWeight: selected ? FontWeight.w600 : FontWeight.normal)),
+                return ChoiceChip(
+                  label: Text(label, style: TextStyle(
+                    fontSize: 12,
+                    color: selected ? Colors.white : AppColors.textPrimary,
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+                  )),
                   selected: selected,
                   onSelected: (_) => notifier.setSortBy(value),
-                  selectedColor: AppColors.secondaryColor,
-                  checkmarkColor: AppColors.primaryColor,
+                  selectedColor: AppColors.primaryColor,
+                  backgroundColor: AppColors.secondaryColor,
                   visualDensity: VisualDensity.compact,
+                  side: BorderSide.none,
                 );
               },
             ),
@@ -216,13 +176,18 @@ class _CbirResultPageState extends ConsumerState<CbirResultPage> {
                   ),
                 ),
               const SizedBox(width: AppSizes.sm),
-              FilterChip(
-                label: Text('Diskon', style: TextStyle(fontSize: 12, fontWeight: state.hasDiscount == true ? FontWeight.w600 : FontWeight.normal)),
+              ChoiceChip(
+                label: Text('Diskon', style: TextStyle(
+                  fontSize: 12,
+                  color: state.hasDiscount == true ? Colors.white : AppColors.textPrimary,
+                  fontWeight: state.hasDiscount == true ? FontWeight.w600 : FontWeight.normal,
+                )),
                 selected: state.hasDiscount == true,
                 onSelected: (v) => notifier.setHasDiscount(v),
-                selectedColor: AppColors.secondaryColor,
-                checkmarkColor: AppColors.primaryColor,
+                selectedColor: AppColors.primaryColor,
+                backgroundColor: AppColors.secondaryColor,
                 visualDensity: VisualDensity.compact,
+                side: BorderSide.none,
               ),
             ],
           ),

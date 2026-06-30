@@ -15,6 +15,7 @@ import '../../../../core/utils/validators.dart';
 import '../../../../core/utils/ktp_utils.dart';
 import '../../../../core/utils/country_codes.dart';
 import '../providers/profile_provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 class EditProfilePage extends ConsumerStatefulWidget {
   final String? scrollToSection;
@@ -141,6 +142,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
         data['password_confirmation'] = _confirmPasswordController.text;
       }
       await notifier.updateProfile(data);
+      ref.read(authProvider.notifier).refreshUser();
 
       // 3. Jika email berubah → kirim OTP dan arahkan ke verifikasi
       if (emailChanged) {
