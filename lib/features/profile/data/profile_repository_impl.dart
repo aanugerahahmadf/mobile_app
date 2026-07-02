@@ -70,6 +70,16 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
+  Future<Map<String, dynamic>> uploadFaceScan(String filePath) async {
+    final formData = FormData.fromMap({
+      'face_scan_photo': await MultipartFile.fromFile(filePath),
+    });
+    final response = await _dio.post(ApiEndpoints.profileFaceScan, data: formData);
+    final d = response.data as Map<String, dynamic>?;
+    return (d?['data'] as Map<String, dynamic>?) ?? {};
+  }
+
+  @override
   Future<Map<String, dynamic>> getCompletion() async {
     final response = await _dio.get(ApiEndpoints.profileCompletion);
     final d = response.data as Map<String, dynamic>?;

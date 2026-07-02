@@ -18,7 +18,11 @@ class WishlistRepository {
     await _dio.post(ApiEndpoints.wishlistToggle, data: body);
   }
 
-  Future<void> removeFromWishlist(String packageOrProductId) async {
-    await _dio.delete(ApiEndpoints.wishlistItem(packageOrProductId));
+  Future<void> removeFromWishlist(String id, {bool isProduct = false}) async {
+    if (isProduct) {
+      await _dio.delete(ApiEndpoints.wishlistItem(id), queryParameters: {'product_id': id});
+    } else {
+      await _dio.delete(ApiEndpoints.wishlistItem(id));
+    }
   }
 }

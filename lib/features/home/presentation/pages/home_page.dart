@@ -14,6 +14,7 @@ import '../../../../features/catalog/data/catalog_repository_impl.dart';
 import '../../../../features/catalog/data/models/item_model.dart';
 import '../../../../features/catalog/presentation/widgets/combined_card.dart';
 import '../../../../features/auth/presentation/providers/auth_provider.dart';
+import '../../../notification/presentation/providers/notification_provider.dart';
 import '../widgets/menu_card.dart';
 import '../widgets/voucher_card.dart';
 
@@ -63,6 +64,12 @@ class _HomePageState extends ConsumerState<HomePage> {
           final rb = (b['average_rating'] ?? b['rating'] as dynamic) is num ? ((b['average_rating'] ?? b['rating']) as num).toDouble() : 0;
           return rb.compareTo(ra);
         });
+      case 'rating_asc':
+        items.sort((a, b) {
+          final ra = (a['average_rating'] ?? a['rating'] as dynamic) is num ? ((a['average_rating'] ?? a['rating']) as num).toDouble() : 0;
+          final rb = (b['average_rating'] ?? b['rating'] as dynamic) is num ? ((b['average_rating'] ?? b['rating']) as num).toDouble() : 0;
+          return ra.compareTo(rb);
+        });
       case 'most_ordered':
         items.sort((a, b) => parseInt(b['ordered_count']).compareTo(parseInt(a['ordered_count'])));
     }
@@ -76,6 +83,9 @@ class _HomePageState extends ConsumerState<HomePage> {
     _fetchCatalog();
     _fetchCategories();
     _startAutoScroll();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(notificationListProvider.notifier).fetchUnreadCount();
+    });
   }
 
   @override
@@ -259,16 +269,24 @@ class _HomePageState extends ConsumerState<HomePage> {
                     ],
                   ),
                 ),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withAlpha(30),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.notifications_outlined, color: Colors.white),
-                    onPressed: () => context.push('/notifications'),
-                  ),
-                ),
+                Consumer(builder: (_, ref, _) {
+                  final unread = ref.watch(notificationListProvider).unreadCount;
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha(30),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: IconButton(
+                      icon: unread > 0
+                          ? Badge(
+                              label: Text(unread > 99 ? '99+' : '$unread'),
+                              child: const Icon(Icons.notifications_outlined, color: Colors.white),
+                            )
+                          : const Icon(Icons.notifications_outlined, color: Colors.white),
+                      onPressed: () => context.push('/notifications'),
+                    ),
+                  );
+                }),
               ],
             ),
           ],
@@ -292,7 +310,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
             children: [
               MenuCard(
-                label: 'Paket Bunga',
+                label: 'Katalog Paket Bunga',
                 icon: Icons.card_giftcard,
                 color: AppColors.categoryColors[0],
                 onTap: () => context.push('/catalog/packages'),
@@ -420,6 +438,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                 _sortChip('price_desc', 'Harga ↓'),
                 const SizedBox(width: 6),
                 _sortChip('rating_desc', 'Rating Tertinggi'),
+                const SizedBox(width: 6),
+                _sortChip('rating_asc', 'Rating Terendah'),
               ],
             ),
           ),

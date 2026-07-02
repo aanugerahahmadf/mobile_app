@@ -52,7 +52,7 @@ class _ModernBottomBar extends StatelessWidget {
     final items = [
       _BarItem(Icons.home_outlined, Icons.home),
       _BarItem(Icons.receipt_long_outlined, Icons.receipt_long),
-      _BarItem(Icons.chat_bubble_outline_rounded, Icons.chat_bubble_rounded),
+      _BarItem(Icons.chat_outlined, Icons.chat),
       _BarItem(Icons.shopping_cart_outlined, Icons.shopping_cart),
       _BarItem(Icons.person_outline_rounded, Icons.person_rounded),
     ];

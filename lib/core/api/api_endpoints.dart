@@ -20,6 +20,7 @@ class ApiEndpoints {
   static const String profileNik = '/profile/nik';
   static const String profileKtp = '/profile/ktp-photo';
   static const String profileSelfie = '/profile/selfie';
+  static const String profileFaceScan = '/profile/face-scan';
   static const String profileCompletion = '/profile/completion';
 
   // Home & Categories
@@ -62,6 +63,9 @@ class ApiEndpoints {
 
   // Notifications
   static const String notifications = '/notifications';
+  static const String notificationReadAll = '/notifications/read-all';
+  static const String notificationUnreadCount = '/notifications/unread-count';
+  static const String registerFcmToken = '/notifications/fcm-token';
 
   // Reviews
   static const String reviews = '/reviews';

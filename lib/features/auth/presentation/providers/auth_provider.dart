@@ -37,12 +37,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   AuthNotifier() : super(const AuthInitial());
 
-  Future<void> login({required String login, required String password}) async {
+  Future<void> login({required String login, required String password, String? loginType}) async {
     state = const AuthLoading();
     try {
+      final data = <String, dynamic>{'login': login, 'password': password};
+      if (loginType != null && loginType != 'email') {
+        data['login_type'] = loginType;
+      }
       final response = await _dio.post(
         ApiEndpoints.login,
-        data: {'login': login, 'password': password},
+        data: data,
       );
       final respData = response.data as Map<String, dynamic>? ?? {};
       final inner = respData['data'] as Map<String, dynamic>? ?? respData;
@@ -133,6 +137,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
     String? address,
     String? ktpPhotoPath,
     String? selfiePhotoPath,
+    String? faceScanPath,
+    String? gender,
+    String? religion,
+    String? maritalStatus,
+    String? motherName,
+    String? occupation,
+    String? incomeRange,
+    String? sourceOfFunds,
     required String password,
     required String passwordConfirmation,
   }) async {
@@ -164,6 +176,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
         if (villageName != null && villageName.isNotEmpty) 'village_name': villageName,
         if (postalCode != null && postalCode.isNotEmpty) 'postal_code': postalCode,
         if (address != null && address.isNotEmpty) 'address': address,
+        if (gender != null && gender.isNotEmpty) 'gender': gender,
+        if (religion != null && religion.isNotEmpty) 'religion': religion,
+        if (maritalStatus != null && maritalStatus.isNotEmpty) 'marital_status': maritalStatus,
+        if (motherName != null && motherName.isNotEmpty) 'mother_name': motherName,
+        if (occupation != null && occupation.isNotEmpty) 'occupation': occupation,
+        if (incomeRange != null && incomeRange.isNotEmpty) 'income_range': incomeRange,
+        if (sourceOfFunds != null && sourceOfFunds.isNotEmpty) 'source_of_funds': sourceOfFunds,
         'password': password,
         'password_confirmation': passwordConfirmation,
       };
@@ -172,6 +191,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
       if (selfiePhotoPath != null) {
         formData['selfie_photo'] = await MultipartFile.fromFile(selfiePhotoPath);
+      }
+      if (faceScanPath != null) {
+        formData['face_scan_photo'] = await MultipartFile.fromFile(faceScanPath);
       }
       final response = await _dio.post(
         ApiEndpoints.register,
@@ -225,6 +247,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  void updateAvatarDirect(String avatarUrl) {
+    final current = state;
+    if (current is AuthAuthenticated) {
+      state = AuthAuthenticated(current.user.copyWith(avatarUrl: avatarUrl));
+    }
+  }
+
   Future<void> refreshUser() async {
     try {
       final token = await _storage.read(key: 'auth_token');
@@ -257,11 +286,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
       });
       final response = await _dio.post(ApiEndpoints.profileAvatar, data: formData);
       final respData = response.data as Map<String, dynamic>? ?? {};
-      final userMap = respData['data'] as Map<String, dynamic>?;
-      if (userMap != null) {
-        state = AuthAuthenticated(UserModel.fromJson(userMap));
+      final avatarData = respData['data'] as Map<String, dynamic>?;
+      if (avatarData != null) {
+        final avatarUrl = avatarData['avatar_url'] as String?;
+        final current = state;
+        if (current is AuthAuthenticated) {
+          final updatedUser = current.user.copyWith(avatarUrl: avatarUrl);
+          state = AuthAuthenticated(updatedUser);
+        }
+        return avatarUrl ?? '';
       }
-      return (respData['avatar_url'] as String?) ?? '';
+      return '';
     } on DioException catch (e) {
       final msg = e.response?.data?['message'] as String? ?? 'Gagal upload avatar';
       state = AuthError(msg);

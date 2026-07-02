@@ -36,7 +36,16 @@ class CbirRepositoryImpl implements CbirRepository {
       data: formData,
     );
 
-    final data = response.data['data'];
+    final raw = response.data;
+    if (raw is Map && raw['status'] == 'error') {
+      throw DioException(
+        requestOptions: response.requestOptions,
+        response: response,
+        message: raw['message'] as String? ?? 'Pencarian gambar gagal',
+      );
+    }
+
+    final data = (raw is Map ? (raw['results'] ?? raw['data']) : raw);
     if (data is List) {
       return data
           .map((e) => CbirResultItem.fromJson(e as Map<String, dynamic>))

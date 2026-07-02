@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/app_date_picker_field.dart';
@@ -20,6 +21,7 @@ import '../../../../core/utils/sim_utils.dart';
 import '../../../../core/utils/npwp_utils.dart';
 import '../../../../core/utils/country_codes.dart';
 import '../providers/profile_provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 /// Halaman khusus untuk melengkapi SATU field/data profil.
 /// [fieldKey] menentukan field apa yang ditampilkan.
@@ -44,9 +46,18 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
   final _birthPlaceController = TextEditingController();
   final _birthDateController  = TextEditingController();
   final _countryController    = TextEditingController();
+  final _emailController      = TextEditingController();
+  final _postalCodeController = TextEditingController();
   final _addressController    = TextEditingController();
+  final _motherNameController = TextEditingController();
 
   String _countryCode   = '+62';
+  String _gender = '';
+  String _religion = '';
+  String _maritalStatus = '';
+  String _occupation = '';
+  String _incomeRange = '';
+  String _sourceOfFunds = '';
   String _identityType  = 'ktp';
   bool   _namesLocked   = false;
   bool   _saving        = false;
@@ -89,8 +100,17 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
       case 'nik':         return 'Isi Nomor Identitas';
       case 'birth':       return 'Isi Data Kelahiran';
       case 'country':     return 'Pilih Negara';
+      case 'email':       return 'Isi Email';
       case 'region':      return 'Pilih Wilayah';
       case 'address':     return 'Isi Alamat Lengkap';
+      case 'postal_code': return 'Isi Kode Pos';
+      case 'gender': return 'Pilih Jenis Kelamin';
+      case 'religion': return 'Pilih Agama';
+      case 'marital_status': return 'Pilih Status Pernikahan';
+      case 'mother_name': return 'Isi Nama Ibu Kandung';
+      case 'occupation': return 'Pilih Pekerjaan';
+      case 'income_range': return 'Pilih Rentang Penghasilan';
+      case 'source_of_funds': return 'Pilih Sumber Dana';
       case 'ktp_photo':   return 'Upload Foto Identitas';
       case 'selfie':      return 'Upload Foto Selfie';
       default:            return 'Lengkapi Data';
@@ -106,8 +126,17 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
       case 'nik':         return 'Nomor identitas (KTP / Passport / SIM / NPWP)';
       case 'birth':       return 'Tempat dan tanggal lahir Anda';
       case 'country':     return 'Negara tempat tinggal Anda saat ini';
+      case 'email':       return 'Alamat email aktif untuk verifikasi akun dan notifikasi';
       case 'region':      return 'Provinsi, kota, kecamatan, kelurahan, dan kode pos';
       case 'address':     return 'Alamat lengkap tempat tinggal Anda';
+      case 'postal_code': return 'Kode pos wilayah tempat tinggal Anda';
+      case 'gender': return 'Jenis kelamin sesuai dokumen identitas';
+      case 'religion': return 'Agama yang Anda anut';
+      case 'marital_status': return 'Status pernikahan saat ini';
+      case 'mother_name': return 'Nama ibu kandung untuk verifikasi keamanan';
+      case 'occupation': return 'Pekerjaan utama Anda saat ini';
+      case 'income_range': return 'Rentang penghasilan per bulan';
+      case 'source_of_funds': return 'Sumber dana untuk transaksi';
       case 'ktp_photo':   return 'Foto KTP / Passport / SIM / NPWP yang jelas';
       case 'selfie':      return 'Foto selfie sambil memegang dokumen identitas';
       default:            return 'Lengkapi informasi ini untuk meningkatkan keamanan akun';
@@ -131,6 +160,8 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
     _birthPlaceController.text = userData['birth_place'] as String? ?? '';
     _birthDateController.text  = userData['birth_date']  as String? ?? '';
     _countryController.text    = userData['country']     as String? ?? '';
+    _emailController.text      = userData['email']       as String? ?? '';
+    _postalCodeController.text = userData['postal_code'] as String? ?? '';
     _addressController.text    = userData['address']     as String? ?? '';
     _provinceId   = userData['province_id']   as int?;
     _cityId       = userData['city_id']       as int?;
@@ -141,6 +172,13 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
     _districtName = userData['district_name'] as String? ?? '';
     _villageName  = userData['village_name']  as String? ?? '';
     _postalCode   = userData['postal_code']   as String? ?? '';
+    _gender = userData['gender'] as String? ?? '';
+    _religion = userData['religion'] as String? ?? '';
+    _maritalStatus = userData['marital_status'] as String? ?? '';
+    _motherNameController.text = userData['mother_name'] as String? ?? '';
+    _occupation = userData['occupation'] as String? ?? '';
+    _incomeRange = userData['income_range'] as String? ?? '';
+    _sourceOfFunds = userData['source_of_funds'] as String? ?? '';
 
     // WhatsApp
     String rawWa = (userData['whatsapp'] as String? ?? '').trim();
@@ -202,7 +240,10 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
     _birthPlaceController.dispose();
     _birthDateController.dispose();
     _countryController.dispose();
+    _emailController.dispose();
+    _postalCodeController.dispose();
     _addressController.dispose();
+    _motherNameController.dispose();
     super.dispose();
   }
 
@@ -229,7 +270,10 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
 
         case 'avatar':
           if (_avatarFile != null) {
-            await notifier.uploadAvatar(_avatarFile!.path);
+            final newAvatarUrl = await notifier.uploadAvatar(_avatarFile!.path);
+            if (newAvatarUrl != null) {
+              ref.read(authProvider.notifier).updateAvatarDirect(newAvatarUrl);
+            }
           }
           break;
 
@@ -255,6 +299,10 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
           });
           break;
 
+        case 'email':
+          await notifier.updateProfile({'email': _emailController.text.trim()});
+          break;
+
         case 'country':
           await notifier.updateProfile({'country': _countryController.text.trim()});
           break;
@@ -273,8 +321,40 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
           await notifier.updateProfile(data);
           break;
 
+        case 'postal_code':
+          await notifier.updateProfile({'postal_code': _postalCodeController.text.trim()});
+          break;
+
         case 'address':
           await notifier.updateProfile({'address': _addressController.text.trim()});
+          break;
+
+        case 'gender':
+          await notifier.updateProfile({'gender': _gender});
+          break;
+
+        case 'religion':
+          await notifier.updateProfile({'religion': _religion});
+          break;
+
+        case 'marital_status':
+          await notifier.updateProfile({'marital_status': _maritalStatus});
+          break;
+
+        case 'mother_name':
+          await notifier.updateProfile({'mother_name': _motherNameController.text.trim()});
+          break;
+
+        case 'occupation':
+          await notifier.updateProfile({'occupation': _occupation});
+          break;
+
+        case 'income_range':
+          await notifier.updateProfile({'income_range': _incomeRange});
+          break;
+
+        case 'source_of_funds':
+          await notifier.updateProfile({'source_of_funds': _sourceOfFunds});
           break;
 
         case 'ktp_photo':
@@ -349,7 +429,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
   Widget build(BuildContext context) {
     final pState    = ref.watch(profileProvider);
     final userData  = pState.userData;
-    final avatarUrl = userData?['avatar_url'] as String?;
+    final avatarUrl = Formatters.avatarUrl(userData);
     final ktpUrl    = pState.ktpUrl    ?? userData?['ktp_photo_url']    as String?;
     final selfieUrl = pState.selfieUrl ?? userData?['selfie_photo_url'] as String?;
 
@@ -627,6 +707,22 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
           ),
         ];
 
+      // ── Email ──────────────────────────────────────────────────────────────
+      case 'email':
+        return [
+          AppTextField(
+            label: 'Email',
+            controller: _emailController,
+            keyboardType: TextInputType.emailAddress,
+            validator: Validators.email,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Email akan digunakan untuk verifikasi akun dan notifikasi penting',
+            style: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
+          ),
+        ];
+
       // ── Negara ────────────────────────────────────────────────────────────
       case 'country':
         return [
@@ -674,6 +770,28 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
           const SizedBox(height: 6),
           Text(
             'Isi nama jalan, nomor rumah, RT/RW, dll.',
+            style: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
+          ),
+        ];
+
+      // ── Kode Pos ──────────────────────────────────────────────────────────
+      case 'postal_code':
+        return [
+          TextFormField(
+            controller: _postalCodeController,
+            keyboardType: TextInputType.number,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            validator: (v) {
+              if (v == null || v.trim().isEmpty) return 'Kode pos wajib diisi';
+              if (v.trim().length < 5) return 'Kode pos minimal 5 digit';
+              return null;
+            },
+            decoration: const InputDecoration(labelText: 'Kode Pos'),
+            style: AppTextStyles.bodyLarge,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Kode pos 5 digit sesuai wilayah tempat tinggal',
             style: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
           ),
         ];
@@ -748,9 +866,215 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
           ),
         ];
 
+      case 'gender':
+        return [
+          GestureDetector(
+            onTap: () => _showPickerSheet('Pilih Jenis Kelamin', ['Pria', 'Wanita'], (v) => setState(() => _gender = v)),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+              decoration: BoxDecoration(
+                color: AppColors.secondaryColor.withAlpha(30),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.dividerColor),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.people_outlined, color: AppColors.primaryColor, size: 22),
+                  SizedBox(width: AppSizes.md),
+                  Expanded(
+                    child: Text(
+                      _gender.isEmpty ? 'Pilih Jenis Kelamin' : _gender,
+                      style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                ],
+              ),
+            ),
+          ),
+        ];
+
+      case 'religion':
+        return [
+          GestureDetector(
+            onTap: () => _showPickerSheet('Pilih Agama', ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu'], (v) => setState(() => _religion = v)),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+              decoration: BoxDecoration(
+                color: AppColors.secondaryColor.withAlpha(30),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.dividerColor),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.church_outlined, color: AppColors.primaryColor, size: 22),
+                  SizedBox(width: AppSizes.md),
+                  Expanded(
+                    child: Text(
+                      _religion.isEmpty ? 'Pilih Agama' : _religion,
+                      style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                ],
+              ),
+            ),
+          ),
+        ];
+
+      case 'marital_status':
+        return [
+          GestureDetector(
+            onTap: () => _showPickerSheet('Pilih Status Pernikahan', ['Belum Menikah', 'Menikah', 'Cerai'], (v) => setState(() => _maritalStatus = v)),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+              decoration: BoxDecoration(
+                color: AppColors.secondaryColor.withAlpha(30),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.dividerColor),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.favorite_border, color: AppColors.primaryColor, size: 22),
+                  SizedBox(width: AppSizes.md),
+                  Expanded(
+                    child: Text(
+                      _maritalStatus.isEmpty ? 'Pilih Status Pernikahan' : _maritalStatus,
+                      style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                ],
+              ),
+            ),
+          ),
+        ];
+
+      case 'mother_name':
+        return [
+          AppTextField(
+            label: 'Nama Ibu Kandung',
+            controller: _motherNameController,
+          ),
+        ];
+
+      case 'occupation':
+        return [
+          GestureDetector(
+            onTap: () => _showPickerSheet('Pilih Pekerjaan', ['Karyawan', 'Wiraswasta', 'Pelajar/Mahasiswa', 'Ibu Rumah Tangga', 'Profesional', 'Lainnya'], (v) => setState(() => _occupation = v)),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+              decoration: BoxDecoration(
+                color: AppColors.secondaryColor.withAlpha(30),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.dividerColor),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.work_outline, color: AppColors.primaryColor, size: 22),
+                  SizedBox(width: AppSizes.md),
+                  Expanded(
+                    child: Text(
+                      _occupation.isEmpty ? 'Pilih Pekerjaan' : _occupation,
+                      style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                ],
+              ),
+            ),
+          ),
+        ];
+
+      case 'income_range':
+        return [
+          GestureDetector(
+            onTap: () => _showPickerSheet('Pilih Rentang Penghasilan', ['< Rp 1 Juta', 'Rp 1-5 Juta', 'Rp 5-10 Juta', 'Rp 10-50 Juta', '> Rp 50 Juta'], (v) => setState(() => _incomeRange = v)),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+              decoration: BoxDecoration(
+                color: AppColors.secondaryColor.withAlpha(30),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.dividerColor),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.trending_up_outlined, color: AppColors.primaryColor, size: 22),
+                  SizedBox(width: AppSizes.md),
+                  Expanded(
+                    child: Text(
+                      _incomeRange.isEmpty ? 'Pilih Rentang Penghasilan' : _incomeRange,
+                      style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                ],
+              ),
+            ),
+          ),
+        ];
+
+      case 'source_of_funds':
+        return [
+          GestureDetector(
+            onTap: () => _showPickerSheet('Pilih Sumber Dana', ['Gaji', 'Bisnis/Usaha', 'Investasi', 'Hadiah/Warisan', 'Lainnya'], (v) => setState(() => _sourceOfFunds = v)),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+              decoration: BoxDecoration(
+                color: AppColors.secondaryColor.withAlpha(30),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.dividerColor),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.account_balance_wallet_outlined, color: AppColors.primaryColor, size: 22),
+                  SizedBox(width: AppSizes.md),
+                  Expanded(
+                    child: Text(
+                      _sourceOfFunds.isEmpty ? 'Pilih Sumber Dana' : _sourceOfFunds,
+                      style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                ],
+              ),
+            ),
+          ),
+        ];
+
       default:
         return [const Text('Field tidak dikenal.')];
     }
+  }
+
+  void _showPickerSheet(String title, List<String> options, Function(String) onSelected) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+              const SizedBox(height: 8),
+              Text(title, style: AppTextStyles.titleMedium),
+              const SizedBox(height: 8),
+              ...options.map((option) => ListTile(
+                title: Text(option, style: AppTextStyles.bodyMedium),
+                onTap: () {
+                  onSelected(option);
+                  Navigator.pop(ctx);
+                },
+              )),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   String _identityTypeLabel() {

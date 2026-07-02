@@ -65,9 +65,20 @@ class _CbirResultPageState extends ConsumerState<CbirResultPage> {
       body: Column(
         children: [
           Container(
-            padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top + AppSizes.sm, left: AppSizes.md, right: AppSizes.md, bottom: AppSizes.md),
+            padding: EdgeInsets.fromLTRB(0, MediaQuery.of(context).padding.top + AppSizes.sm, MediaQuery.of(context).padding.right, AppSizes.md),
             decoration: const BoxDecoration(color: AppColors.primaryColor),
-            child: const GlobalSearchBar(translucent: true),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: () {
+                    ref.read(cbirProvider.notifier).reset();
+                    context.pop();
+                  },
+                ),
+                const Expanded(child: GlobalSearchBar(translucent: true)),
+              ],
+            ),
           ),
           Expanded(child: _buildBody(context, state)),
         ],
@@ -215,7 +226,7 @@ class _CbirResultPageState extends ConsumerState<CbirResultPage> {
     return CombinedCard(
       item: item.data,
       type: item.type,
-      similarity: item.similarity / 100,
+      similarity: item.similarity,
       onTap: () => context.go('/catalog/${_routeType(item.type)}/${item.data.id}'),
     );
   }

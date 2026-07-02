@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_shimmer.dart';
 import '../../../../core/widgets/app_snackbar.dart';
@@ -90,10 +91,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         CircleAvatar(
                           radius: 48,
                           backgroundColor: Colors.white.withValues(alpha: 0.2),
-                          backgroundImage: userData?['avatar_url'] != null
-                              ? CachedNetworkImageProvider(userData!['avatar_url'] as String)
+                          backgroundImage: Formatters.avatarUrl(userData) != null
+                              ? CachedNetworkImageProvider(Formatters.avatarUrl(userData)!)
                               : null,
-                          child: userData?['avatar_url'] == null
+                          child: Formatters.avatarUrl(userData) == null
                               ? const Icon(Icons.person, size: 48, color: Colors.white)
                               : null,
                         ),
@@ -137,13 +138,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       ),
                     ),
                   ),
-                  _buildProfileCompletion(ref),
-                  _buildIdentityVerification(userData),
+                  _buildProfileCompletion(ref, userData),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
                     child: Column(
                       children: [
                         _menuTile(Icons.edit, 'Edit Profil', () => context.push('/edit-profile')),
+                        _menuTile(Icons.settings, 'Pengaturan', () => context.push('/settings')),
                         _menuTile(Icons.card_giftcard, 'Voucher Saya', () => context.push('/vouchers')),
                         _menuTile(Icons.privacy_tip, 'Privasi & Ketentuan', () => context.push('/legal/privacy-term')),
                         _menuTile(Icons.help, 'Pusat Bantuan', () => context.push('/help-center')),
@@ -158,216 +159,192 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     );
   }
 
-  Widget _buildProfileCompletion(WidgetRef ref) {
+  Widget _buildProfileCompletion(WidgetRef ref, Map<String, dynamic>? userData) {
     final pState = ref.watch(profileProvider);
     final percent = pState.completionPercent;
     final items = pState.completionItems;
-    final userData = pState.userData;
 
     if (items == null) {
       ref.read(profileProvider.notifier).fetchCompletion();
       return const SizedBox.shrink();
     }
 
-    // full_name is derived from first_name + mid_name + last_name (same as Sign Up)
+    final identityVerified = userData?['identity_verified_at'] != null;
+    final selfieUrl = userData?['selfie_photo_url'] as String?;
+
     final firstName = (userData?['first_name'] as String? ?? '').trim();
     final midName  = (userData?['mid_name']   as String? ?? '').trim();
     final lastName = (userData?['last_name']  as String? ?? '').trim();
     final hasFullName = firstName.isNotEmpty || midName.isNotEmpty || lastName.isNotEmpty;
 
-    // Map all 9 completion items returned by the API backend
-    // API items: full_name, username, whatsapp, avatar_url, email_verified,
-    //            nik, ktp_photo, selfie_photo, identity_verified
     final missingFields = <_ProfileTask>[];
     if (!hasFullName) {
       missingFields.add(const _ProfileTask(
-        key: 'full_name',
-        icon: Icons.person_outline_rounded,
+        key: 'full_name', icon: Icons.person_outline_rounded,
         label: 'Isi nama depan, tengah & belakang Anda',
-        action: 'Isi',
-        section: 'name',
+        action: 'Isi', section: 'name',
       ));
     }
     if (items['username'] == false) {
       missingFields.add(const _ProfileTask(
-        key: 'username',
-        icon: Icons.alternate_email_rounded,
+        key: 'username', icon: Icons.alternate_email_rounded,
         label: 'Buat username unik Anda',
-        action: 'Buat',
-        section: 'username',
+        action: 'Buat', section: 'username',
       ));
     }
     if (items['avatar_url'] == false) {
       missingFields.add(const _ProfileTask(
-        key: 'avatar_url',
-        icon: Icons.account_circle_outlined,
+        key: 'avatar_url', icon: Icons.account_circle_outlined,
         label: 'Unggah foto profil Anda',
-        action: 'Unggah',
-        section: 'avatar',
+        action: 'Unggah', section: 'avatar',
       ));
     }
     if (items['whatsapp'] == false) {
       missingFields.add(const _ProfileTask(
-        key: 'whatsapp',
-        icon: Icons.phone_outlined,
+        key: 'whatsapp', icon: Icons.phone_outlined,
         label: 'Tambahkan nomor WhatsApp aktif',
-        action: 'Tambah',
-        section: 'whatsapp',
+        action: 'Tambah', section: 'whatsapp',
       ));
     }
     if (items['email_verified'] == false) {
       missingFields.add(const _ProfileTask(
-        key: 'email_verified',
-        icon: Icons.mark_email_unread_outlined,
+        key: 'email_verified', icon: Icons.mark_email_unread_outlined,
         label: 'Verifikasi alamat email Anda',
-        action: 'Verifikasi',
-        section: 'username',
+        action: 'Verifikasi', section: 'username',
       ));
     }
     if (items['nik'] == false) {
       missingFields.add(const _ProfileTask(
-        key: 'nik',
-        icon: Icons.badge_outlined,
+        key: 'nik', icon: Icons.badge_outlined,
         label: 'Nomor Identitas (NIK / Passport / SIM / NPWP)',
-        action: 'Isi',
-        section: 'identity',
+        action: 'Isi', section: 'identity',
       ));
     }
 
-    // --- Cek field dari userData langsung (tidak ada di completionItems backend) ---
-    final identityVerified = userData?['identity_verified_at'] != null;
-    // Hanya tampilkan field identitas & alamat jika identitas belum terverifikasi
     if (!identityVerified) {
       final birthPlace = (userData?['birth_place'] as String? ?? '').trim();
       if (birthPlace.isEmpty) {
         missingFields.add(const _ProfileTask(
-          key: 'birth_place',
-          icon: Icons.location_city_outlined,
+          key: 'birth_place', icon: Icons.location_city_outlined,
           label: 'Isi tempat lahir Anda',
-          action: 'Isi',
-          section: 'identity',
+          action: 'Isi', section: 'identity',
         ));
       }
-
       final birthDate = (userData?['birth_date'] as String? ?? '').trim();
       if (birthDate.isEmpty) {
         missingFields.add(const _ProfileTask(
-          key: 'birth_date',
-          icon: Icons.cake_outlined,
+          key: 'birth_date', icon: Icons.cake_outlined,
           label: 'Isi tanggal lahir Anda',
-          action: 'Isi',
-          section: 'identity',
+          action: 'Isi', section: 'identity',
         ));
       }
-
       final country = (userData?['country'] as String? ?? '').trim();
       if (country.isEmpty) {
         missingFields.add(const _ProfileTask(
-          key: 'country',
-          icon: Icons.flag_outlined,
+          key: 'country', icon: Icons.flag_outlined,
           label: 'Pilih negara tempat tinggal Anda',
-          action: 'Pilih',
-          section: 'identity',
+          action: 'Pilih', section: 'identity',
         ));
       }
-
       final provinceName = (userData?['province_name'] as String? ?? '').trim();
       if (provinceName.isEmpty) {
         missingFields.add(const _ProfileTask(
-          key: 'province',
-          icon: Icons.map_outlined,
+          key: 'province', icon: Icons.map_outlined,
           label: 'Pilih provinsi tempat tinggal Anda',
-          action: 'Pilih',
-          section: 'identity',
+          action: 'Pilih', section: 'identity',
         ));
       }
-
       final cityName = (userData?['city_name'] as String? ?? '').trim();
       if (cityName.isEmpty) {
         missingFields.add(const _ProfileTask(
-          key: 'city',
-          icon: Icons.location_on_outlined,
+          key: 'city', icon: Icons.location_on_outlined,
           label: 'Pilih kota / kabupaten Anda',
-          action: 'Pilih',
-          section: 'identity',
+          action: 'Pilih', section: 'identity',
         ));
       }
-
       final districtName = (userData?['district_name'] as String? ?? '').trim();
       if (districtName.isEmpty) {
         missingFields.add(const _ProfileTask(
-          key: 'district',
-          icon: Icons.holiday_village_outlined,
+          key: 'district', icon: Icons.holiday_village_outlined,
           label: 'Pilih kecamatan Anda',
-          action: 'Pilih',
-          section: 'identity',
+          action: 'Pilih', section: 'identity',
         ));
       }
-
       final villageName = (userData?['village_name'] as String? ?? '').trim();
       if (villageName.isEmpty) {
         missingFields.add(const _ProfileTask(
-          key: 'village',
-          icon: Icons.home_work_outlined,
+          key: 'village', icon: Icons.home_work_outlined,
           label: 'Pilih kelurahan / desa Anda',
-          action: 'Pilih',
-          section: 'identity',
+          action: 'Pilih', section: 'identity',
         ));
       }
-
       final postalCode = (userData?['postal_code'] as String? ?? '').trim();
       if (postalCode.isEmpty) {
         missingFields.add(const _ProfileTask(
-          key: 'postal_code',
-          icon: Icons.markunread_mailbox_outlined,
+          key: 'postal_code', icon: Icons.markunread_mailbox_outlined,
           label: 'Isi kode pos wilayah Anda',
-          action: 'Isi',
-          section: 'identity',
+          action: 'Isi', section: 'identity',
         ));
       }
-
       final address = (userData?['address'] as String? ?? '').trim();
       if (address.isEmpty) {
         missingFields.add(const _ProfileTask(
-          key: 'address',
-          icon: Icons.edit_road_outlined,
+          key: 'address', icon: Icons.edit_road_outlined,
           label: 'Isi detail alamat lengkap Anda',
-          action: 'Isi',
-          section: 'identity',
+          action: 'Isi', section: 'identity',
         ));
+      }
+      final gender = (userData?['gender'] as String? ?? '').trim();
+      if (gender.isEmpty) {
+        missingFields.add(const _ProfileTask(key: 'gender', icon: Icons.people_outlined, label: 'Pilih jenis kelamin', action: 'Pilih', section: 'identity'));
+      }
+      final religion = (userData?['religion'] as String? ?? '').trim();
+      if (religion.isEmpty) {
+        missingFields.add(const _ProfileTask(key: 'religion', icon: Icons.church_outlined, label: 'Pilih agama', action: 'Pilih', section: 'identity'));
+      }
+      final maritalStatus = (userData?['marital_status'] as String? ?? '').trim();
+      if (maritalStatus.isEmpty) {
+        missingFields.add(const _ProfileTask(key: 'marital_status', icon: Icons.favorite_border, label: 'Pilih status pernikahan', action: 'Pilih', section: 'identity'));
+      }
+      final motherName = (userData?['mother_name'] as String? ?? '').trim();
+      if (motherName.isEmpty) {
+        missingFields.add(const _ProfileTask(key: 'mother_name', icon: Icons.woman_outlined, label: 'Isi nama ibu kandung', action: 'Isi', section: 'identity'));
+      }
+      final occupation = (userData?['occupation'] as String? ?? '').trim();
+      if (occupation.isEmpty) {
+        missingFields.add(const _ProfileTask(key: 'occupation', icon: Icons.work_outline, label: 'Pilih pekerjaan', action: 'Pilih', section: 'identity'));
+      }
+      final incomeRange = (userData?['income_range'] as String? ?? '').trim();
+      if (incomeRange.isEmpty) {
+        missingFields.add(const _ProfileTask(key: 'income_range', icon: Icons.trending_up_outlined, label: 'Pilih rentang penghasilan', action: 'Pilih', section: 'identity'));
+      }
+      final sourceOfFunds = (userData?['source_of_funds'] as String? ?? '').trim();
+      if (sourceOfFunds.isEmpty) {
+        missingFields.add(const _ProfileTask(key: 'source_of_funds', icon: Icons.account_balance_wallet_outlined, label: 'Pilih sumber dana', action: 'Pilih', section: 'identity'));
       }
     }
 
     if (items['ktp_photo'] == false) {
       missingFields.add(const _ProfileTask(
-        key: 'ktp_photo',
-        icon: Icons.credit_card_outlined,
+        key: 'ktp_photo', icon: Icons.credit_card_outlined,
         label: 'Unggah Foto KTP / Passport / SIM / NPWP',
-        action: 'Unggah',
-        section: 'ktp_photo',
+        action: 'Unggah', section: 'ktp_photo',
       ));
     }
     if (items['selfie_photo'] == false) {
       missingFields.add(const _ProfileTask(
-        key: 'selfie_photo',
-        icon: Icons.face_outlined,
-        label: 'Unggah Foto Selfie + Dokumen Identitas (KTP/Passport/SIM/NPWP)',
-        action: 'Unggah',
-        section: 'selfie',
+        key: 'selfie_photo', icon: Icons.face_outlined,
+        label: 'Unggah Foto Selfie + Dokumen Identitas',
+        action: 'Unggah', section: 'selfie',
       ));
     }
     if (items['identity_verified'] == false) {
       missingFields.add(const _ProfileTask(
-        key: 'identity_verified',
-        icon: Icons.face_retouching_natural,
-        label: 'Verifikasi wajah dengan scan selfie Anda',
-        action: 'Scan',
-        section: 'selfie',
+        key: 'identity_verified', icon: Icons.face_retouching_natural_outlined,
+        label: 'Verifikasi Wajah dengan Kamera',
+        action: 'Scan', section: 'identity_verified',
       ));
     }
-
-    // Jika semua data sudah lengkap, sembunyikan card sepenuhnya
-    if (missingFields.isEmpty) return const SizedBox.shrink();
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
@@ -380,21 +357,74 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Kelengkapan Profil', style: AppTextStyles.titleSmall),
-                  Text(
-                    '$percent%',
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: percent >= 80
-                          ? Colors.green
-                          : (percent >= 50 ? Colors.orange : AppColors.primaryColor),
-                      fontWeight: FontWeight.w600,
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: identityVerified ? Colors.green.withAlpha(25) : Colors.orange.withAlpha(25),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      identityVerified ? Icons.verified : Icons.warning_amber_rounded,
+                      color: identityVerified ? Colors.green : Colors.orange,
+                      size: 20,
+                    ),
+                  ),
+                  SizedBox(width: AppSizes.sm),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          identityVerified
+                              ? 'Identitas Terverifikasi 100%'
+                              : 'Identitas Belum Terverifikasi ($percent%)',
+                          style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        if (identityVerified && selfieUrl != null) ...[
+                          SizedBox(height: 2),
+                          Row(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: SizedBox(
+                                  width: 24, height: 24,
+                                  child: CachedNetworkImage(imageUrl: selfieUrl, fit: BoxFit.cover),
+                                ),
+                              ),
+                              SizedBox(width: 6),
+                              Flexible(
+                                child: Text(
+                                  'Verifikasi Wajah',
+                                  style: AppTextStyles.bodySmall.copyWith(color: Colors.green),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: () => context.push('/face-scanner'),
+                    icon: Icon(
+                      identityVerified ? Icons.refresh : Icons.camera_alt_outlined,
+                      size: 16,
+                    ),
+                    label: Text(
+                      identityVerified ? 'Verifikasi Ulang Wajah' : 'Verifikasi Sekarang',
+                      style: AppTextStyles.bodySmall,
+                    ),
+                    style: TextButton.styleFrom(
+                      foregroundColor: identityVerified ? AppColors.primaryColor : Colors.orange,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              SizedBox(height: AppSizes.sm),
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: LinearProgressIndicator(
@@ -402,8 +432,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   minHeight: 10,
                   backgroundColor: AppColors.secondaryColor.withAlpha(50),
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    percent >= 80
-                        ? Colors.green
+                    percent >= 80 ? Colors.green
                         : (percent >= 50 ? Colors.orange : AppColors.primaryColor),
                   ),
                 ),
@@ -412,20 +441,37 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    const Icon(Icons.info_outline_rounded, size: 14, color: Color(0xFF888888)),
-                    const SizedBox(width: 6),
+                    Icon(Icons.info_outline_rounded, size: 14, color: const Color(0xFF888888)),
+                    SizedBox(width: 6),
                     Text(
                       '${missingFields.length} data belum dilengkapi',
                       style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF555555),
+                        fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF555555),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 10),
                 ...missingFields.map((task) => _buildTaskRow(task)),
+              ],
+              if (!identityVerified) ...[
+                const SizedBox(height: AppSizes.md),
+                SizedBox(
+                  width: double.infinity,
+                  child: AppButton(
+                    label: 'Verifikasi Sekarang',
+                    onPressed: () async {
+                      final result = await context.push<String>('/face-scanner');
+                      if (result != null && mounted) {
+                        await ref.read(profileProvider.notifier).uploadFaceScan(result);
+                        if (mounted) {
+                          AppSnackBar.show(context, 'Verifikasi wajah berhasil!', type: SnackBarType.success);
+                        }
+                      }
+                    },
+                    type: ButtonType.primary,
+                  ),
+                ),
               ],
             ],
           ),
@@ -458,8 +504,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         break;
 
       case 'identity_verified':
-        // Verifikasi wajah → Face Scanner
-        context.push('/face-scanner');
+        final result = await context.push<String>('/face-scanner');
+        if (result != null && mounted) {
+          await ref.read(profileProvider.notifier).uploadFaceScan(result);
+          if (mounted) {
+            AppSnackBar.show(context, 'Verifikasi wajah berhasil!', type: SnackBarType.success);
+          }
+        }
         break;
 
       // Masing-masing field punya halaman tersendiri
@@ -493,6 +544,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       case 'postal_code':
         // Semua wilayah → satu halaman region
         context.push('/profile-field', extra: {'key': 'region'});
+        break;
+      case 'gender':
+      case 'religion':
+      case 'marital_status':
+      case 'mother_name':
+      case 'occupation':
+      case 'income_range':
+      case 'source_of_funds':
+        context.push('/profile-field', extra: {'key': task.key});
         break;
       case 'address':
         context.push('/profile-field', extra: {'key': 'address'});
@@ -564,94 +624,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     );
   }
 
-
-  Widget _buildIdentityVerification(Map<String, dynamic>? userData) {
-    final identityVerified = userData?['identity_verified_at'] != null;
-    final selfieUrl = userData?['selfie_photo_url'] as String?;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
-      child: Card(
-        margin: const EdgeInsets.only(bottom: AppSizes.md),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSizes.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: identityVerified ? Colors.green.withAlpha(25) : Colors.orange.withAlpha(25),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Icon(
-                      identityVerified ? Icons.verified : Icons.warning_amber_rounded,
-                      color: identityVerified ? Colors.green : Colors.orange,
-                      size: 20,
-                    ),
-                  ),
-                  SizedBox(width: AppSizes.sm),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          identityVerified ? 'Identitas Terverifikasi' : 'Identitas Belum Terverifikasi',
-                          style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
-                        ),
-                        if (identityVerified && selfieUrl != null) ...[
-                          SizedBox(height: 2),
-                          Row(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(4),
-                                child: SizedBox(
-                                  width: 24, height: 24,
-                                  child: CachedNetworkImage(imageUrl: selfieUrl, fit: BoxFit.cover),
-                                ),
-                              ),
-                              SizedBox(width: 6),
-                              Flexible(
-                                child: Text(
-                                  'Verifikasi Wajah',
-                                  style: AppTextStyles.bodySmall.copyWith(color: Colors.green),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  SizedBox(width: AppSizes.sm),
-                  TextButton.icon(
-                    onPressed: () => context.push('/face-scanner'),
-                    icon: Icon(
-                      identityVerified ? Icons.refresh : Icons.camera_alt_outlined,
-                      size: 16,
-                    ),
-                    label: Text(
-                      identityVerified ? 'Verifikasi Ulang Wajah' : 'Verifikasi Sekarang',
-                      style: AppTextStyles.bodySmall,
-                    ),
-                    style: TextButton.styleFrom(
-                      foregroundColor: identityVerified ? AppColors.primaryColor : Colors.orange,
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _statItem(String label, String value) {
     return Column(

@@ -51,9 +51,9 @@ class _WishlistPageState extends ConsumerState<WishlistPage> {
                         itemCount: state.items.length,
                         itemBuilder: (_, i) {
                           final item = state.items[i];
-                          final isPackage = item['package'] != null;
-                          final type = isPackage ? 'packages' : 'products';
-                          final pkg = (item['package'] ?? item['product']) as Map<String, dynamic>? ?? {};
+                          final resourceType = item['resource_type'] as String? ?? 'product';
+                          final type = resourceType == 'package' ? 'packages' : 'products';
+                          final pkg = item;
 
                           return Stack(
                             children: [

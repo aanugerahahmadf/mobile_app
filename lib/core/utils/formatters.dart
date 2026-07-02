@@ -45,6 +45,18 @@ class Formatters {
     return '${(score * 100).toStringAsFixed(0)}%';
   }
 
+  /// Extract avatar URL from raw user data map with fallback to [avatar] field.
+  static String? avatarUrl(Map<String, dynamic>? data) {
+    if (data == null) return null;
+    final url = data['avatar_url'] as String?;
+    if (url != null && url.isNotEmpty) return imageUrl(url);
+    final avatar = data['avatar'] as String?;
+    if (avatar != null && avatar.isNotEmpty && avatar != 'avatar.png') {
+      return imageUrl('media/$avatar');
+    }
+    return null;
+  }
+
   static String imageUrl(String? url) {
     if (url == null || url.isEmpty) return '';
 

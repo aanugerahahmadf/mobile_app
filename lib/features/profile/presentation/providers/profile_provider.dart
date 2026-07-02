@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/api/dio_client.dart';
+import '../../../../core/utils/formatters.dart';
 import '../../data/profile_repository_impl.dart';
 import '../../domain/profile_repository.dart';
 
@@ -80,7 +81,11 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     state = state.copyWith(saving: true, error: null);
     try {
       final result = await _repository.updateProfile(data);
-      state = state.copyWith(userData: result, saving: false);
+      final merged = Map<String, dynamic>.from(state.userData ?? {});
+      result.forEach((key, value) {
+        if (value != null) merged[key] = value;
+      });
+      state = state.copyWith(userData: merged, saving: false);
     } on DioException catch (e) {
       state = state.copyWith(
         saving: false,
@@ -96,7 +101,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
   Future<String?> uploadAvatar(String filePath) async {
     state = state.copyWith(saving: true, error: null);
     try {
-      final avatarUrl = await _repository.uploadAvatar(filePath);
+      final avatarUrl = Formatters.imageUrl(await _repository.uploadAvatar(filePath));
       if (state.userData != null) {
         final updated = Map<String, dynamic>.from(state.userData!)
           ..['avatar_url'] = avatarUrl;
@@ -110,10 +115,10 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
         saving: false,
         error: e.error?.toString() ?? 'Gagal mengunggah avatar',
       );
-      return null;
+      rethrow;
     } catch (e) {
       state = state.copyWith(saving: false, error: e.toString());
-      return null;
+      rethrow;
     }
   }
 
@@ -184,6 +189,27 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       return null;
     } catch (e) {
       state = state.copyWith(selfieUploading: false, error: e.toString());
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> uploadFaceScan(String filePath) async {
+    state = state.copyWith(error: null);
+    try {
+      final result = await _repository.uploadFaceScan(filePath);
+      if (state.userData != null) {
+        final updated = Map<String, dynamic>.from(state.userData!)
+          ..['face_scan_photo_url'] = result['face_scan_photo_url']
+          ..['identity_verified_at'] = result['identity_verified_at'];
+        state = state.copyWith(userData: updated);
+      }
+      await fetchCompletion();
+      return result;
+    } on DioException catch (e) {
+      state = state.copyWith(error: e.error?.toString() ?? 'Gagal mengunggah face scan');
+      return null;
+    } catch (e) {
+      state = state.copyWith(error: e.toString());
       return null;
     }
   }

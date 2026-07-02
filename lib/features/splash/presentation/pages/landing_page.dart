@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../auth/presentation/providers/biometric_settings_provider.dart';
 import '../../../auth/presentation/widgets/auth_modals.dart';
 
 class LandingPage extends ConsumerStatefulWidget {
@@ -31,14 +32,24 @@ class _LandingPageState extends ConsumerState<LandingPage> {
     if (authState is AuthAuthenticated) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          context.go('/home');
+          final fingerprintEnabled = ref.read(fingerprintUnlockProvider);
+          if (fingerprintEnabled) {
+            context.go('/app-lock');
+          } else {
+            context.go('/home');
+          }
         }
       });
     }
 
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (next is AuthAuthenticated) {
-        context.go('/home');
+        final fingerprintEnabled = ref.read(fingerprintUnlockProvider);
+        if (fingerprintEnabled) {
+          context.go('/app-lock');
+        } else {
+          context.go('/home');
+        }
       }
     });
 

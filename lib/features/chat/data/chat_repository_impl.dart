@@ -32,11 +32,25 @@ class ChatRepositoryImpl implements ChatRepository {
   Future<Map<String, dynamic>> sendMessage({
     required int inboxId,
     required String message,
+    String? filePath,
+    Map<String, dynamic>? itemContext,
   }) async {
-    final response = await _dio.post(ApiEndpoints.messagesSend, data: {
+    final data = <String, dynamic>{
       'inbox_id': inboxId,
       'message': message,
-    });
+    };
+    if (itemContext != null) {
+      data.addAll(itemContext);
+    }
+    if (filePath != null) {
+      final formData = FormData.fromMap({
+        ...data,
+        'attachment': await MultipartFile.fromFile(filePath),
+      });
+      final response = await _dio.post(ApiEndpoints.messagesSend, data: formData);
+      return response.data['data'] as Map<String, dynamic>;
+    }
+    final response = await _dio.post(ApiEndpoints.messagesSend, data: data);
     return response.data['data'] as Map<String, dynamic>;
   }
 

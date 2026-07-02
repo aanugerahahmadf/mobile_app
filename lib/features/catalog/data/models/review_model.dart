@@ -28,7 +28,13 @@ class ReviewModel {
   });
 
   String? get userName => user?['full_name'] as String? ?? user?['name'] as String?;
-  String? get userAvatar => user?['avatar_url'] as String?;
+  String? get userAvatar {
+    final url = user?['avatar_url'] as String?;
+    if (url != null && url.isNotEmpty) return url;
+    final avatar = user?['avatar'] as String?;
+    if (avatar != null && avatar.isNotEmpty) return avatar;
+    return null;
+  }
 
   factory ReviewModel.fromJson(Map<String, dynamic> json) {
     return ReviewModel(

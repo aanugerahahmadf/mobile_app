@@ -140,10 +140,12 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
   String? _selectedWorldVillage;
   String? _selectedWorldPostalCode;
 
-  // Fallback text controllers (when API returns no data)
-  final _fallbackDistrictController = TextEditingController();
-  final _fallbackVillageController = TextEditingController();
-  final _fallbackPostalController = TextEditingController();
+  // Fallback text controllers (world free text when API returns no data)
+  final _freeDistrictController = TextEditingController();
+  final _freeVillageController = TextEditingController();
+  final _freePostalController = TextEditingController();
+  final _freeCityController = TextEditingController();
+  final _freeStateController = TextEditingController();
 
   // Loading states
   bool _loadingProvinces = false;
@@ -162,10 +164,12 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
   void initState() {
     super.initState();
     _isIndonesia = (widget.country ?? '').trim() == 'Indonesia';
-    _fallbackDistrictController.text = widget.initialDistrictName ?? '';
-    _fallbackVillageController.text = widget.initialVillageName ?? '';
-    _fallbackPostalController.text = widget.initialPostalCode ?? '';
-    _setupFallbackListeners();
+    _freeDistrictController.text = widget.initialDistrictName ?? '';
+    _freeVillageController.text = widget.initialVillageName ?? '';
+    _freePostalController.text = widget.initialPostalCode ?? '';
+    _freeCityController.text = widget.initialCityName ?? '';
+    _freeStateController.text = widget.initialProvinceName ?? '';
+    _setupFreeListeners();
     if (_isIndonesia) {
       _fetchProvinces();
     } else if (widget.country != null && widget.country!.isNotEmpty) {
@@ -173,15 +177,21 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
     }
   }
 
-  void _setupFallbackListeners() {
-    _fallbackDistrictController.addListener(() {
-      widget.onDistrictNameChanged(_fallbackDistrictController.text);
+  void _setupFreeListeners() {
+    _freeDistrictController.addListener(() {
+      widget.onDistrictNameChanged(_freeDistrictController.text);
     });
-    _fallbackVillageController.addListener(() {
-      widget.onVillageNameChanged(_fallbackVillageController.text);
+    _freeVillageController.addListener(() {
+      widget.onVillageNameChanged(_freeVillageController.text);
     });
-    _fallbackPostalController.addListener(() {
-      widget.onPostalCodeChanged(_fallbackPostalController.text);
+    _freePostalController.addListener(() {
+      widget.onPostalCodeChanged(_freePostalController.text);
+    });
+    _freeCityController.addListener(() {
+      widget.onCityNameChanged(_freeCityController.text);
+    });
+    _freeStateController.addListener(() {
+      widget.onProvinceNameChanged(_freeStateController.text);
     });
   }
 
@@ -211,9 +221,11 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
         _villages = [];
         _worldStates = [];
         _worldCities = [];
-        _fallbackDistrictController.text = '';
-        _fallbackVillageController.text = '';
-        _fallbackPostalController.text = '';
+        _freeDistrictController.text = '';
+        _freeVillageController.text = '';
+        _freePostalController.text = '';
+        _freeCityController.text = '';
+        _freeStateController.text = '';
         if (nowIndonesia) {
           _fetchProvinces();
         } else if (widget.country != null && widget.country!.isNotEmpty) {
@@ -221,16 +233,15 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
         }
       });
     }
-    if (widget.initialPostalCode != oldWidget.initialPostalCode) {
-      _fallbackPostalController.text = widget.initialPostalCode ?? '';
-    }
   }
 
   @override
   void dispose() {
-    _fallbackDistrictController.dispose();
-    _fallbackVillageController.dispose();
-    _fallbackPostalController.dispose();
+    _freeDistrictController.dispose();
+    _freeVillageController.dispose();
+    _freePostalController.dispose();
+    _freeCityController.dispose();
+    _freeStateController.dispose();
     super.dispose();
   }
 
@@ -320,7 +331,7 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
 
   Future<void> _fetchWorldCities() async {
     if (_selectedWorldState == null) return;
-    setState(() => _loadingWorldCities = true);
+    setState(() { _loadingWorldCities = true; });
     try {
       final res = await _dio.get(ApiEndpoints.worldCities, queryParameters: {
         'country': widget.country,
@@ -342,7 +353,7 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
 
   Future<void> _fetchWorldDistricts() async {
     if (_selectedWorldState == null) return;
-    setState(() => _loadingWorldDistricts = true);
+    setState(() { _loadingWorldDistricts = true; });
     try {
       final res = await _dio.get(ApiEndpoints.geoAdmin2, queryParameters: {
         'country': widget.country,
@@ -366,7 +377,7 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
 
   Future<void> _fetchWorldVillages(String districtName) async {
     if (_selectedWorldState == null) return;
-    setState(() => _loadingWorldVillages = true);
+    setState(() { _loadingWorldVillages = true; });
     try {
       final res = await _dio.get(ApiEndpoints.geoAdmin3, queryParameters: {
         'country': widget.country,
@@ -389,7 +400,7 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
   }
 
   Future<void> _fetchWorldPostalCodes(String cityName) async {
-    setState(() => _loadingWorldPostalCodes = true);
+    setState(() { _loadingWorldPostalCodes = true; });
     try {
       final res = await _dio.get(ApiEndpoints.geoPostalCodes, queryParameters: {
         'country': widget.country,
@@ -431,6 +442,8 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
       widget.onDistrictNameChanged('');
       widget.onVillageIdChanged(null);
       widget.onVillageNameChanged('');
+      _freePostalController.text = '';
+      widget.onPostalCodeChanged('');
     }
     if (province != null) _fetchCities(province.code);
   }
@@ -450,6 +463,8 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
       widget.onDistrictNameChanged('');
       widget.onVillageIdChanged(null);
       widget.onVillageNameChanged('');
+      _freePostalController.text = '';
+      widget.onPostalCodeChanged('');
     }
     if (city != null) _fetchDistricts(city.code);
   }
@@ -490,9 +505,11 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
       _worldDistricts = [];
       _worldVillages = [];
       _worldPostalCodes = [];
-      _fallbackDistrictController.text = '';
-      _fallbackVillageController.text = '';
-      _fallbackPostalController.text = '';
+      _freeDistrictController.text = '';
+      _freeVillageController.text = '';
+      _freePostalController.text = '';
+      _freeCityController.text = '';
+      _freeStateController.text = state?.name ?? '';
     });
     if (notify) {
       widget.onProvinceIdChanged(null);
@@ -516,7 +533,8 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
       _selectedWorldCity = city;
       _selectedWorldPostalCode = null;
       _worldPostalCodes = [];
-      _fallbackPostalController.text = '';
+      _freePostalController.text = '';
+      _freeCityController.text = city?.name ?? '';
     });
     if (notify) {
       widget.onCityIdChanged(null);
@@ -533,7 +551,7 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
       _selectedWorldDistrict = districtName;
       _selectedWorldVillage = null;
       _worldVillages = [];
-      _fallbackDistrictController.text = districtName ?? '';
+      _freeDistrictController.text = districtName ?? '';
     });
     widget.onDistrictIdChanged(null);
     widget.onDistrictNameChanged(districtName ?? '');
@@ -547,7 +565,7 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
   void _selectWorldVillage(String? villageName) {
     setState(() {
       _selectedWorldVillage = villageName;
-      _fallbackVillageController.text = villageName ?? '';
+      _freeVillageController.text = villageName ?? '';
     });
     widget.onVillageIdChanged(null);
     widget.onVillageNameChanged(villageName ?? '');
@@ -556,94 +574,22 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
   void _selectWorldPostalCode(String? code) {
     setState(() {
       _selectedWorldPostalCode = code;
-      _fallbackPostalController.text = code ?? '';
+      _freePostalController.text = code ?? '';
     });
     widget.onPostalCodeChanged(code ?? '');
   }
 
-  // --- Bottom sheets ---
+  // --- Autocomplete Builder ---
 
-  void _showSearchPicker({
-    required String title,
-    required List<String> items,
-    required String? currentValue,
-    required ValueChanged<String> onSelect,
-  }) {
-    final searchController = TextEditingController();
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
-            final query = searchController.text.toLowerCase();
-            final filtered = query.isEmpty
-                ? items
-                : items.where((i) => i.toLowerCase().contains(query)).toList();
-            return DraggableScrollableSheet(
-              initialChildSize: 0.6,
-              minChildSize: 0.3,
-              maxChildSize: 0.9,
-              expand: false,
-              builder: (context, scrollController) => Column(children: [
-                const SizedBox(height: 12),
-                Container(
-                  width: 40, height: 4,
-                  decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                  child: Text(title, style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold)),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: TextField(
-                    controller: searchController,
-                    decoration: InputDecoration(
-                      hintText: 'Cari $title...',
-                      prefixIcon: const Icon(Icons.search, size: 20),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    ),
-                    onChanged: (_) => setSheetState(() {}),
-                  ),
-                ),
-                Expanded(
-                  child: filtered.isEmpty
-                      ? const Center(child: Text('Tidak ada data'))
-                      : ListView.builder(
-                          controller: scrollController,
-                          itemCount: filtered.length,
-                          itemBuilder: (_, i) {
-                            final item = filtered[i];
-                            final isSelected = currentValue == item;
-                            return ListTile(
-                              title: Text(item),
-                              trailing: isSelected
-                                  ? const Icon(Icons.check, color: AppColors.primaryColor, size: 20) : null,
-                              onTap: () { onSelect(item); Navigator.pop(ctx); },
-                            );
-                          },
-                        ),
-                ),
-              ]),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  // --- Builder helpers ---
-
-  Widget _buildPickerField({
+  Widget _buildAutocomplete<T extends Object>({
     required String label,
-    required String? value,
+    required List<T> items,
     required bool loading,
-    required VoidCallback onTap,
+    required Key fieldKey,
+    required T? value,
+    required String Function(T) labelOf,
+    required ValueChanged<T> onSelect,
+    VoidCallback? onClear,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -652,28 +598,91 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
         children: [
           Text(label, style: AppTextStyles.titleSmall),
           const SizedBox(height: 8),
-          GestureDetector(
-            onTap: widget.readOnly ? null : onTap,
-            child: AbsorbPointer(
-              child: TextFormField(
-                controller: TextEditingController(text: value ?? ''),
+          Autocomplete<T>(
+            key: fieldKey,
+            initialValue: value != null ? TextEditingValue(text: labelOf(value)) : null,
+            optionsBuilder: (textEditingValue) {
+              if (loading || items.isEmpty) return [];
+              final query = textEditingValue.text.toLowerCase();
+              if (query.isEmpty) return items.take(100);
+              return items
+                  .where((o) => labelOf(o).toLowerCase().contains(query))
+                  .take(100);
+            },
+            onSelected: onSelect,
+            displayStringForOption: labelOf,
+            fieldViewBuilder: (ctx, textController, focusNode, onSubmitted) {
+              return TextFormField(
+                controller: textController,
+                focusNode: focusNode,
+                readOnly: widget.readOnly,
                 decoration: InputDecoration(
                   suffixIcon: loading
                       ? const Padding(
                           padding: EdgeInsets.all(12),
-                          child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                          child: SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
                         )
-                      : const Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                      : (textController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.close, size: 18),
+                              onPressed: () {
+                                textController.clear();
+                                onClear?.call();
+                              },
+                            )
+                          : null),
                 ),
-              ),
-            ),
+              );
+            },
+            optionsViewBuilder: (ctx, onSelected, options) {
+              return Align(
+                alignment: Alignment.topLeft,
+                child: Material(
+                  elevation: 8,
+                  borderRadius: BorderRadius.circular(8),
+                  color: Colors.white,
+                  clipBehavior: Clip.antiAlias,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: 200,
+                      maxWidth: MediaQuery.of(ctx).size.width - 64,
+                    ),
+                    child: ListView.builder(
+                      padding: EdgeInsets.zero,
+                      itemCount: options.length,
+                      itemBuilder: (_, i) {
+                        final item = options.elementAt(i);
+                        final isSelected = value == item;
+                        return ListTile(
+                          dense: true,
+                          selected: isSelected,
+                          selectedTileColor: AppColors.primaryColor.withAlpha(20),
+                          title: Text(
+                            labelOf(item),
+                            style: TextStyle(
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                              color: isSelected ? AppColors.primaryColor : AppColors.textPrimary,
+                            ),
+                          ),
+                          onTap: () => onSelected(item),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
     );
   }
 
-  Widget _buildEditableField({
+  Widget _buildFreeTextField({
     required String label,
     required TextEditingController controller,
   }) {
@@ -693,32 +702,79 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
     );
   }
 
-  /// Shows a dropdown if items is non-empty, otherwise shows a free-text field.
   Widget _buildWorldField({
     required String label,
     required List<String> items,
     required bool loading,
     required String? selectedValue,
-    required TextEditingController fallbackController,
+    required TextEditingController freeController,
     required ValueChanged<String> onSelect,
   }) {
-    if (loading || items.isNotEmpty) {
-      return _buildPickerField(
+    if (loading) {
+      return _buildAutocomplete<String>(
         label: label,
+        items: items,
+        loading: true,
+        fieldKey: ValueKey('${label}_loading_${items.length}'),
         value: selectedValue,
-        loading: loading,
-        onTap: () {
-          _showSearchPicker(
-            title: label,
-            items: items,
-            currentValue: selectedValue,
-            onSelect: onSelect,
-          );
-        },
+        labelOf: (s) => s,
+        onSelect: onSelect,
       );
     }
-    return _buildEditableField(label: label, controller: fallbackController);
+    if (items.isNotEmpty) {
+      return _buildAutocomplete<String>(
+        label: label,
+        items: items,
+        loading: false,
+        fieldKey: ValueKey('${label}_${items.length}_$selectedValue'),
+        value: selectedValue,
+        labelOf: (s) => s,
+        onSelect: onSelect,
+      );
+    }
+    return _buildFreeTextField(label: label, controller: freeController);
   }
+
+  // --- Indonesia child field (handles loading → autocomplete → free text fallback) ---
+
+  Widget _buildIndonesiaChildField({
+    required String label,
+    required List<RegionData> items,
+    required bool loading,
+    required RegionData? value,
+    required String keyPrefix,
+    required ValueChanged<RegionData> onSelect,
+    required VoidCallback onClear,
+    required TextEditingController freeController,
+  }) {
+    if (loading) {
+      return _buildAutocomplete<RegionData>(
+        label: label,
+        items: items,
+        loading: true,
+        fieldKey: ValueKey('${keyPrefix}_loading'),
+        value: value,
+        labelOf: (r) => r.name,
+        onSelect: onSelect,
+        onClear: onClear,
+      );
+    }
+    if (items.isNotEmpty) {
+      return _buildAutocomplete<RegionData>(
+        label: label,
+        items: items,
+        loading: false,
+        fieldKey: ValueKey('${keyPrefix}_${value?.id ?? ''}'),
+        value: value,
+        labelOf: (r) => r.name,
+        onSelect: onSelect,
+        onClear: onClear,
+      );
+    }
+    return _buildFreeTextField(label: label, controller: freeController);
+  }
+
+  // --- Build ---
 
   @override
   Widget build(BuildContext context) {
@@ -726,131 +782,96 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildPickerField(
+          _buildAutocomplete<RegionData>(
             label: 'Provinsi',
-            value: _selectedProvince?.name,
+            items: _provinces,
             loading: _loadingProvinces,
-            onTap: () {
-              final names = _provinces.map((p) => p.name).toList();
-              _showSearchPicker(
-                title: 'Provinsi',
-                items: names,
-                currentValue: _selectedProvince?.name,
-                onSelect: (v) {
-                  final match = _provinces.where((p) => p.name == v).firstOrNull;
-                  if (match != null) _selectProvince(match);
-                },
-              );
-            },
+            fieldKey: const ValueKey('province'),
+            value: _selectedProvince,
+            labelOf: (p) => p.name,
+            onSelect: _selectProvince,
+            onClear: () => _selectProvince(null),
           ),
-          if (_loadingCities || _cities.isNotEmpty)
-            _buildPickerField(
-              label: 'Kota / Kabupaten',
-              value: _selectedCity?.name,
-              loading: _loadingCities,
-              onTap: () {
-                final names = _cities.map((c) => c.name).toList();
-                _showSearchPicker(
-                  title: 'Kota/Kabupaten',
-                  items: names,
-                  currentValue: _selectedCity?.name,
-                  onSelect: (v) {
-                    final match = _cities.where((c) => c.name == v).firstOrNull;
-                    if (match != null) _selectCity(match);
-                  },
-                );
-              },
-            ),
-          if (_loadingDistricts || _districts.isNotEmpty)
-            _buildPickerField(
-              label: 'Kecamatan',
-              value: _selectedDistrict?.name,
-              loading: _loadingDistricts,
-              onTap: () {
-                final names = _districts.map((d) => d.name).toList();
-                _showSearchPicker(
-                  title: 'Kecamatan',
-                  items: names,
-                  currentValue: _selectedDistrict?.name,
-                  onSelect: (v) {
-                    final match = _districts.where((d) => d.name == v).firstOrNull;
-                    if (match != null) _selectDistrict(match);
-                  },
-                );
-              },
-            ),
-          if (_loadingVillages || _villages.isNotEmpty)
-            _buildPickerField(
-              label: 'Kelurahan / Desa',
-              value: _selectedVillage?.name,
-              loading: _loadingVillages,
-              onTap: () {
-                final names = _villages.map((v) => v.name).toList();
-                _showSearchPicker(
-                  title: 'Kelurahan/Desa',
-                  items: names,
-                  currentValue: _selectedVillage?.name,
-                  onSelect: (v) {
-                    final match = _villages.where((x) => x.name == v).firstOrNull;
-                    if (match != null) _selectVillage(match);
-                  },
-                );
-              },
-            ),
-          _buildEditableField(label: 'Kode Pos', controller: _fallbackPostalController),
+          _buildIndonesiaChildField(
+            label: 'Kota / Kabupaten',
+            items: _cities,
+            loading: _loadingCities,
+            value: _selectedCity,
+            keyPrefix: 'city_${_selectedProvince?.id ?? 0}',
+            onSelect: _selectCity,
+            onClear: () => _selectCity(null),
+            freeController: _freeCityController,
+          ),
+          _buildIndonesiaChildField(
+            label: 'Kecamatan',
+            items: _districts,
+            loading: _loadingDistricts,
+            value: _selectedDistrict,
+            keyPrefix: 'district_${_selectedCity?.id ?? 0}',
+            onSelect: _selectDistrict,
+            onClear: () => _selectDistrict(null),
+            freeController: _freeDistrictController,
+          ),
+          _buildIndonesiaChildField(
+            label: 'Kelurahan / Desa',
+            items: _villages,
+            loading: _loadingVillages,
+            value: _selectedVillage,
+            keyPrefix: 'village_${_selectedDistrict?.id ?? 0}',
+            onSelect: _selectVillage,
+            onClear: () => _selectVillage(null),
+            freeController: _freeVillageController,
+          ),
+          _buildFreeTextField(
+            label: 'Kode Pos',
+            controller: _freePostalController,
+          ),
         ],
       );
     }
 
-    // Non-Indonesia: real data cascading with GeoNames fallback
+    // Non-Indonesia
+    final stateItems = _worldStates.map((s) => s.name).toList();
+    final cityItems = _worldCities.map((c) => c.name).toList();
     final districtItems = _worldDistricts.map((d) => d.name).toList();
     final villageItems = _worldVillages.map((v) => v.name).toList();
-    final postalItems = _worldPostalCodes.map((p) => '${p.postalCode} — ${p.placeName}').toList();
+    final postalItems = _worldPostalCodes
+        .map((p) => '${p.postalCode} — ${p.placeName}')
+        .toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildPickerField(
+        _buildAutocomplete<String>(
           label: 'Provinsi',
-          value: _selectedWorldState?.name,
+          items: stateItems,
           loading: _loadingWorldStates,
-          onTap: () {
-            final names = _worldStates.map((s) => s.name).toList();
-            _showSearchPicker(
-              title: 'Provinsi',
-              items: names,
-              currentValue: _selectedWorldState?.name,
-              onSelect: (v) {
-                final match = _worldStates.where((s) => s.name == v).firstOrNull;
-                if (match != null) _selectWorldState(match);
-              },
-            );
+          fieldKey: const ValueKey('worldState'),
+          value: _selectedWorldState?.name,
+          labelOf: (s) => s,
+          onSelect: (v) {
+            final match = _worldStates.where((s) => s.name == v).firstOrNull;
+            if (match != null) _selectWorldState(match);
+          },
+          onClear: () => _selectWorldState(null),
+        ),
+        _buildWorldField(
+          label: 'Kota / Kabupaten',
+          items: cityItems,
+          loading: _loadingWorldCities,
+          selectedValue: _selectedWorldCity?.name,
+          freeController: _freeCityController,
+          onSelect: (v) {
+            final match = _worldCities.where((c) => c.name == v).firstOrNull;
+            if (match != null) _selectWorldCity(match);
           },
         ),
-        if (_loadingWorldCities || _worldCities.isNotEmpty)
-          _buildPickerField(
-            label: 'Kota / Kabupaten',
-            value: _selectedWorldCity?.name,
-            loading: _loadingWorldCities,
-            onTap: () {
-              final names = _worldCities.map((c) => c.name).toList();
-              _showSearchPicker(
-                title: 'Kota / Kabupaten',
-                items: names,
-                currentValue: _selectedWorldCity?.name,
-                onSelect: (v) {
-                  final match = _worldCities.where((c) => c.name == v).firstOrNull;
-                  if (match != null) _selectWorldCity(match);
-                },
-              );
-            },
-          ),
         _buildWorldField(
           label: 'Kecamatan',
           items: districtItems,
           loading: _loadingWorldDistricts,
           selectedValue: _selectedWorldDistrict,
-          fallbackController: _fallbackDistrictController,
+          freeController: _freeDistrictController,
           onSelect: _selectWorldDistrict,
         ),
         _buildWorldField(
@@ -858,7 +879,7 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
           items: villageItems,
           loading: _loadingWorldVillages,
           selectedValue: _selectedWorldVillage,
-          fallbackController: _fallbackVillageController,
+          freeController: _freeVillageController,
           onSelect: _selectWorldVillage,
         ),
         _buildWorldField(
@@ -866,9 +887,8 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
           items: postalItems,
           loading: _loadingWorldPostalCodes,
           selectedValue: _selectedWorldPostalCode,
-          fallbackController: _fallbackPostalController,
+          freeController: _freePostalController,
           onSelect: (v) {
-            // For postal codes, extract just the code part
             final code = v.split(' — ').first.trim();
             _selectWorldPostalCode(code);
           },

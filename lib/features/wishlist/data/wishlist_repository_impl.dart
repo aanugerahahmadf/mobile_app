@@ -26,9 +26,13 @@ class WishlistRepositoryImpl implements WishlistRepository {
   }
 
   @override
-  Future<void> removeFromWishlist(String packageOrProductId) async {
+  Future<void> removeFromWishlist(String id, {bool isProduct = false}) async {
     return DioClient.safeCall(() async {
-      await _dio.delete(ApiEndpoints.wishlistItem(packageOrProductId));
+      if (isProduct) {
+        await _dio.delete(ApiEndpoints.wishlistItem(id), queryParameters: {'product_id': id});
+      } else {
+        await _dio.delete(ApiEndpoints.wishlistItem(id));
+      }
     });
   }
 }

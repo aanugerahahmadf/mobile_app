@@ -18,7 +18,9 @@ import '../../features/order/presentation/pages/order_history_page.dart';
 import '../../features/order/presentation/pages/order_detail_page.dart';
 import '../../features/chat/presentation/pages/chat_list_page.dart';
 import '../../features/chat/presentation/pages/chat_detail_page.dart';
+import '../../features/search/presentation/pages/search_results_page.dart';
 import '../../features/notification/presentation/pages/notification_page.dart';
+import '../../features/profile/presentation/pages/notification_settings_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/profile/presentation/pages/edit_profile_page.dart';
 import '../../features/profile/presentation/pages/complete_profile_page.dart';
@@ -37,6 +39,8 @@ import '../../features/legal/presentation/pages/privacy_policy_page.dart';
 import '../../features/legal/presentation/pages/wedding_policy_page.dart';
 import '../../features/legal/presentation/pages/help_center_page.dart';
 import '../../features/legal/presentation/pages/privacy_and_term_page.dart';
+import '../../features/profile/presentation/pages/settings_page.dart';
+import '../../features/auth/presentation/pages/app_lock_page.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -104,6 +108,14 @@ final appRouter = GoRouter(
     GoRoute(path: '/order/:id', builder: (_, state) => OrderDetailPage(id: state.pathParameters['id']!)),
     GoRoute(path: '/chat/:id', builder: (_, state) => ChatDetailPage(id: state.pathParameters['id']!)),
     GoRoute(path: '/notifications', builder: (_, _) => const NotificationPage()),
+    GoRoute(path: '/notification-settings', builder: (_, _) => const NotificationSettingsPage()),
+    GoRoute(
+      path: '/search',
+      builder: (_, state) {
+        final query = (state.extra as Map<String, dynamic>?)?['query'] as String? ?? '';
+        return SearchResultsPage(query: query);
+      },
+    ),
     GoRoute(
       path: '/edit-profile',
       builder: (_, state) {
@@ -142,6 +154,8 @@ final appRouter = GoRouter(
     GoRoute(path: '/help-center', builder: (_, _) => const HelpCenterPage()),
     GoRoute(path: '/legal/privacy-term', builder: (_, _) => const PrivacyAndTermPage()),
     GoRoute(path: '/switch-account', builder: (_, _) => const SwitchAccountPage()),
+    GoRoute(path: '/settings', builder: (_, _) => const SettingsPage()),
+    GoRoute(path: '/app-lock', builder: (_, _) => const AppLockPage()),
     GoRoute(
       path: '/payment/:orderId',
       builder: (_, state) {

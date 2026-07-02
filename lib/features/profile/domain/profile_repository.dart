@@ -6,5 +6,6 @@ abstract class ProfileRepository {
   Future<void> updateNik(String nik);
   Future<String> uploadKtp(String filePath);
   Future<Map<String, dynamic>> uploadSelfie(String filePath);
+  Future<Map<String, dynamic>> uploadFaceScan(String filePath);
   Future<Map<String, dynamic>> getCompletion();
 }

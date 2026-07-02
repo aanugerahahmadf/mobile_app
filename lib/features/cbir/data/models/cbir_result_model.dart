@@ -15,9 +15,11 @@ class CbirResultItem {
   });
 
   factory CbirResultItem.fromJson(Map<String, dynamic> json) {
+    var sim = parseDouble(json['similarity']);
+    if (sim > 1) sim /= 100;
     return CbirResultItem(
       type: (json['type'] ?? 'package') as String,
-      similarity: parseDouble(json['similarity']),
+      similarity: sim,
       score: parseDouble(json['score']),
       data: ItemModel.fromJson(json['data'] as Map<String, dynamic>),
     );

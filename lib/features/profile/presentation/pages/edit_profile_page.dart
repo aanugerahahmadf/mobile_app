@@ -4,15 +4,19 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:dio/dio.dart';
 import '../../../../core/api/dio_client.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/utils/validators.dart';
-import '../../../../core/utils/ktp_utils.dart';
 import '../../../../core/utils/country_codes.dart';
 import '../providers/profile_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -99,8 +103,172 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
 
   Future<void> _pickAvatar() async {
     if (!_editing) return;
-    final file = await pickKtpPhoto(context);
-    if (file != null) setState(() => _avatarFile = file);
+    final action = await showModalBottomSheet<String>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Kamera'),
+                onTap: () => Navigator.pop(ctx, 'camera'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Galeri'),
+                onTap: () => Navigator.pop(ctx, 'gallery'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.folder_open),
+                title: const Text('File Manager'),
+                onTap: () => Navigator.pop(ctx, 'file'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.cloud),
+                title: const Text('Google Drive'),
+                onTap: () => Navigator.pop(ctx, 'drive'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (action == null) return;
+
+    switch (action) {
+      case 'camera':
+      case 'gallery':
+        final picked = await ImagePicker().pickImage(
+          source: action == 'camera' ? ImageSource.camera : ImageSource.gallery,
+          maxWidth: 1200, maxHeight: 800,
+        );
+        if (picked != null) setState(() => _avatarFile = File(picked.path));
+        break;
+      case 'file':
+        final result = await FilePicker.platform.pickFiles(type: FileType.image);
+        if (result != null && result.files.single.path != null) {
+          setState(() => _avatarFile = File(result.files.single.path!));
+        }
+        break;
+      case 'drive':
+        await _pickFromDrive();
+    }
+  }
+
+  Future<void> _pickFromDrive() async {
+    try {
+      const scopes = ['email', 'https://www.googleapis.com/auth/drive.readonly'];
+      final googleSignIn = GoogleSignIn(scopes: scopes);
+      final account = await googleSignIn.signIn();
+      if (account == null) return;
+
+      final auth = await account.authentication;
+      final token = auth.accessToken;
+      if (token == null) return;
+
+      final dio = Dio(BaseOptions(
+        headers: {'Authorization': 'Bearer $token'},
+      ));
+
+      final response = await dio.get(
+        'https://www.googleapis.com/drive/v3/files',
+        queryParameters: {
+          'q': "mimeType contains 'image/' and trashed = false",
+          'fields': 'files(id, name, mimeType, webContentLink, size)',
+          'orderBy': 'modifiedTime desc',
+          'pageSize': 20,
+        },
+      );
+
+      final files = (response.data['files'] as List?) ?? [];
+      if (files.isEmpty || !mounted) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Tidak ada gambar di Google Drive')),
+          );
+        }
+        return;
+      }
+
+      final selected = await showModalBottomSheet<Map<String, dynamic>>(
+        context: context,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (ctx) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36, height: 4, margin: const EdgeInsets.only(top: 12),
+                decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: Text('Pilih dari Google Drive',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                ),
+              ),
+              SizedBox(
+                height: MediaQuery.of(ctx).size.height * 0.45,
+                child: ListView.separated(
+                  itemCount: files.length,
+                  separatorBuilder: (_, _) => const Divider(height: 1, indent: 70),
+                  itemBuilder: (_, i) {
+                    final file = files[i];
+                    return ListTile(
+                      leading: const Icon(Icons.image_rounded, size: 40, color: Colors.grey),
+                      title: Text(file['name'] as String? ?? '', maxLines: 1, overflow: TextOverflow.ellipsis),
+                      onTap: () => Navigator.pop(ctx, file as Map<String, dynamic>),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      if (selected == null || !mounted) return;
+
+      final fileId = selected['id'] as String?;
+      final fileName = selected['name'] as String? ?? 'drive_image';
+      if (fileId == null) return;
+
+      final tempDir = Directory.systemTemp;
+      final tempFile = File('${tempDir.path}/$fileName');
+      await dio.download(
+        'https://www.googleapis.com/drive/v3/files/$fileId?alt=media',
+        tempFile.path,
+      );
+
+      if (mounted) {
+        setState(() => _avatarFile = tempFile);
+      }
+
+      await googleSignIn.signOut();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal mengambil dari Google Drive: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _save() async {
@@ -127,8 +295,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
 
     try {
       // 1. Upload avatar jika dipilih
+      String? newAvatarUrl;
       if (_avatarFile != null) {
-        await notifier.uploadAvatar(_avatarFile!.path);
+        newAvatarUrl = await notifier.uploadAvatar(_avatarFile!.path);
       }
 
       // 2. Update profil (username, whatsapp, email, password)
@@ -143,6 +312,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       }
       await notifier.updateProfile(data);
       ref.read(authProvider.notifier).refreshUser();
+      if (newAvatarUrl != null) {
+        ref.read(authProvider.notifier).updateAvatarDirect(newAvatarUrl);
+      }
 
       // 3. Jika email berubah → kirim OTP dan arahkan ke verifikasi
       if (emailChanged) {
@@ -191,7 +363,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   Widget build(BuildContext context) {
     final state    = ref.watch(profileProvider);
     final userData = state.userData;
-    final avatarUrl = userData?['avatar_url'] as String?;
+    final avatarUrl = Formatters.avatarUrl(userData);
 
     final firstName = userData?['first_name'] as String? ?? '';
     final midName   = userData?['mid_name']   as String? ?? '';
@@ -235,14 +407,25 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                   onTap: _editing ? _pickAvatar : null,
                   child: Stack(
                     children: [
-                      CircleAvatar(
-                        radius: 56,
-                        backgroundColor: AppColors.secondaryColor.withAlpha(60),
-                        backgroundImage: _avatarFile != null
-                            ? FileImage(_avatarFile!) as ImageProvider
-                            : (avatarUrl != null
-                                ? CachedNetworkImageProvider(avatarUrl)
-                                : null),
+                      Container(
+                        width: 112,
+                        height: 112,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: AppColors.primaryColor,
+                            width: 3,
+                          ),
+                          image: (_avatarFile != null || avatarUrl != null)
+                              ? DecorationImage(
+                                  image: _avatarFile != null
+                                      ? FileImage(_avatarFile!) as ImageProvider
+                                      : CachedNetworkImageProvider(Formatters.imageUrl(avatarUrl!)),
+                                  fit: BoxFit.cover,
+                                )
+                              : null,
+                          color: AppColors.secondaryColor.withAlpha(60),
+                        ),
                         child: (_avatarFile == null && avatarUrl == null)
                             ? const Icon(Icons.person, size: 48, color: AppColors.textTertiary)
                             : null,

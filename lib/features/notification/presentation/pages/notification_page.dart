@@ -1,10 +1,12 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../data/models/notification_model.dart';
 import '../providers/notification_provider.dart';
 
 class NotificationPage extends ConsumerStatefulWidget {
@@ -19,7 +21,9 @@ class _NotificationPageState extends ConsumerState<NotificationPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(notificationListProvider.notifier).fetchNotifications();
+      final notifier = ref.read(notificationListProvider.notifier);
+      notifier.fetchNotifications();
+      notifier.fetchUnreadCount();
     });
   }
 
@@ -32,7 +36,7 @@ class _NotificationPageState extends ConsumerState<NotificationPage> {
       appBar: AppBar(
         title: Text('Notifikasi'),
         actions: [
-          if (state.notifications.any((n) => n['read_at'] == null))
+          if (state.notifications.any((n) => n.isUnread))
             TextButton(
               onPressed: () => notifier.markAllAsRead(),
               child: Text('Tandai Dibaca'),
@@ -42,7 +46,25 @@ class _NotificationPageState extends ConsumerState<NotificationPage> {
       body: state.loading
           ? const Center(child: CircularProgressIndicator())
           : state.error != null
-              ? Center(child: Text(state.error!, style: AppTextStyles.bodyMedium))
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSizes.lg),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.cloud_off, size: 64, color: Colors.grey[400]),
+                        SizedBox(height: AppSizes.md),
+                        Text(state.error!, style: AppTextStyles.bodyMedium, textAlign: TextAlign.center),
+                        SizedBox(height: AppSizes.md),
+                        ElevatedButton.icon(
+                          onPressed: () => notifier.fetchNotifications(),
+                          icon: Icon(Icons.refresh),
+                          label: Text('Coba Lagi'),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
               : state.notifications.isEmpty
                   ? AppEmptyState(
                       title: 'Belum ada notifikasi',
@@ -57,16 +79,16 @@ class _NotificationPageState extends ConsumerState<NotificationPage> {
                         separatorBuilder: (_, _) => const Divider(height: 1),
                         itemBuilder: (context, index) {
                           final notif = state.notifications[index];
-                          final isRead = notif['read_at'] != null;
-                          final title = notif['title'] as String? ?? 'Notifikasi';
-                          final body = notif['body'] as String? ?? notif['message'] as String? ?? '';
-                          final time = notif['created_at'] as String? ?? '';
+                          final isRead = !notif.isUnread;
+                          final title = notif.title ?? 'Notifikasi';
+                          final body = notif.body ?? '';
+                          final time = notif.createdAt ?? '';
 
                           return ListTile(
                             leading: CircleAvatar(
                               backgroundColor: isRead ? Colors.grey[200] : AppColors.secondaryColor,
                               child: Icon(
-                                _getNotificationIcon(notif['type'] as String?),
+                                _getNotificationIcon(notif.type),
                                 color: isRead ? AppColors.textSecondary : AppColors.primaryColor,
                                 size: 20,
                               ),
@@ -88,13 +110,47 @@ class _NotificationPageState extends ConsumerState<NotificationPage> {
                               style: AppTextStyles.labelSmall,
                             ),
                             onTap: () {
-                              if (!isRead) notifier.markAsRead(notif['id'].toString());
+                              if (notif.isUnread) notifier.markAsRead(notif.id.toString());
+                              _navigateToNotification(notif);
                             },
                           );
                         },
                       ),
                     ),
     );
+  }
+
+  void _navigateToNotification(NotificationModel notif) {
+    final type = notif.type;
+    final data = notif.data;
+    final id = data?['id']?.toString() ?? data?['order_id']?.toString() ?? data?['package_id']?.toString();
+    final route = data?['route'] as String?;
+
+    if (route != null && route.isNotEmpty) {
+      context.push(route);
+      return;
+    }
+
+    switch (type) {
+      case 'order':
+      case 'payment':
+        if (id != null) context.push('/order/$id');
+        break;
+      case 'chat':
+        if (id != null) context.push('/chat/$id');
+        break;
+      case 'promo':
+        context.push('/vouchers');
+        break;
+      case 'package':
+        if (id != null) context.push('/catalog/packages/$id');
+        break;
+      case 'product':
+        if (id != null) context.push('/catalog/products/$id');
+        break;
+      default:
+        break;
+    }
   }
 
   IconData _getNotificationIcon(String? type) {

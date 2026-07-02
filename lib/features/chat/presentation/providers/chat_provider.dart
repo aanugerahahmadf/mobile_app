@@ -73,9 +73,11 @@ class ChatNotifier extends StateNotifier<ChatState> {
     required int inboxId,
     required String message,
     required String senderName,
+    String? filePath,
+    Map<String, dynamic>? itemContext,
   }) async {
     try {
-      final sent = await _repository.sendMessage(inboxId: inboxId, message: message);
+      final sent = await _repository.sendMessage(inboxId: inboxId, message: message, filePath: filePath, itemContext: itemContext);
       final constructed = <String, dynamic>{
         'id': sent['id'],
         'message': message,
@@ -84,6 +86,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
         'is_me': true,
         'read_by': <String>[],
         'attachments': <String>[],
+        'meta': sent['meta'],
         'created_at': sent['created_at'] ?? DateTime.now().toIso8601String(),
       };
       if (state is ChatMessagesLoaded) {

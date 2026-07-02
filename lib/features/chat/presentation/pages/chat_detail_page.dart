@@ -1,7 +1,16 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../../../core/api/dio_client.dart';
+import '../../../../core/api/api_endpoints.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
@@ -66,9 +75,9 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
     });
   }
 
-  Future<void> _sendMessage() async {
+  Future<void> _sendMessage({String? filePath}) async {
     final text = _messageController.text.trim();
-    if (text.isEmpty) return;
+    if (text.isEmpty && filePath == null) return;
 
     _messageController.clear();
     try {
@@ -76,6 +85,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
         inboxId: int.parse(widget.id),
         message: text,
         senderName: _senderName(),
+        filePath: filePath,
       );
       _scrollToBottom();
     } catch (e) {
@@ -87,6 +97,387 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
     }
   }
 
+  void _showAttachmentOptions() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: SingleChildScrollView(
+          child: Container(
+            padding: const EdgeInsets.only(top: 12, bottom: 32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 36, height: 4,
+                  decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+                ),
+                const SizedBox(height: 24),
+                Text('Lampiran',
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Color(0xFF1A1A2E)),
+                ),
+                const SizedBox(height: 24),
+                _attachmentOption(
+                  icon: Icons.camera_alt_rounded,
+                  title: 'Kamera',
+                  subtitle: 'Ambil foto langsung',
+                  onTap: () { context.pop(); _pickImage(ImageSource.camera); },
+                ),
+                _attachmentOption(
+                  icon: Icons.photo_library,
+                  title: 'Galeri',
+                  subtitle: 'Pilih dari Galeri',
+                  onTap: () { context.pop(); _pickImage(ImageSource.gallery); },
+                ),
+                _attachmentOption(
+                  icon: Icons.folder_open_rounded,
+                  title: 'File',
+                  subtitle: 'Pilih dari penyimpanan',
+                  onTap: () { context.pop(); _pickFile(); },
+                ),
+                _attachmentOption(
+                  icon: Icons.cloud,
+                  title: 'Google Drive',
+                  subtitle: 'Pilih file dari Drive',
+                  onTap: () { context.pop(); _pickFromDrive(); },
+                ),
+                _attachmentOption(
+                  icon: Icons.category_rounded,
+                  title: 'Katalog',
+                  subtitle: 'Bagikan produk',
+                  onTap: () { context.pop(); _pickFromCatalog(); },
+                ),
+                _attachmentOption(
+                  icon: Icons.receipt_long_rounded,
+                  title: 'Pesanan',
+                  subtitle: 'Bagikan detail pesanan',
+                  onTap: () { context.pop(); _pickFromOrders(); },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickImage(ImageSource source) async {
+    final picked = await ImagePicker().pickImage(source: source, maxWidth: 1024);
+    if (picked != null && mounted) {
+      await _sendMessage(filePath: picked.path);
+      _scrollToBottom();
+    }
+  }
+
+  Future<void> _pickFile() async {
+    final result = await FilePicker.platform.pickFiles();
+    if (result != null && result.files.isNotEmpty && mounted) {
+      final path = result.files.first.path;
+      if (path != null) {
+        await _sendMessage(filePath: path);
+        _scrollToBottom();
+      }
+    }
+  }
+
+  Future<void> _pickFromDrive() async {
+    try {
+      final googleUser = await GoogleSignIn(
+        serverClientId: dotenv.get('GOOGLE_CLIENT_ID'),
+        scopes: ['https://www.googleapis.com/auth/drive.readonly'],
+      ).signIn();
+      if (googleUser == null || !mounted) return;
+
+      final auth = await googleUser.authentication;
+      if (auth.accessToken == null) return;
+
+      final response = await Dio().get(
+        'https://www.googleapis.com/drive/v3/files',
+        queryParameters: {
+          'q': "mimeType contains 'image/' and trashed = false",
+          'fields': 'files(id, name, mimeType, thumbnailLink)',
+          'pageSize': '50',
+          'orderBy': 'modifiedTime desc',
+        },
+        options: Options(headers: {'Authorization': 'Bearer ${auth.accessToken}'}),
+      );
+
+      final files = (response.data['files'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+      if (files.isEmpty || !mounted) return;
+
+      final selected = await showModalBottomSheet<String>(
+        context: context,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (ctx) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36, height: 4, margin: const EdgeInsets.only(top: 12),
+                decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: Text('Pilih dari Google Drive',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                ),
+              ),
+              SizedBox(
+                height: MediaQuery.of(ctx).size.height * 0.45,
+                child: ListView.separated(
+                  itemCount: files.length,
+                  separatorBuilder: (_, _) => const Divider(height: 1, indent: 16, endIndent: 16),
+                  itemBuilder: (_, i) {
+                    final f = files[i];
+                    final thumb = f['thumbnailLink'] as String?;
+                    return ListTile(
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: thumb != null
+                            ? CachedNetworkImage(imageUrl: thumb, width: 48, height: 48, fit: BoxFit.cover)
+                            : Container(
+                                width: 48, height: 48,
+                                decoration: BoxDecoration(color: const Color(0xFFE8F5E9), borderRadius: BorderRadius.circular(8)),
+                                child: const Icon(Icons.cloud, color: Color(0xFF4CAF50), size: 24),
+                              ),
+                      ),
+                      title: Text(f['name'] as String? ?? '', maxLines: 1, overflow: TextOverflow.ellipsis),
+                      onTap: () => Navigator.pop(ctx, f['id'] as String?),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      if (selected == null || !mounted) return;
+
+      final imageResponse = await Dio().get(
+        'https://www.googleapis.com/drive/v3/files/$selected?alt=media',
+        options: Options(
+          headers: {'Authorization': 'Bearer ${auth.accessToken}'},
+          responseType: ResponseType.bytes,
+        ),
+      );
+
+      final tempDir = await Directory.systemTemp.createTemp('drive_');
+      final file = File('${tempDir.path}/drive_image.jpg');
+      await file.writeAsBytes(imageResponse.data as List<int>);
+
+      await _sendMessage(filePath: file.path);
+      _scrollToBottom();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal mengambil dari Drive: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickFromCatalog() async {
+    try {
+      final dio = DioClient.instance;
+      final results = await Future.wait([
+        dio.get(ApiEndpoints.packages, queryParameters: {'per_page': 20}),
+        dio.get(ApiEndpoints.products, queryParameters: {'per_page': 20}),
+      ]);
+      final packages = ((results[0].data['data'] as List?) ?? []).map((e) => e as Map<String, dynamic>..['_type'] = 'package').toList();
+      final products = ((results[1].data['data'] as List?) ?? []).map((e) => e as Map<String, dynamic>..['_type'] = 'product').toList();
+      final items = [...packages, ...products];
+
+      if (items.isEmpty || !mounted) return;
+
+      final selected = await showModalBottomSheet<Map<String, dynamic>>(
+        context: context,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (ctx) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36, height: 4, margin: const EdgeInsets.only(top: 12),
+                decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: Text('Pilih Produk',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                ),
+              ),
+              SizedBox(
+                height: MediaQuery.of(ctx).size.height * 0.45,
+                child: ListView.separated(
+                  itemCount: items.length,
+                  separatorBuilder: (_, _) => const Divider(height: 1, indent: 70),
+                  itemBuilder: (_, i) {
+                    final item = items[i];
+                    final imageUrl = _fixImageUrl(item['image_url'] as String? ?? (() {
+                      final images = item['media'] as List? ?? item['images'] as List? ?? [];
+                      if (images.isEmpty) return '';
+                      final first = images.first;
+                      return first is String ? first : (first['url'] as String? ?? first['original_url'] as String? ?? '');
+                    })());
+                    final name = item['name'] as String? ?? '';
+                    final price = item['price'];
+                    final type = item['_type'] as String? ?? '';
+                    return ListTile(
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: imageUrl.isNotEmpty
+                            ? CachedNetworkImage(imageUrl: imageUrl, width: 48, height: 48, fit: BoxFit.cover)
+                            : Container(
+                                width: 48, height: 48,
+                                decoration: BoxDecoration(color: const Color(0xFFF5F5F5), borderRadius: BorderRadius.circular(8)),
+                                child: const Icon(Icons.image_outlined, color: Color(0xFFD0D0D0)),
+                              ),
+                      ),
+                      title: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      subtitle: Text('$type · Rp ${price != null ? (price is int ? price.toString() : price.toString()) : '0'}'),
+                      onTap: () => Navigator.pop(ctx, item),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      if (selected == null || !mounted) return;
+
+      await ref.read(chatProvider.notifier).sendMessage(
+        inboxId: int.parse(widget.id),
+        message: '',
+        senderName: _senderName(),
+        itemContext: {
+          'type': selected['_type'] as String? ?? 'product',
+          'item_id': selected['id'],
+          'item_name': selected['name'] as String? ?? '',
+          'item_price': selected['price'],
+          'item_image': _fixImageUrl(selected['image_url'] as String? ?? (() {
+            final images = selected['media'] as List? ?? selected['images'] as List? ?? [];
+            if (images.isEmpty) return '';
+            final first = images.first;
+            return first is String ? first : (first['url'] as String? ?? first['original_url'] as String? ?? '');
+          })()),
+        },
+      );
+      _scrollToBottom();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal memuat katalog')),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickFromOrders() async {
+    try {
+      final dio = DioClient.instance;
+      final response = await dio.get(ApiEndpoints.bookings, queryParameters: {'per_page': 20});
+      final orders = (response.data['data'] as List?) ?? [];
+
+      if (orders.isEmpty || !mounted) return;
+
+      final selected = await showModalBottomSheet<Map<String, dynamic>>(
+        context: context,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (ctx) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 36, height: 4, margin: const EdgeInsets.only(top: 12),
+                decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+              ),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: Text('Pilih Pesanan',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                ),
+              ),
+              SizedBox(
+                height: MediaQuery.of(ctx).size.height * 0.45,
+                child: ListView.separated(
+                  itemCount: orders.length,
+                  separatorBuilder: (_, _) => const Divider(height: 1, indent: 16),
+                  itemBuilder: (_, i) {
+                    final order = orders[i];
+                    final orderNumber = order['order_number'] as String? ?? '';
+                    final status = order['status'] as String? ?? '';
+                    final title = order['title'] as String? ?? '';
+                    return ListTile(
+                      title: Text('#$orderNumber', style: const TextStyle(fontWeight: FontWeight.w600)),
+                      subtitle: Text(status.isNotEmpty ? '$status · $title' : title, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      onTap: () => Navigator.pop(ctx, order),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      if (selected == null || !mounted) return;
+
+      await ref.read(chatProvider.notifier).sendMessage(
+        inboxId: int.parse(widget.id),
+        message: '',
+        senderName: _senderName(),
+        itemContext: {
+          'order_id': selected['id'],
+        },
+      );
+      _scrollToBottom();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal memuat pesanan')),
+        );
+      }
+    }
+  }
+
+  Widget _attachmentOption({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    VoidCallback? onTap,
+  }) {
+    return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 2),
+      leading: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: AppColors.primaryLight,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Icon(icon, color: AppColors.primaryColor, size: 22),
+      ),
+      title: Text(title, style: AppTextStyles.titleMedium),
+      subtitle: Text(subtitle, style: AppTextStyles.bodySmall),
+      onTap: onTap,
+    );
+  }
+
+  String _fixImageUrl(String url) => url.replaceAll('/storage/', '/media/');
+
   Widget _buildContextCard(Map<String, dynamic> meta) {
     final isOrder = meta['is_order'] == true;
 
@@ -96,7 +487,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
 
     final name = meta['name'] as String? ?? '';
     final price = meta['price'];
-    final image = meta['image'] as String? ?? '';
+    final image = _fixImageUrl(meta['image'] as String? ?? '');
     final type = meta['type'] as String? ?? 'product';
 
     return Container(
@@ -144,7 +535,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
                   ),
                   if (price != null) ...[
                     const SizedBox(height: 2),
-                    Text(_formatCurrency((price as num).toInt()),
+                    Text(_formatCurrency((num.tryParse(price.toString()) ?? 0).toInt()),
                       style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFFE53935)),
                     ),
                   ],
@@ -162,7 +553,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
     final orderStatus = meta['order_status'] as String? ?? '';
     final paymentStatus = meta['payment_status'] as String? ?? '';
     final name = meta['name'] as String? ?? '';
-    final image = meta['image'] as String? ?? '';
+    final image = _fixImageUrl(meta['image'] as String? ?? '');
 
     return Container(
       width: MediaQuery.of(context).size.width * 0.8,
@@ -357,6 +748,19 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
             child: SafeArea(
               child: Row(
                 children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.secondaryColor.withAlpha(60),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.add_rounded, color: AppColors.primaryColor, size: 24),
+                      onPressed: _showAttachmentOptions,
+                      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                      splashRadius: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: TextField(
                       controller: _messageController,
@@ -374,7 +778,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
                     backgroundColor: AppColors.primaryColor,
                     child: IconButton(
                       icon: const Icon(Icons.send, color: Colors.white, size: 20),
-                      onPressed: _sendMessage,
+                      onPressed: () => _sendMessage(),
                     ),
                   ),
                 ],

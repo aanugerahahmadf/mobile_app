@@ -1,5 +1,8 @@
+import '../data/models/notification_model.dart';
+
 abstract class NotificationRepository {
-  Future<List<Map<String, dynamic>>> getNotifications();
+  Future<List<NotificationModel>> getNotifications();
+  Future<int> getUnreadCount();
   Future<void> markAsRead(String id);
   Future<void> markAllAsRead();
 }

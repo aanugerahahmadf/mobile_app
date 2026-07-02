@@ -8,6 +8,7 @@ import '../../../../core/api/dio_client.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/app_date_picker_field.dart';
@@ -21,6 +22,7 @@ import '../../../../core/utils/sim_utils.dart';
 import '../../../../core/utils/npwp_utils.dart';
 import '../../../../core/utils/country_codes.dart';
 import '../providers/profile_provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 class CompleteProfilePage extends ConsumerStatefulWidget {
   final String? scrollToSection;
@@ -61,6 +63,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
   bool _saving = false;
   File? _ktpFile;
   File? _selfieFile;
+  String? _faceScanPath;
   File? _avatarFile;
 
   int? _provinceId;
@@ -72,6 +75,13 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
   String _districtName = '';
   String _villageName = '';
   String _postalCode = '';
+  String _gender = '';
+  String _religion = '';
+  String _maritalStatus = '';
+  final _motherNameController = TextEditingController();
+  String _occupation = '';
+  String _incomeRange = '';
+  String _sourceOfFunds = '';
 
   String get _fullName => [
     _firstNameController.text.trim(),
@@ -133,6 +143,13 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
         _districtName = userData['district_name'] as String? ?? '';
         _villageName  = userData['village_name']  as String? ?? '';
         _postalCode   = userData['postal_code']   as String? ?? '';
+        _gender = userData['gender'] as String? ?? '';
+        _religion = userData['religion'] as String? ?? '';
+        _maritalStatus = userData['marital_status'] as String? ?? '';
+        _motherNameController.text = userData['mother_name'] as String? ?? '';
+        _occupation = userData['occupation'] as String? ?? '';
+        _incomeRange = userData['income_range'] as String? ?? '';
+        _sourceOfFunds = userData['source_of_funds'] as String? ?? '';
 
         // Parse WhatsApp
         String rawWa = (userData['whatsapp'] as String? ?? '').trim();
@@ -228,6 +245,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
     _birthDateController.dispose();
     _countryController.dispose();
     _addressController.dispose();
+    _motherNameController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -315,6 +333,13 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
     if (_districtName.isNotEmpty) data['district_name'] = _districtName;
     if (_villageName.isNotEmpty)  data['village_name']  = _villageName;
     if (_postalCode.isNotEmpty)   data['postal_code']   = _postalCode;
+    if (_gender.isNotEmpty) data['gender'] = _gender;
+    if (_religion.isNotEmpty) data['religion'] = _religion;
+    if (_maritalStatus.isNotEmpty) data['marital_status'] = _maritalStatus;
+    if (_motherNameController.text.trim().isNotEmpty) data['mother_name'] = _motherNameController.text.trim();
+    if (_occupation.isNotEmpty) data['occupation'] = _occupation;
+    if (_incomeRange.isNotEmpty) data['income_range'] = _incomeRange;
+    if (_sourceOfFunds.isNotEmpty) data['source_of_funds'] = _sourceOfFunds;
 
     setState(() => _saving = true);
 
@@ -322,13 +347,19 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
       await profileNotifier.updateProfile(data);
 
       if (_avatarFile != null) {
-        await profileNotifier.uploadAvatar(_avatarFile!.path);
+        final newAvatarUrl = await profileNotifier.uploadAvatar(_avatarFile!.path);
+        if (newAvatarUrl != null) {
+          ref.read(authProvider.notifier).updateAvatarDirect(newAvatarUrl);
+        }
       }
       if (_ktpFile != null) {
         await profileNotifier.uploadKtp(_ktpFile!.path);
       }
       if (_selfieFile != null) {
         await profileNotifier.uploadSelfie(_selfieFile!.path);
+      }
+      if (_faceScanPath != null) {
+        await profileNotifier.uploadFaceScan(_faceScanPath!);
       }
 
       // Cek apakah email berubah → kirim OTP verifikasi
@@ -363,6 +394,36 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
     } finally {
       if (mounted) setState(() => _saving = false);
     }
+  }
+
+  void _showPickerSheet(String title, List<String> options, Function(String) onSelected) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+              const SizedBox(height: 8),
+              Text(title, style: AppTextStyles.titleMedium),
+              const SizedBox(height: 8),
+              ...options.map((option) => ListTile(
+                title: Text(option, style: AppTextStyles.bodyMedium),
+                onTap: () {
+                  onSelected(option);
+                  Navigator.pop(ctx);
+                },
+              )),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildSectionHeader(String title, {IconData? icon}) {
@@ -484,7 +545,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
     final userData  = pState.userData;
     final ktpUrl    = pState.ktpUrl    ?? userData?['ktp_photo_url']    as String?;
     final selfieUrl = pState.selfieUrl ?? userData?['selfie_photo_url'] as String?;
-    final avatarUrl = pState.userData?['avatar_url'] as String?;
+    final avatarUrl = Formatters.avatarUrl(pState.userData);
     final completionPercent = pState.completionPercent;
 
     // Flags untuk menentukan field apa yang perlu diisi
@@ -506,6 +567,13 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
     final needsAddress    = _addressController.text.trim().isEmpty;
     final needsKtp        = ktpUrl == null && _ktpFile == null;
     final needsSelfie     = selfieUrl == null && _selfieFile == null;
+    final needsGender = _gender.isEmpty;
+    final needsReligion = _religion.isEmpty;
+    final needsMaritalStatus = _maritalStatus.isEmpty;
+    final needsMotherName = _motherNameController.text.trim().isEmpty;
+    final needsOccupation = _occupation.isEmpty;
+    final needsIncomeRange = _incomeRange.isEmpty;
+    final needsSourceOfFunds = _sourceOfFunds.isEmpty;
 
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
@@ -821,6 +889,198 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
 
               const SizedBox(height: AppSizes.md),
 
+              // ── Data KYC ────────────────────────────────────────────────
+              if (needsGender) ...[
+                const Divider(),
+                const SizedBox(height: AppSizes.sm),
+                _buildSectionHeader('Jenis Kelamin', icon: Icons.people_outlined),
+                GestureDetector(
+                  onTap: () => _showPickerSheet('Pilih Jenis Kelamin', ['Pria', 'Wanita'], (v) => setState(() => _gender = v)),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondaryColor.withAlpha(30),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.dividerColor),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.people_outlined, color: AppColors.primaryColor, size: 22),
+                        SizedBox(width: AppSizes.md),
+                        Expanded(
+                          child: Text(
+                            _gender.isEmpty ? 'Pilih Jenis Kelamin' : _gender,
+                            style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSizes.sm),
+              ],
+              if (needsReligion) ...[
+                const Divider(),
+                const SizedBox(height: AppSizes.sm),
+                _buildSectionHeader('Agama', icon: Icons.church_outlined),
+                GestureDetector(
+                  onTap: () => _showPickerSheet('Pilih Agama', ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu'], (v) => setState(() => _religion = v)),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondaryColor.withAlpha(30),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.dividerColor),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.church_outlined, color: AppColors.primaryColor, size: 22),
+                        SizedBox(width: AppSizes.md),
+                        Expanded(
+                          child: Text(
+                            _religion.isEmpty ? 'Pilih Agama' : _religion,
+                            style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSizes.sm),
+              ],
+              if (needsMaritalStatus) ...[
+                const Divider(),
+                const SizedBox(height: AppSizes.sm),
+                _buildSectionHeader('Status Pernikahan', icon: Icons.favorite_border),
+                GestureDetector(
+                  onTap: () => _showPickerSheet('Pilih Status Pernikahan', ['Belum Menikah', 'Menikah', 'Cerai'], (v) => setState(() => _maritalStatus = v)),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondaryColor.withAlpha(30),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.dividerColor),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.favorite_border, color: AppColors.primaryColor, size: 22),
+                        SizedBox(width: AppSizes.md),
+                        Expanded(
+                          child: Text(
+                            _maritalStatus.isEmpty ? 'Pilih Status Pernikahan' : _maritalStatus,
+                            style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSizes.sm),
+              ],
+              if (needsMotherName) ...[
+                const Divider(),
+                const SizedBox(height: AppSizes.sm),
+                _buildSectionHeader('Nama Ibu Kandung', icon: Icons.woman_outlined),
+                AppTextField(
+                  label: 'Nama Ibu Kandung',
+                  controller: _motherNameController,
+                ),
+                const SizedBox(height: AppSizes.sm),
+              ],
+              if (needsOccupation) ...[
+                const Divider(),
+                const SizedBox(height: AppSizes.sm),
+                _buildSectionHeader('Pekerjaan', icon: Icons.work_outline),
+                GestureDetector(
+                  onTap: () => _showPickerSheet('Pilih Pekerjaan', ['Karyawan', 'Wiraswasta', 'Pelajar/Mahasiswa', 'Ibu Rumah Tangga', 'Profesional', 'Lainnya'], (v) => setState(() => _occupation = v)),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondaryColor.withAlpha(30),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.dividerColor),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.work_outline, color: AppColors.primaryColor, size: 22),
+                        SizedBox(width: AppSizes.md),
+                        Expanded(
+                          child: Text(
+                            _occupation.isEmpty ? 'Pilih Pekerjaan' : _occupation,
+                            style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSizes.sm),
+              ],
+              if (needsIncomeRange) ...[
+                const Divider(),
+                const SizedBox(height: AppSizes.sm),
+                _buildSectionHeader('Rentang Penghasilan', icon: Icons.trending_up_outlined),
+                GestureDetector(
+                  onTap: () => _showPickerSheet('Pilih Rentang Penghasilan', ['< Rp 1 Juta', 'Rp 1-5 Juta', 'Rp 5-10 Juta', 'Rp 10-50 Juta', '> Rp 50 Juta'], (v) => setState(() => _incomeRange = v)),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondaryColor.withAlpha(30),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.dividerColor),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.trending_up_outlined, color: AppColors.primaryColor, size: 22),
+                        SizedBox(width: AppSizes.md),
+                        Expanded(
+                          child: Text(
+                            _incomeRange.isEmpty ? 'Pilih Rentang Penghasilan' : _incomeRange,
+                            style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSizes.sm),
+              ],
+              if (needsSourceOfFunds) ...[
+                const Divider(),
+                const SizedBox(height: AppSizes.sm),
+                _buildSectionHeader('Sumber Dana', icon: Icons.account_balance_wallet_outlined),
+                GestureDetector(
+                  onTap: () => _showPickerSheet('Pilih Sumber Dana', ['Gaji', 'Bisnis/Usaha', 'Investasi', 'Hadiah/Warisan', 'Lainnya'], (v) => setState(() => _sourceOfFunds = v)),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondaryColor.withAlpha(30),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.dividerColor),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.account_balance_wallet_outlined, color: AppColors.primaryColor, size: 22),
+                        SizedBox(width: AppSizes.md),
+                        Expanded(
+                          child: Text(
+                            _sourceOfFunds.isEmpty ? 'Pilih Sumber Dana' : _sourceOfFunds,
+                            style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSizes.sm),
+              ],
+
               // ── Dokumen Identitas ─────────────────────────────────────────
               if (needsKtp) ...[
                 const Divider(),
@@ -852,6 +1112,56 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
                 const SizedBox(height: AppSizes.sm),
               ] else
                 SizedBox(key: _keySelfie),
+
+              const SizedBox(height: AppSizes.md),
+              GestureDetector(
+                onTap: () async {
+                  final path = await context.push<String>('/face-scanner');
+                  if (path != null) setState(() => _faceScanPath = path);
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: _faceScanPath != null ? AppColors.successColor.withAlpha(20) : AppColors.secondaryColor.withAlpha(30),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _faceScanPath != null ? AppColors.successColor : AppColors.dividerColor,
+                      width: 1.5,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        _faceScanPath != null ? Icons.check_circle : Icons.face_retouching_natural,
+                        color: _faceScanPath != null ? AppColors.successColor : AppColors.textSecondary,
+                        size: 26,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Verifikasi Wajah', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 2),
+                            Text(
+                              _faceScanPath != null ? 'Wajah terverifikasi' : 'Scan wajah dengan kamera untuk verifikasi',
+                              style: AppTextStyles.bodySmall.copyWith(
+                                color: _faceScanPath != null ? AppColors.successColor : AppColors.textTertiary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (_faceScanPath != null)
+                        GestureDetector(
+                          onTap: () => setState(() => _faceScanPath = null),
+                          child: const Icon(Icons.close, size: 18, color: AppColors.textSecondary),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
 
               const SizedBox(height: AppSizes.xl),
 

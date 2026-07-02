@@ -126,7 +126,11 @@ class UserModel {
       whatsapp: json['whatsapp'] as String?,
       phone: json['phone'] as String?,
       avatar: json['avatar'] as String?,
-      avatarUrl: json['avatar_url'] != null ? Formatters.imageUrl(json['avatar_url'] as String) : null,
+      avatarUrl: json['avatar_url'] != null
+          ? Formatters.imageUrl(json['avatar_url'] as String)
+          : (json['avatar'] != null && json['avatar'] != 'avatar.png'
+              ? Formatters.imageUrl('storage/${json['avatar']}')
+              : null),
       gender: json['gender'] as String?,
       address: json['address'] as String?,
       weddingDate: json['wedding_date'] as String?,

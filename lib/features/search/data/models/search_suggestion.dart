@@ -83,7 +83,7 @@ class SearchSuggestion {
           name: json['code'] as String?,
           subtitle: json['description'] as String?,
           routePath: '/vouchers/$id',
-          routeExtra: json,
+          routeExtra: {...json, 'id': id},
         );
 
       case SuggestionType.orders:
@@ -161,7 +161,7 @@ class SearchSuggestion {
 
       case SuggestionType.packages:
       case SuggestionType.products:
-        final price = (json['price'] as num?)?.toInt() ?? 0;
+        final price = _pickPrice(json);
         final name = json['name'] as String? ?? '';
         final subtitle = price > 0 ? _formatCurrency(price) : null;
         return SearchSuggestion(
@@ -176,14 +176,33 @@ class SearchSuggestion {
   }
 
   static String? _extractImage(Map<String, dynamic> json) {
+    final imageUrl = json['image_url'] as String?;
+    if (imageUrl != null && imageUrl.isNotEmpty) return Formatters.imageUrl(imageUrl);
     final media = json['media'] as List? ?? [];
     if (media.isNotEmpty && media[0] is Map) {
-      final url = (media[0] as Map)['url'];
-      if (url is String && url.isNotEmpty) return Formatters.imageUrl(url);
+      final m = media[0] as Map;
+      final originalUrl = m['original_url'] as String?;
+      if (originalUrl != null && originalUrl.isNotEmpty) return Formatters.imageUrl(originalUrl);
+      final previewUrl = m['preview_url'] as String?;
+      if (previewUrl != null && previewUrl.isNotEmpty) return Formatters.imageUrl(previewUrl);
     }
     final image = json['image'] as String?;
     if (image != null && image.isNotEmpty) return Formatters.imageUrl(image);
     return null;
+  }
+
+  static int _pickPrice(Map<String, dynamic> json) {
+    final price = _parsePrice(json['price']);
+    if (price > 0) return price;
+    return _parsePrice(json['final_price']);
+  }
+
+  static int _parsePrice(dynamic v) {
+    if (v == null) return 0;
+    if (v is int) return v;
+    if (v is double) return v.toInt();
+    if (v is String) return double.tryParse(v)?.toInt() ?? 0;
+    return 0;
   }
 
   static String _formatCurrency(int amount) {

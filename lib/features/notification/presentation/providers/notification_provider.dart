@@ -1,28 +1,33 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../data/models/notification_model.dart';
 import '../../data/notification_repository_impl.dart';
 import '../../domain/notification_repository.dart';
 
 class NotificationState {
-  final List<Map<String, dynamic>> notifications;
+  final List<NotificationModel> notifications;
   final bool loading;
   final String? error;
+  final int unreadCount;
 
   const NotificationState({
     this.notifications = const [],
     this.loading = false,
     this.error,
+    this.unreadCount = 0,
   });
 
   NotificationState copyWith({
-    List<Map<String, dynamic>>? notifications,
+    List<NotificationModel>? notifications,
     bool? loading,
     String? error,
+    int? unreadCount,
   }) {
     return NotificationState(
       notifications: notifications ?? this.notifications,
       loading: loading ?? this.loading,
       error: error,
+      unreadCount: unreadCount ?? this.unreadCount,
     );
   }
 }
@@ -40,36 +45,49 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
     } on DioException catch (e) {
       state = state.copyWith(
         loading: false,
-        error: e.error?.toString() ?? 'Gagal memuat notifikasi',
+        error: e.response?.data?['message'] as String? ?? 'Gagal memuat notifikasi',
       );
     } catch (e) {
       state = state.copyWith(loading: false, error: e.toString());
     }
   }
 
-  Future<void> markAsRead(String id) async {
+  Future<void> fetchUnreadCount() async {
     try {
-      await _repository.markAsRead(id);
-      state = state.copyWith(
-        notifications: state.notifications.map((n) {
-          if (n['id'].toString() == id) {
-            return {...n, 'read_at': DateTime.now().toIso8601String()};
-          }
-          return n;
-        }).toList(),
-      );
+      final count = await _repository.getUnreadCount();
+      state = state.copyWith(unreadCount: count);
     } catch (_) {}
   }
 
-  Future<void> markAllAsRead() async {
+  Future<void> markAsRead(String id) async {
+    final previous = state.notifications;
     try {
-      await _repository.markAllAsRead();
       state = state.copyWith(
         notifications: state.notifications.map((n) {
-          return {...n, 'read_at': DateTime.now().toIso8601String()};
+          if (n.id.toString() == id) {
+            return n.copyWith(readAt: DateTime.now().toIso8601String());
+          }
+          return n;
         }).toList(),
+        unreadCount: state.unreadCount > 0 ? state.unreadCount - 1 : 0,
       );
-    } catch (_) {}
+      await _repository.markAsRead(id);
+    } catch (_) {
+      state = state.copyWith(notifications: previous);
+    }
+  }
+
+  Future<void> markAllAsRead() async {
+    final previous = state.notifications;
+    try {
+      state = state.copyWith(
+        notifications: state.notifications.map((n) => n.copyWith(readAt: DateTime.now().toIso8601String())).toList(),
+        unreadCount: 0,
+      );
+      await _repository.markAllAsRead();
+    } catch (_) {
+      state = state.copyWith(notifications: previous);
+    }
   }
 }
 

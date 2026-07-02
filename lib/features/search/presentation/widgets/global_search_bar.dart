@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -106,10 +107,25 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
     }
   }
 
+  void _openSearchResults(String query) {
+    _controller.clear();
+    _focusNode.unfocus();
+    _removeOverlay();
+    context.push('/search', extra: {'query': query});
+  }
+
   Future<void> _pickImage(ImageSource source) async {
     final picked = await ImagePicker().pickImage(source: source, maxWidth: 1024);
     if (picked != null && mounted) {
       ref.read(cbirProvider.notifier).search(File(picked.path));
+      if (mounted) context.push('/cbir-result');
+    }
+  }
+
+  Future<void> _pickFile() async {
+    final result = await FilePicker.platform.pickFiles(type: FileType.image);
+    if (result != null && result.files.single.path != null && mounted) {
+      ref.read(cbirProvider.notifier).search(File(result.files.single.path!));
       if (mounted) context.push('/cbir-result');
     }
   }
@@ -252,7 +268,7 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
                   icon: Icons.folder,
                   title: 'File Manager',
                   subtitle: 'Pilih dari penyimpanan',
-                  onTap: () { context.pop(); _pickImage(ImageSource.gallery); },
+                  onTap: () { context.pop(); _pickFile(); },
                 ),
                 _sheetOption(
                   icon: Icons.cloud,
@@ -323,8 +339,13 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
             child: TextField(
               controller: _controller,
               focusNode: _focusNode,
+              textInputAction: TextInputAction.search,
+              onSubmitted: (value) {
+                final q = value.trim();
+                if (q.length >= 2) _openSearchResults(q);
+              },
               decoration: InputDecoration(
-                hintText: 'Cari paket bunga...',
+                hintText: 'Pencarian...',
                 hintStyle: TextStyle(color: _hintColor, fontWeight: FontWeight.w400),
                 prefixIconConstraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                 prefixIcon: cbirState.uploadedImagePath != null
@@ -461,7 +482,6 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
             style: TextStyle(
               fontSize: 11,
               color: AppColors.textSecondary,
-              fontStyle: item.type == SuggestionType.terms || item.type == SuggestionType.privacy || item.type == SuggestionType.weddingPolicy ? FontStyle.italic : FontStyle.normal,
               fontWeight: item.type == SuggestionType.vouchers || item.type == SuggestionType.orders ? FontWeight.w600 : FontWeight.w400,
             ),
             maxLines: 1, overflow: TextOverflow.ellipsis,
@@ -522,9 +542,11 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
 
     return Stack(
       children: [
-        GestureDetector(
-          onTap: () { _focusNode.unfocus(); _removeOverlay(); },
-          child: Container(color: Colors.transparent),
+        Positioned.fill(
+          child: GestureDetector(
+            onTap: () { _focusNode.unfocus(); _removeOverlay(); },
+            child: Container(color: Colors.transparent),
+          ),
         ),
         Positioned(
           left: 16,

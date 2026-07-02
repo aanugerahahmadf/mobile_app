@@ -460,6 +460,7 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
     ref.read(authProvider.notifier).login(
       login: _emailController.text.trim(),
       password: _passwordController.text,
+      loginType: _loginType,
     );
   }
 
@@ -495,7 +496,7 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Lengkapi profil Anda'), backgroundColor: AppColors.infoColor),
           );
-          GoRouter.of(context).push('/edit-profile');
+          GoRouter.of(context).push('/profile-field');
         } else {
           final messenger = ScaffoldMessenger.of(context);
           final router = GoRouter.of(context);
@@ -754,6 +755,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
   File? _avatarFile;
   File? _ktpFile;
   File? _selfieKtpFile;
+  String? _faceScanPath;
   bool _namesLocked = false;
   String _ocrExtractedName = '';
   int? _provinceId;
@@ -767,6 +769,13 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
   String _postalCode = '';
   String _identityType = 'ktp';
   String _countryCode = '+62';
+  String _gender = '';
+  String _religion = '';
+  String _maritalStatus = '';
+  final _motherNameController = TextEditingController();
+  String _occupation = '';
+  String _incomeRange = '';
+  String _sourceOfFunds = '';
 
   String get _idLabel {
     switch (_identityType) {
@@ -815,9 +824,40 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
     _birthDateController.dispose();
     _countryController.dispose();
     _addressController.dispose();
+    _motherNameController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
+  }
+
+  void _showPickerSheet(String title, List<String> options, Function(String) onSelected) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+              const SizedBox(height: 8),
+              Text(title, style: AppTextStyles.titleMedium),
+              const SizedBox(height: 8),
+              ...options.map((option) => ListTile(
+                title: Text(option, style: AppTextStyles.bodyMedium),
+                onTap: () {
+                  onSelected(option);
+                  Navigator.pop(ctx);
+                },
+              )),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _showIdentityTypeSheet() {
@@ -1030,8 +1070,16 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
       villageName: _villageName,
       postalCode: _postalCode,
       address: _addressController.text.trim(),
+      gender: _gender,
+      religion: _religion,
+      maritalStatus: _maritalStatus,
+      motherName: _motherNameController.text.trim(),
+      occupation: _occupation,
+      incomeRange: _incomeRange,
+      sourceOfFunds: _sourceOfFunds,
       ktpPhotoPath: _ktpFile?.path,
       selfiePhotoPath: _selfieKtpFile?.path,
+      faceScanPath: _faceScanPath,
       password: _passwordController.text,
       passwordConfirmation: _confirmPasswordController.text,
     );
@@ -1420,6 +1468,57 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
                 ),
               ),
             ),
+            SizedBox(height: AppSizes.sm),
+            GestureDetector(
+              onTap: () async {
+                final path = await GoRouter.of(context).push<String>('/face-scanner');
+                if (path != null) setState(() => _faceScanPath = path);
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: _faceScanPath != null ? AppColors.successColor.withAlpha(20) : AppColors.secondaryColor.withAlpha(30),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: _faceScanPath != null ? AppColors.successColor : AppColors.dividerColor,
+                    width: 1.5,
+                    strokeAlign: BorderSide.strokeAlignInside,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      _faceScanPath != null ? Icons.check_circle : Icons.face_retouching_natural,
+                      color: _faceScanPath != null ? AppColors.successColor : AppColors.textSecondary,
+                      size: 28,
+                    ),
+                    SizedBox(width: AppSizes.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('Verifikasi Wajah', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+                          SizedBox(height: 2),
+                          Text(
+                            _faceScanPath != null ? 'Wajah terverifikasi' : 'Scan wajah dengan kamera',
+                            style: AppTextStyles.bodySmall.copyWith(
+                              color: _faceScanPath != null ? AppColors.successColor : AppColors.textTertiary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (_faceScanPath != null)
+                      GestureDetector(
+                        onTap: () => setState(() => _faceScanPath = null),
+                        child: Icon(Icons.close, size: 18, color: AppColors.textSecondary),
+                      ),
+                  ],
+                ),
+              ),
+            ),
             SizedBox(height: AppSizes.md),
             AppTextField(
               label: _idLabel,
@@ -1471,6 +1570,173 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
             ),
             _buildPhoneField(),
             const SizedBox(height: AppSizes.md),
+            Text('Jenis Kelamin', style: AppTextStyles.titleSmall),
+            SizedBox(height: AppSizes.sm),
+            GestureDetector(
+              onTap: () => _showPickerSheet('Pilih Jenis Kelamin', ['Pria', 'Wanita'], (v) => setState(() => _gender = v)),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: AppColors.secondaryColor.withAlpha(30),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.dividerColor),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.people_outlined, color: AppColors.primaryColor, size: 22),
+                    SizedBox(width: AppSizes.md),
+                    Expanded(
+                      child: Text(
+                        _gender.isEmpty ? 'Pilih Jenis Kelamin' : _gender,
+                        style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(height: AppSizes.md),
+            Text('Agama', style: AppTextStyles.titleSmall),
+            SizedBox(height: AppSizes.sm),
+            GestureDetector(
+              onTap: () => _showPickerSheet('Pilih Agama', ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu'], (v) => setState(() => _religion = v)),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: AppColors.secondaryColor.withAlpha(30),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.dividerColor),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.church_outlined, color: AppColors.primaryColor, size: 22),
+                    SizedBox(width: AppSizes.md),
+                    Expanded(
+                      child: Text(
+                        _religion.isEmpty ? 'Pilih Agama' : _religion,
+                        style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(height: AppSizes.md),
+            Text('Status Pernikahan', style: AppTextStyles.titleSmall),
+            SizedBox(height: AppSizes.sm),
+            GestureDetector(
+              onTap: () => _showPickerSheet('Pilih Status Pernikahan', ['Belum Menikah', 'Menikah', 'Cerai'], (v) => setState(() => _maritalStatus = v)),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: AppColors.secondaryColor.withAlpha(30),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.dividerColor),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.favorite_border, color: AppColors.primaryColor, size: 22),
+                    SizedBox(width: AppSizes.md),
+                    Expanded(
+                      child: Text(
+                        _maritalStatus.isEmpty ? 'Pilih Status Pernikahan' : _maritalStatus,
+                        style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(height: AppSizes.md),
+            AppTextField(
+              label: 'Nama Ibu Kandung',
+              controller: _motherNameController,
+            ),
+            SizedBox(height: AppSizes.md),
+            Text('Pekerjaan', style: AppTextStyles.titleSmall),
+            SizedBox(height: AppSizes.sm),
+            GestureDetector(
+              onTap: () => _showPickerSheet('Pilih Pekerjaan', ['Karyawan', 'Wiraswasta', 'Pelajar/Mahasiswa', 'Ibu Rumah Tangga', 'Profesional', 'Lainnya'], (v) => setState(() => _occupation = v)),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: AppColors.secondaryColor.withAlpha(30),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.dividerColor),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.work_outline, color: AppColors.primaryColor, size: 22),
+                    SizedBox(width: AppSizes.md),
+                    Expanded(
+                      child: Text(
+                        _occupation.isEmpty ? 'Pilih Pekerjaan' : _occupation,
+                        style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(height: AppSizes.md),
+            Text('Rentang Penghasilan', style: AppTextStyles.titleSmall),
+            SizedBox(height: AppSizes.sm),
+            GestureDetector(
+              onTap: () => _showPickerSheet('Pilih Rentang Penghasilan', ['< Rp 1 Juta', 'Rp 1-5 Juta', 'Rp 5-10 Juta', 'Rp 10-50 Juta', '> Rp 50 Juta'], (v) => setState(() => _incomeRange = v)),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: AppColors.secondaryColor.withAlpha(30),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.dividerColor),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.trending_up_outlined, color: AppColors.primaryColor, size: 22),
+                    SizedBox(width: AppSizes.md),
+                    Expanded(
+                      child: Text(
+                        _incomeRange.isEmpty ? 'Pilih Rentang Penghasilan' : _incomeRange,
+                        style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(height: AppSizes.md),
+            Text('Sumber Dana', style: AppTextStyles.titleSmall),
+            SizedBox(height: AppSizes.sm),
+            GestureDetector(
+              onTap: () => _showPickerSheet('Pilih Sumber Dana', ['Gaji', 'Bisnis/Usaha', 'Investasi', 'Hadiah/Warisan', 'Lainnya'], (v) => setState(() => _sourceOfFunds = v)),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: AppColors.secondaryColor.withAlpha(30),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.dividerColor),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.account_balance_wallet_outlined, color: AppColors.primaryColor, size: 22),
+                    SizedBox(width: AppSizes.md),
+                    Expanded(
+                      child: Text(
+                        _sourceOfFunds.isEmpty ? 'Pilih Sumber Dana' : _sourceOfFunds,
+                        style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(height: AppSizes.md),
             AppTextField(
               label: 'Kata Sandi',
               controller: _passwordController,
