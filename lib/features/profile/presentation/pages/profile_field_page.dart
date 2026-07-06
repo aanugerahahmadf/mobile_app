@@ -21,6 +21,7 @@ import '../../../../core/utils/sim_utils.dart';
 import '../../../../core/utils/npwp_utils.dart';
 import '../../../../core/utils/country_codes.dart';
 import '../providers/profile_provider.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 /// Halaman khusus untuk melengkapi SATU field/data profil.
@@ -64,6 +65,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
   File?  _avatarFile;
   File?  _ktpFile;
   File?  _selfieFile;
+  File?  _faceScanFile;
 
   int?   _provinceId;
   int?   _cityId;
@@ -81,65 +83,67 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
     _lastNameController.text.trim(),
   ].where((s) => s.isNotEmpty).join(' ');
 
-  String get _identityNumberLabel {
+  String _identityNumberLabel(AppLocalizations l) {
     switch (_identityType) {
-      case 'ktp':      return 'Nomor Induk Kependudukan (NIK)';
-      case 'passport': return 'Nomor Passport';
-      case 'sim':      return 'Nomor SIM';
-      case 'npwp':     return 'Nomor NPWP';
-      default:         return 'Nomor Identitas';
+      case 'ktp':      return l.nikLabel;
+      case 'passport': return l.passportLabel;
+      case 'sim':      return l.simLabel;
+      case 'npwp':     return l.npwpLabel;
+      default:         return l.identityNumber;
     }
   }
 
-  String get _pageTitle {
+  String _pageTitle(AppLocalizations l) {
     switch (widget.fieldKey) {
-      case 'full_name':   return 'Isi Nama Lengkap';
-      case 'username':    return 'Buat Username';
-      case 'avatar':      return 'Upload Foto Profil';
-      case 'whatsapp':    return 'Tambah Nomor WhatsApp';
-      case 'nik':         return 'Isi Nomor Identitas';
-      case 'birth':       return 'Isi Data Kelahiran';
-      case 'country':     return 'Pilih Negara';
-      case 'email':       return 'Isi Email';
-      case 'region':      return 'Pilih Wilayah';
-      case 'address':     return 'Isi Alamat Lengkap';
-      case 'postal_code': return 'Isi Kode Pos';
-      case 'gender': return 'Pilih Jenis Kelamin';
-      case 'religion': return 'Pilih Agama';
-      case 'marital_status': return 'Pilih Status Pernikahan';
-      case 'mother_name': return 'Isi Nama Ibu Kandung';
-      case 'occupation': return 'Pilih Pekerjaan';
-      case 'income_range': return 'Pilih Rentang Penghasilan';
-      case 'source_of_funds': return 'Pilih Sumber Dana';
-      case 'ktp_photo':   return 'Upload Foto Identitas';
-      case 'selfie':      return 'Upload Foto Selfie';
-      default:            return 'Lengkapi Data';
+      case 'full_name':   return l.fieldFullName;
+      case 'username':    return l.fieldUsername;
+      case 'avatar':      return l.fieldAvatar;
+      case 'whatsapp':    return l.fieldWhatsapp;
+      case 'nik':         return l.fieldNik;
+      case 'birth':       return l.fieldBirth;
+      case 'country':     return l.fieldCountry;
+      case 'email':       return l.fieldEmail;
+      case 'region':      return l.fieldRegion;
+      case 'address':     return l.fieldAddress;
+      case 'postal_code': return l.fieldPostalCode;
+      case 'gender':      return l.fieldGender;
+      case 'religion':    return l.fieldReligion;
+      case 'marital_status': return l.fieldMaritalStatus;
+      case 'mother_name': return l.fieldMotherName;
+      case 'occupation':  return l.fieldOccupation;
+      case 'income_range': return l.fieldIncomeRange;
+      case 'source_of_funds': return l.fieldSourceOfFunds;
+      case 'ktp_photo':   return l.fieldKtpPhoto;
+      case 'selfie':      return l.fieldSelfie;
+      case 'face_scan':   return l.faceVerification;
+      default:            return l.fieldCompleteData;
     }
   }
 
-  String get _pageSubtitle {
+  String _pageSubtitle(AppLocalizations l) {
     switch (widget.fieldKey) {
-      case 'full_name':   return 'Nama sesuai dokumen identitas Anda';
-      case 'username':    return 'Username unik untuk profil Anda';
-      case 'avatar':      return 'Foto profil yang jelas dan terbaru';
-      case 'whatsapp':    return 'Nomor WhatsApp aktif untuk komunikasi';
-      case 'nik':         return 'Nomor identitas (KTP / Passport / SIM / NPWP)';
-      case 'birth':       return 'Tempat dan tanggal lahir Anda';
-      case 'country':     return 'Negara tempat tinggal Anda saat ini';
-      case 'email':       return 'Alamat email aktif untuk verifikasi akun dan notifikasi';
-      case 'region':      return 'Provinsi, kota, kecamatan, kelurahan, dan kode pos';
-      case 'address':     return 'Alamat lengkap tempat tinggal Anda';
-      case 'postal_code': return 'Kode pos wilayah tempat tinggal Anda';
-      case 'gender': return 'Jenis kelamin sesuai dokumen identitas';
-      case 'religion': return 'Agama yang Anda anut';
-      case 'marital_status': return 'Status pernikahan saat ini';
-      case 'mother_name': return 'Nama ibu kandung untuk verifikasi keamanan';
-      case 'occupation': return 'Pekerjaan utama Anda saat ini';
-      case 'income_range': return 'Rentang penghasilan per bulan';
-      case 'source_of_funds': return 'Sumber dana untuk transaksi';
-      case 'ktp_photo':   return 'Foto KTP / Passport / SIM / NPWP yang jelas';
-      case 'selfie':      return 'Foto selfie sambil memegang dokumen identitas';
-      default:            return 'Lengkapi informasi ini untuk meningkatkan keamanan akun';
+      case 'full_name':   return l.subtitleFullName;
+      case 'username':    return l.subtitleUsername;
+      case 'avatar':      return l.subtitleAvatar;
+      case 'whatsapp':    return l.subtitleWhatsapp;
+      case 'nik':         return l.subtitleNik;
+      case 'birth':       return l.subtitleBirth;
+      case 'country':     return l.subtitleCountry;
+      case 'email':       return l.subtitleEmail;
+      case 'region':      return l.subtitleRegion;
+      case 'address':     return l.subtitleAddress;
+      case 'postal_code': return l.subtitlePostalCode;
+      case 'gender':      return l.subtitleGender;
+      case 'religion':    return l.subtitleReligion;
+      case 'marital_status': return l.subtitleMaritalStatus;
+      case 'mother_name': return l.subtitleMotherName;
+      case 'occupation':  return l.subtitleOccupation;
+      case 'income_range': return l.subtitleIncomeRange;
+      case 'source_of_funds': return l.subtitleSourceOfFunds;
+      case 'ktp_photo':   return l.subtitleKtpPhoto;
+      case 'selfie':      return l.subtitleSelfie;
+      case 'face_scan':   return l.faceScanInstruction;
+      default:            return l.subtitleCompleteData;
     }
   }
 
@@ -248,6 +252,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
   }
 
   Future<void> _save() async {
+    final l = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
     setState(() => _saving = true);
 
@@ -364,15 +369,19 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
         case 'selfie':
           if (_selfieFile != null) await notifier.uploadSelfie(_selfieFile!.path);
           break;
+
+        case 'face_scan':
+          if (_faceScanFile != null) await notifier.uploadFaceScan(_faceScanFile!.path);
+          break;
       }
 
       if (mounted) {
-        AppSnackBar.show(context, 'Data berhasil disimpan!', type: SnackBarType.success);
+        AppSnackBar.show(context, l.dataSavedSuccess, type: SnackBarType.success);
         context.pop();
       }
     } catch (e) {
       if (mounted) {
-        AppSnackBar.show(context, 'Gagal menyimpan data. Coba lagi.', type: SnackBarType.error);
+        AppSnackBar.show(context, l.failedSaveData, type: SnackBarType.error);
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -427,6 +436,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l        = AppLocalizations.of(context)!;
     final pState    = ref.watch(profileProvider);
     final userData  = pState.userData;
     final avatarUrl = Formatters.avatarUrl(userData);
@@ -436,7 +446,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
       appBar: AppBar(
-        title: Text(_pageTitle),
+        title: Text(_pageTitle(l)),
         centerTitle: true,
       ),
       body: Form(
@@ -461,7 +471,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        _pageSubtitle,
+                        _pageSubtitle(l),
                         style: AppTextStyles.bodySmall.copyWith(color: AppColors.primaryColor),
                       ),
                     ),
@@ -475,7 +485,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
 
               const SizedBox(height: AppSizes.xl),
               AppButton(
-                label: 'Simpan',
+                label: l.save,
                 loading: _saving,
                 onPressed: _save,
                 type: ButtonType.primary,
@@ -489,15 +499,16 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
   }
 
   List<Widget> _buildFields(String? avatarUrl, String? ktpUrl, String? selfieUrl) {
+    final l = AppLocalizations.of(context)!;
     switch (widget.fieldKey) {
 
       // ── Nama Lengkap ──────────────────────────────────────────────────────
       case 'full_name':
         return [
-          Text('Nama Depan *', style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
+          Text('${l.firstName}${l.required}', style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
           const SizedBox(height: 4),
           AppTextField(
-            label: 'Nama Depan',
+            label: l.firstName,
             controller: _firstNameController,
             readOnly: _namesLocked,
             validator: Validators.required,
@@ -505,14 +516,14 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
           ),
           const SizedBox(height: AppSizes.sm),
           AppTextField(
-            label: 'Nama Tengah (Opsional)',
+            label: l.midNameOptional,
             controller: _midNameController,
             readOnly: _namesLocked,
             onChanged: (_) => setState(() {}),
           ),
           const SizedBox(height: AppSizes.sm),
           AppTextField(
-            label: 'Nama Belakang *',
+            label: '${l.lastName}${l.required}',
             controller: _lastNameController,
             readOnly: _namesLocked,
             validator: Validators.required,
@@ -524,17 +535,17 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.green.withAlpha(15),
+                color: AppColors.successColor.withAlpha(15),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: Colors.green.withAlpha(60)),
+                border: Border.all(color: AppColors.successColor.withAlpha(60)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.check_circle_outline, color: Colors.green, size: 18),
+                  Icon(Icons.check_circle_outline, color: AppColors.successColor, size: 18),
                   const SizedBox(width: 8),
                   Text(
-                    'Nama Lengkap: $_fullName',
-                    style: AppTextStyles.bodySmall.copyWith(color: Colors.green.shade700, fontWeight: FontWeight.w600),
+                    l.fullNameValue(_fullName),
+                    style: AppTextStyles.bodySmall.copyWith(color: AppColors.successColor, fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -545,7 +556,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
             TextButton.icon(
               onPressed: () => setState(() => _namesLocked = false),
               icon: const Icon(Icons.edit, size: 14),
-              label: const Text('Edit nama (kunci dilepas)'),
+              label: Text(l.editNameUnlocked),
             ),
           ],
         ];
@@ -554,13 +565,13 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
       case 'username':
         return [
           AppTextField(
-            label: 'Username',
+            label: l.username,
             controller: _usernameController,
             validator: Validators.required,
           ),
           const SizedBox(height: 6),
           Text(
-            'Username hanya mengandung huruf, angka, titik, dan underscore',
+            l.usernameHint,
             style: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
           ),
         ];
@@ -580,7 +591,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
                         ? FileImage(_avatarFile!) as ImageProvider
                         : (avatarUrl != null ? CachedNetworkImageProvider(avatarUrl) : null),
                     child: (_avatarFile == null && avatarUrl == null)
-                        ? const Icon(Icons.person, size: 56, color: AppColors.textTertiary)
+                        ? Icon(Icons.person, size: 56, color: AppColors.textTertiary)
                         : null,
                   ),
                   Positioned(
@@ -603,7 +614,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
           const SizedBox(height: 12),
           Center(
             child: Text(
-              _avatarFile != null ? 'Foto dipilih. Klik Simpan untuk mengunggah.' : 'Ketuk foto untuk memilih gambar',
+              _avatarFile != null ? l.photoSelected : l.tapPhotoToSelect,
               style: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
               textAlign: TextAlign.center,
             ),
@@ -613,7 +624,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
             OutlinedButton.icon(
               onPressed: _pickAvatar,
               icon: const Icon(Icons.upload_rounded),
-              label: const Text('Pilih Foto Profil'),
+              label: Text(l.selectProfilePhoto),
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 48),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -632,7 +643,10 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
                   final code = await showModalBottomSheet<String>(
                     context: context,
                     isScrollControlled: true,
-                    builder: (_) => _CountryCodeSheet(selectedCode: _countryCode),
+                    builder: (_) => _CountryCodeSheet(
+                    selectedCode: _countryCode,
+                    l: AppLocalizations.of(context)!,
+                  ),
                   );
                   if (code != null) setState(() => _countryCode = code);
                 },
@@ -647,7 +661,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
                     children: [
                       Text(_countryCode, style: AppTextStyles.bodyMedium),
                       const SizedBox(width: 4),
-                      const Icon(Icons.arrow_drop_down, size: 18, color: AppColors.textSecondary),
+                      Icon(Icons.arrow_drop_down, size: 18, color: AppColors.textSecondary),
                     ],
                   ),
                 ),
@@ -667,25 +681,26 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
           ),
           const SizedBox(height: 6),
           Text(
-            'Contoh: 8123456789 (tanpa angka 0 di depan)',
+            l.whatsappExample,
             style: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
           ),
         ];
 
       // ── Nomor Identitas ───────────────────────────────────────────────────
       case 'nik':
+        final idLabel = _identityNumberLabel(l);
         return [
-          Text('Pilih Jenis Identitas', style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
+          Text(l.selectIdentityType, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
           const SizedBox(height: 8),
           _buildIdentityTypePicker(),
           const SizedBox(height: AppSizes.sm),
           AppTextField(
-            label: _identityNumberLabel,
+            label: idLabel,
             controller: _nikController,
             keyboardType: _identityType == 'ktp' ? TextInputType.number : TextInputType.text,
             validator: (v) {
-              if (v == null || v.trim().isEmpty) return '$_identityNumberLabel wajib diisi';
-              if (_identityType == 'ktp' && v.trim().length != 16) return 'NIK harus 16 digit';
+              if (v == null || v.trim().isEmpty) return l.identityNumberRequired(idLabel);
+              if (_identityType == 'ktp' && v.trim().length != 16) return l.nikMustBe16Digits;
               return null;
             },
           ),
@@ -695,13 +710,13 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
       case 'birth':
         return [
           AppTextField(
-            label: 'Tempat',
+            label: l.placeOfBirth,
             controller: _birthPlaceController,
             validator: Validators.required,
           ),
           const SizedBox(height: AppSizes.sm),
           AppDatePickerField(
-            label: 'Tanggal Lahir',
+            label: l.dateOfBirth,
             controller: _birthDateController,
             validator: Validators.required,
           ),
@@ -711,14 +726,14 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
       case 'email':
         return [
           AppTextField(
-            label: 'Email',
+            label: l.email,
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
             validator: Validators.email,
           ),
           const SizedBox(height: 6),
           Text(
-            'Email akan digunakan untuk verifikasi akun dan notifikasi penting',
+            l.emailForVerification,
             style: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
           ),
         ];
@@ -727,7 +742,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
       case 'country':
         return [
           AppCountryPickerField(
-            label: 'Negara Tempat Tinggal',
+            label: l.countryOfResidence,
             controller: _countryController,
           ),
         ];
@@ -762,14 +777,14 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
       case 'address':
         return [
           AppTextField(
-            label: 'Detail Alamat Lengkap',
+            label: l.fullAddress,
             controller: _addressController,
             maxLines: 4,
             validator: Validators.required,
           ),
           const SizedBox(height: 6),
           Text(
-            'Isi nama jalan, nomor rumah, RT/RW, dll.',
+            l.addressHint,
             style: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
           ),
         ];
@@ -782,16 +797,16 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             validator: (v) {
-              if (v == null || v.trim().isEmpty) return 'Kode pos wajib diisi';
-              if (v.trim().length < 5) return 'Kode pos minimal 5 digit';
+              if (v == null || v.trim().isEmpty) return l.postalCodeRequired;
+              if (v.trim().length < 5) return l.postalCodeMin5;
               return null;
             },
-            decoration: const InputDecoration(labelText: 'Kode Pos'),
+            decoration: InputDecoration(labelText: l.postalCode),
             style: AppTextStyles.bodyLarge,
           ),
           const SizedBox(height: 6),
           Text(
-            'Kode pos 5 digit sesuai wilayah tempat tinggal',
+            l.postalCodeHint,
             style: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
           ),
         ];
@@ -799,18 +814,18 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
       // ── Foto KTP / Identitas ──────────────────────────────────────────────
       case 'ktp_photo':
         return [
-          Text('Pilih Jenis Identitas', style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
+          Text(l.selectIdentityType, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
           const SizedBox(height: 8),
           _buildIdentityTypePicker(),
           const SizedBox(height: AppSizes.md),
           _buildUploadBox(
             icon: Icons.credit_card_outlined,
-            title: 'Foto ${_identityTypeLabel()}',
+            title: '${l.identityPhoto} ${_identityTypeLabel(l)}',
             subtitle: _ktpFile != null
-                ? 'Foto berhasil dipilih'
+                ? l.photoSelected
                 : ktpUrl != null
-                    ? 'Sudah ada foto (ketuk untuk ganti)'
-                    : 'Ketuk untuk pilih foto dari galeri atau kamera',
+                    ? l.photoAlreadyExists
+                    : l.tapToSelectPhoto,
             hasFile: _ktpFile != null || ktpUrl != null,
             onTap: _pickKtp,
             onRemove: _ktpFile != null ? () => setState(() => _ktpFile = null) : null,
@@ -819,7 +834,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
             const SizedBox(height: 8),
             Center(
               child: Text(
-                'Sudah ada foto tersimpan. Pilih foto baru jika ingin mengganti.',
+                l.existingPhotoHint,
                 style: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
                 textAlign: TextAlign.center,
               ),
@@ -832,12 +847,12 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
         return [
           _buildUploadBox(
             icon: Icons.face_outlined,
-            title: 'Foto Selfie + Identitas',
+            title: l.selfieImageTitle,
             subtitle: _selfieFile != null
-                ? 'Foto berhasil dipilih'
+                ? l.photoSelected
                 : selfieUrl != null
-                    ? 'Sudah ada foto (ketuk untuk ganti)'
-                    : 'Selfie sambil memegang KTP / Passport / SIM / NPWP',
+                    ? l.photoAlreadyExists
+                    : l.tapToSelectPhoto,
             hasFile: _selfieFile != null || selfieUrl != null,
             onTap: _pickSelfie,
             onRemove: _selfieFile != null ? () => setState(() => _selfieFile = null) : null,
@@ -846,19 +861,19 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.orange.withAlpha(15),
+              color: AppColors.warningColor.withAlpha(15),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.orange.withAlpha(50)),
+              border: Border.all(color: AppColors.warningColor.withAlpha(50)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.tips_and_updates_outlined, color: Colors.orange, size: 18),
+                Icon(Icons.tips_and_updates_outlined, color: AppColors.warningColor, size: 18),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Tips: Pastikan wajah dan tulisan di identitas terlihat jelas. Foto harus terang dan tidak buram.',
-                    style: AppTextStyles.bodySmall.copyWith(color: Colors.orange.shade800),
+                    l.selfieTips,
+                    style: AppTextStyles.bodySmall.copyWith(color: AppColors.warningColor),
                   ),
                 ),
               ],
@@ -866,10 +881,56 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
           ),
         ];
 
+      case 'face_scan':
+        return [
+          const SizedBox(height: AppSizes.sm),
+          Center(
+            child: Icon(Icons.face_outlined, size: 80, color: AppColors.primaryColor.withAlpha(150)),
+          ),
+          const SizedBox(height: AppSizes.md),
+          Text(
+            l.faceScanInstruction,
+            textAlign: TextAlign.center,
+            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: AppSizes.lg),
+          SizedBox(
+            width: double.infinity,
+            child: AppButton(
+              label: l.scanFace,
+              onPressed: () async {
+                final result = await context.push<String>('/face-scanner');
+                if (result != null && mounted) {
+                  setState(() => _faceScanFile = File(result));
+                }
+              },
+              type: ButtonType.primary,
+            ),
+          ),
+          if (_faceScanFile != null) ...[
+            const SizedBox(height: AppSizes.sm),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.successColor.withAlpha(15),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.successColor.withAlpha(60)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.check_circle, color: AppColors.successColor, size: 20),
+                  const SizedBox(width: 8),
+                  Text(l.faceScanSuccess, style: AppTextStyles.bodySmall.copyWith(color: AppColors.successColor)),
+                ],
+              ),
+            ),
+          ],
+        ];
+
       case 'gender':
         return [
           GestureDetector(
-            onTap: () => _showPickerSheet('Pilih Jenis Kelamin', ['Pria', 'Wanita'], (v) => setState(() => _gender = v)),
+            onTap: () => _showPickerSheet(l.selectGender, [l.male, l.female], (v) => setState(() => _gender = v)),
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
               decoration: BoxDecoration(
@@ -883,7 +944,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
                   SizedBox(width: AppSizes.md),
                   Expanded(
                     child: Text(
-                      _gender.isEmpty ? 'Pilih Jenis Kelamin' : _gender,
+                      _gender.isEmpty ? l.selectGender : _gender,
                       style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                     ),
                   ),
@@ -897,7 +958,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
       case 'religion':
         return [
           GestureDetector(
-            onTap: () => _showPickerSheet('Pilih Agama', ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu'], (v) => setState(() => _religion = v)),
+            onTap: () => _showPickerSheet(l.selectReligion, [l.islam, l.christian, l.catholic, l.hindu, l.buddha, l.confucian], (v) => setState(() => _religion = v)),
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
               decoration: BoxDecoration(
@@ -911,7 +972,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
                   SizedBox(width: AppSizes.md),
                   Expanded(
                     child: Text(
-                      _religion.isEmpty ? 'Pilih Agama' : _religion,
+                      _religion.isEmpty ? l.selectReligion : _religion,
                       style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                     ),
                   ),
@@ -925,7 +986,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
       case 'marital_status':
         return [
           GestureDetector(
-            onTap: () => _showPickerSheet('Pilih Status Pernikahan', ['Belum Menikah', 'Menikah', 'Cerai'], (v) => setState(() => _maritalStatus = v)),
+            onTap: () => _showPickerSheet(l.selectMaritalStatus, [l.single, l.married, l.divorced], (v) => setState(() => _maritalStatus = v)),
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
               decoration: BoxDecoration(
@@ -939,7 +1000,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
                   SizedBox(width: AppSizes.md),
                   Expanded(
                     child: Text(
-                      _maritalStatus.isEmpty ? 'Pilih Status Pernikahan' : _maritalStatus,
+                      _maritalStatus.isEmpty ? l.selectMaritalStatus : _maritalStatus,
                       style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                     ),
                   ),
@@ -953,7 +1014,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
       case 'mother_name':
         return [
           AppTextField(
-            label: 'Nama Ibu Kandung',
+            label: l.motherName,
             controller: _motherNameController,
           ),
         ];
@@ -961,7 +1022,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
       case 'occupation':
         return [
           GestureDetector(
-            onTap: () => _showPickerSheet('Pilih Pekerjaan', ['Karyawan', 'Wiraswasta', 'Pelajar/Mahasiswa', 'Ibu Rumah Tangga', 'Profesional', 'Lainnya'], (v) => setState(() => _occupation = v)),
+            onTap: () => _showPickerSheet(l.selectOccupation, [l.employee, l.entrepreneur, l.student, l.housewife, l.professional, l.other], (v) => setState(() => _occupation = v)),
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
               decoration: BoxDecoration(
@@ -975,7 +1036,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
                   SizedBox(width: AppSizes.md),
                   Expanded(
                     child: Text(
-                      _occupation.isEmpty ? 'Pilih Pekerjaan' : _occupation,
+                      _occupation.isEmpty ? l.selectOccupation : _occupation,
                       style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                     ),
                   ),
@@ -989,7 +1050,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
       case 'income_range':
         return [
           GestureDetector(
-            onTap: () => _showPickerSheet('Pilih Rentang Penghasilan', ['< Rp 1 Juta', 'Rp 1-5 Juta', 'Rp 5-10 Juta', 'Rp 10-50 Juta', '> Rp 50 Juta'], (v) => setState(() => _incomeRange = v)),
+            onTap: () => _showPickerSheet(l.selectIncomeRange, [l.lessThan1M, l.range1to5M, l.range5to10M, l.range10to50M, l.moreThan50M], (v) => setState(() => _incomeRange = v)),
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
               decoration: BoxDecoration(
@@ -1003,7 +1064,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
                   SizedBox(width: AppSizes.md),
                   Expanded(
                     child: Text(
-                      _incomeRange.isEmpty ? 'Pilih Rentang Penghasilan' : _incomeRange,
+                      _incomeRange.isEmpty ? l.selectIncomeRange : _incomeRange,
                       style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                     ),
                   ),
@@ -1017,7 +1078,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
       case 'source_of_funds':
         return [
           GestureDetector(
-            onTap: () => _showPickerSheet('Pilih Sumber Dana', ['Gaji', 'Bisnis/Usaha', 'Investasi', 'Hadiah/Warisan', 'Lainnya'], (v) => setState(() => _sourceOfFunds = v)),
+            onTap: () => _showPickerSheet(l.selectSourceOfFunds, [l.salary, l.business, l.investment, l.gift, l.other], (v) => setState(() => _sourceOfFunds = v)),
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
               decoration: BoxDecoration(
@@ -1031,7 +1092,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
                   SizedBox(width: AppSizes.md),
                   Expanded(
                     child: Text(
-                      _sourceOfFunds.isEmpty ? 'Pilih Sumber Dana' : _sourceOfFunds,
+                      _sourceOfFunds.isEmpty ? l.selectSourceOfFunds : _sourceOfFunds,
                       style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                     ),
                   ),
@@ -1043,7 +1104,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
         ];
 
       default:
-        return [const Text('Field tidak dikenal.')];
+        return [Text(l.fieldCompleteData)];
     }
   }
 
@@ -1059,17 +1120,24 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2))),
               const SizedBox(height: 8),
               Text(title, style: AppTextStyles.titleMedium),
               const SizedBox(height: 8),
-              ...options.map((option) => ListTile(
-                title: Text(option, style: AppTextStyles.bodyMedium),
-                onTap: () {
-                  onSelected(option);
-                  Navigator.pop(ctx);
-                },
-              )),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: options.map((option) => ListTile(
+                      title: Text(option, style: AppTextStyles.bodyMedium),
+                      onTap: () {
+                        onSelected(option);
+                        Navigator.pop(ctx);
+                      },
+                    )).toList(),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -1077,22 +1145,23 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
     );
   }
 
-  String _identityTypeLabel() {
+  String _identityTypeLabel(AppLocalizations l) {
     switch (_identityType) {
-      case 'ktp':      return 'KTP';
-      case 'passport': return 'Passport';
-      case 'sim':      return 'SIM';
-      case 'npwp':     return 'NPWP';
-      default:         return 'Identitas';
+      case 'ktp':      return l.nikShort;
+      case 'passport': return l.passport;
+      case 'sim':      return l.simShort;
+      case 'npwp':     return l.npwpShort;
+      default:         return l.identityShort;
     }
   }
 
   Widget _buildIdentityTypePicker() {
+    final l = AppLocalizations.of(context)!;
     final types = [
-      ('ktp',      'KTP',      Icons.badge_outlined),
-      ('passport', 'Passport', Icons.book_outlined),
-      ('sim',      'SIM',      Icons.drive_eta_outlined),
-      ('npwp',     'NPWP',     Icons.receipt_long_outlined),
+      ('ktp',      l.idCardKtp, Icons.badge_outlined),
+      ('passport', l.passport,  Icons.book_outlined),
+      ('sim',      l.idCardSim, Icons.drive_eta_outlined),
+      ('npwp',     l.idCardNpwp,Icons.receipt_long_outlined),
     ];
     return Wrap(
       spacing: 8,
@@ -1137,10 +1206,10 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
         decoration: BoxDecoration(
-          color: hasFile ? Colors.green.withAlpha(18) : AppColors.secondaryColor.withAlpha(30),
+          color: hasFile ? AppColors.successColor.withAlpha(18) : AppColors.secondaryColor.withAlpha(30),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: hasFile ? Colors.green : AppColors.dividerColor,
+            color: hasFile ? AppColors.successColor : AppColors.dividerColor,
             width: 1.5,
           ),
         ),
@@ -1148,7 +1217,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
           children: [
             Icon(
               hasFile ? Icons.check_circle : icon,
-              color: hasFile ? Colors.green : AppColors.textSecondary,
+              color: hasFile ? AppColors.successColor : AppColors.textSecondary,
               size: 32,
             ),
             const SizedBox(width: 14),
@@ -1159,7 +1228,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
                   Text(title, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
                   const SizedBox(height: 3),
                   Text(subtitle, style: AppTextStyles.bodySmall.copyWith(
-                    color: hasFile ? Colors.green.shade700 : AppColors.textTertiary,
+                    color: hasFile ? AppColors.successColor : AppColors.textTertiary,
                   )),
                 ],
               ),
@@ -1167,10 +1236,10 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
             if (hasFile && onRemove != null)
               GestureDetector(
                 onTap: onRemove,
-                child: const Icon(Icons.close, size: 20, color: AppColors.textSecondary),
+                child: Icon(Icons.close, size: 20, color: AppColors.textSecondary),
               )
             else
-              const Icon(Icons.upload_rounded, color: AppColors.textSecondary, size: 20),
+              Icon(Icons.upload_rounded, color: AppColors.textSecondary, size: 20),
           ],
         ),
       ),
@@ -1182,7 +1251,8 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
 
 class _CountryCodeSheet extends StatelessWidget {
   final String selectedCode;
-  const _CountryCodeSheet({required this.selectedCode});
+  final AppLocalizations l;
+  const _CountryCodeSheet({required this.selectedCode, required this.l});
 
   @override
   Widget build(BuildContext context) {
@@ -1191,9 +1261,9 @@ class _CountryCodeSheet extends StatelessWidget {
       child: Column(
         children: [
           const SizedBox(height: 12),
-          Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+          Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2))),
           const SizedBox(height: 12),
-          Text('Pilih Kode Negara', style: AppTextStyles.titleSmall),
+          Text(l.selectCountryCode, style: AppTextStyles.titleSmall),
           const Divider(),
           Expanded(
             child: ListView.builder(

@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
+import '../constants/app_colors.dart';
 
 Future<File?> pickSimPhoto(BuildContext context) async {
   final source = await showModalBottomSheet<ImageSource>(
@@ -18,19 +20,19 @@ Future<File?> pickSimPhoto(BuildContext context) async {
             Container(
               width: 40, height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppColors.dividerColor,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
             const SizedBox(height: 16),
             ListTile(
               leading: const Icon(Icons.camera_alt),
-              title: const Text('Kamera'),
+              title: Text(AppLocalizations.of(context)!.camera),
               onTap: () => Navigator.pop(ctx, ImageSource.camera),
             ),
             ListTile(
               leading: const Icon(Icons.photo_library),
-              title: const Text('Galeri'),
+              title: Text(AppLocalizations.of(context)!.gallery),
               onTap: () => Navigator.pop(ctx, ImageSource.gallery),
             ),
           ],

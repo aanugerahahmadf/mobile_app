@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -35,6 +36,7 @@ class _MidtransWebviewPageState extends ConsumerState<MidtransWebviewPage> {
   }
 
   Future<void> _initPayment() async {
+    final l = AppLocalizations.of(context)!;
     String? url;
 
     if (widget.initialSnapToken != null && widget.initialSnapToken!.isNotEmpty) {
@@ -60,16 +62,16 @@ class _MidtransWebviewPageState extends ConsumerState<MidtransWebviewPage> {
               final currentUrl = change.url ?? '';
               if (currentUrl.contains('finish') || currentUrl.contains('success')) {
                 _handled = true;
-                _showResultDialog('Pembayaran Berhasil', 'Terima kasih! Pembayaran Anda telah diterima. Pesanan sedang diproses.', Icons.check_circle, AppColors.successColor, true);
+                _showResultDialog(l.paymentSuccess, l.paymentSuccessDesc, Icons.check_circle, AppColors.successColor, true);
               } else if (currentUrl.contains('unfinish') || currentUrl.contains('pending')) {
                 _handled = true;
-                _showResultDialog('Pembayaran Belum Selesai', 'Pembayaran Anda masih menunggu konfirmasi. Silakan hubungi admin jika perlu bantuan.', Icons.access_time, AppColors.warningColor, false);
+                _showResultDialog(l.paymentPending, l.paymentPendingDesc, Icons.access_time, AppColors.warningColor, false);
               } else if (currentUrl.contains('cancel')) {
                 _handled = true;
-                _showResultDialog('Pembayaran Dibatalkan', 'Anda membatalkan pembayaran. Anda dapat melakukan pembayaran kapan saja.', Icons.cancel, AppColors.errorColor, false);
+                _showResultDialog(l.paymentCancelled, l.paymentCancelledDesc, Icons.cancel, AppColors.errorColor, false);
               } else if (currentUrl.contains('error') || currentUrl.contains('failed')) {
                 _handled = true;
-                _showResultDialog('Pembayaran Gagal', 'Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi.', Icons.error, AppColors.errorColor, false);
+                _showResultDialog(l.paymentFailed, l.paymentFailedDesc, Icons.error, AppColors.errorColor, false);
               }
             },
           ),
@@ -82,6 +84,7 @@ class _MidtransWebviewPageState extends ConsumerState<MidtransWebviewPage> {
   }
 
   void _showResultDialog(String title, String message, IconData icon, Color color, bool success) {
+    final l = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -98,7 +101,7 @@ class _MidtransWebviewPageState extends ConsumerState<MidtransWebviewPage> {
             Text(message, style: AppTextStyles.bodyMedium, textAlign: TextAlign.center),
             const SizedBox(height: 20),
             AppButton(
-              label: success ? 'Lihat Pesanan' : 'Kembali',
+              label: success ? l.viewOrder : l.back,
               onPressed: () {
                 context.pop();
                 context.pop();
@@ -108,7 +111,7 @@ class _MidtransWebviewPageState extends ConsumerState<MidtransWebviewPage> {
             if (!success) ...[
               const SizedBox(height: 8),
               AppButton(
-                label: 'Coba Lagi',
+                label: l.tryAgain,
                 onPressed: () {
                   context.pop();
                   _handled = false;
@@ -134,13 +137,13 @@ class _MidtransWebviewPageState extends ConsumerState<MidtransWebviewPage> {
           children: [
             const Icon(Icons.error_outline, size: 64, color: AppColors.errorColor),
             const SizedBox(height: 16),
-            Text('Pembayaran Gagal', style: AppTextStyles.titleLarge.copyWith(fontWeight: FontWeight.w600)),
+            Text(AppLocalizations.of(context)!.paymentFailed, style: AppTextStyles.titleLarge.copyWith(fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
-            Text(ref.read(paymentProvider).error ?? 'Terjadi kesalahan. Silakan coba lagi.', style: AppTextStyles.bodyMedium, textAlign: TextAlign.center),
+            Text(ref.read(paymentProvider).error ?? AppLocalizations.of(context)!.paymentFailedDesc, style: AppTextStyles.bodyMedium, textAlign: TextAlign.center),
             const SizedBox(height: 20),
-            AppButton(label: 'Coba Lagi', onPressed: () { context.pop(); _initPayment(); }),
+            AppButton(label: AppLocalizations.of(context)!.tryAgain, onPressed: () { context.pop(); _initPayment(); }),
             const SizedBox(height: 8),
-            AppButton(label: 'Kembali', onPressed: () { context.pop(); context.pop(); }, type: ButtonType.text),
+            AppButton(label: AppLocalizations.of(context)!.back, onPressed: () { context.pop(); context.pop(); }, type: ButtonType.text),
           ],
         ),
       ),
@@ -149,22 +152,23 @@ class _MidtransWebviewPageState extends ConsumerState<MidtransWebviewPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final paymentState = ref.watch(paymentProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Pembayaran'),
+        title: Text(l.payment),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () {
             showDialog(
               context: context,
               builder: (ctx) => AlertDialog(
-                title: Text('Batalkan Pembayaran?'),
-                content: Text('Apakah Anda yakin ingin meninggalkan halaman pembayaran?'),
+                title: Text(l.cancelPayment),
+                content: Text(l.confirmLeavePayment),
                 actions: [
-                  TextButton(onPressed: () => context.pop(), child: Text('Lanjutkan Bayar')),
-                  TextButton(onPressed: () { context.pop(); context.pop(); }, child: Text('Ya, Batalkan')),
+                  TextButton(onPressed: () => context.pop(), child: Text(l.continuePayment)),
+                  TextButton(onPressed: () { context.pop(); context.pop(); }, child: Text(l.yesCancel)),
                 ],
               ),
             );
@@ -182,7 +186,7 @@ class _MidtransWebviewPageState extends ConsumerState<MidtransWebviewPage> {
                       const SizedBox(height: 16),
                       Text(paymentState.error!, style: const TextStyle(color: AppColors.errorColor), textAlign: TextAlign.center),
                       const SizedBox(height: 16),
-                      AppButton(label: 'Coba Lagi', onPressed: _initPayment, type: ButtonType.outline),
+                      AppButton(label: l.tryAgain, onPressed: _initPayment, type: ButtonType.outline),
                     ],
                   ),
                 )

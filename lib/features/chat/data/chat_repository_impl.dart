@@ -9,17 +9,28 @@ class ChatRepositoryImpl implements ChatRepository {
   ChatRepositoryImpl({Dio? dio}) : _dio = dio ?? DioClient.instance;
 
   @override
-  Future<List<Map<String, dynamic>>> getConversations() async {
+  Future<Map<String, dynamic>> getConversations() async {
     final response = await _dio.get(ApiEndpoints.conversations);
+    final data = (response.data['data'] as List?)?.cast<Map<String, dynamic>>() ?? <Map<String, dynamic>>[];
+    final isAdmin = response.data['current_user_is_super_admin'] as bool? ?? false;
+    return {'conversations': data, 'is_super_admin': isAdmin};
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getCustomersForChat() async {
+    final response = await _dio.get(ApiEndpoints.customersForChat);
     return (response.data['data'] as List?)?.cast<Map<String, dynamic>>() ?? [];
   }
 
   @override
-  Future<List<Map<String, dynamic>>> getMessages(String inboxId) async {
+  Future<Map<String, dynamic>> getMessages(String inboxId) async {
     final response = await _dio.get(ApiEndpoints.conversationMessages(inboxId));
     final data = response.data['data'];
-    if (data is List) return data.cast<Map<String, dynamic>>();
-    return [];
+    final otherUser = response.data['other_user'] as Map<String, dynamic>?;
+    return {
+      'messages': (data is List) ? data.cast<Map<String, dynamic>>() : <Map<String, dynamic>>[],
+      'other_user': otherUser,
+    };
   }
 
   @override

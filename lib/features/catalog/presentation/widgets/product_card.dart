@@ -95,8 +95,8 @@ class ProductCard extends ConsumerWidget {
                     },
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
-                        color: Colors.grey[200],
-                        child: const Icon(Icons.broken_image, color: Colors.grey, size: 36),
+                        color: AppColors.secondaryColor,
+                        child: Icon(Icons.broken_image, color: AppColors.textTertiary, size: 36),
                       );
                     },
                   ),
@@ -192,7 +192,7 @@ class ProductCard extends ConsumerWidget {
                       style: AppTextStyles.bodySmall.copyWith(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF1A1A2E),
+                        color: AppColors.textPrimary,
                         height: 1.3,
                       ),
                       maxLines: 2,

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/widgets/app_shimmer.dart';
@@ -22,12 +23,12 @@ class CbirResultPage extends ConsumerStatefulWidget {
 }
 
 class _CbirResultPageState extends ConsumerState<CbirResultPage> {
-  static const _sortOptions = [
-    ('Kemiripan', null),
-    ('Harga Terendah', 'price_asc'),
-    ('Harga Tertinggi', 'price_desc'),
-    ('Terbaru', 'newest'),
-    ('Rating', 'rating_desc'),
+  List<(String, String?)> _sortOptions(AppLocalizations l) => [
+    (l.similarity, null),
+    (l.lowestPrice, 'price_asc'),
+    (l.highestPrice, 'price_desc'),
+    (l.newest, 'newest'),
+    (l.rating, 'rating_desc'),
   ];
 
   List<Map<String, dynamic>> _categories = [];
@@ -60,33 +61,36 @@ class _CbirResultPageState extends ConsumerState<CbirResultPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final state = ref.watch(cbirProvider);
     return Scaffold(
       body: Column(
         children: [
-          Container(
-            padding: EdgeInsets.fromLTRB(0, MediaQuery.of(context).padding.top + AppSizes.sm, MediaQuery.of(context).padding.right, AppSizes.md),
-            decoration: const BoxDecoration(color: AppColors.primaryColor),
+          SafeArea(
+            bottom: false,
+            child: Padding(
+            padding: const EdgeInsets.fromLTRB(0, AppSizes.sm, 0, AppSizes.md),
             child: Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  icon: Icon(Icons.arrow_back, color: AppColors.primaryColor),
                   onPressed: () {
                     ref.read(cbirProvider.notifier).reset();
                     context.pop();
                   },
                 ),
-                const Expanded(child: GlobalSearchBar(translucent: true)),
+                const Expanded(child: GlobalSearchBar()),
               ],
             ),
+            ),
           ),
-          Expanded(child: _buildBody(context, state)),
+          Expanded(child: _buildBody(context, state, l)),
         ],
       ),
     );
   }
 
-  Widget _buildBody(BuildContext context, CbirState state) {
+  Widget _buildBody(BuildContext context, CbirState state, AppLocalizations l) {
     if (state.loading && state.results.isEmpty) {
       return const CustomScrollView(
         slivers: [
@@ -100,33 +104,33 @@ class _CbirResultPageState extends ConsumerState<CbirResultPage> {
 
     if (state.error != null && state.results.isEmpty) {
       return AppErrorState(
-        message: state.error ?? 'Terjadi kesalahan',
+        message: state.error ?? l.errorOccurred,
       );
     }
 
     if (state.results.isEmpty && state.uploadedImagePath == null) {
       return AppEmptyState(
-        title: 'Cari dengan Gambar',
-        subtitle: 'Unggah gambar untuk mencari produk serupa',
+        title: l.searchByImage,
+        subtitle: l.uploadImageToSearch,
       );
     }
 
     if (state.results.isEmpty) {
       return AppEmptyState(
-        title: 'Hasil tidak ditemukan',
-        subtitle: 'Coba gambar lain',
+        title: l.noResults,
+        subtitle: l.tryDifferentImage,
       );
     }
 
     return Column(
       children: [
-        _buildFilters(state),
+        _buildFilters(state, l),
         Expanded(child: _buildResultsGrid(context, state)),
       ],
     );
   }
 
-  Widget _buildFilters(CbirState state) {
+  Widget _buildFilters(CbirState state, AppLocalizations l) {
     final notifier = ref.read(cbirProvider.notifier);
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppSizes.md, AppSizes.sm, AppSizes.md, 0),
@@ -137,10 +141,12 @@ class _CbirResultPageState extends ConsumerState<CbirResultPage> {
             height: 36,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              itemCount: _sortOptions.length,
+              itemCount: _sortOptions(l).length,
               separatorBuilder: (_, _) => const SizedBox(width: 8),
               itemBuilder: (_, i) {
-                final (label, value) = _sortOptions[i];
+                final entry = _sortOptions(l)[i];
+                final label = entry.$1;
+                final value = entry.$2;
                 final selected = state.sortBy == value;
                 return ChoiceChip(
                   label: Text(label, style: TextStyle(
@@ -188,7 +194,7 @@ class _CbirResultPageState extends ConsumerState<CbirResultPage> {
                 ),
               const SizedBox(width: AppSizes.sm),
               ChoiceChip(
-                label: Text('Diskon', style: TextStyle(
+                label: Text(l.discount, style: TextStyle(
                   fontSize: 12,
                   color: state.hasDiscount == true ? Colors.white : AppColors.textPrimary,
                   fontWeight: state.hasDiscount == true ? FontWeight.w600 : FontWeight.normal,

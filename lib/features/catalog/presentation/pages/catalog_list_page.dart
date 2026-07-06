@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/api/dio_client.dart';
+import '../../../../core/api/api_endpoints.dart';
 import '../widgets/product_card.dart';
 import '../../../../core/widgets/app_shimmer.dart';
 import '../../../../core/widgets/app_empty_state.dart';
@@ -26,19 +29,28 @@ class _CatalogListPageState extends ConsumerState<CatalogListPage> {
   bool _loading = true;
   String? _error;
   String? _selectedSort;
+  String? _selectedCategoryId;
+  List<Map<String, dynamic>> _categories = [];
 
-  static const _sortOptions = [
-    ('Semua', null),
-    ('Termurah', 'price_asc'),
-    ('Termahal', 'price_desc'),
-    ('Terbaru', 'newest'),
-  ];
+
 
   @override
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
     _fetchData();
+    _fetchCategories();
+  }
+
+  Future<void> _fetchCategories() async {
+    try {
+      final typeParam = widget.type == 'packages' ? 'package' : 'product';
+      final res = await DioClient.instance.get('${ApiEndpoints.categories}?type=$typeParam');
+      final data = res.data['data'];
+      if (data is List && mounted) {
+        setState(() => _categories = data.cast<Map<String, dynamic>>());
+      }
+    } catch (_) {}
   }
 
   @override
@@ -66,8 +78,8 @@ class _CatalogListPageState extends ConsumerState<CatalogListPage> {
     try {
       final repo = ref.read(catalogRepositoryProvider);
       final res = widget.type == 'packages'
-          ? await repo.getPackages(sort: _selectedSort, page: 1)
-          : await repo.getProducts(sort: _selectedSort, page: 1);
+          ? await repo.getPackages(sort: _selectedSort, page: 1, categoryId: _selectedCategoryId)
+          : await repo.getProducts(sort: _selectedSort, page: 1, categoryId: _selectedCategoryId);
       final data = res['data'];
       final list = _extractList(data);
       _items.addAll(list);
@@ -84,8 +96,8 @@ class _CatalogListPageState extends ConsumerState<CatalogListPage> {
     try {
       final repo = ref.read(catalogRepositoryProvider);
       final res = widget.type == 'packages'
-          ? await repo.getPackages(sort: _selectedSort, page: _page)
-          : await repo.getProducts(sort: _selectedSort, page: _page);
+          ? await repo.getPackages(sort: _selectedSort, page: _page, categoryId: _selectedCategoryId)
+          : await repo.getProducts(sort: _selectedSort, page: _page, categoryId: _selectedCategoryId);
       final data = res['data'];
       final list = _extractList(data);
       _items.addAll(list);
@@ -104,30 +116,75 @@ class _CatalogListPageState extends ConsumerState<CatalogListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.type == 'packages' ? 'Paket Bunga' : 'Bunga'),
+        title: Text(widget.type == 'packages' ? l.flowerPackages : l.flowers),
         centerTitle: true,
+        titleTextStyle: TextStyle(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Colors.white
+              : AppColors.textPrimary,
+          fontSize: 17,
+          fontWeight: FontWeight.w600,
+        ),
       ),
       body: Column(
         children: [
-          _buildFilterChips(),
-          Expanded(child: _buildBody()),
+          _buildFilterChips(l),
+          Expanded(child: _buildBody(l)),
         ],
       ),
     );
   }
 
-  Widget _buildFilterChips() {
+  Widget _buildFilterChips(AppLocalizations l) {
+    final sortOptions = [
+      (l.all, null),
+      (l.cheapest, 'price_asc'),
+      (l.mostExpensive, 'price_desc'),
+      (l.newest, 'newest'),
+    ];
     return SizedBox(
       height: 48,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
-        itemCount: _sortOptions.length,
+        itemCount: sortOptions.length + (_categories.isNotEmpty ? 1 : 0),
         separatorBuilder: (_, _) => SizedBox(width: AppSizes.sm),
         itemBuilder: (_, i) {
-          final (label, value) = _sortOptions[i];
+          if (_categories.isNotEmpty && i == 0) {
+            return Container(
+              height: 34,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              decoration: BoxDecoration(
+                color: AppColors.secondaryColor.withAlpha(30),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<String>(
+                  value: _selectedCategoryId,
+                  hint: Text(l.category, style: const TextStyle(fontSize: 12)),
+                  isDense: true,
+                  items: [
+                    DropdownMenuItem(value: null, child: Text(l.all, style: const TextStyle(fontSize: 12))),
+                    ..._categories.map((c) {
+                      return DropdownMenuItem(
+                        value: '${c['id']}',
+                        child: Text('${c['name']}', style: const TextStyle(fontSize: 12)),
+                      );
+                    }),
+                  ],
+                  onChanged: (v) {
+                    setState(() => _selectedCategoryId = v);
+                    _fetchData();
+                  },
+                ),
+              ),
+            );
+          }
+          final chipIdx = _categories.isNotEmpty ? i - 1 : i;
+          final (label, value) = sortOptions[chipIdx];
           final isSelected = _selectedSort == value;
           return FilterChip(
             label: Text(
@@ -149,7 +206,7 @@ class _CatalogListPageState extends ConsumerState<CatalogListPage> {
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(AppLocalizations l) {
     if (_loading) {
       return CustomScrollView(
         slivers: [
@@ -167,8 +224,8 @@ class _CatalogListPageState extends ConsumerState<CatalogListPage> {
 
     if (_items.isEmpty) {
       return AppEmptyState(
-        title: 'Tidak ada data',
-        subtitle: widget.type == 'packages' ? 'Belum ada Paket tersedia' : 'Belum ada Bunga tersedia',
+        title: l.catalogEmpty,
+        subtitle: l.catalogEmptyDesc,
       );
     }
 

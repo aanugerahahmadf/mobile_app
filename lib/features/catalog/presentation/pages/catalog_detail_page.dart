@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
@@ -67,6 +68,7 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
   }
 
   Future<void> _addToCart() async {
+    final l = AppLocalizations.of(context)!;
     setState(() => _cartLoading = true);
     try {
       final ok = await ref.read(cartProvider.notifier).addItem(
@@ -75,9 +77,9 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
       );
       if (mounted) {
         if (ok) {
-          AppSnackBar.show(context, 'Ditambahkan ke keranjang', type: SnackBarType.success);
+          AppSnackBar.show(context, l.addedSuccess, type: SnackBarType.success);
         } else {
-          AppSnackBar.show(context, 'Gagal menambahkan ke keranjang', type: SnackBarType.error);
+          AppSnackBar.show(context, l.addFailed, type: SnackBarType.error);
         }
       }
     } finally {
@@ -86,19 +88,21 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
   }
 
   Future<void> _toggleFavorite() async {
+    final l = AppLocalizations.of(context)!;
     setState(() => _favLoading = true);
     try {
       await DioClient.instance.post(ApiEndpoints.wishlistToggle, data: {
         if (widget.type == 'packages') 'package_id': widget.id else 'product_id': widget.id,
       });
-      if (mounted) AppSnackBar.show(context, 'Berhasil diperbarui', type: SnackBarType.success);
+      if (mounted) AppSnackBar.show(context, l.updatedSuccess, type: SnackBarType.success);
     } catch (e) {
-      if (mounted) AppSnackBar.show(context, 'Gagal memperbarui favorit', type: SnackBarType.error);
+      if (mounted) AppSnackBar.show(context, l.updateFailed, type: SnackBarType.error);
     }
     if (mounted) setState(() => _favLoading = false);
   }
 
   Future<void> _messageAdmin() async {
+    final l = AppLocalizations.of(context)!;
     if (_data == null) return;
     try {
       final media = (_data!['media'] as List?)?.cast<Map<String, dynamic>>() ?? [];
@@ -115,7 +119,7 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
       }
     } catch (e) {
       if (mounted) {
-        AppSnackBar.show(context, 'Gagal memulai percakapan', type: SnackBarType.error);
+        AppSnackBar.show(context, l.failed, type: SnackBarType.error);
       }
     }
   }
@@ -171,6 +175,7 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
   }
 
   Widget _buildContent() {
+    final l = AppLocalizations.of(context)!;
     final item = _data!;
     final media = (item['media'] as List?)?.cast<Map<String, dynamic>>() ?? [];
     final name = item['name'] as String? ?? '';
@@ -200,7 +205,7 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
                 _buildPriceRow(price, discountPrice),
                 SizedBox(height: AppSizes.md),
                 const Divider(),
-                Text('Deskripsi', style: AppTextStyles.titleMedium),
+                Text(l.description, style: AppTextStyles.titleMedium),
                 SizedBox(height: AppSizes.sm),
                 Text(
                   description,
@@ -235,7 +240,7 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
                 if (reviews.isNotEmpty) ...[
                   SizedBox(height: AppSizes.md),
                   const Divider(),
-                  Text('Ulasan', style: AppTextStyles.titleMedium),
+                  Text(l.reviews, style: AppTextStyles.titleMedium),
                   SizedBox(height: AppSizes.sm),
                   ...reviews.map((r) => _buildReviewCard(r)),
                 ],
@@ -269,8 +274,8 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
                 },
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
-                    color: Colors.grey[200],
-                    child: const Icon(Icons.broken_image, color: Colors.grey),
+                    color: AppColors.dividerColor,
+                    child: Icon(Icons.broken_image, color: AppColors.textTertiary),
                   );
                 },
               );
@@ -297,6 +302,7 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
   }
 
   Widget _buildRatingBadge(num? rating, int? discountPrice) {
+    final l = AppLocalizations.of(context)!;
     return Row(
       children: [
         if (rating != null) ...[
@@ -309,7 +315,7 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(color: AppColors.errorColor, borderRadius: BorderRadius.circular(8)),
-            child: Text('Diskon', style: const TextStyle(color: Colors.white, fontSize: 11)),
+            child: Text(l.discount, style: const TextStyle(color: Colors.white, fontSize: 11)),
           ),
       ],
     );
@@ -345,7 +351,7 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
                 ),
                 SizedBox(width: AppSizes.sm),
                 Expanded(child: Text(r['user_name'] as String? ?? '', style: AppTextStyles.bodyMedium)),
-                Row(children: List.generate(5, (i) => Icon(Icons.star, size: 14, color: i < rating ? AppColors.warningColor : Colors.grey[300]))),
+                Row(children: List.generate(5, (i) => Icon(Icons.star, size: 14, color: i < rating ? AppColors.warningColor : AppColors.dividerColor))),
               ],
             ),
             if (r['comment'] != null) ...[
@@ -359,10 +365,11 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
   }
 
   Widget _buildBottomBar() {
+    final l = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.fromLTRB(AppSizes.md, AppSizes.sm, AppSizes.md, AppSizes.md),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surfaceColor,
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -2))],
       ),
       child: SafeArea(
@@ -388,7 +395,7 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
             const SizedBox(width: 8),
             Expanded(
               child: AppButton(
-                label: 'Checkout',
+                label: l.checkout,
                 onPressed: _buyNow,
               ),
             ),

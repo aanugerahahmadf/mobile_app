@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
@@ -222,13 +223,14 @@ class _FaceScannerPageState extends State<FaceScannerPage> with WidgetsBindingOb
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: Text(_captured ? 'Konfirmasi Selfie' : 'Scan Wajah'),
+        title: Text(_captured ? l.confirmSelfie : l.scanFace),
         centerTitle: true,
       ),
       body: _cameraReady
@@ -240,6 +242,7 @@ class _FaceScannerPageState extends State<FaceScannerPage> with WidgetsBindingOb
   }
 
   Widget _buildScanner() {
+    final l = AppLocalizations.of(context)!;
     return Stack(
       children: [
         CameraPreview(_cameraController!),
@@ -258,9 +261,9 @@ class _FaceScannerPageState extends State<FaceScannerPage> with WidgetsBindingOb
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  _faceTooSmall ? 'Dekatkan wajah ke kamera'
-                      : _faceDetected ? 'Wajah terdeteksi'
-                      : 'Arahkan wajah ke dalam bingkai oval',
+                  _faceTooSmall ? l.faceTooClose
+                      : _faceDetected ? l.faceDetectedLabel
+                      : l.faceScanInstruction,
                   style: AppTextStyles.bodySmall.copyWith(color: Colors.white),
                   textAlign: TextAlign.center,
                 ),
@@ -270,7 +273,7 @@ class _FaceScannerPageState extends State<FaceScannerPage> with WidgetsBindingOb
                 TextButton.icon(
                   onPressed: _capturePhoto,
                   icon: const Icon(Icons.camera_alt, color: Colors.white70),
-                  label: Text('Ambil Manual', style: const TextStyle(color: Colors.white70)),
+                  label: Text(l.manualCapture, style: const TextStyle(color: Colors.white70)),
                 ),
             ],
           ),
@@ -304,6 +307,7 @@ class _FaceScannerPageState extends State<FaceScannerPage> with WidgetsBindingOb
   }
 
   Widget _buildConfirmation() {
+    final l = AppLocalizations.of(context)!;
     return Column(
       children: [
         Expanded(
@@ -331,7 +335,7 @@ class _FaceScannerPageState extends State<FaceScannerPage> with WidgetsBindingOb
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   icon: const Icon(Icons.refresh),
-                  label: Text('Ulangi'),
+                  label: Text(l.retake),
                 ),
               ),
               SizedBox(width: AppSizes.md),
@@ -345,7 +349,7 @@ class _FaceScannerPageState extends State<FaceScannerPage> with WidgetsBindingOb
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   icon: const Icon(Icons.check),
-                  label: Text('Gunakan'),
+                  label: Text(l.use),
                 ),
               ),
             ],

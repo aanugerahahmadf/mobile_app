@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 
 class NotificationSettingsPage extends StatefulWidget {
   const NotificationSettingsPage({super.key});
@@ -47,25 +48,26 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text('Pengaturan Notifikasi')),
+      appBar: AppBar(title: Text(l.notificationSettings)),
       body: _loaded
           ? ListView(
               padding: const EdgeInsets.all(AppSizes.md),
               children: [
-                _buildSwitchTile('Notifikasi Pesanan', 'Terima notifikasi status pesanan', _orderUpdates, (v) {
+                _buildSwitchTile(l.orderNotifications, l.orderNotificationsDesc, _orderUpdates, (v) {
                   setState(() => _orderUpdates = v);
                   _save(_keyOrder, v);
                 }),
-                _buildSwitchTile('Notifikasi Promosi', 'Terima informasi promo dan diskon', _promotions, (v) {
+                _buildSwitchTile(l.promoNotifications, l.promoNotificationsDesc, _promotions, (v) {
                   setState(() => _promotions = v);
                   _save(_keyPromo, v);
                 }),
-                _buildSwitchTile('Notifikasi Chat', 'Terima notifikasi pesan baru', _chatMessages, (v) {
+                _buildSwitchTile(l.chatNotifications, l.chatNotificationsDesc, _chatMessages, (v) {
                   setState(() => _chatMessages = v);
                   _save(_keyChat, v);
                 }),
-                _buildSwitchTile('Notifikasi Favorit', 'Terima notifikasi wishlist', _wishlistAlerts, (v) {
+                _buildSwitchTile(l.wishlistNotifications, l.wishlistNotificationsDesc, _wishlistAlerts, (v) {
                   setState(() => _wishlistAlerts = v);
                   _save(_keyWishlist, v);
                 }),

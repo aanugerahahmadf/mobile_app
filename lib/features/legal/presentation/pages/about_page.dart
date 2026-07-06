@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 
@@ -7,33 +8,34 @@ class AboutPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text('Tentang Aplikasi')),
+      appBar: AppBar(title: Text(l.aboutApp)),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSizes.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Center(
+            Center(
               child: Column(
                 children: [
-                  Icon(Icons.card_giftcard, size: 64, color: AppColors.primaryColor),
-                  SizedBox(height: 8),
-                  Text('WeddingApp', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+                  const Icon(Icons.card_giftcard, size: 64, color: AppColors.primaryColor),
+                  const SizedBox(height: 8),
+                  Text(l.appName, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
                 ],
               ),
             ),
             const SizedBox(height: 24),
-            Text('Tentang Aplikasi', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+            Text(l.aboutApp, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
             Text(
-              'WeddingApp membantu Anda menemukan dekorasi bunga pernikahan yang sempurna. Jelajahi paket, cari dengan gambar, dan pesan dengan mudah.',
-              style: const TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.6),
+              l.appDescription,
+              style: TextStyle(fontSize: 14, color: AppColors.textSecondary, height: 1.6),
             ),
             const SizedBox(height: AppSizes.xl),
-            Text('Versi', style: const TextStyle(fontSize: 14, color: AppColors.textSecondary)),
+            Text(l.version, style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
             const SizedBox(height: 4),
-            const Text('1.0.0', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+            Text(l.appVersion, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
           ],
         ),
       ),

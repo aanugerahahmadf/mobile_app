@@ -8,6 +8,7 @@ import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../data/models/notification_model.dart';
 import '../providers/notification_provider.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 
 class NotificationPage extends ConsumerStatefulWidget {
   const NotificationPage({super.key});
@@ -29,17 +30,18 @@ class _NotificationPageState extends ConsumerState<NotificationPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final state = ref.watch(notificationListProvider);
     final notifier = ref.read(notificationListProvider.notifier);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Notifikasi'),
+        title: Text(l.notifications),
         actions: [
           if (state.notifications.any((n) => n.isUnread))
             TextButton(
               onPressed: () => notifier.markAllAsRead(),
-              child: Text('Tandai Dibaca'),
+              child: Text(l.markAsRead),
             ),
         ],
       ),
@@ -52,14 +54,14 @@ class _NotificationPageState extends ConsumerState<NotificationPage> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.cloud_off, size: 64, color: Colors.grey[400]),
+                        Icon(Icons.cloud_off, size: 64, color: AppColors.textTertiary),
                         SizedBox(height: AppSizes.md),
                         Text(state.error!, style: AppTextStyles.bodyMedium, textAlign: TextAlign.center),
                         SizedBox(height: AppSizes.md),
                         ElevatedButton.icon(
                           onPressed: () => notifier.fetchNotifications(),
                           icon: Icon(Icons.refresh),
-                          label: Text('Coba Lagi'),
+                          label: Text(l.tryAgain),
                         ),
                       ],
                     ),
@@ -67,8 +69,8 @@ class _NotificationPageState extends ConsumerState<NotificationPage> {
                 )
               : state.notifications.isEmpty
                   ? AppEmptyState(
-                      title: 'Belum ada notifikasi',
-                      subtitle: 'Belum ada notifikasi saat ini',
+                      title: l.noNotifications,
+                      subtitle: l.noNotifications,
                       icon: Icons.notifications_outlined,
                     )
                   : RefreshIndicator(
@@ -80,39 +82,69 @@ class _NotificationPageState extends ConsumerState<NotificationPage> {
                         itemBuilder: (context, index) {
                           final notif = state.notifications[index];
                           final isRead = !notif.isUnread;
-                          final title = notif.title ?? 'Notifikasi';
+                          final title = notif.title ?? l.notifications;
                           final body = notif.body ?? '';
                           final time = notif.createdAt ?? '';
 
-                          return ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: isRead ? Colors.grey[200] : AppColors.secondaryColor,
-                              child: Icon(
-                                _getNotificationIcon(notif.type),
-                                color: isRead ? AppColors.textSecondary : AppColors.primaryColor,
-                                size: 20,
-                              ),
+                          return Dismissible(
+                            key: ValueKey(notif.id),
+                            direction: DismissDirection.endToStart,
+                            background: Container(
+                              alignment: Alignment.centerRight,
+                              padding: const EdgeInsets.only(right: AppSizes.md),
+                              color: Colors.red,
+                              child: const Icon(Icons.delete_outline, color: Colors.white),
                             ),
-                            title: Text(
-                              title,
-                              style: AppTextStyles.bodyMedium.copyWith(
-                                fontWeight: isRead ? FontWeight.normal : FontWeight.w600,
-                              ),
-                            ),
-                            subtitle: Text(
-                              body,
-                              style: AppTextStyles.bodySmall,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            trailing: Text(
-                              Formatters.timeAgo(time),
-                              style: AppTextStyles.labelSmall,
-                            ),
-                            onTap: () {
-                              if (notif.isUnread) notifier.markAsRead(notif.id.toString());
-                              _navigateToNotification(notif);
+                            confirmDismiss: (_) async {
+                              return await showDialog<bool>(
+                                context: context,
+                                builder: (ctx) => AlertDialog(
+                                  title: Text(l.deleteNotification),
+                                  content: Text(l.deleteNotificationConfirm),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx, false),
+                                      child: Text(l.cancel),
+                                    ),
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(ctx, true),
+                                      child: Text(l.delete, style: const TextStyle(color: Colors.red)),
+                                    ),
+                                  ],
+                                ),
+                              );
                             },
+                            onDismissed: (_) => notifier.deleteNotification(notif.id),
+                            child: ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: AppColors.secondaryColor,
+                                child: Icon(
+                                  _getNotificationIcon(notif.type),
+                                  color: isRead ? AppColors.textSecondary : AppColors.primaryColor,
+                                  size: 20,
+                                ),
+                              ),
+                              title: Text(
+                                title,
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  fontWeight: isRead ? FontWeight.normal : FontWeight.w600,
+                                ),
+                              ),
+                              subtitle: Text(
+                                body,
+                                style: AppTextStyles.bodySmall,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              trailing: Text(
+                                Formatters.timeAgo(time),
+                                style: AppTextStyles.labelSmall,
+                              ),
+                              onTap: () {
+                                if (notif.isUnread) notifier.markAsRead(notif.id);
+                                _navigateToNotification(notif);
+                              },
+                            ),
                           );
                         },
                       ),

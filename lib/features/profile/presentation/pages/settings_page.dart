@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/providers/theme_provider.dart';
 import '../../../auth/data/biometric_auth_service.dart';
 import '../../../auth/presentation/providers/biometric_settings_provider.dart';
 
@@ -30,18 +32,31 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final fingerprintEnabled = ref.watch(fingerprintUnlockProvider);
+    final themeMode = ref.watch(themeProvider);
+    final isDark = themeMode == ThemeMode.dark;
     return Scaffold(
-      appBar: AppBar(title: Text('Pengaturan')),
+      appBar: AppBar(title: Text(l.settings)),
       body: Padding(
         padding: const EdgeInsets.all(AppSizes.md),
         child: Column(
           children: [
-            _menuTile(Icons.language, 'Bahasa', () => context.push('/language')),
-            _menuTile(Icons.notifications_outlined, 'Pengaturan Notifikasi', () => context.push('/notification-settings')),
-            _menuTile(Icons.privacy_tip_outlined, 'Privasi & Ketentuan', () => context.push('/legal/privacy-term')),
-            SizedBox(height: AppSizes.sm),
-            _menuTile(Icons.face_outlined, 'Verifikasi Wajah', () => context.push('/face-scanner'), subtitle: 'Scan wajah untuk verifikasi identitas'),
+            _menuTile(Icons.language, l.language, () => context.push('/language')),
+            _menuTile(Icons.notifications_outlined, l.notifications, () => context.push('/notification-settings')),
+            const SizedBox(height: AppSizes.sm),
+            Card(
+              margin: EdgeInsets.zero,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: SwitchListTile(
+                secondary: Icon(isDark ? Icons.dark_mode : Icons.light_mode, color: AppColors.primaryColor),
+                title: Text(l.darkMode, style: AppTextStyles.bodyMedium),
+                subtitle: Text(isDark ? l.useLightTheme : l.useDarkTheme, style: AppTextStyles.bodySmall),
+                value: isDark,
+                onChanged: (v) => ref.read(themeProvider.notifier).toggleDarkMode(v),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
             if (_biometricAvailable) ...[
               const SizedBox(height: AppSizes.sm),
               Card(
@@ -49,8 +64,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 child: SwitchListTile(
                   secondary: Icon(Icons.fingerprint, color: AppColors.primaryColor),
-                  title: Text('Buka Kunci Sidik Jari', style: AppTextStyles.bodyMedium),
-                  subtitle: Text('Gunakan sidik jari untuk membuka aplikasi', style: AppTextStyles.bodySmall),
+                  title: Text(l.biometricLock, style: AppTextStyles.bodyMedium),
+                  subtitle: Text(l.useFingerprint, style: AppTextStyles.bodySmall),
                   value: fingerprintEnabled,
                   onChanged: (v) => ref.read(fingerprintUnlockProvider.notifier).setEnabled(v),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -71,7 +86,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         leading: Icon(icon, color: AppColors.primaryColor),
         title: Text(label, style: AppTextStyles.bodyMedium),
         subtitle: subtitle != null ? Text(subtitle, style: AppTextStyles.bodySmall) : null,
-        trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+        trailing: Icon(Icons.chevron_right, color: AppColors.textSecondary),
         onTap: onTap,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),

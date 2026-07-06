@@ -17,6 +17,7 @@ import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/chat_provider.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 
 class ChatDetailPage extends ConsumerStatefulWidget {
   final String id;
@@ -56,11 +57,12 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
   }
 
   String _senderName() {
+    final l = AppLocalizations.of(context)!;
     final auth = ref.read(authProvider);
     if (auth is AuthAuthenticated) {
       return auth.user.fullName.isNotEmpty ? auth.user.fullName : auth.user.username;
     }
-    return 'Saya';
+    return l.me;
   }
 
   void _scrollToBottom() {
@@ -76,6 +78,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
   }
 
   Future<void> _sendMessage({String? filePath}) async {
+    final l = AppLocalizations.of(context)!;
     final text = _messageController.text.trim();
     if (text.isEmpty && filePath == null) return;
 
@@ -91,13 +94,14 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal mengirim pesan')),
+          SnackBar(content: Text(l.failedSendMessage)),
         );
       }
     }
   }
 
   void _showAttachmentOptions() {
+    final l = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -112,47 +116,47 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
               children: [
                 Container(
                   width: 36, height: 4,
-                  decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+                  decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2)),
                 ),
                 const SizedBox(height: 24),
-                Text('Lampiran',
-                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Color(0xFF1A1A2E)),
+                Text(l.attachment,
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 24),
                 _attachmentOption(
                   icon: Icons.camera_alt_rounded,
-                  title: 'Kamera',
-                  subtitle: 'Ambil foto langsung',
+                  title: l.camera,
+                  subtitle: l.takePhotoDirect,
                   onTap: () { context.pop(); _pickImage(ImageSource.camera); },
                 ),
                 _attachmentOption(
                   icon: Icons.photo_library,
-                  title: 'Galeri',
-                  subtitle: 'Pilih dari Galeri',
+                  title: l.gallery,
+                  subtitle: l.chooseFromGallery,
                   onTap: () { context.pop(); _pickImage(ImageSource.gallery); },
                 ),
                 _attachmentOption(
                   icon: Icons.folder_open_rounded,
-                  title: 'File',
-                  subtitle: 'Pilih dari penyimpanan',
+                  title: l.file,
+                  subtitle: l.chooseFromStorage,
                   onTap: () { context.pop(); _pickFile(); },
                 ),
                 _attachmentOption(
                   icon: Icons.cloud,
-                  title: 'Google Drive',
-                  subtitle: 'Pilih file dari Drive',
+                  title: l.googleDrive,
+                  subtitle: l.chooseFromDrive,
                   onTap: () { context.pop(); _pickFromDrive(); },
                 ),
                 _attachmentOption(
                   icon: Icons.category_rounded,
-                  title: 'Katalog',
-                  subtitle: 'Bagikan produk',
+                  title: l.catalog,
+                  subtitle: l.shareProduct,
                   onTap: () { context.pop(); _pickFromCatalog(); },
                 ),
                 _attachmentOption(
                   icon: Icons.receipt_long_rounded,
-                  title: 'Pesanan',
-                  subtitle: 'Bagikan detail pesanan',
+                  title: l.order,
+                  subtitle: l.shareOrderDetail,
                   onTap: () { context.pop(); _pickFromOrders(); },
                 ),
               ],
@@ -207,6 +211,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
       final files = (response.data['files'] as List?)?.cast<Map<String, dynamic>>() ?? [];
       if (files.isEmpty || !mounted) return;
 
+      final l = AppLocalizations.of(context)!;
       final selected = await showModalBottomSheet<String>(
         context: context,
         isScrollControlled: true,
@@ -219,12 +224,12 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
             children: [
               Container(
                 width: 36, height: 4, margin: const EdgeInsets.only(top: 12),
-                decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+                decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2)),
               ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                child: Text('Pilih dari Google Drive',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: Text(l.pickFromGoogleDrive,
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
                 ),
               ),
               SizedBox(
@@ -242,8 +247,8 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
                             ? CachedNetworkImage(imageUrl: thumb, width: 48, height: 48, fit: BoxFit.cover)
                             : Container(
                                 width: 48, height: 48,
-                                decoration: BoxDecoration(color: const Color(0xFFE8F5E9), borderRadius: BorderRadius.circular(8)),
-                                child: const Icon(Icons.cloud, color: Color(0xFF4CAF50), size: 24),
+                                decoration: BoxDecoration(color: AppColors.successColor.withAlpha(25), borderRadius: BorderRadius.circular(8)),
+                                child: const Icon(Icons.cloud, color: AppColors.successColor, size: 24),
                               ),
                       ),
                       title: Text(f['name'] as String? ?? '', maxLines: 1, overflow: TextOverflow.ellipsis),
@@ -275,8 +280,9 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
       _scrollToBottom();
     } catch (e) {
       if (mounted) {
+        final l = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal mengambil dari Drive: $e')),
+          SnackBar(content: Text(l.failedFetchFromDrive.replaceFirst('%s', e.toString()))),
         );
       }
     }
@@ -295,6 +301,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
 
       if (items.isEmpty || !mounted) return;
 
+      final l = AppLocalizations.of(context)!;
       final selected = await showModalBottomSheet<Map<String, dynamic>>(
         context: context,
         isScrollControlled: true,
@@ -307,12 +314,12 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
             children: [
               Container(
                 width: 36, height: 4, margin: const EdgeInsets.only(top: 12),
-                decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+                decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2)),
               ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                child: Text('Pilih Produk',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: Text(l.chooseProduct,
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
                 ),
               ),
               SizedBox(
@@ -338,8 +345,8 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
                             ? CachedNetworkImage(imageUrl: imageUrl, width: 48, height: 48, fit: BoxFit.cover)
                             : Container(
                                 width: 48, height: 48,
-                                decoration: BoxDecoration(color: const Color(0xFFF5F5F5), borderRadius: BorderRadius.circular(8)),
-                                child: const Icon(Icons.image_outlined, color: Color(0xFFD0D0D0)),
+                                decoration: BoxDecoration(color: AppColors.secondaryColor, borderRadius: BorderRadius.circular(8)),
+                                child: Icon(Icons.image_outlined, color: AppColors.textTertiary),
                               ),
                       ),
                       title: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
@@ -376,8 +383,9 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
       _scrollToBottom();
     } catch (e) {
       if (mounted) {
+        final l = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal memuat katalog')),
+          SnackBar(content: Text(l.failedLoadCatalog)),
         );
       }
     }
@@ -391,6 +399,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
 
       if (orders.isEmpty || !mounted) return;
 
+      final l = AppLocalizations.of(context)!;
       final selected = await showModalBottomSheet<Map<String, dynamic>>(
         context: context,
         isScrollControlled: true,
@@ -403,12 +412,12 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
             children: [
               Container(
                 width: 36, height: 4, margin: const EdgeInsets.only(top: 12),
-                decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+                decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2)),
               ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                child: Text('Pilih Pesanan',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: Text(l.chooseOrder,
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
                 ),
               ),
               SizedBox(
@@ -447,8 +456,9 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
       _scrollToBottom();
     } catch (e) {
       if (mounted) {
+        final l = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal memuat pesanan')),
+          SnackBar(content: Text(l.failedLoadOrders)),
         );
       }
     }
@@ -494,7 +504,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
       width: MediaQuery.of(context).size.width * 0.8,
       margin: const EdgeInsets.only(bottom: 4),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surfaceColor,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.primaryColor.withAlpha(40)),
         boxShadow: [
@@ -511,12 +521,12 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
                 width: 60, height: 60,
                 child: image.isNotEmpty
                     ? CachedNetworkImage(imageUrl: image, fit: BoxFit.cover,
-                        errorWidget: (_, _, _) => Container(color: Colors.grey[200],
-                          child: const Icon(Icons.image_outlined, color: Colors.grey),
-                        ),
-                      )
-                    : Container(color: Colors.grey[200],
-                        child: const Icon(Icons.image_outlined, color: Colors.grey),
+                        errorWidget: (_, _, _) => Container(color: AppColors.dividerColor,
+                        child: Icon(Icons.image_outlined, color: AppColors.textTertiary),
+                      ),
+                    )
+                    : Container(color: AppColors.dividerColor,
+                        child: Icon(Icons.image_outlined, color: AppColors.textTertiary),
                       ),
               ),
             ),
@@ -530,13 +540,13 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
                   ),
                   const SizedBox(height: 2),
                   Text(name,
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFF1A1A2E)),
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
                     maxLines: 2, overflow: TextOverflow.ellipsis,
                   ),
                   if (price != null) ...[
                     const SizedBox(height: 2),
                     Text(_formatCurrency((num.tryParse(price.toString()) ?? 0).toInt()),
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFFE53935)),
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.errorColor),
                     ),
                   ],
                 ],
@@ -549,6 +559,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
   }
 
   Widget _buildOrderContextCard(Map<String, dynamic> meta) {
+    final l = AppLocalizations.of(context)!;
     final orderNumber = meta['order_number'] as String? ?? '';
     final orderStatus = meta['order_status'] as String? ?? '';
     final paymentStatus = meta['payment_status'] as String? ?? '';
@@ -560,9 +571,9 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
       margin: const EdgeInsets.only(bottom: 4),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surfaceColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE3F2FD)),
+        border: Border.all(color: AppColors.infoColor.withAlpha(25)),
         boxShadow: [
           BoxShadow(color: Colors.black.withAlpha(13), blurRadius: 8, offset: const Offset(0, 2)),
         ],
@@ -572,16 +583,16 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
         children: [
           Row(
             children: [
-              const Icon(Icons.receipt_long_rounded, size: 16, color: Color(0xFF1565C0)),
+              const Icon(Icons.receipt_long_rounded, size: 16, color: AppColors.infoColor),
               const SizedBox(width: 6),
-              Text('pesanan',
-                style: const TextStyle(fontSize: 10, color: Color(0xFF1565C0), fontWeight: FontWeight.w600),
+              Text(l.order,
+                style: const TextStyle(fontSize: 10, color: AppColors.infoColor, fontWeight: FontWeight.w600),
               ),
             ],
           ),
           const SizedBox(height: 6),
           Text('#$orderNumber',
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF1A1A2E)),
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
           ),
           if (name.isNotEmpty) ...[
             const SizedBox(height: 4),
@@ -593,14 +604,14 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
                     child: SizedBox(
                       width: 36, height: 36,
                       child: CachedNetworkImage(imageUrl: image, fit: BoxFit.cover,
-                        errorWidget: (_, _, _) => Container(color: Colors.grey[200]),
+                        errorWidget: (_, _, _) => Container(color: AppColors.secondaryColor),
                       ),
                     ),
                   ),
                 if (image.isNotEmpty) const SizedBox(width: 8),
                 Expanded(
                   child: Text(name,
-                    style: const TextStyle(fontSize: 12, color: Color(0xFF666680)),
+                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                     maxLines: 1, overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -610,9 +621,9 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
           const SizedBox(height: 6),
           Row(
             children: [
-              _orderBadge(orderStatus.isNotEmpty ? orderStatus : '-', const Color(0xFF1565C0), const Color(0xFFE3F2FD)),
+              _orderBadge(orderStatus.isNotEmpty ? orderStatus : '-', AppColors.infoColor, AppColors.infoColor.withAlpha(25)),
               const SizedBox(width: 8),
-              _orderBadge(paymentStatus.isNotEmpty ? paymentStatus : '-', const Color(0xFFE65100), const Color(0xFFFFF3E0)),
+              _orderBadge(paymentStatus.isNotEmpty ? paymentStatus : '-', AppColors.warningColor, AppColors.warningColor.withAlpha(25)),
             ],
           ),
         ],
@@ -634,12 +645,68 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
     return 'Rp ${amount.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
   }
 
+  void _showImagePreview(String url) {
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(24),
+        child: Stack(
+          alignment: Alignment.topRight,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.network(url, fit: BoxFit.contain, width: double.infinity, height: double.infinity),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 28),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final chatState = ref.watch(chatProvider);
 
+    final otherUser = chatState is ChatMessagesLoaded ? chatState.otherUser : null;
+    final otherName = otherUser?['name'] as String? ?? l.navChat;
+    final otherPhoto = otherUser?['profile_photo'] as String?;
+
     return Scaffold(
-      appBar: AppBar(title: Text('Chat dengan Admin')),
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/chat-list'),
+        ),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            GestureDetector(
+              onTap: otherPhoto != null
+                  ? () => _showImagePreview(otherPhoto)
+                  : null,
+              child: CircleAvatar(
+                radius: 16,
+                backgroundColor: AppColors.secondaryColor,
+                backgroundImage: otherPhoto != null ? NetworkImage(otherPhoto) : null,
+                child: otherPhoto == null
+                    ? Icon(Icons.person, size: 18, color: AppColors.primaryColor)
+                    : null,
+              ),
+            ),
+            const SizedBox(width: AppSizes.sm),
+            Flexible(child: Text(otherName, overflow: TextOverflow.ellipsis)),
+          ],
+        ),
+      ),
       body: Column(
         children: [
           Expanded(
@@ -688,7 +755,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
                                       constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.75),
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: isMe ? AppColors.primaryColor : Colors.grey[100],
+                                        color: isMe ? AppColors.primaryColor : AppColors.secondaryColor,
                                         borderRadius: BorderRadius.only(
                                           topLeft: const Radius.circular(16),
                                           topRight: const Radius.circular(16),
@@ -742,8 +809,8 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
           Container(
             padding: const EdgeInsets.all(AppSizes.sm),
             decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -2))],
+        color: AppColors.surfaceColor,
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -2))],
             ),
             child: SafeArea(
               child: Row(
@@ -765,7 +832,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
                     child: TextField(
                       controller: _messageController,
                       decoration: InputDecoration(
-                        hintText: 'Ketik pesan...',
+                        hintText: l.typeMessage,
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(24)),
                       ),

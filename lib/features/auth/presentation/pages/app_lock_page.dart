@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../providers/biometric_settings_provider.dart';
 import '../../data/biometric_auth_service.dart';
 
@@ -38,6 +40,7 @@ class _AppLockPageState extends ConsumerState<AppLockPage> with WidgetsBindingOb
   }
 
   Future<void> _authenticate() async {
+    final l = AppLocalizations.of(context)!;
     final enabled = ref.read(fingerprintUnlockProvider);
     if (!enabled) {
       context.go('/home');
@@ -51,7 +54,7 @@ class _AppLockPageState extends ConsumerState<AppLockPage> with WidgetsBindingOb
     if (!available) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Autentikasi biometrik tidak tersedia di perangkat ini')),
+          SnackBar(content: Text(l.biometricNotAvailable)),
         );
         context.go('/home');
       }
@@ -59,7 +62,7 @@ class _AppLockPageState extends ConsumerState<AppLockPage> with WidgetsBindingOb
     }
 
     final typeName = await service.biometricTypeName;
-    final reason = 'Buka aplikasi dengan $typeName';
+    final reason = l.unlockWith.replaceFirst('%s', typeName);
 
     final success = await service.authenticate(reason: reason);
 
@@ -73,6 +76,7 @@ class _AppLockPageState extends ConsumerState<AppLockPage> with WidgetsBindingOb
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return PopScope(
       canPop: false,
       child: Scaffold(
@@ -81,7 +85,7 @@ class _AppLockPageState extends ConsumerState<AppLockPage> with WidgetsBindingOb
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xFF0F1B33), Color(0xFF1E3050)],
+              colors: [AppColors.primaryDark, AppColors.primaryColor],
             ),
           ),
           child: SafeArea(
@@ -99,13 +103,13 @@ class _AppLockPageState extends ConsumerState<AppLockPage> with WidgetsBindingOb
                     child: const Icon(Icons.fingerprint, size: 56, color: Colors.white),
                   ),
                   const SizedBox(height: 32),
-                  const Text(
-                    'Buka Aplikasi',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Colors.white),
+                  Text(
+                    l.unlockApp,
+                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: Colors.white),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Gunakan sidik jari atau Face ID untuk membuka',
+                    l.useBiometricToUnlock,
                     style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.7)),
                     textAlign: TextAlign.center,
                   ),
@@ -118,9 +122,9 @@ class _AppLockPageState extends ConsumerState<AppLockPage> with WidgetsBindingOb
                       height: 48,
                       child: ElevatedButton.icon(
                         onPressed: _authenticate,
-                        icon: const Icon(Icons.fingerprint, color: Color(0xFF0F1B33)),
-                        label: const Text('Buka dengan Sidik Jari',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Color(0xFF0F1B33))),
+                        icon: const Icon(Icons.fingerprint, color: AppColors.primaryDark),
+                        label: Text(l.unlockWithFingerprint,
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.primaryDark)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

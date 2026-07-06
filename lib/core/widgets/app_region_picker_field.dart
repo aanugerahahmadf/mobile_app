@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 import '../api/api_endpoints.dart';
 import '../api/dio_client.dart';
 import '../constants/app_colors.dart';
@@ -644,7 +645,7 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
                 child: Material(
                   elevation: 8,
                   borderRadius: BorderRadius.circular(8),
-                  color: Colors.white,
+                  color: AppColors.surfaceColor,
                   clipBehavior: Clip.antiAlias,
                   child: ConstrainedBox(
                     constraints: BoxConstraints(
@@ -778,12 +779,13 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     if (_isIndonesia) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildAutocomplete<RegionData>(
-            label: 'Provinsi',
+            label: l.province,
             items: _provinces,
             loading: _loadingProvinces,
             fieldKey: const ValueKey('province'),
@@ -793,7 +795,7 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
             onClear: () => _selectProvince(null),
           ),
           _buildIndonesiaChildField(
-            label: 'Kota / Kabupaten',
+            label: l.city,
             items: _cities,
             loading: _loadingCities,
             value: _selectedCity,
@@ -803,7 +805,7 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
             freeController: _freeCityController,
           ),
           _buildIndonesiaChildField(
-            label: 'Kecamatan',
+            label: l.district,
             items: _districts,
             loading: _loadingDistricts,
             value: _selectedDistrict,
@@ -813,7 +815,7 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
             freeController: _freeDistrictController,
           ),
           _buildIndonesiaChildField(
-            label: 'Kelurahan / Desa',
+            label: l.village,
             items: _villages,
             loading: _loadingVillages,
             value: _selectedVillage,
@@ -823,7 +825,7 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
             freeController: _freeVillageController,
           ),
           _buildFreeTextField(
-            label: 'Kode Pos',
+            label: l.postalCode,
             controller: _freePostalController,
           ),
         ],
@@ -843,7 +845,7 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildAutocomplete<String>(
-          label: 'Provinsi',
+          label: l.province,
           items: stateItems,
           loading: _loadingWorldStates,
           fieldKey: const ValueKey('worldState'),
@@ -856,7 +858,7 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
           onClear: () => _selectWorldState(null),
         ),
         _buildWorldField(
-          label: 'Kota / Kabupaten',
+          label: l.city,
           items: cityItems,
           loading: _loadingWorldCities,
           selectedValue: _selectedWorldCity?.name,
@@ -867,7 +869,7 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
           },
         ),
         _buildWorldField(
-          label: 'Kecamatan',
+          label: l.district,
           items: districtItems,
           loading: _loadingWorldDistricts,
           selectedValue: _selectedWorldDistrict,
@@ -875,7 +877,7 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
           onSelect: _selectWorldDistrict,
         ),
         _buildWorldField(
-          label: 'Kelurahan / Desa',
+          label: l.village,
           items: villageItems,
           loading: _loadingWorldVillages,
           selectedValue: _selectedWorldVillage,
@@ -883,7 +885,7 @@ class _AppRegionPickerFieldState extends State<AppRegionPickerField> {
           onSelect: _selectWorldVillage,
         ),
         _buildWorldField(
-          label: 'Kode Pos',
+          label: l.postalCode,
           items: postalItems,
           loading: _loadingWorldPostalCodes,
           selectedValue: _selectedWorldPostalCode,

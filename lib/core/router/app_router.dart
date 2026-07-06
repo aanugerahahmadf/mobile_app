@@ -3,9 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../features/splash/presentation/pages/landing_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
-import '../../features/auth/presentation/pages/otp_email_verification_page.dart';
-import '../../features/auth/presentation/pages/forgot_password_page.dart';
-import '../../features/auth/presentation/pages/reset_password_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/home/presentation/pages/main_shell.dart';
 import '../../features/auth/presentation/pages/switch_account_page.dart';
@@ -40,7 +37,21 @@ import '../../features/legal/presentation/pages/wedding_policy_page.dart';
 import '../../features/legal/presentation/pages/help_center_page.dart';
 import '../../features/legal/presentation/pages/privacy_and_term_page.dart';
 import '../../features/profile/presentation/pages/settings_page.dart';
+import '../../features/profile/presentation/pages/language_page.dart';
 import '../../features/auth/presentation/pages/app_lock_page.dart';
+import '../../features/admin/presentation/pages/admin_users/page.dart';
+import '../../features/admin/presentation/pages/admin_packages/page.dart';
+import '../../features/admin/presentation/pages/admin_products/page.dart';
+import '../../features/admin/presentation/pages/admin_categories/page.dart';
+import '../../features/admin/presentation/pages/admin_orders/page.dart';
+import '../../features/admin/presentation/pages/admin_reviews/page.dart';
+import '../../features/admin/presentation/pages/admin_vouchers/page.dart';
+import '../../features/admin/presentation/pages/admin_transactions/page.dart';
+import '../../features/admin/presentation/pages/admin_helps/page.dart';
+import '../../features/admin/presentation/pages/admin_legal_pages/page.dart';
+import '../../features/admin/presentation/pages/admin_terms/page.dart';
+import '../../features/admin/presentation/pages/admin_privacy_policies/page.dart';
+import '../../features/admin/presentation/pages/admin_wedding_policies/page.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -57,15 +68,6 @@ final appRouter = GoRouter(
   routes: [
     GoRoute(path: '/landing', builder: (_, _) => const LandingPage()),
     GoRoute(path: '/onboarding', builder: (_, _) => const OnboardingPage()),
-    GoRoute(path: '/verify-otp', builder: (_, state) {
-      final extra = state.extra as Map<String, dynamic>?;
-      return OtpEmailVerificationPage(
-        email: extra?['email'] as String?,
-        purpose: (extra?['purpose'] as String?) ?? 'verify_email',
-      );
-    }),
-    GoRoute(path: '/forgot-password', builder: (_, _) => const ForgotPasswordPage()),
-    GoRoute(path: '/reset-password', builder: (_, _) => const ResetPasswordPage()),
     StatefulShellRoute.indexedStack(
       builder: (_, _, navigationShell) => MainShell(navigationShell: navigationShell),
       branches: [
@@ -153,8 +155,25 @@ final appRouter = GoRouter(
     GoRoute(path: '/wedding-policy', builder: (_, _) => const WeddingPolicyPage()),
     GoRoute(path: '/help-center', builder: (_, _) => const HelpCenterPage()),
     GoRoute(path: '/legal/privacy-term', builder: (_, _) => const PrivacyAndTermPage()),
+    // ─── Admin CRUD Routes ─────────────────────────────────────────────────────
+    GoRoute(path: '/admin/users', builder: (_, _) => const AdminUsersPage()),
+    GoRoute(path: '/admin/packages', builder: (_, _) => const AdminPackagesPage()),
+    GoRoute(path: '/admin/products', builder: (_, _) => const AdminProductsPage()),
+    GoRoute(path: '/admin/categories', builder: (_, _) => const AdminCategoriesPage()),
+    GoRoute(path: '/admin/orders', builder: (_, _) => const AdminOrdersPage()),
+    GoRoute(path: '/admin/reviews', builder: (_, _) => const AdminReviewsPage()),
+    GoRoute(path: '/admin/vouchers', builder: (_, _) => const AdminVouchersPage()),
+    GoRoute(path: '/admin/transactions', builder: (_, _) => const AdminTransactionsPage()),
+    GoRoute(path: '/admin/helps', builder: (_, _) => const AdminHelpsPage()),
+    GoRoute(path: '/admin/legal-pages', builder: (_, _) => const AdminLegalPagesPage()),
+    GoRoute(path: '/admin/terms', builder: (_, _) => const AdminTermsPage()),
+    GoRoute(path: '/admin/privacy-policies', builder: (_, _) => const AdminPrivacyPoliciesPage()),
+    GoRoute(path: '/admin/wedding-policies', builder: (_, _) => const AdminWeddingPoliciesPage()),
+    GoRoute(path: '/admin/notifications', builder: (_, _) => const NotificationPage()),
+    GoRoute(path: '/admin/inboxes', builder: (_, _) => const ChatListPage()),
     GoRoute(path: '/switch-account', builder: (_, _) => const SwitchAccountPage()),
     GoRoute(path: '/settings', builder: (_, _) => const SettingsPage()),
+    GoRoute(path: '/language', builder: (_, _) => const LanguagePage()),
     GoRoute(path: '/app-lock', builder: (_, _) => const AppLockPage()),
     GoRoute(
       path: '/payment/:orderId',

@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
@@ -55,13 +56,13 @@ class _ReviewListPageState extends ConsumerState<ReviewListPage> {
       setState(() => _showForm = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ulasan berhasil dikirim')),
+          SnackBar(content: Text(AppLocalizations.of(context)!.reviewSubmitted)),
         );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal mengirim ulasan: ${e.toString()}')),
+          SnackBar(content: Text('${AppLocalizations.of(context)!.reviewFailed}: ${e.toString()}')),
         );
       }
     }
@@ -69,11 +70,12 @@ class _ReviewListPageState extends ConsumerState<ReviewListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final state = ref.watch(reviewProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Ulasan'),
+        title: Text(l.reviews),
       ),
       body: Column(
         children: [
@@ -81,13 +83,13 @@ class _ReviewListPageState extends ConsumerState<ReviewListPage> {
             Padding(
               padding: const EdgeInsets.all(AppSizes.md),
               child: AppButton(
-                label: 'Tulis Ulasan',
+                label: l.writeReview,
                 icon: Icons.edit,
                 onPressed: () => setState(() => _showForm = true),
                 type: ButtonType.outline,
               ),
             ),
-          if (_showForm) _buildReviewForm(),
+          if (_showForm) _buildReviewForm(l),
           Expanded(
             child: state.loading
                 ? const Center(child: CircularProgressIndicator())
@@ -95,8 +97,8 @@ class _ReviewListPageState extends ConsumerState<ReviewListPage> {
                     ? Center(child: Text(state.error!, style: AppTextStyles.bodyMedium))
                     : state.reviews.isEmpty
                         ? AppEmptyState(
-                            title: 'Belum ada ulasan',
-                            subtitle: 'Jadilah yang pertama memberikan ulasan',
+                            title: l.noReviews,
+                            subtitle: l.beFirstReview,
                             icon: Icons.star_outline,
                           )
                         : RefreshIndicator(
@@ -138,7 +140,7 @@ class _ReviewListPageState extends ConsumerState<ReviewListPage> {
                                                 (i) => Icon(
                                                   Icons.star,
                                                   size: 14,
-                                                  color: i < rating ? AppColors.warningColor : Colors.grey[300],
+                                                  color: i < rating ? AppColors.warningColor : AppColors.textTertiary,
                                                 ),
                                               ),
                                             ),
@@ -166,11 +168,11 @@ class _ReviewListPageState extends ConsumerState<ReviewListPage> {
     );
   }
 
-  Widget _buildReviewForm() {
+  Widget _buildReviewForm(AppLocalizations l) {
     return Container(
       padding: const EdgeInsets.all(AppSizes.md),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surfaceColor,
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
       ),
       child: Column(
@@ -179,7 +181,7 @@ class _ReviewListPageState extends ConsumerState<ReviewListPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Rating', style: AppTextStyles.bodyMedium),
+              Text(l.rating, style: AppTextStyles.bodyMedium),
               Row(
                 children: List.generate(
                   5,
@@ -201,7 +203,7 @@ class _ReviewListPageState extends ConsumerState<ReviewListPage> {
           TextField(
             controller: _commentController,
             decoration: InputDecoration(
-              hintText: 'Tulis ulasan Anda...',
+              hintText: l.writeYourReview,
               border: const OutlineInputBorder(),
             ),
             maxLines: 3,
@@ -211,7 +213,7 @@ class _ReviewListPageState extends ConsumerState<ReviewListPage> {
             children: [
               Expanded(
                 child: AppButton(
-                  label: 'Batal',
+                  label: l.cancel,
                   onPressed: () => setState(() => _showForm = false),
                   type: ButtonType.outline,
                 ),
@@ -219,7 +221,7 @@ class _ReviewListPageState extends ConsumerState<ReviewListPage> {
               SizedBox(width: AppSizes.sm),
               Expanded(
                 child: AppButton(
-                  label: 'Kirim',
+                  label: l.send,
                   loading: ref.watch(reviewProvider).submitting,
                   onPressed: _submitReview,
                 ),

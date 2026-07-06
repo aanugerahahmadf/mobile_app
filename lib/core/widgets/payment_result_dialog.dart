@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 import '../constants/app_colors.dart';
 import '../utils/formatters.dart';
 import 'app_button.dart';
@@ -46,39 +47,42 @@ class _PaymentResultContent extends StatelessWidget {
   final PaymentResultConfig config;
   const _PaymentResultContent({required this.config});
 
-  void _shareGmail() {
-    final subject = Uri.encodeComponent('Invoice Pembayaran #${config.orderId}');
-    final body = Uri.encodeComponent(_shareText());
+  void _shareGmail(BuildContext ctx) {
+    final sl = AppLocalizations.of(ctx)!;
+    final subject = Uri.encodeComponent('${sl.invoice} #${config.orderId}');
+    final body = Uri.encodeComponent(_shareText(sl));
     launchUrl(Uri.parse('mailto:?subject=$subject&body=$body'), mode: LaunchMode.externalApplication);
   }
 
-  void _shareMessages() {
-    launchUrl(Uri.parse('sms:?body=${Uri.encodeComponent(_shareText())}'), mode: LaunchMode.externalApplication);
+  void _shareMessages(BuildContext ctx) {
+    final sl = AppLocalizations.of(ctx)!;
+    launchUrl(Uri.parse('sms:?body=${Uri.encodeComponent(_shareText(sl))}'), mode: LaunchMode.externalApplication);
   }
 
-  void _shareWhatsapp() {
-    launchUrl(Uri.parse('https://wa.me/?text=${Uri.encodeComponent(_shareText())}'), mode: LaunchMode.externalApplication);
+  void _shareWhatsapp(BuildContext ctx) {
+    final sl = AppLocalizations.of(ctx)!;
+    launchUrl(Uri.parse('https://wa.me/?text=${Uri.encodeComponent(_shareText(sl))}'), mode: LaunchMode.externalApplication);
   }
 
-  String _shareText() {
+  String _shareText(AppLocalizations l) {
     final buf = StringBuffer()
-      ..writeln('━─━━─━ INVOICE ━─━━─━')
-      ..writeln('Pesanan #${config.orderId}')
-      ..writeln('Status: ${config.title}');
+      ..writeln('━─━━─━ ${l.invoice} ━─━━─━')
+      ..writeln('${l.viewOrder} #${config.orderId}')
+      ..writeln('${l.tryAgain}: ${config.title}');
     if (config.transactionId != null) {
-      buf.writeln('ID Transaksi: ${config.transactionId!}');
+      buf.writeln('${l.transactionId}: ${config.transactionId!}');
     }
     if (config.paymentMethod != null) {
-      buf.writeln('Metode: ${config.paymentMethod!}');
+      buf.writeln('${l.method}: ${config.paymentMethod!}');
     }
     if (config.vaNumber != null) {
-      buf.writeln('${'VA Number'}: ${config.vaNumber}');
+      buf.writeln('${l.vaNumber}: ${config.vaNumber}');
     }
     if (config.grossAmount != null) {
-      buf.writeln('Total: ${Formatters.currency(config.grossAmount!)}');
+      buf.writeln('${l.total}: ${Formatters.currency(config.grossAmount!)}');
     }
     if (config.transactionTime != null) {
-      buf.writeln('Waktu: ${Formatters.dateTime(config.transactionTime!)}');
+      buf.writeln('${l.time}: ${Formatters.dateTime(config.transactionTime!)}');
     }
     buf.writeln('━─━━─━━─━━─━━─━');
     return buf.toString();
@@ -86,6 +90,7 @@ class _PaymentResultContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       contentPadding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
@@ -102,12 +107,12 @@ class _PaymentResultContent extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(config.title,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Color(0xFF1A1A2E)),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(config.message,
-            style: const TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
+            style: TextStyle(fontSize: 13, color: AppColors.textSecondary, height: 1.4),
             textAlign: TextAlign.center,
           ),
 
@@ -123,19 +128,19 @@ class _PaymentResultContent extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('INVOICE MIDTRANS',
-                    style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: AppColors.textTertiary, letterSpacing: 1),
+                  Text(l.invoice,
+                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: AppColors.textTertiary, letterSpacing: 1),
                   ),
                   const SizedBox(height: 12),
-                  _receiptRow('ID Transaksi', config.transactionId ?? '-'),
+                  _receiptRow(l.transactionId, config.transactionId ?? '-'),
                   if (config.paymentMethod != null)
-                    _receiptRow('Metode', _methodLabel(config.paymentMethod!)),
+                    _receiptRow(l.method, _methodLabel(config.paymentMethod!, l)),
                   if (config.vaNumber != null)
-                    _receiptRow('VA Number', config.vaNumber!),
+                    _receiptRow(l.vaNumber, config.vaNumber!),
                   if (config.grossAmount != null)
-                    _receiptRow('Total', Formatters.currency(config.grossAmount!)),
+                    _receiptRow(l.total, Formatters.currency(config.grossAmount!)),
                   if (config.transactionTime != null)
-                    _receiptRow('Waktu Bayar', Formatters.dateTime(config.transactionTime!)),
+                    _receiptRow(l.paymentTime, Formatters.dateTime(config.transactionTime!)),
                 ],
               ),
             ),
@@ -151,14 +156,14 @@ class _PaymentResultContent extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  Text('Bagikan Invoice', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.textTertiary)),
+                  Text(l.shareInvoice, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.textTertiary)),
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      _shareButton(Icons.email_rounded, const Color(0xFFEA4335), 'Kirim pesan via aplikasi Gmail', _shareGmail),
-                      _shareButton(Icons.chat_bubble_rounded, const Color(0xFF34B7F1), 'Kirim ke Messages (SMS)', _shareMessages),
-                      _shareButton(Icons.chat_outlined, const Color(0xFF25D366), 'WhatsApp', _shareWhatsapp),
+                      _shareButton(Icons.email_rounded, const Color(0xFFEA4335), l.sendViaGmail, () => _shareGmail(context)),
+                      _shareButton(Icons.chat_bubble_rounded, const Color(0xFF34B7F1), l.sendViaSms, () => _shareMessages(context)),
+                      _shareButton(Icons.chat_outlined, const Color(0xFF25D366), l.whatsapp, () => _shareWhatsapp(context)),
                     ],
                   ),
                 ],
@@ -173,7 +178,7 @@ class _PaymentResultContent extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: AppButton(
-              label: 'Lihat Pesanan',
+              label: l.viewOrder,
               onPressed: () {
                 context.pop();
                 context.pop();
@@ -185,8 +190,8 @@ class _PaymentResultContent extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: AppButton(
-                  label: 'Kembali',
+                  child: AppButton(
+                    label: l.back,
                   onPressed: () {
                     context.pop();
                     context.pop();
@@ -198,7 +203,7 @@ class _PaymentResultContent extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: AppButton(
-                  label: 'Coba Lagi',
+                  label: l.tryAgain,
                   onPressed: () {
                     context.pop();
                     context.push('/payment/${config.orderId}');
@@ -218,21 +223,21 @@ class _PaymentResultContent extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 11, color: AppColors.textTertiary)),
-          Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF1A1A2E))),
+          Text(label, style: TextStyle(fontSize: 11, color: AppColors.textTertiary)),
+          Text(value, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
         ],
       ),
     );
   }
 
-  String _methodLabel(String method) {
+  String _methodLabel(String method, AppLocalizations l) {
     switch (method) {
-      case 'bank_transfer': return 'Transfer Bank';
-      case 'qris': return 'QRIS';
-      case 'gopay': return 'GoPay';
-      case 'shopeepay': return 'ShopeePay';
-      case 'echannel': return 'Mandiri Bill';
-      case 'cstore': return 'Convenience Store';
+      case 'bank_transfer': return l.transferBank;
+      case 'qris': return l.qris;
+      case 'gopay': return l.gopay;
+      case 'shopeepay': return l.shopeepay;
+      case 'echannel': return l.mandiriBill;
+      case 'cstore': return l.convenienceStore;
       default: return method;
     }
   }

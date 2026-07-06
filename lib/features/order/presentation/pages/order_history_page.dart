@@ -9,6 +9,7 @@ import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_shimmer.dart';
 import '../../../../core/utils/formatters.dart';
 import '../providers/order_provider.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 
 class OrderHistoryPage extends ConsumerStatefulWidget {
   const OrderHistoryPage({super.key});
@@ -21,22 +22,15 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryPage> with Single
   late TabController _tabController;
   String? _activeStatus;
 
-  final _tabs = [
-    {'label': 'Semua', 'status': null},
-    {'label': 'Menunggu', 'status': 'pending'},
-    {'label': 'Dikonfirmasi', 'status': 'confirmed'},
-    {'label': 'Diproses', 'status': 'preparing'},
-    {'label': 'Selesai', 'status': 'completed'},
-    {'label': 'Dibatalkan', 'status': 'cancelled'},
-  ];
+  final _tabStatuses = [null, 'pending', 'confirmed', 'preparing', 'completed', 'cancelled'];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _tabs.length, vsync: this);
+    _tabController = TabController(length: _tabStatuses.length, vsync: this);
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
-        setState(() => _activeStatus = _tabs[_tabController.index]['status']);
+        setState(() => _activeStatus = _tabStatuses[_tabController.index]);
         ref.read(orderProvider.notifier).fetchOrders(status: _activeStatus, refresh: true);
       }
     });
@@ -52,13 +46,14 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryPage> with Single
   }
 
   String _statusLabel(String? status) {
+    final l = AppLocalizations.of(context)!;
     switch (status) {
-      case 'pending': return 'Menunggu';
-      case 'confirmed': return 'Dikonfirmasi';
-      case 'preparing': return 'Diproses';
-      case 'event_day': return 'Hari-H';
-      case 'completed': return 'Selesai';
-      case 'cancelled': return 'Dibatalkan';
+      case 'pending': return l.pending;
+      case 'confirmed': return l.confirmed;
+      case 'preparing': return l.processed;
+      case 'event_day': return l.eventDay;
+      case 'completed': return l.completed;
+      case 'cancelled': return l.cancelled;
       default: return status ?? '-';
     }
   }
@@ -67,7 +62,7 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryPage> with Single
     switch (status) {
       case 'pending': return AppColors.warningColor;
       case 'confirmed': case 'preparing': return AppColors.primaryColor;
-      case 'event_day': return const Color(0xFF9C27B0);
+      case 'event_day': return AppColors.eventDayColor;
       case 'completed': return AppColors.successColor;
       case 'cancelled': return AppColors.errorColor;
       default: return AppColors.textSecondary;
@@ -79,8 +74,10 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryPage> with Single
     final state = ref.watch(orderProvider);
     final notifier = ref.read(orderProvider.notifier);
 
+    final l = AppLocalizations.of(context)!;
+    final tabLabels = [l.all, l.pending, l.confirmed, l.processed, l.completed, l.cancelled];
     return Scaffold(
-      appBar: AppBar(title: Text('Pesanan Saya')),
+      appBar: AppBar(title: Text(l.myOrders)),
       body: Column(
         children: [
           TabBar(
@@ -89,7 +86,7 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryPage> with Single
             labelColor: AppColors.primaryColor,
             unselectedLabelColor: AppColors.textSecondary,
             indicatorColor: AppColors.primaryColor,
-            tabs: _tabs.map((t) => Tab(text: (t['label'] as String))).toList(),
+            tabs: tabLabels.map((label) => Tab(text: label)).toList(),
           ),
           Expanded(
             child: state.loading
@@ -104,7 +101,7 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryPage> with Single
                 : state.error != null
                     ? Center(child: Text(state.error ?? '', style: AppTextStyles.bodyMedium))
                     : state.orders.isEmpty
-                        ? AppEmptyState(title: 'Tidak Ada Pesanan', subtitle: 'Belum ada pesanan', icon: Icons.receipt_long_outlined)
+                        ? AppEmptyState(title: l.noOrders, subtitle: l.noOrdersDesc, icon: Icons.receipt_long_outlined)
                         : RefreshIndicator(
                             onRefresh: () => notifier.fetchOrders(status: _activeStatus, refresh: true),
                             child: ListView.builder(
@@ -137,7 +134,7 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryPage> with Single
                                           Row(
                                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
-                                              Text('${'Pesanan'} #${order['order_number'] ?? order['id']}', style: AppTextStyles.bodySmall),
+                                              Text('${l.order} #${order['order_number'] ?? order['id']}', style: AppTextStyles.bodySmall),
                                               Container(
                                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                                 decoration: BoxDecoration(
@@ -159,8 +156,8 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryPage> with Single
                                                   borderRadius: BorderRadius.circular(8),
                                                   child: Container(
                                                     width: 60, height: 60,
-                                                    color: Colors.grey[200],
-                                                    child: const Icon(Icons.image, color: Colors.grey),
+                                                    color: AppColors.secondaryColor,
+                                                    child: Icon(Icons.image, color: AppColors.textTertiary),
                                                   ),
                                                 ),
                                               if (firstItem != null) const SizedBox(width: 12),
@@ -168,8 +165,8 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryPage> with Single
                                                 child: Column(
                                                   crossAxisAlignment: CrossAxisAlignment.start,
                                                   children: [
-                                                    Text(firstItem?['name'] as String? ?? 'Pesanan', style: AppTextStyles.bodyMedium),
-                                                    Text('1 item', style: AppTextStyles.bodySmall),
+                                                    Text(firstItem?['name'] as String? ?? l.order, style: AppTextStyles.bodyMedium),
+                                                    Text(l.itemCount, style: AppTextStyles.bodySmall),
                                                   ],
                                                 ),
                                               ),
@@ -187,15 +184,15 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryPage> with Single
                                             Row(
                                               children: [
                                                 Expanded(
-                                                  child: AppButton(
-                                                    label: 'Bayar',
+                                                    child: AppButton(
+                                                    label: l.pay,
                                                     onPressed: () => context.push('/payment/${order['id']}'),
                                                   ),
                                                 ),
                                                 const SizedBox(width: 12),
                                                 Expanded(
-                                                  child: AppButton(
-                                                    label: 'Batalkan',
+                                                    child: AppButton(
+                                                    label: l.cancel,
                                                     onPressed: () => notifier.cancelOrder('${order['id']}'),
                                                     type: ButtonType.outline,
                                                   ),

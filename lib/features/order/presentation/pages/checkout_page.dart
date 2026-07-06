@@ -15,6 +15,7 @@ import '../../../../core/widgets/app_shimmer.dart';
 import '../../../../core/api/dio_client.dart';
 import '../../../../core/api/api_endpoints.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 
 class CheckoutPage extends ConsumerStatefulWidget {
   final String? type;
@@ -221,6 +222,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   }
 
   Future<void> _handleCheckout() async {
+    final l = AppLocalizations.of(context)!;
     setState(() => _submitting = true);
     try {
       final data = <String, dynamic>{
@@ -256,7 +258,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       final snapToken = orderData['snap_token'] as String?;
 
       if (mounted) {
-        AppSnackBar.show(context, 'Pesanan berhasil dibuat', type: SnackBarType.success);
+        AppSnackBar.show(context, l.orderCreated, type: SnackBarType.success);
         if (snapToken != null && snapToken.isNotEmpty) {
           context.push('/payment/$orderId', extra: {'snap_token': snapToken});
         } else {
@@ -265,7 +267,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       }
     } catch (e) {
       if (mounted) {
-        AppSnackBar.show(context, 'Gagal membuat pesanan', type: SnackBarType.error);
+        AppSnackBar.show(context, l.orderFailed, type: SnackBarType.error);
       }
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -298,12 +300,13 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   }
 
   String _getStepTitle() {
+    final l = AppLocalizations.of(context)!;
     switch (_currentStep) {
-      case 0: return 'Detail Acara';
-      case 1: return 'Info Kontak';
-      case 2: return 'Voucher & Diskon';
-      case 3: return 'Konfirmasi';
-      default: return 'Checkout';
+      case 0: return l.eventDetail;
+      case 1: return l.contactInfo;
+      case 2: return l.voucherAndDiscount;
+      case 3: return l.confirm;
+      default: return l.checkout;
     }
   }
 
@@ -318,7 +321,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
               width: 32, height: 32,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: (i <= _currentStep) ? AppColors.primaryColor : Colors.grey[300],
+                color: (i <= _currentStep) ? AppColors.primaryColor : AppColors.dividerColor,
               ),
               child: Center(
                 child: (i < _currentStep)
@@ -326,7 +329,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                     : Text(
                         '${i + 1}',
                         style: TextStyle(
-                          color: (i <= _currentStep) ? Colors.white : Colors.grey[600],
+                          color: (i <= _currentStep) ? Colors.white : AppColors.textTertiary,
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                         ),
@@ -338,7 +341,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
               Expanded(
                 child: Container(
                   height: 2,
-                  color: (i < _currentStep) ? AppColors.primaryColor : Colors.grey[300],
+                  color: (i < _currentStep) ? AppColors.primaryColor : AppColors.dividerColor,
                 ),
               ),
           ],
@@ -366,12 +369,13 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   }
 
   Widget _buildStep1() {
+    final l = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _buildItemPreview(),
         SizedBox(height: AppSizes.lg),
-        Text('Tanggal Acara', style: AppTextStyles.titleSmall),
+        Text(l.eventDate, style: AppTextStyles.titleSmall),
         const SizedBox(height: 8),
         InkWell(
           onTap: _pickDate,
@@ -379,7 +383,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey[300]!),
+              border: Border.all(color: AppColors.dividerColor),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
@@ -389,7 +393,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                 Text(
                   _eventDate != null
                       ? Formatters.date(_eventDate!.toIso8601String())
-                      : 'Pilih tanggal acara',
+                      : l.selectEventDate,
                   style: AppTextStyles.bodyMedium.copyWith(
                     color: _eventDate != null ? AppColors.textPrimary : AppColors.textSecondary,
                   ),
@@ -399,7 +403,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
           ),
         ),
         SizedBox(height: AppSizes.md),
-        Text('Jam Acara', style: AppTextStyles.titleSmall),
+        Text(l.eventTime, style: AppTextStyles.titleSmall),
         const SizedBox(height: 8),
         InkWell(
           onTap: _pickTime,
@@ -407,7 +411,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: Border.all(color: Colors.grey[300]!),
+              border: Border.all(color: AppColors.dividerColor),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
@@ -416,8 +420,8 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                 SizedBox(width: AppSizes.sm),
                 Text(
                   _eventTime != null
-                      ? '${_eventTime!.hour.toString().padLeft(2, '0')}:${_eventTime!.minute.toString().padLeft(2, '0')} WIB'
-                      : 'Pilih jam acara',
+                      ? '${_eventTime!.hour.toString().padLeft(2, '0')}:${_eventTime!.minute.toString().padLeft(2, '0')} ${l.timezoneWIB}'
+                      : l.selectEventTime,
                   style: AppTextStyles.bodyMedium.copyWith(
                     color: _eventTime != null ? AppColors.textPrimary : AppColors.textSecondary,
                   ),
@@ -427,13 +431,13 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
           ),
         ),
         SizedBox(height: AppSizes.md),
-        Text('Jumlah', style: AppTextStyles.titleSmall),
+        Text(l.quantity, style: AppTextStyles.titleSmall),
         const SizedBox(height: 8),
         Row(
           children: [
             IconButton(
               onPressed: _quantity > 1 ? () => setState(() => _quantity--) : null,
-              icon: Icon(Icons.remove_circle_outline, color: _quantity > 1 ? AppColors.primaryColor : Colors.grey[300]),
+              icon: Icon(Icons.remove_circle_outline, color: _quantity > 1 ? AppColors.primaryColor : AppColors.dividerColor),
             ),
             Text('$_quantity', style: AppTextStyles.titleLarge),
             IconButton(
@@ -444,13 +448,13 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
         ),
         SizedBox(height: AppSizes.md),
         AppTextField(
-          label: 'Catatan (opsional)',
+          label: '${l.notes} (${l.optional})',
           controller: _notesController,
           maxLines: 3,
         ),
         SizedBox(height: AppSizes.md),
         AppCountryPickerField(
-          label: 'Negara',
+          label: l.country,
           controller: _countryController,
           onChanged: (_) => setState(() {}),
         ),
@@ -469,7 +473,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
         ),
         SizedBox(height: AppSizes.sm),
         AppTextField(
-          label: 'Alamat Lengkap',
+          label: l.fullAddress,
           controller: _addressController,
           maxLines: 2,
         ),
@@ -478,22 +482,23 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   }
 
   Widget _buildStep2() {
+    final l = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Informasi Kontak', style: AppTextStyles.titleMedium),
+        Text(l.contactInformation, style: AppTextStyles.titleMedium),
         SizedBox(height: AppSizes.sm),
-        Text('Pastikan data kontak Anda benar', style: AppTextStyles.bodySmall),
+        Text(l.contactInfoSubtitle, style: AppTextStyles.bodySmall),
         SizedBox(height: AppSizes.lg),
         AppTextField(
-          label: 'Nama Lengkap',
+          label: l.fullName,
           controller: _nameController,
           readOnly: true,
           validator: Validators.required,
         ),
         SizedBox(height: AppSizes.md),
         AppTextField(
-          label: 'Nomor WhatsApp',
+          label: l.whatsappNumber,
           controller: _whatsappController,
           keyboardType: TextInputType.phone,
           validator: Validators.phone,
@@ -510,7 +515,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
               Icon(Icons.info_outline, color: AppColors.infoColor, size: 18),
               SizedBox(width: AppSizes.sm),
               Expanded(
-                child: Text('Nomor WhatsApp akan digunakan untuk notifikasi pesanan', style: AppTextStyles.bodySmall),
+                child: Text(l.whatsappUsedForNotification, style: AppTextStyles.bodySmall),
               ),
             ],
           ),
@@ -520,25 +525,26 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   }
 
   Widget _buildStep3() {
+    final l = AppLocalizations.of(context)!;
     final total = _getTotalPrice();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Voucher Diskon', style: AppTextStyles.titleMedium),
+        Text(l.voucherDiscount, style: AppTextStyles.titleMedium),
         SizedBox(height: AppSizes.sm),
-        Text('Masukkan kode voucher untuk mendapatkan diskon', style: AppTextStyles.bodySmall),
+        Text(l.enterVoucherCode, style: AppTextStyles.bodySmall),
         SizedBox(height: AppSizes.lg),
         Row(
           children: [
             Expanded(
               child: AppTextField(
-                label: 'Kode Voucher',
+                label: l.voucherCode,
                 controller: _voucherController,
               ),
             ),
             SizedBox(width: AppSizes.sm),
             AppButton(
-              label: 'Cek',
+              label: l.check,
               onPressed: _voucherChecking ? null : _checkVoucher,
               type: ButtonType.outline,
               loading: _voucherChecking,
@@ -562,8 +568,8 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Voucher berhasil diterapkan!', style: AppTextStyles.bodySmall.copyWith(color: AppColors.successColor, fontWeight: FontWeight.w600)),
-                      Text('Diskon: ${Formatters.currency(_discountAmount)}', style: AppTextStyles.bodySmall),
+                      Text(l.voucherApplied, style: AppTextStyles.bodySmall.copyWith(color: AppColors.successColor, fontWeight: FontWeight.w600)),
+                      Text(l.discountLabel.replaceFirst('%s', Formatters.currency(_discountAmount)), style: AppTextStyles.bodySmall),
                     ],
                   ),
                 ),
@@ -574,39 +580,40 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
         SizedBox(height: AppSizes.lg),
         const Divider(),
         SizedBox(height: AppSizes.sm),
-        _buildPriceRow('Subtotal', Formatters.currency(total)),
+        _buildPriceRow(l.subtotal, Formatters.currency(total)),
         if (_voucherValid)
-          _buildPriceRow('Diskon Voucher', '- ${Formatters.currency(_discountAmount)}', color: AppColors.successColor),
+          _buildPriceRow(l.discountVoucher, '- ${Formatters.currency(_discountAmount)}', color: AppColors.successColor),
         const Divider(height: AppSizes.md),
-        _buildPriceRow('Total', Formatters.currency(_getFinalPrice()), bold: true),
+        _buildPriceRow(l.total, Formatters.currency(_getFinalPrice()), bold: true),
       ],
     );
   }
 
   Widget _buildStep4() {
+    final l = AppLocalizations.of(context)!;
     final total = _getTotalPrice();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Ringkasan Pesanan', style: AppTextStyles.titleMedium),
+        Text(l.orderSummary, style: AppTextStyles.titleMedium),
         SizedBox(height: AppSizes.lg),
         _buildSummaryCard(),
         SizedBox(height: AppSizes.md),
-        _buildSummaryRow('Item', _getItemName()),
-        _buildSummaryRow('Jumlah', '$_quantity'),
-        _buildSummaryRow('Tanggal', _eventDate != null ? Formatters.date(_eventDate!.toIso8601String()) : '-'),
-        _buildSummaryRow('Jam', _eventTime != null ? '${_eventTime!.hour.toString().padLeft(2, '0')}:${_eventTime!.minute.toString().padLeft(2, '0')} WIB' : '-'),
-        _buildSummaryRow('WhatsApp', _whatsappController.text.trim()),
+        _buildSummaryRow(l.orderItems, _getItemName()),
+        _buildSummaryRow(l.quantity, '$_quantity'),
+        _buildSummaryRow(l.date, _eventDate != null ? Formatters.date(_eventDate!.toIso8601String()) : '-'),
+        _buildSummaryRow(l.eventTime, _eventTime != null ? '${_eventTime!.hour.toString().padLeft(2, '0')}:${_eventTime!.minute.toString().padLeft(2, '0')} ${l.timezoneWIB}' : '-'),
+        _buildSummaryRow(l.whatsapp, _whatsappController.text.trim()),
         if (_notesController.text.trim().isNotEmpty)
-          _buildSummaryRow('Catatan', _notesController.text.trim()),
+          _buildSummaryRow(l.notes, _notesController.text.trim()),
         SizedBox(height: AppSizes.lg),
         const Divider(),
         SizedBox(height: AppSizes.sm),
-        _buildPriceRow('Subtotal', Formatters.currency(total)),
+        _buildPriceRow(l.subtotal, Formatters.currency(total)),
         if (_voucherValid)
-          _buildPriceRow('Diskon Voucher', '- ${Formatters.currency(_discountAmount)}', color: AppColors.successColor),
+          _buildPriceRow(l.discountVoucher, '- ${Formatters.currency(_discountAmount)}', color: AppColors.successColor),
         const Divider(height: AppSizes.md),
-        _buildPriceRow('Total', Formatters.currency(_getFinalPrice()), bold: true),
+        _buildPriceRow(l.total, Formatters.currency(_getFinalPrice()), bold: true),
       ],
     );
   }
@@ -628,8 +635,8 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
               width: 56, height: 56, fit: BoxFit.cover,
               errorBuilder: (_, _, _) => Container(
                 width: 56, height: 56,
-                color: Colors.grey[200],
-                child: Icon(Icons.image, color: Colors.grey[400]),
+                color: AppColors.shimmerBase,
+                child: Icon(Icons.image, color: AppColors.textTertiary),
               ),
             ),
           ),
@@ -669,8 +676,8 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                   width: 48, height: 48, fit: BoxFit.cover,
                   errorBuilder: (_, _, _) => Container(
                     width: 48, height: 48,
-                    color: Colors.grey[200],
-                    child: Icon(Icons.image, color: Colors.grey[400]),
+                    color: AppColors.shimmerBase,
+                    child: Icon(Icons.image, color: AppColors.textTertiary),
                   ),
                 ),
               ),
@@ -713,11 +720,12 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   }
 
   Widget _buildBottomBar() {
+    final l = AppLocalizations.of(context)!;
     final isLastStep = _currentStep == 3;
     return Container(
       padding: const EdgeInsets.fromLTRB(AppSizes.md, AppSizes.sm, AppSizes.md, AppSizes.md),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.surfaceColor,
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -2))],
       ),
       child: SafeArea(
@@ -725,14 +733,14 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
           children: [
             if (_currentStep > 0)
               AppButton(
-                label: 'Kembali',
+                label: l.back,
                 onPressed: _prevStep,
                 type: ButtonType.text,
               ),
             if (_currentStep > 0) SizedBox(width: AppSizes.md),
             Expanded(
               child: AppButton(
-                label: isLastStep ? 'Konfirmasi & Bayar' : 'Lanjutkan',
+                label: isLastStep ? l.confirmAndPay : l.proceed,
                 loading: _submitting,
                 onPressed: isLastStep ? _handleCheckout : _nextStep,
               ),

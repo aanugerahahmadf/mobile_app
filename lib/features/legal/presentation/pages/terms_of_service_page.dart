@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/widgets/app_shimmer.dart';
@@ -11,10 +12,11 @@ class TermsOfServicePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final async = ref.watch(termsOfServiceProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text('Ketentuan Layanan')),
+      appBar: AppBar(title: Text(l.termsOfService)),
       body: async.when(
         loading: () => const Center(child: AppShimmer(width: 200, height: 16)),
         error: (err, _) => Center(
@@ -23,15 +25,15 @@ class TermsOfServicePage extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.error_outline, size: 48, color: AppColors.textSecondary),
+                Icon(Icons.error_outline, size: 48, color: AppColors.textSecondary),
                 const SizedBox(height: 12),
-                Text('Gagal memuat halaman', textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 14, color: AppColors.textSecondary)),
+                Text(l.failedLoadPage, textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
                 const SizedBox(height: 16),
                 FilledButton.icon(
                   onPressed: () => ref.invalidate(termsOfServiceProvider),
                   icon: const Icon(Icons.refresh, size: 18),
-                  label: Text('Coba Lagi'),
+                  label: Text(l.tryAgain),
                 ),
               ],
             ),
@@ -45,7 +47,7 @@ class TermsOfServicePage extends ConsumerWidget {
               Text(content.title, style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700)),
               if (content.updatedAt != null) ...[
                 const SizedBox(height: 8),
-                Text('${'Terakhir diperbarui'}: ${content.updatedAt}',
+                Text(l.lastUpdatedFormat(content.updatedAt!),
                     style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary)),
               ],
               const SizedBox(height: 16),

@@ -32,6 +32,7 @@ dependencies:
   shimmer: ^3.0.0
   flutter_dotenv: ^6.0.1
   firebase_core: ^4.11.0
+  firebase_auth: ^6.5.4
   firebase_messaging: ^16.4.1
   firebase_analytics: ^12.4.3
   pusher_channels_flutter: ^2.4.0
@@ -70,6 +71,7 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.4
 
 flutter:
+  generate: true
   uses-material-design: true
   assets:
     - .env

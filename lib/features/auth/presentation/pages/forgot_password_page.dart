@@ -9,6 +9,7 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/utils/validators.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -29,6 +30,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   }
 
   void _onSendResetCode() async {
+    final l = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
 
@@ -38,11 +40,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         data: {'email': _emailController.text.trim()},
       );
       if (!mounted) return;
-      AppSnackBar.show(context, 'Kode reset telah dikirim ke email Anda', type: SnackBarType.success);
+      AppSnackBar.show(context, l.resetCodeSent, type: SnackBarType.success);
       context.go('/reset-password');
     } catch (e) {
       if (!mounted) return;
-      AppSnackBar.show(context, 'Gagal mengirim kode reset. Coba lagi.', type: SnackBarType.error);
+      AppSnackBar.show(context, l.sendFailed, type: SnackBarType.error);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -50,8 +52,9 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.backgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -67,22 +70,22 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Lupa Password?', style: AppTextStyles.headlineMedium),
+              Text(l.forgotPassword, style: AppTextStyles.headlineMedium),
               SizedBox(height: AppSizes.xs),
               Text(
-                'Masukkan email Anda untuk menerima kode reset password',
+                l.enterEmailForResetPassword,
                 style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary),
               ),
               SizedBox(height: AppSizes.xl),
               AppTextField(
-                label: 'Email',
+                label: l.email,
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 validator: Validators.email,
               ),
               SizedBox(height: AppSizes.xl),
               AppButton(
-                label: 'Kirim Kode Reset',
+                label: l.sendOtp,
                 loading: _loading,
                 onPressed: _onSendResetCode,
               ),

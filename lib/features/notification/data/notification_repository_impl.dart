@@ -31,4 +31,9 @@ class NotificationRepositoryImpl implements NotificationRepository {
   Future<void> markAllAsRead() async {
     await _dio.post(ApiEndpoints.notificationReadAll);
   }
+
+  @override
+  Future<void> deleteNotification(String id) async {
+    await _dio.delete(ApiEndpoints.notificationDelete(id));
+  }
 }

@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../providers/search_provider.dart';
 import '../../data/models/search_suggestion.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 class SearchResultsPage extends ConsumerStatefulWidget {
   final String query;
@@ -19,18 +21,35 @@ class SearchResultsPage extends ConsumerStatefulWidget {
 class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
   late String _query;
 
+  SearchNotifier get _searchNotifier {
+    final authState = ref.read(authProvider);
+    if (authState is AuthAuthenticated && authState.user.isAdmin) {
+      return ref.read(adminSearchProvider.notifier);
+    }
+    return ref.read(searchProvider.notifier);
+  }
+
+  SearchState get _searchState {
+    final authState = ref.watch(authProvider);
+    if (authState is AuthAuthenticated && authState.user.isAdmin) {
+      return ref.watch(adminSearchProvider);
+    }
+    return ref.watch(searchProvider);
+  }
+
   @override
   void initState() {
     super.initState();
     _query = widget.query;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(searchProvider.notifier).search(_query);
+      _searchNotifier.search(_query);
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(searchProvider);
+    final l = AppLocalizations.of(context)!;
+    final state = _searchState;
 
     return Scaffold(
       appBar: AppBar(
@@ -42,7 +61,7 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
             child: TextField(
               controller: TextEditingController.fromValue(TextEditingValue(text: _query)),
               decoration: InputDecoration(
-                hintText: 'Cari apa saja...',
+                hintText: l.searchHint,
                 prefixIcon: const Icon(Icons.search_rounded, size: 20),
                 suffixIcon: IconButton(
                   icon: const Icon(Icons.close_rounded, size: 18),
@@ -51,7 +70,7 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
                   },
                 ),
                 filled: true,
-                fillColor: const Color(0xFFF5F5F5),
+                fillColor: AppColors.secondaryColor,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide.none,
@@ -65,7 +84,7 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
                 final q = value.trim();
                 if (q.isNotEmpty) {
                   setState(() => _query = q);
-                  ref.read(searchProvider.notifier).search(q);
+                  _searchNotifier.search(q);
                 }
               },
             ),
@@ -81,14 +100,14 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.cloud_off, size: 64, color: Colors.grey[400]),
+                        Icon(Icons.cloud_off, size: 64, color: AppColors.textTertiary),
                         const SizedBox(height: AppSizes.md),
                         Text(state.error!, style: AppTextStyles.bodyMedium, textAlign: TextAlign.center),
                         const SizedBox(height: AppSizes.md),
                         ElevatedButton.icon(
-                          onPressed: () => ref.read(searchProvider.notifier).search(_query),
+                          onPressed: () => _searchNotifier.search(_query),
                           icon: const Icon(Icons.refresh),
-                          label: const Text('Coba Lagi'),
+                          label: Text(l.tryAgain),
                         ),
                       ],
                     ),
@@ -101,16 +120,16 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.search_off, size: 64, color: Colors.grey[400]),
+                            Icon(Icons.search_off, size: 64, color: AppColors.textTertiary),
                             const SizedBox(height: AppSizes.md),
-                            Text('Hasil tidak ditemukan untuk "$_query"',
+                            Text('${l.noResults} untuk "$_query"',
                               style: AppTextStyles.bodyMedium, textAlign: TextAlign.center),
                           ],
                         ),
                       ),
                     )
                   : RefreshIndicator(
-                      onRefresh: () => ref.read(searchProvider.notifier).search(_query),
+                      onRefresh: () => _searchNotifier.search(_query),
                       child: _buildGroupedResults(state.results!.items),
                     ),
     );
@@ -169,7 +188,10 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
   }
 
   Widget _buildResultItem(SearchSuggestion item) {
+    final authState = ref.watch(authProvider);
+    final isAdmin = authState is AuthAuthenticated && authState.user.isAdmin;
     final hasImage = item.imageUrl != null && item.imageUrl!.isNotEmpty;
+    final showSub2 = isAdmin && item.subtitle2 != null && item.subtitle2!.isNotEmpty;
     return Card(
       margin: const EdgeInsets.only(bottom: 4),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
@@ -182,17 +204,27 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
                   width: 40, height: 40,
                   child: CachedNetworkImage(
                     imageUrl: item.imageUrl!, fit: BoxFit.cover,
-                    errorWidget: (_, _, _) => Container(color: const Color(0xFFF5F5F5), child: const Icon(Icons.image_outlined, size: 20, color: Color(0xFFD0D0D0))),
+                    errorWidget: (_, _, _) => Container(color: AppColors.secondaryColor, child: Icon(Icons.image_outlined, size: 20, color: AppColors.textTertiary)),
                   ),
                 ),
               )
             : _iconBox(item.type),
         title: Text(item.name ?? '', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500), maxLines: 1, overflow: TextOverflow.ellipsis),
-        subtitle: item.subtitle != null ? Text(item.subtitle!, style: const TextStyle(fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis) : null,
+        subtitle: showSub2
+            ? Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (item.subtitle != null)
+                    Text(item.subtitle!, style: const TextStyle(fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  Text(item.subtitle2!, style: TextStyle(fontSize: 10, color: AppColors.textTertiary, fontStyle: FontStyle.italic),
+                    maxLines: 1, overflow: TextOverflow.ellipsis),
+                ],
+              )
+            : (item.subtitle != null ? Text(item.subtitle!, style: const TextStyle(fontSize: 11), maxLines: 1, overflow: TextOverflow.ellipsis) : null),
         trailing: Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          decoration: BoxDecoration(color: Colors.grey[100], borderRadius: BorderRadius.circular(4)),
-          child: Text(item.type.badgeLabel, style: TextStyle(fontSize: 9, color: Colors.grey[600])),
+          decoration: BoxDecoration(color: AppColors.secondaryColor, borderRadius: BorderRadius.circular(4)),
+          child: Text(item.type.badgeLabel, style: TextStyle(fontSize: 9, color: AppColors.textSecondary)),
         ),
         onTap: () => _navigateToItem(item),
       ),
@@ -216,6 +248,8 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
       case SuggestionType.terms: case SuggestionType.privacy: case SuggestionType.weddingPolicy: return Icons.description_rounded;
       case SuggestionType.helps: return Icons.help_outline_rounded;
       case SuggestionType.histories: return Icons.history_rounded;
+      case SuggestionType.users: return Icons.people_rounded;
+      case SuggestionType.transactions: return Icons.payments_rounded;
       case SuggestionType.packages: case SuggestionType.products: return Icons.image_outlined;
     }
   }
@@ -243,6 +277,10 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
         context.push('/help-center');
       case SuggestionType.weddingPolicy:
         context.push('/wedding-policy');
+      case SuggestionType.users:
+        context.push('/admin/users');
+      case SuggestionType.transactions:
+        context.push('/admin/transactions');
     }
   }
 

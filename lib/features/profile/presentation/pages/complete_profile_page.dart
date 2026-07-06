@@ -22,6 +22,8 @@ import '../../../../core/utils/sim_utils.dart';
 import '../../../../core/utils/npwp_utils.dart';
 import '../../../../core/utils/country_codes.dart';
 import '../providers/profile_provider.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
+import '../../../auth/presentation/widgets/auth_modals.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 class CompleteProfilePage extends ConsumerStatefulWidget {
@@ -89,33 +91,33 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
     _lastNameController.text.trim(),
   ].where((s) => s.isNotEmpty).join(' ');
 
-  String get _identityNumberLabel {
+  String _identityNumberLabel(AppLocalizations l) {
     switch (_identityType) {
-      case 'ktp':      return 'Nomor Induk Kependudukan (NIK)';
-      case 'passport': return 'Nomor Passport';
-      case 'sim':      return 'Nomor SIM';
-      case 'npwp':     return 'Nomor NPWP';
-      default:         return 'Nomor Identitas';
+      case 'ktp':      return l.nikLabel;
+      case 'passport': return l.passportLabel;
+      case 'sim':      return l.simLabel;
+      case 'npwp':     return l.npwpLabel;
+      default:         return l.identityNumber;
     }
   }
 
-  String get _idPhotoLabel {
+  String _idPhotoLabel(AppLocalizations l) {
     switch (_identityType) {
-      case 'ktp':      return 'Foto KTP';
-      case 'passport': return 'Foto Passport';
-      case 'sim':      return 'Foto SIM';
-      case 'npwp':     return 'Foto NPWP';
-      default:         return 'Foto Identitas';
+      case 'ktp':      return l.ktpPhoto;
+      case 'passport': return l.passportPhoto;
+      case 'sim':      return l.simPhoto;
+      case 'npwp':     return l.npwpPhoto;
+      default:         return l.identityPhoto;
     }
   }
 
-  String get _idSelfieLabel {
+  String _idSelfieLabel(AppLocalizations l) {
     switch (_identityType) {
-      case 'ktp':      return 'Foto Selfie + KTP';
-      case 'passport': return 'Foto Selfie + Passport';
-      case 'sim':      return 'Foto Selfie + SIM';
-      case 'npwp':     return 'Foto Selfie + NPWP';
-      default:         return 'Foto Selfie + Identitas';
+      case 'ktp':      return l.selfieKtp;
+      case 'passport': return l.selfiePassport;
+      case 'sim':      return l.selfieSim;
+      case 'npwp':     return l.selfieNpwp;
+      default:         return l.selfieIdentity;
     }
   }
 
@@ -300,6 +302,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
   }
 
   Future<void> _save() async {
+    final l = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
 
     final pState = ref.read(profileProvider);
@@ -372,24 +375,24 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
             data: {'email': newEmail, 'purpose': 'verify_email'},
           );
           if (mounted) {
-            AppSnackBar.show(context, 'Data disimpan. Silakan verifikasi email baru Anda.', type: SnackBarType.success);
-            context.pushReplacement('/verify-otp', extra: {'email': newEmail, 'purpose': 'verify_email'});
+            AppSnackBar.show(context, l.profileSavedVerifyEmail, type: SnackBarType.success);
+            showOtpVerificationSheet(context, email: newEmail, purpose: 'verify_email');
           }
         } catch (_) {
           if (mounted) {
-            AppSnackBar.show(context, 'Data disimpan. Gagal mengirim OTP verifikasi.', type: SnackBarType.warning);
-            context.pop();
+            AppSnackBar.show(context, l.profileSavedFailedSendOtp, type: SnackBarType.warning);
+            context.go('/home');
           }
         }
       } else {
         if (mounted) {
-          AppSnackBar.show(context, 'Profil berhasil dilengkapi!', type: SnackBarType.success);
-          context.pop();
+            AppSnackBar.show(context, l.profileUpdated, type: SnackBarType.success);
+          context.go('/home');
         }
       }
     } catch (e) {
       if (mounted) {
-        AppSnackBar.show(context, 'Gagal menyimpan data profil', type: SnackBarType.error);
+        AppSnackBar.show(context, l.profileUpdateFailed, type: SnackBarType.error);
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -408,17 +411,24 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2))),
               const SizedBox(height: 8),
               Text(title, style: AppTextStyles.titleMedium),
               const SizedBox(height: 8),
-              ...options.map((option) => ListTile(
-                title: Text(option, style: AppTextStyles.bodyMedium),
-                onTap: () {
-                  onSelected(option);
-                  Navigator.pop(ctx);
-                },
-              )),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: options.map((option) => ListTile(
+                      title: Text(option, style: AppTextStyles.bodyMedium),
+                      onTap: () {
+                        onSelected(option);
+                        Navigator.pop(ctx);
+                      },
+                    )).toList(),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -449,11 +459,12 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
   }
 
   Widget _buildIdentityTypePicker() {
+    final l = AppLocalizations.of(context)!;
     final types = [
-      ('ktp', 'KTP', Icons.badge_outlined),
-      ('passport', 'Passport', Icons.book_outlined),
-      ('sim', 'SIM', Icons.drive_eta_outlined),
-      ('npwp', 'NPWP', Icons.receipt_long_outlined),
+      ('ktp', l.nikShort, Icons.badge_outlined),
+      ('passport', l.passport, Icons.book_outlined),
+      ('sim', l.simShort, Icons.drive_eta_outlined),
+      ('npwp', l.npwpShort, Icons.receipt_long_outlined),
     ];
     return Wrap(
       spacing: 8,
@@ -530,7 +541,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
               if (hasFile && onRemove != null)
                 GestureDetector(
                   onTap: onRemove,
-                  child: const Icon(Icons.close, size: 18, color: AppColors.textSecondary),
+                  child: Icon(Icons.close, size: 18, color: AppColors.textSecondary),
                 ),
             ],
           ),
@@ -541,6 +552,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final l        = AppLocalizations.of(context)!;
     final pState    = ref.watch(profileProvider);
     final userData  = pState.userData;
     final ktpUrl    = pState.ktpUrl    ?? userData?['ktp_photo_url']    as String?;
@@ -578,7 +590,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
       appBar: AppBar(
-        title: const Text('Lengkapi Profil'),
+        title: Text(l.completeProfile),
         centerTitle: true,
         actions: [
           if (completionPercent > 0)
@@ -622,7 +634,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
               ),
               const SizedBox(height: 4),
               Text(
-                'Lengkapi semua data untuk verifikasi akun',
+                l.completeAllDataForVerification,
                 style: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
               ),
               const SizedBox(height: AppSizes.lg),
@@ -633,7 +645,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildSectionHeader('Foto Profil', icon: Icons.account_circle_outlined),
+                    _buildSectionHeader(l.profilePhoto, icon: Icons.account_circle_outlined),
                     Center(
                       child: GestureDetector(
                         onTap: _pickAvatar,
@@ -646,7 +658,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
                                   ? FileImage(_avatarFile!)
                                   : (avatarUrl != null ? CachedNetworkImageProvider(avatarUrl) : null) as ImageProvider?,
                               child: (_avatarFile == null && avatarUrl == null)
-                                  ? const Icon(Icons.person, size: 48, color: AppColors.textTertiary)
+                                  ? Icon(Icons.person, size: 48, color: AppColors.textTertiary)
                                   : null,
                             ),
                             Positioned(
@@ -670,7 +682,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
                       const SizedBox(height: 6),
                       Center(
                         child: Text(
-                          'Ketuk untuk mengunggah foto profil',
+                          l.tapToUploadProfilePhoto,
                           style: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
                         ),
                       ),
@@ -687,13 +699,13 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
               if (needsName) ...[
                 KeyedSubtree(
                   key: _keyName,
-                  child: _buildSectionHeader('Nama Lengkap', icon: Icons.person_outline_rounded),
+                  child: _buildSectionHeader(l.fullName, icon: Icons.person_outline_rounded),
                 ),
                 Row(
                   children: [
                     Expanded(
                       child: AppTextField(
-                        label: 'Nama Depan',
+                        label: l.firstName,
                         controller: _firstNameController,
                         readOnly: _namesLocked,
                         validator: Validators.required,
@@ -703,7 +715,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: AppTextField(
-                        label: 'Nama Tengah',
+                        label: l.middleName,
                         controller: _midNameController,
                         readOnly: _namesLocked,
                         onChanged: (_) => setState(() {}),
@@ -716,7 +728,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
                   children: [
                     Expanded(
                       child: AppTextField(
-                        label: 'Nama Belakang',
+                        label: l.lastName,
                         controller: _lastNameController,
                         readOnly: _namesLocked,
                         validator: Validators.required,
@@ -732,7 +744,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
-                          _fullName.isEmpty ? 'Nama Lengkap' : _fullName,
+                          _fullName.isEmpty ? l.fullName : _fullName,
                           style: AppTextStyles.bodySmall.copyWith(
                             color: _fullName.isEmpty ? AppColors.textTertiary : AppColors.textPrimary,
                           ),
@@ -749,10 +761,10 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
               if (needsUsername) ...[
                 KeyedSubtree(
                   key: _keyUsername,
-                  child: _buildSectionHeader('Username', icon: Icons.alternate_email_rounded),
+                  child: _buildSectionHeader(l.username, icon: Icons.alternate_email_rounded),
                 ),
                 AppTextField(
-                  label: 'Username',
+                  label: l.username,
                   controller: _usernameController,
                   validator: Validators.required,
                 ),
@@ -764,7 +776,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
               if (needsWhatsapp) ...[
                 KeyedSubtree(
                   key: _keyWhatsapp,
-                  child: _buildSectionHeader('Nomor WhatsApp', icon: Icons.phone_outlined),
+                  child: _buildSectionHeader(l.whatsappNumber, icon: Icons.phone_outlined),
                 ),
                 Row(
                   children: [
@@ -807,21 +819,21 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
               // ── Identitas & Alamat ────────────────────────────────────────
               KeyedSubtree(
                 key: _keyIdentity,
-                child: _buildSectionHeader('Identitas & Alamat', icon: Icons.badge_outlined),
+                child: _buildSectionHeader(l.identityAndAddress, icon: Icons.badge_outlined),
               ),
 
-              _buildSectionHeader('Pilih Jenis Identitas'),
+              _buildSectionHeader(l.selectIdentityType),
               _buildIdentityTypePicker(),
               const SizedBox(height: AppSizes.sm),
 
               if (needsNik) ...[
                 AppTextField(
-                  label: _identityNumberLabel,
+                  label: _identityNumberLabel(l),
                   controller: _nikController,
                   keyboardType: _identityType == 'ktp' ? TextInputType.number : TextInputType.text,
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) return '$_identityNumberLabel wajib diisi';
-                    if (_identityType == 'ktp' && v.trim().length != 16) return 'NIK harus 16 digit';
+                    if (v == null || v.trim().isEmpty) return l.identityNumberRequired(_identityNumberLabel(l));
+                    if (_identityType == 'ktp' && v.trim().length != 16) return l.nikMustBe16Digits;
                     return null;
                   },
                 ),
@@ -830,7 +842,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
 
               if (needsBirthPlace) ...[
                 AppTextField(
-                  label: 'Tempat Lahir',
+                  label: l.placeOfBirth,
                   controller: _birthPlaceController,
                   validator: null,
                 ),
@@ -839,7 +851,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
 
               if (needsBirthDate) ...[
                 AppDatePickerField(
-                  label: 'Tanggal Lahir',
+                  label: l.dateOfBirth,
                   controller: _birthDateController,
                 ),
                 const SizedBox(height: AppSizes.sm),
@@ -847,7 +859,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
 
               if (needsCountry) ...[
                 AppCountryPickerField(
-                  label: 'Negara',
+                  label: l.country,
                   controller: _countryController,
                 ),
                 const SizedBox(height: AppSizes.sm),
@@ -880,7 +892,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
 
               if (needsAddress) ...[
                 AppTextField(
-                  label: 'Detail Alamat Lengkap',
+                  label: l.fullAddress,
                   controller: _addressController,
                   maxLines: 3,
                 ),
@@ -893,9 +905,9 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
               if (needsGender) ...[
                 const Divider(),
                 const SizedBox(height: AppSizes.sm),
-                _buildSectionHeader('Jenis Kelamin', icon: Icons.people_outlined),
+                _buildSectionHeader(l.gender, icon: Icons.people_outlined),
                 GestureDetector(
-                  onTap: () => _showPickerSheet('Pilih Jenis Kelamin', ['Pria', 'Wanita'], (v) => setState(() => _gender = v)),
+                  onTap: () => _showPickerSheet(l.selectGender, [l.male, l.female], (v) => setState(() => _gender = v)),
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                     decoration: BoxDecoration(
@@ -909,7 +921,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
                         SizedBox(width: AppSizes.md),
                         Expanded(
                           child: Text(
-                            _gender.isEmpty ? 'Pilih Jenis Kelamin' : _gender,
+                            _gender.isEmpty ? l.selectGender : _gender,
                             style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                           ),
                         ),
@@ -923,9 +935,9 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
               if (needsReligion) ...[
                 const Divider(),
                 const SizedBox(height: AppSizes.sm),
-                _buildSectionHeader('Agama', icon: Icons.church_outlined),
+                _buildSectionHeader(l.religion, icon: Icons.church_outlined),
                 GestureDetector(
-                  onTap: () => _showPickerSheet('Pilih Agama', ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu'], (v) => setState(() => _religion = v)),
+                  onTap: () => _showPickerSheet(l.selectReligion, [l.islam, l.christian, l.catholic, l.hindu, l.buddha, l.confucian], (v) => setState(() => _religion = v)),
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                     decoration: BoxDecoration(
@@ -939,7 +951,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
                         SizedBox(width: AppSizes.md),
                         Expanded(
                           child: Text(
-                            _religion.isEmpty ? 'Pilih Agama' : _religion,
+                            _religion.isEmpty ? l.selectReligion : _religion,
                             style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                           ),
                         ),
@@ -953,9 +965,9 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
               if (needsMaritalStatus) ...[
                 const Divider(),
                 const SizedBox(height: AppSizes.sm),
-                _buildSectionHeader('Status Pernikahan', icon: Icons.favorite_border),
+                _buildSectionHeader(l.maritalStatus, icon: Icons.favorite_border),
                 GestureDetector(
-                  onTap: () => _showPickerSheet('Pilih Status Pernikahan', ['Belum Menikah', 'Menikah', 'Cerai'], (v) => setState(() => _maritalStatus = v)),
+                  onTap: () => _showPickerSheet(l.selectMaritalStatus, [l.single, l.married, l.divorced], (v) => setState(() => _maritalStatus = v)),
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                     decoration: BoxDecoration(
@@ -969,7 +981,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
                         SizedBox(width: AppSizes.md),
                         Expanded(
                           child: Text(
-                            _maritalStatus.isEmpty ? 'Pilih Status Pernikahan' : _maritalStatus,
+                            _maritalStatus.isEmpty ? l.selectMaritalStatus : _maritalStatus,
                             style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                           ),
                         ),
@@ -983,9 +995,9 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
               if (needsMotherName) ...[
                 const Divider(),
                 const SizedBox(height: AppSizes.sm),
-                _buildSectionHeader('Nama Ibu Kandung', icon: Icons.woman_outlined),
+                _buildSectionHeader(l.motherName, icon: Icons.woman_outlined),
                 AppTextField(
-                  label: 'Nama Ibu Kandung',
+                  label: l.motherName,
                   controller: _motherNameController,
                 ),
                 const SizedBox(height: AppSizes.sm),
@@ -993,9 +1005,9 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
               if (needsOccupation) ...[
                 const Divider(),
                 const SizedBox(height: AppSizes.sm),
-                _buildSectionHeader('Pekerjaan', icon: Icons.work_outline),
+                _buildSectionHeader(l.occupation, icon: Icons.work_outline),
                 GestureDetector(
-                  onTap: () => _showPickerSheet('Pilih Pekerjaan', ['Karyawan', 'Wiraswasta', 'Pelajar/Mahasiswa', 'Ibu Rumah Tangga', 'Profesional', 'Lainnya'], (v) => setState(() => _occupation = v)),
+                  onTap: () => _showPickerSheet(l.selectOccupation, [l.employee, l.entrepreneur, l.student, l.housewife, l.professional, l.other], (v) => setState(() => _occupation = v)),
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                     decoration: BoxDecoration(
@@ -1009,7 +1021,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
                         SizedBox(width: AppSizes.md),
                         Expanded(
                           child: Text(
-                            _occupation.isEmpty ? 'Pilih Pekerjaan' : _occupation,
+                            _occupation.isEmpty ? l.selectOccupation : _occupation,
                             style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                           ),
                         ),
@@ -1023,9 +1035,9 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
               if (needsIncomeRange) ...[
                 const Divider(),
                 const SizedBox(height: AppSizes.sm),
-                _buildSectionHeader('Rentang Penghasilan', icon: Icons.trending_up_outlined),
+                _buildSectionHeader(l.incomeRange, icon: Icons.trending_up_outlined),
                 GestureDetector(
-                  onTap: () => _showPickerSheet('Pilih Rentang Penghasilan', ['< Rp 1 Juta', 'Rp 1-5 Juta', 'Rp 5-10 Juta', 'Rp 10-50 Juta', '> Rp 50 Juta'], (v) => setState(() => _incomeRange = v)),
+                  onTap: () => _showPickerSheet(l.selectIncomeRange, [l.lessThan1M, l.range1to5M, l.range5to10M, l.range10to50M, l.moreThan50M], (v) => setState(() => _incomeRange = v)),
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                     decoration: BoxDecoration(
@@ -1039,7 +1051,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
                         SizedBox(width: AppSizes.md),
                         Expanded(
                           child: Text(
-                            _incomeRange.isEmpty ? 'Pilih Rentang Penghasilan' : _incomeRange,
+                            _incomeRange.isEmpty ? l.selectIncomeRange : _incomeRange,
                             style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                           ),
                         ),
@@ -1053,9 +1065,9 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
               if (needsSourceOfFunds) ...[
                 const Divider(),
                 const SizedBox(height: AppSizes.sm),
-                _buildSectionHeader('Sumber Dana', icon: Icons.account_balance_wallet_outlined),
+                _buildSectionHeader(l.sourceOfFunds, icon: Icons.account_balance_wallet_outlined),
                 GestureDetector(
-                  onTap: () => _showPickerSheet('Pilih Sumber Dana', ['Gaji', 'Bisnis/Usaha', 'Investasi', 'Hadiah/Warisan', 'Lainnya'], (v) => setState(() => _sourceOfFunds = v)),
+                  onTap: () => _showPickerSheet(l.selectSourceOfFunds, [l.salary, l.business, l.investment, l.gift, l.other], (v) => setState(() => _sourceOfFunds = v)),
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                     decoration: BoxDecoration(
@@ -1069,7 +1081,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
                         SizedBox(width: AppSizes.md),
                         Expanded(
                           child: Text(
-                            _sourceOfFunds.isEmpty ? 'Pilih Sumber Dana' : _sourceOfFunds,
+                            _sourceOfFunds.isEmpty ? l.selectSourceOfFunds : _sourceOfFunds,
                             style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                           ),
                         ),
@@ -1085,12 +1097,12 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
               if (needsKtp) ...[
                 const Divider(),
                 const SizedBox(height: AppSizes.sm),
-                _buildSectionHeader('Dokumen Identitas', icon: Icons.credit_card_outlined),
+                _buildSectionHeader(l.identityDocuments, icon: Icons.credit_card_outlined),
                 _buildUploadBox(
                   boxKey: _keyKtpPhoto,
                   icon: Icons.credit_card_outlined,
-                  title: _idPhotoLabel,
-                  subtitle: _ktpFile != null ? '$_idPhotoLabel berhasil dipilih' : 'Upload foto $_idPhotoLabel yang jelas',
+                  title: _idPhotoLabel(l),
+                  subtitle: _ktpFile != null ? l.labelSelected(_idPhotoLabel(l)) : l.uploadClearPhotoOf(_idPhotoLabel(l)),
                   hasFile: _ktpFile != null || ktpUrl != null,
                   onTap: _pickKtpImage,
                   onRemove: _ktpFile != null ? () => setState(() => _ktpFile = null) : null,
@@ -1103,8 +1115,8 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
                 _buildUploadBox(
                   boxKey: _keySelfie,
                   icon: Icons.face_outlined,
-                  title: _idSelfieLabel,
-                  subtitle: _selfieFile != null ? '$_idSelfieLabel berhasil dipilih' : 'Upload foto selfie sambil memegang $_idPhotoLabel',
+                  title: _idSelfieLabel(l),
+                  subtitle: _selfieFile != null ? l.labelSelected(_idSelfieLabel(l)) : l.uploadSelfieHoldingPhoto(_idPhotoLabel(l)),
                   hasFile: _selfieFile != null || selfieUrl != null,
                   onTap: _pickSelfie,
                   onRemove: _selfieFile != null ? () => setState(() => _selfieFile = null) : null,
@@ -1142,10 +1154,10 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Verifikasi Wajah', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+                            Text(l.faceVerification, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
                             const SizedBox(height: 2),
                             Text(
-                              _faceScanPath != null ? 'Wajah terverifikasi' : 'Scan wajah dengan kamera untuk verifikasi',
+                              _faceScanPath != null ? l.faceVerified : l.uploadFacePhotoAction,
                               style: AppTextStyles.bodySmall.copyWith(
                                 color: _faceScanPath != null ? AppColors.successColor : AppColors.textTertiary,
                               ),
@@ -1156,7 +1168,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
                       if (_faceScanPath != null)
                         GestureDetector(
                           onTap: () => setState(() => _faceScanPath = null),
-                          child: const Icon(Icons.close, size: 18, color: AppColors.textSecondary),
+                          child: Icon(Icons.close, size: 18, color: AppColors.textSecondary),
                         ),
                     ],
                   ),
@@ -1166,7 +1178,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
               const SizedBox(height: AppSizes.xl),
 
               AppButton(
-                label: 'Simpan & Lanjut',
+                label: l.saveAndContinue,
                 loading: _saving,
                 onPressed: _save,
                 type: ButtonType.primary,
@@ -1188,14 +1200,15 @@ class _CountryCodePicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return SizedBox(
       height: MediaQuery.of(context).size.height * 0.6,
       child: Column(
         children: [
           const SizedBox(height: 12),
-          Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+          Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2))),
           const SizedBox(height: 12),
-          Text('Pilih Kode Negara', style: AppTextStyles.titleSmall),
+          Text(l.selectCountryCode, style: AppTextStyles.titleSmall),
           const Divider(),
           Expanded(
             child: ListView.builder(

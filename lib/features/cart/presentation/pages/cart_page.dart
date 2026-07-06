@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
@@ -16,11 +17,12 @@ class CartPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final cartState = ref.watch(cartProvider);
     final notifier = ref.read(cartProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(title: Text('Keranjang')),
+      appBar: AppBar(title: Text(l.cart)),
       body: cartState.loading
           ? const _CartShimmer()
           : cartState.error != null
@@ -30,12 +32,12 @@ class CartPage extends ConsumerWidget {
                     children: [
                       Text(cartState.error ?? '', style: AppTextStyles.bodyMedium),
                       const SizedBox(height: 16),
-                      AppButton(label: 'Coba Lagi', onPressed: () => notifier.fetchCart(), type: ButtonType.outline),
+                      AppButton(label: l.tryAgain, onPressed: () => notifier.fetchCart(), type: ButtonType.outline),
                     ],
                   ),
                 )
               : cartState.items.isEmpty
-                  ? AppEmptyState(title: 'Keranjang belanja kosong', subtitle: 'Tidak ada item di keranjang', icon: Icons.shopping_cart_outlined)
+                  ? AppEmptyState(title: l.cartEmpty, subtitle: l.cartEmptyDesc, icon: Icons.shopping_cart_outlined)
                   : Column(
                       children: [
                         Expanded(
@@ -66,13 +68,13 @@ class CartPage extends ConsumerWidget {
                                             width: 80, height: 80,
                                             fit: BoxFit.cover,
                                             placeholder: (_, _) => Shimmer.fromColors(
-                                              baseColor: Colors.grey[300]!,
-                                              highlightColor: Colors.grey[100]!,
-                                              child: Container(color: Colors.white),
+                                              baseColor: AppColors.shimmerBase,
+                                              highlightColor: AppColors.shimmerHighlight,
+                                              child: Container(color: AppColors.surfaceColor),
                                             ),
                                             errorWidget: (_, _, _) => Container(
-                                              color: Colors.grey[200],
-                                              child: const Icon(Icons.broken_image, color: Colors.grey),
+                                              color: AppColors.shimmerBase,
+                                              child: Icon(Icons.broken_image, color: AppColors.textTertiary),
                                             ),
                                           ),
                                         ),
@@ -115,8 +117,8 @@ class CartPage extends ConsumerWidget {
                         Container(
                           padding: const EdgeInsets.all(AppSizes.md),
                           decoration: BoxDecoration(
-                            color: Colors.white,
-                            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -2))],
+                            color: AppColors.surfaceColor,
+                            boxShadow: [BoxShadow(color: AppColors.textTertiary.withValues(alpha: 0.15), blurRadius: 10, offset: const Offset(0, -2))],
                           ),
                           child: SafeArea(
                             child: Column(
@@ -124,13 +126,13 @@ class CartPage extends ConsumerWidget {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text('Subtotal', style: AppTextStyles.bodyMedium),
+                                    Text(l.subtotal, style: AppTextStyles.bodyMedium),
                                     Text(Formatters.currency(cartState.subtotal), style: AppTextStyles.titleMedium),
                                   ],
                                 ),
                                 const SizedBox(height: 8),
                                 AppButton(
-                                  label: 'Lanjut ke Checkout',
+                                  label: l.proceedToCheckout,
                                   onPressed: cartState.items.isEmpty ? null : () => context.push('/checkout'),
                                 ),
                               ],
@@ -153,14 +155,14 @@ class _CartShimmer extends StatelessWidget {
       itemCount: 3,
       itemBuilder: (_, _) => Padding(
         padding: const EdgeInsets.only(bottom: 12),
-        child: Shimmer.fromColors(
-          baseColor: Colors.grey[300]!,
-          highlightColor: Colors.grey[100]!,
-          child: Container(
-            height: 100,
-            decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+          child: Shimmer.fromColors(
+            baseColor: AppColors.shimmerBase,
+            highlightColor: AppColors.shimmerHighlight,
+            child: Container(
+              height: 100,
+              decoration: BoxDecoration(color: AppColors.surfaceColor, borderRadius: BorderRadius.circular(12)),
+            ),
           ),
-        ),
       ),
     );
   }

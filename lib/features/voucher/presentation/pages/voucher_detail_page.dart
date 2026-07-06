@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
@@ -12,6 +13,7 @@ class VoucherDetailPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(title: Text(voucher.code)),
       body: SingleChildScrollView(
@@ -50,19 +52,19 @@ class VoucherDetailPage extends ConsumerWidget {
                 padding: const EdgeInsets.all(AppSizes.md),
                 child: Column(
                   children: [
-                    _infoRow(Icons.local_offer, 'Diskon', voucher.isPercentage
+                    _infoRow(Icons.local_offer, l.discount, voucher.isPercentage
                         ? '${voucher.discountAmount}%'
                         : Formatters.currency(voucher.discountAmount.toInt())),
                     const Divider(),
-                    _infoRow(Icons.shopping_bag, 'minimal_pembelian', Formatters.currency(voucher.minPurchase.toInt())),
+                    _infoRow(Icons.shopping_bag, l.minPurchase, Formatters.currency(voucher.minPurchase.toInt())),
                     const Divider(),
-                    _infoRow(Icons.access_time, 'Kedaluwarsa', voucher.expiresAt ?? '-'),
+                    _infoRow(Icons.access_time, l.validUntil, voucher.expiresAt ?? '-'),
                     if (voucher.maxUses != null) ...[
                       const Divider(),
-                      _infoRow(Icons.repeat, 'maksimal_pemakaian', '${voucher.maxUses}'),
+                      _infoRow(Icons.repeat, l.tryAgain, '${voucher.maxUses}'),
                     ],
                     const Divider(),
-                    _infoRow(Icons.info_outline, 'status', voucher.isActive ? 'Aktif' : 'Tidak Aktif'),
+                    _infoRow(Icons.info_outline, l.tryAgain, voucher.isActive ? l.active : l.inactive),
                   ],
                 ),
               ),

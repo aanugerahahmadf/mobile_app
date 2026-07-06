@@ -64,7 +64,7 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
     try {
       state = state.copyWith(
         notifications: state.notifications.map((n) {
-          if (n.id.toString() == id) {
+          if (n.id == id) {
             return n.copyWith(readAt: DateTime.now().toIso8601String());
           }
           return n;
@@ -85,6 +85,19 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
         unreadCount: 0,
       );
       await _repository.markAllAsRead();
+    } catch (_) {
+      state = state.copyWith(notifications: previous);
+    }
+  }
+
+  Future<void> deleteNotification(String id) async {
+    final previous = state.notifications;
+    try {
+      state = state.copyWith(
+        notifications: state.notifications.where((n) => n.id != id).toList(),
+        unreadCount: state.unreadCount > 0 ? state.unreadCount - 1 : 0,
+      );
+      await _repository.deleteNotification(id);
     } catch (_) {
       state = state.copyWith(notifications: previous);
     }

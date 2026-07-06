@@ -1,11 +1,15 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/api/api_endpoints.dart';
+import 'package:dio/dio.dart';
 import '../../../../core/api/dio_client.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
@@ -27,6 +31,7 @@ import '../../../legal/presentation/providers/legal_provider.dart';
 import '../providers/auth_provider.dart';
 import 'auth_header.dart';
 import 'social_login_button.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 
 enum AgreementMode { wizard, terms, privacy, weddingPolicy }
 
@@ -62,25 +67,26 @@ class _AgreementModalState extends State<_AgreementModal> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final isWizard = widget.mode == AgreementMode.wizard;
     final isWedding = widget.mode == AgreementMode.weddingPolicy;
 
     String title;
     if (isWedding) {
-      title = 'Kebijakan Aplikasi';
+      title = l.appPolicy;
     } else if (_step == 1) {
-      title = 'Ketentuan Layanan';
+      title = l.termsOfService;
     } else if (_step == 2) {
-      title = 'Kebijakan Privasi';
+      title = l.privacyPolicy;
     } else {
-      title = 'Kebijakan Aplikasi';
+      title = l.appPolicy;
     }
 
     return Container(
       clipBehavior: Clip.antiAlias,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceColor,
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(20),
           topRight: Radius.circular(20),
         ),
@@ -180,8 +186,20 @@ class _LegalContentView extends ConsumerWidget {
     this.onClose,
   });
 
+  List<dynamic>? _parseContent(dynamic content) {
+    if (content is List) return content;
+    if (content is String && content.startsWith('[')) {
+      try {
+        final decoded = jsonDecode(content);
+        if (decoded is List) return decoded;
+      } catch (_) {}
+    }
+    return null;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final async = ref.watch(provider);
 
     return async.when(
@@ -192,16 +210,16 @@ class _LegalContentView extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline, size: 48, color: AppColors.textSecondary),
+              Icon(Icons.error_outline, size: 48, color: AppColors.textSecondary),
               const SizedBox(height: 12),
-              Text('Gagal memuat halaman',
+              Text(l.failedLoadPage,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 14, color: AppColors.textSecondary)),
+                  style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
               const SizedBox(height: 16),
               FilledButton.icon(
                 onPressed: () => ref.invalidate(provider),
                 icon: const Icon(Icons.refresh, size: 18),
-                label: Text('Coba Lagi'),
+                label: Text(l.tryAgain),
               ),
             ],
           ),
@@ -219,14 +237,15 @@ class _LegalContentView extends ConsumerWidget {
                       style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700)),
                   if (content.updatedAt != null) ...[
                     const SizedBox(height: 8),
-                    Text('${'Terakhir diperbarui'}: ${content.updatedAt}',
+                    Text('${l.lastUpdated}: ${content.updatedAt}',
                         style: GoogleFonts.inter(fontSize: 12, color: AppColors.textSecondary)),
                   ],
                   const SizedBox(height: 16),
-                  if (content.content is List)
-                    ...(content.content as List).map<Widget>((section) {
+                  if (_parseContent(content.content) case final List sections?)
+                    ...sections.map<Widget>((section) {
                       final heading = section['heading'] as String?;
                       final body = section['body'] as String?;
+                      final isItalic = section['is_italic'] == true;
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 16),
                         child: Column(
@@ -237,7 +256,7 @@ class _LegalContentView extends ConsumerWidget {
                                 padding: const EdgeInsets.only(bottom: 4),
                                 child: Text(heading, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold)),
                               ),
-                            Text(body ?? '', textAlign: TextAlign.justify, style: GoogleFonts.inter(fontSize: 14, height: 1.6)),
+                            Text(body ?? '', textAlign: TextAlign.justify, style: GoogleFonts.inter(fontSize: 14, height: 1.6, fontStyle: isItalic ? FontStyle.italic : FontStyle.normal)),
                           ],
                         ),
                       );
@@ -258,7 +277,7 @@ class _LegalContentView extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(AppSizes.md),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.surfaceColor,
                 border: Border(top: BorderSide(color: AppColors.dividerColor)),
               ),
               child: Row(
@@ -266,7 +285,7 @@ class _LegalContentView extends ConsumerWidget {
                 children: [
                   if (onNext != null)
                     AppButton(
-                      label: 'Lanjutkan',
+                      label: l.proceed,
                       onPressed: onNext,
                       type: ButtonType.primary,
                       width: 140,
@@ -274,14 +293,14 @@ class _LegalContentView extends ConsumerWidget {
                   if (onAgreed != null)
                     Expanded(
                       child: AppButton(
-                        label: 'Saya Mengerti & Setuju',
+                        label: l.iUnderstandAndAgree,
                         onPressed: onAgreed,
                         type: ButtonType.primary,
                       ),
                     ),
                   if (onClose != null)
                     AppButton(
-                      label: 'Tutup',
+                      label: l.close,
                       onPressed: onClose,
                       type: ButtonType.outline,
                       width: 120,
@@ -325,6 +344,26 @@ Future<void> showForgotPasswordSheet(BuildContext context) {
   );
 }
 
+Future<void> showOtpVerificationSheet(BuildContext context, {String? email, String purpose = 'forgot_password'}) {
+  return showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => _AuthSheetWrapper(child: _OtpVerificationSheetContent(email: email, purpose: purpose)),
+  );
+}
+
+Future<void> showResetPasswordSheet(BuildContext context) {
+  return showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => const _AuthSheetWrapper(child: _ResetPasswordSheetContent()),
+  );
+}
+
 class _AuthSheetWrapper extends StatelessWidget {
   final Widget child;
   const _AuthSheetWrapper({required this.child});
@@ -333,9 +372,9 @@ class _AuthSheetWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       clipBehavior: Clip.antiAlias,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceColor,
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
         ),
@@ -383,19 +422,20 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
   }
 
   String get _loginLabel {
+    final l = AppLocalizations.of(context)!;
     switch (_loginType) {
       case 'nik':
-        return 'Nomer Induk Kependudukan (NIK)';
+        return l.nikLabel;
       case 'passport':
-        return 'Nomer Passport';
+        return l.passportLabel;
       case 'sim':
-        return 'Surat Izin Mengemudi (SIM)';
+        return l.simLabel;
       case 'npwp':
-        return 'Nomor Pokok Wajib Pajak (NPWP)';
+        return l.npwpLabel;
       case 'username':
-        return 'Username';
+        return l.username;
       default:
-        return 'Email';
+        return l.email;
     }
   }
 
@@ -409,9 +449,34 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
     }
   }
 
+  String? _loginValidator(String? value) {
+    final l = AppLocalizations.of(context)!;
+    if (value == null || value.trim().isEmpty) return '$_loginLabel ${l.fieldRequired}';
+    final clean = value.trim();
+    switch (_loginType) {
+      case 'email':
+        return Validators.email(value);
+      case 'nik':
+        if (!RegExp(r'^\d{16}$').hasMatch(clean)) return l.nikMustBe16Digits;
+        return null;
+      case 'passport':
+        if (!RegExp(r'^[A-Z0-9]{6,9}$').hasMatch(clean.toUpperCase())) return l.invalidPassportFormat;
+        return null;
+      case 'sim':
+        if (!isValidSimNumber(clean)) return l.invalidSimNumber;
+        return null;
+      case 'npwp':
+        if (!isValidNpwpNumber(clean)) return l.invalidNpwpNumber;
+        return null;
+      default:
+        return null;
+    }
+  }
+
   Widget _buildLoginTypeSelector() {
+    final l = AppLocalizations.of(context)!;
     final types = ['email', 'username', 'nik', 'passport', 'sim', 'npwp'];
-    final labels = {'email': 'Email', 'username': 'Username', 'nik': 'NIK', 'passport': 'Passport', 'sim': 'SIM', 'npwp': 'NPWP'};
+    final labels = {'email': l.email, 'username': l.username, 'nik': l.nikShort, 'passport': l.passport, 'sim': l.simShort, 'npwp': l.npwpShort};
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
@@ -438,7 +503,7 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
               visualDensity: VisualDensity.compact,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            child: Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
+            child: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
           ),
         ),
         );
@@ -450,11 +515,11 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
   void _onLogin() {
     if (!_formKey.currentState!.validate()) return;
     if (!_agreeTerms) {
-      _showWarning('Anda harus menyetujui perjanjian untuk melanjutkan.');
+      _showWarning(AppLocalizations.of(context)!.warningMustAgree);
       return;
     }
     if (!_rememberMe) {
-      _showWarning('Centang Ingat Saya terlebih dahulu');
+      _showWarning(AppLocalizations.of(context)!.warningCheckRemember);
       return;
     }
     ref.read(authProvider.notifier).login(
@@ -465,12 +530,13 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
   }
 
   Future<void> _onGoogleLogin() async {
+    final l = AppLocalizations.of(context)!;
     if (!_agreeTerms) {
-      _showWarning('Anda harus menyetujui perjanjian untuk melanjutkan.');
+      _showWarning(l.warningMustAgree);
       return;
     }
     if (!_rememberMe) {
-      _showWarning('Centang Ingat Saya terlebih dahulu');
+      _showWarning(l.warningCheckRemember);
       return;
     }
     await ref.read(authProvider.notifier).googleLogin();
@@ -484,17 +550,18 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final authState = ref.watch(authProvider);
 
     ref.listen<AuthState>(authProvider, (_, state) {
       if (state is AuthAuthenticated) {
         if (state.needsOtp) {
           Navigator.of(context).pop();
-          GoRouter.of(context).push('/verify-otp', extra: {'email': state.user.email, 'purpose': 'google_register'});
+          showOtpVerificationSheet(context, email: state.user.email, purpose: 'google_register');
         } else if (state.needsCompletion) {
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Lengkapi profil Anda'), backgroundColor: AppColors.infoColor),
+            SnackBar(content: Text(l.completeYourProfile), backgroundColor: AppColors.infoColor),
           );
           GoRouter.of(context).push('/profile-field');
         } else {
@@ -502,7 +569,7 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
           final router = GoRouter.of(context);
           Navigator.of(context).pop();
           messenger.showSnackBar(
-            SnackBar(content: Text('Login berhasil'), backgroundColor: AppColors.successColor),
+            SnackBar(content: Text(l.loginSuccess), backgroundColor: AppColors.successColor),
           );
           router.go('/home');
         }
@@ -522,7 +589,7 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            AuthHeader(title: 'Selamat datang,', subtitle: 'Masuk ke akun Anda'),
+            AuthHeader(title: '${l.welcome},', subtitle: l.signInSubtitle),
             const SizedBox(height: AppSizes.lg),
             _buildLoginTypeSelector(),
             const SizedBox(height: AppSizes.md),
@@ -530,13 +597,14 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
               label: _loginLabel,
               controller: _emailController,
               keyboardType: _loginKeyboardType,
+              validator: _loginValidator,
             ),
             const SizedBox(height: AppSizes.md),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text('Kata Sandi', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+                Text(l.password, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
                 TextButton(
                   style: TextButton.styleFrom(
                     padding: EdgeInsets.zero,
@@ -547,7 +615,7 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
                     Navigator.of(context).pop();
                     showForgotPasswordSheet(context);
                   },
-                  child: Text('Lupa Password?', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primaryColor)),
+                  child: Text(l.forgotPassword, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primaryColor)),
                 ),
               ],
             ),
@@ -567,7 +635,7 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
             _agreementCheckbox(),
             const SizedBox(height: AppSizes.md),
             AppButton(
-              label: 'Masuk',
+              label: l.signIn,
               loading: isLoading,
               disabled: !_agreeTerms || !_rememberMe,
               onPressed: _onLogin,
@@ -579,7 +647,7 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
                 const Expanded(child: Divider()),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
-                  child: Text('Atau', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
+                  child: Text(l.or, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
                 ),
                 const Expanded(child: Divider()),
               ],
@@ -590,13 +658,13 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('Belum punya akun?', style: AppTextStyles.bodyMedium),
+                Text(l.dontHaveAccount, style: AppTextStyles.bodyMedium),
                 GestureDetector(
                   onTap: () {
                     Navigator.of(context).pop();
                     showSignUpSheet(context);
                   },
-                  child: Text('Daftar', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w600)),
+                  child: Text(l.signUp, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w600)),
                 ),
               ],
             ),
@@ -607,6 +675,7 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
   }
 
   Widget _agreementCheckbox() {
+    final l = AppLocalizations.of(context)!;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -645,49 +714,37 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
               text: TextSpan(
                 style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
                 children: [
-                  const TextSpan(text: 'Dengan mencentang Setuju & Bergabung atau Lanjutkan, Anda menyetujui '),
-                  WidgetSpan(
-                    child: GestureDetector(
-                      onTap: () => showAgreementModal(context, mode: AgreementMode.terms),
-                      child: Text(
-                        'Perjanjian Pengguna',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.primaryColor,
-                          fontWeight: FontWeight.w600,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
+                  TextSpan(text: l.agreementPrefix),
+                  TextSpan(
+                    text: l.userAgreement,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.primaryColor,
+                      fontWeight: FontWeight.w600,
+                      decoration: TextDecoration.underline,
                     ),
+                    recognizer: TapGestureRecognizer()..onTap = () => showAgreementModal(context, mode: AgreementMode.terms),
                   ),
-                  const TextSpan(text: ', '),
-                  WidgetSpan(
-                    child: GestureDetector(
-                      onTap: () => showAgreementModal(context, mode: AgreementMode.privacy),
-                      child: Text(
-                        'Kebijakan Privasi',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.primaryColor,
-                          fontWeight: FontWeight.w600,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
+                  TextSpan(text: l.comma),
+                  TextSpan(
+                    text: l.privacyPolicy,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.primaryColor,
+                      fontWeight: FontWeight.w600,
+                      decoration: TextDecoration.underline,
                     ),
+                    recognizer: TapGestureRecognizer()..onTap = () => showAgreementModal(context, mode: AgreementMode.privacy),
                   ),
-                  const TextSpan(text: ' dan '),
-                  WidgetSpan(
-                    child: GestureDetector(
-                      onTap: () => showAgreementModal(context, mode: AgreementMode.weddingPolicy),
-                      child: Text(
-                        'Kebijakan Aplikasi',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.primaryColor,
-                          fontWeight: FontWeight.w600,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
+                  TextSpan(text: l.andWord),
+                  TextSpan(
+                    text: l.appPolicy,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.primaryColor,
+                      fontWeight: FontWeight.w600,
+                      decoration: TextDecoration.underline,
                     ),
+                    recognizer: TapGestureRecognizer()..onTap = () => showAgreementModal(context, mode: AgreementMode.weddingPolicy),
                   ),
-                  const TextSpan(text: ' Wedding Flowers Decorasi.'),
+                  TextSpan(text: l.agreementSuffix),
                 ],
               ),
             ),
@@ -698,6 +755,7 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
   }
 
   Widget _rememberCheckbox() {
+    final l = AppLocalizations.of(context)!;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -716,7 +774,7 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
           child: GestureDetector(
             onTap: () => setState(() => _rememberMe = !_rememberMe),
             child: Text(
-              'Ingat Saya',
+              l.rememberMe,
               style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
             ),
           ),
@@ -778,31 +836,20 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
   String _sourceOfFunds = '';
 
   String get _idLabel {
+    final l = AppLocalizations.of(context)!;
     switch (_identityType) {
-      case 'ktp': return 'Nomer Induk Kependudukan (NIK)';
-      case 'passport': return 'Nomer Passport';
-      case 'sim': return 'Surat Izin Mengemudi (SIM)';
-      case 'npwp': return 'Nomor Pokok Wajib Pajak (NPWP)';
-      default: return 'Nomor Identitas';
+      case 'ktp': return l.nikLabel;
+      case 'passport': return l.passportLabel;
+      case 'sim': return l.simLabel;
+      case 'npwp': return l.npwpLabel;
+      default: return l.idNumber;
     }
   }
   String get _idPhotoLabel {
-    switch (_identityType) {
-      case 'ktp': return 'Foto KTP';
-      case 'passport': return 'Foto Passport';
-      case 'sim': return 'Foto SIM';
-      case 'npwp': return 'Foto NPWP';
-      default: return 'Foto Identitas';
-    }
+    return AppLocalizations.of(context)!.identityPhoto;
   }
   String get _idSelfieLabel {
-    switch (_identityType) {
-      case 'ktp': return 'Foto Selfie + KTP';
-      case 'passport': return 'Foto Selfie + Passport';
-      case 'sim': return 'Foto Selfie + SIM';
-      case 'npwp': return 'Foto Selfie + NPWP';
-      default: return 'Foto Selfie + Identitas';
-    }
+    return AppLocalizations.of(context)!.selfiePhoto;
   }
 
   String get _fullName => [
@@ -833,27 +880,42 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
   void _showPickerSheet(String title, List<String> options, Function(String) onSelected) {
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
-              const SizedBox(height: 8),
-              Text(title, style: AppTextStyles.titleMedium),
-              const SizedBox(height: 8),
-              ...options.map((option) => ListTile(
-                title: Text(option, style: AppTextStyles.bodyMedium),
-                onTap: () {
-                  onSelected(option);
-                  Navigator.pop(ctx);
-                },
-              )),
-            ],
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: AppColors.surfaceColor,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(16),
+            topRight: Radius.circular(16),
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2))),
+                const SizedBox(height: 8),
+                Text(title, style: AppTextStyles.titleMedium),
+                const SizedBox(height: 8),
+                Flexible(
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: options.map((option) => ListTile(
+                      title: Text(option, style: AppTextStyles.bodyMedium),
+                      onTap: () {
+                        onSelected(option);
+                        Navigator.pop(ctx);
+                      },
+                    )).toList(),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -861,82 +923,100 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
   }
 
   void _showIdentityTypeSheet() {
+    final l = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
+      backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
-              const SizedBox(height: 8),
-              Text('Pilih Jenis Identitas', style: AppTextStyles.titleMedium),
-              const SizedBox(height: 8),
-              ListTile(
-                leading: const Icon(Icons.credit_card),
-                title: Text('Kartu Tanda Kependudukan (KTP)', style: AppTextStyles.bodyMedium),
-                trailing: _identityType == 'ktp' ? Icon(Icons.check, color: AppColors.primaryColor) : null,
-                onTap: () {
-                  setState(() {
-                    _identityType = 'ktp';
-                    _ktpFile = null;
-                    _nikController.clear();
-                    _namesLocked = false;
-                    _ocrExtractedName = '';
-                  });
-                  Navigator.pop(ctx);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.card_travel),
-                title: Text('Passport', style: AppTextStyles.bodyMedium),
-                trailing: _identityType == 'passport' ? Icon(Icons.check, color: AppColors.primaryColor) : null,
-                onTap: () {
-                  setState(() {
-                    _identityType = 'passport';
-                    _ktpFile = null;
-                    _nikController.clear();
-                    _namesLocked = false;
-                    _ocrExtractedName = '';
-                  });
-                  Navigator.pop(ctx);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.drive_eta),
-                title: Text('Surat Izin Mengemudi (SIM)', style: AppTextStyles.bodyMedium),
-                trailing: _identityType == 'sim' ? Icon(Icons.check, color: AppColors.primaryColor) : null,
-                onTap: () {
-                  setState(() {
-                    _identityType = 'sim';
-                    _ktpFile = null;
-                    _nikController.clear();
-                    _namesLocked = false;
-                    _ocrExtractedName = '';
-                  });
-                  Navigator.pop(ctx);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.receipt_long),
-                title: Text('Nomor Pokok Wajib Pajak (NPWP)', style: AppTextStyles.bodyMedium),
-                trailing: _identityType == 'npwp' ? Icon(Icons.check, color: AppColors.primaryColor) : null,
-                onTap: () {
-                  setState(() {
-                    _identityType = 'npwp';
-                    _ktpFile = null;
-                    _nikController.clear();
-                    _namesLocked = false;
-                    _ocrExtractedName = '';
-                  });
-                  Navigator.pop(ctx);
-                },
-              ),
-            ],
+      builder: (ctx) => Container(
+        decoration: BoxDecoration(
+          color: AppColors.surfaceColor,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(16),
+            topRight: Radius.circular(16),
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2))),
+                const SizedBox(height: 8),
+                Text(l.selectIdentityType, style: AppTextStyles.titleMedium),
+                const SizedBox(height: 8),
+                Flexible(
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: [
+                      ListTile(
+                        leading: const Icon(Icons.credit_card),
+                        title: Text(l.idCardKtp, style: AppTextStyles.bodyMedium),
+                        trailing: _identityType == 'ktp' ? Icon(Icons.check, color: AppColors.primaryColor) : null,
+                        onTap: () {
+                          setState(() {
+                            _identityType = 'ktp';
+                            _ktpFile = null;
+                            _nikController.clear();
+                            _namesLocked = false;
+                            _ocrExtractedName = '';
+                          });
+                          Navigator.pop(ctx);
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.card_travel),
+                        title: Text(l.passport, style: AppTextStyles.bodyMedium),
+                        trailing: _identityType == 'passport' ? Icon(Icons.check, color: AppColors.primaryColor) : null,
+                        onTap: () {
+                          setState(() {
+                            _identityType = 'passport';
+                            _ktpFile = null;
+                            _nikController.clear();
+                            _namesLocked = false;
+                            _ocrExtractedName = '';
+                          });
+                          Navigator.pop(ctx);
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.drive_eta),
+                        title: Text(l.idCardSim, style: AppTextStyles.bodyMedium),
+                        trailing: _identityType == 'sim' ? Icon(Icons.check, color: AppColors.primaryColor) : null,
+                        onTap: () {
+                          setState(() {
+                            _identityType = 'sim';
+                            _ktpFile = null;
+                            _nikController.clear();
+                            _namesLocked = false;
+                            _ocrExtractedName = '';
+                          });
+                          Navigator.pop(ctx);
+                        },
+                      ),
+                      ListTile(
+                        leading: const Icon(Icons.receipt_long),
+                        title: Text(l.idCardNpwp, style: AppTextStyles.bodyMedium),
+                        trailing: _identityType == 'npwp' ? Icon(Icons.check, color: AppColors.primaryColor) : null,
+                        onTap: () {
+                          setState(() {
+                            _identityType = 'npwp';
+                            _ktpFile = null;
+                            _nikController.clear();
+                            _namesLocked = false;
+                            _ocrExtractedName = '';
+                          });
+                          Navigator.pop(ctx);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -944,12 +1024,13 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
   }
 
   Widget _buildIdentityTypePicker() {
+    final l = AppLocalizations.of(context)!;
     final (icon, label) = switch (_identityType) {
-      'ktp' => (Icons.credit_card, 'Kartu Tanda Kependudukan (KTP)'),
-      'passport' => (Icons.card_travel, 'Passport'),
-      'sim' => (Icons.drive_eta, 'Surat Izin Mengemudi (SIM)'),
-      'npwp' => (Icons.receipt_long, 'Nomor Pokok Wajib Pajak (NPWP)'),
-      _ => (Icons.credit_card, 'Pilih Jenis Identitas'),
+      'ktp' => (Icons.credit_card, l.idCardKtp),
+      'passport' => (Icons.card_travel, l.passport),
+      'sim' => (Icons.drive_eta, l.idCardSim),
+      'npwp' => (Icons.receipt_long, l.idCardNpwp),
+      _ => (Icons.credit_card, l.selectIdentityType),
     };
     return GestureDetector(
       onTap: _showIdentityTypeSheet,
@@ -1021,25 +1102,26 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
   }
 
   Future<void> _onRegister() async {
+    final l = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
     if (!_agreeTerms) {
-      _showWarning('Anda harus menyetujui perjanjian untuk melanjutkan.');
+      _showWarning(l.warningMustAgree);
       return;
     }
     if (!_rememberMe) {
-      _showWarning('Centang Ingat Saya terlebih dahulu');
+      _showWarning(l.warningCheckRemember);
       return;
     }
     if (_ktpFile != null) {
       if (!_namesLocked && _ocrExtractedName.isEmpty) {
-        _showWarning('Nama gagal diverifikasi dari $_idPhotoLabel. Upload ulang dengan foto yang jelas.');
+        _showWarning('${l.nameVerificationFailed} $_idPhotoLabel');
         return;
       }
       if (_ocrExtractedName.isNotEmpty) {
         final enteredName = _fullName.toUpperCase().replaceAll(RegExp(r'\s+'), ' ');
         final ocrName = _ocrExtractedName.toUpperCase().replaceAll(RegExp(r'\s+'), ' ');
         if (!enteredName.contains(ocrName) && !ocrName.contains(enteredName)) {
-          _showWarning('Nama tidak sesuai dengan $_idPhotoLabel');
+          _showWarning('${l.nameNotMatch} $_idPhotoLabel');
           return;
         }
       }
@@ -1092,12 +1174,13 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
   }
 
   Widget _buildPhoneField() {
+    final l = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
-          child: Text('WhatsApp', style: AppTextStyles.titleSmall),
+          child: Text(l.whatsappNumber, style: AppTextStyles.titleSmall),
         ),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1148,61 +1231,71 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
   }
 
   void _showCountryCodePicker() {
+    final l = AppLocalizations.of(context)!;
     final searchController = TextEditingController();
     List<CountryCode> codes = List.of(countryCodes);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setSheetState) {
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 8),
-                Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
-                const SizedBox(height: 12),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: TextField(
-                    controller: searchController,
-                    decoration: InputDecoration(
-                      hintText: 'Cari negara...',
-                      prefixIcon: const Icon(Icons.search, size: 20),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                    onChanged: (v) {
-                      setSheetState(() {
-                        codes = countryCodes.where((c) =>
-                          c.name.toLowerCase().contains(v.toLowerCase()) ||
-                          c.dialCode.contains(v)).toList();
-                      });
-                    },
-                  ),
+            return Container(
+              decoration: BoxDecoration(
+                color: AppColors.surfaceColor,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
                 ),
-                const SizedBox(height: 8),
-                Flexible(
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    itemCount: codes.length,
-                    separatorBuilder: (_, _) => const Divider(height: 1),
-                    itemBuilder: (_, i) => ListTile(
-                      dense: true,
-                      leading: Text(codes[i].flag, style: const TextStyle(fontSize: 22)),
-                      title: Text(codes[i].name, style: AppTextStyles.bodyMedium),
-                      trailing: Text(codes[i].dialCode, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
-                      onTap: () {
-                        setState(() => _countryCode = codes[i].dialCode);
-                        Navigator.pop(ctx);
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  const SizedBox(height: 8),
+                  Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2))),
+                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: TextField(
+                      controller: searchController,
+                      decoration: InputDecoration(
+                        hintText: l.searchCountry,
+                        prefixIcon: const Icon(Icons.search, size: 20),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      onChanged: (v) {
+                        setSheetState(() {
+                          codes = countryCodes.where((c) =>
+                            c.name.toLowerCase().contains(v.toLowerCase()) ||
+                            c.dialCode.contains(v)).toList();
+                        });
                       },
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: ListView.separated(
+                      itemCount: codes.length,
+                      separatorBuilder: (_, _) => const Divider(height: 1),
+                      itemBuilder: (_, i) => ListTile(
+                        dense: true,
+                        leading: Text(codes[i].flag, style: const TextStyle(fontSize: 22)),
+                        title: Text(codes[i].name, style: AppTextStyles.bodyMedium),
+                        trailing: Text(codes[i].dialCode, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
+                        onTap: () {
+                          setState(() => _countryCode = codes[i].dialCode);
+                          Navigator.pop(ctx);
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             );
           },
         );
@@ -1219,10 +1312,11 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
       password.contains(RegExp(r'[!@#\$%^&*(),.?":{}|<>]')),
     ];
     final score = checks.where((c) => c).length;
+    final l = AppLocalizations.of(context)!;
     final (label, color, value) = switch (score) {
-      0 || 1 => ('Lemah', AppColors.errorColor, 0.2),
-      2 || 3 => ('Sedang', AppColors.warningColor, 0.5),
-      _ => ('Kuat', AppColors.successColor, 0.9),
+      0 || 1 => (l.passwordStrengthWeak, AppColors.errorColor, 0.2),
+      2 || 3 => (l.passwordStrengthMedium, AppColors.warningColor, 0.5),
+      _ => (l.passwordStrengthStrong, AppColors.successColor, 0.9),
     };
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1244,6 +1338,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final authState = ref.watch(authProvider);
 
     ref.listen<AuthState>(authProvider, (_, state) {
@@ -1252,7 +1347,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
         final router = GoRouter.of(context);
         Navigator.of(context).pop();
         messenger.showSnackBar(
-          SnackBar(content: Text('Registrasi berhasil'), backgroundColor: AppColors.successColor),
+          SnackBar(content: Text(l.registerSuccess), backgroundColor: AppColors.successColor),
         );
         router.go('/home');
       } else if (state is AuthError) {
@@ -1272,9 +1367,9 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: AppSizes.sm),
-            Center(child: Text('Daftar Akun', style: AppTextStyles.headlineMedium)),
+            Center(child: Text(l.createAccount, style: AppTextStyles.headlineMedium)),
             const SizedBox(height: AppSizes.xs),
-            Center(child: Text('Isi data diri Anda dengan benar', style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary))),
+            Center(child: Text(l.fillDataCorrectly, style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary))),
 
             const SizedBox(height: AppSizes.lg),
             Center(
@@ -1308,7 +1403,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
             ),
             const SizedBox(height: AppSizes.lg),
             AppTextField(
-              label: 'Nama Depan',
+              label: l.firstName,
               controller: _firstNameController,
               readOnly: _namesLocked,
               validator: Validators.required,
@@ -1316,14 +1411,14 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
             ),
             SizedBox(height: AppSizes.md),
             AppTextField(
-              label: 'Nama Tengah',
+              label: l.middleName,
               controller: _middleNameController,
               readOnly: _namesLocked,
               onChanged: (_) => setState(() {}),
             ),
             SizedBox(height: AppSizes.md),
             AppTextField(
-              label: 'Nama Belakang',
+              label: l.lastName,
               controller: _lastNameController,
               readOnly: _namesLocked,
               validator: Validators.required,
@@ -1342,7 +1437,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
                   SizedBox(width: AppSizes.sm),
                   Expanded(
                     child: Text(
-                      _fullName.isNotEmpty ? _fullName : 'Nama Anda akan tampil di sini',
+                      _fullName.isNotEmpty ? _fullName : l.yourNameAppearsHere,
                       style: AppTextStyles.bodySmall.copyWith(
                         color: _fullName.isNotEmpty ? AppColors.textPrimary : AppColors.textTertiary,
                       ),
@@ -1353,20 +1448,20 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
             ),
             const SizedBox(height: AppSizes.md),
             AppTextField(
-              label: 'Username',
+              label: l.username,
               controller: _usernameController,
               validator: Validators.required,
             ),
             const SizedBox(height: AppSizes.md),
             AppTextField(
-              label: 'Email',
+              label: l.email,
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
               validator: Validators.email,
             ),
             const SizedBox(height: AppSizes.md),
             SizedBox(height: AppSizes.lg),
-            Text('Pilih Jenis Identitas', style: AppTextStyles.titleSmall),
+            Text(l.selectIdentityType, style: AppTextStyles.titleSmall),
             SizedBox(height: AppSizes.sm),
             _buildIdentityTypePicker(),
             SizedBox(height: AppSizes.md),
@@ -1400,7 +1495,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
                           Text(_idPhotoLabel, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
                           SizedBox(height: 2),
                           Text(
-                            _ktpFile != null ? '$_idPhotoLabel berhasil diupload' : 'Upload $_idPhotoLabel',
+                            _ktpFile != null ? l.idPhotoUploaded : l.uploadIdPhotoAction,
                             style: AppTextStyles.bodySmall.copyWith(
                               color: _ktpFile != null ? AppColors.successColor : AppColors.textTertiary,
                             ),
@@ -1451,7 +1546,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
                           Text(_idSelfieLabel, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
                           SizedBox(height: 2),
                           Text(
-                            _selfieKtpFile != null ? '$_idSelfieLabel berhasil diupload' : 'Upload $_idSelfieLabel',
+                            _selfieKtpFile != null ? l.selfiePhotoUploaded : l.uploadSelfiePhotoAction,
                             style: AppTextStyles.bodySmall.copyWith(
                               color: _selfieKtpFile != null ? AppColors.successColor : AppColors.textTertiary,
                             ),
@@ -1499,10 +1594,10 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text('Verifikasi Wajah', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+                          Text(l.faceVerification, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
                           SizedBox(height: 2),
                           Text(
-                            _faceScanPath != null ? 'Wajah terverifikasi' : 'Scan wajah dengan kamera',
+                            _faceScanPath != null ? l.faceVerified : l.uploadFacePhotoAction,
                             style: AppTextStyles.bodySmall.copyWith(
                               color: _faceScanPath != null ? AppColors.successColor : AppColors.textTertiary,
                             ),
@@ -1525,28 +1620,28 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
               controller: _nikController,
               keyboardType: _identityType == 'ktp' ? TextInputType.number : TextInputType.text,
               validator: (v) {
-                if (v == null || v.trim().isEmpty) return '$_idLabel wajib diisi';
-                if (_identityType == 'ktp' && v.trim().length != 16) return 'NIK harus 16 digit';
-                if (_identityType == 'sim' && v.trim().length < 6) return 'Nomor SIM minimal 6 karakter';
-                if (_identityType == 'npwp' && v.trim().length < 15) return 'Nomor NPWP minimal 15 digit';
-                if (!['ktp', 'sim', 'npwp'].contains(_identityType) && v.trim().length < 6) return '$_idLabel minimal 6 karakter';
+                if (v == null || v.trim().isEmpty) return l.idNumberRequired;
+                if (_identityType == 'ktp' && v.trim().length != 16) return l.nikMustBe16Digits;
+                if (_identityType == 'sim' && v.trim().length < 6) return l.simMin6Chars;
+                if (_identityType == 'npwp' && v.trim().length < 15) return l.npwpMin15Chars;
+                if (!['ktp', 'sim', 'npwp'].contains(_identityType) && v.trim().length < 6) return l.passportMin6Chars;
                 return null;
               },
             ),
             const SizedBox(height: AppSizes.md),
             SizedBox(height: AppSizes.sm),
             AppTextField(
-              label: 'Tempat',
+              label: l.placeOfBirthLabel,
               controller: _birthPlaceController,
             ),
             SizedBox(height: AppSizes.md),
             AppDatePickerField(
-              label: 'Tanggal Lahir',
+              label: l.dateOfBirthLabel,
               controller: _birthDateController,
             ),
             SizedBox(height: AppSizes.md),
             AppCountryPickerField(
-              label: 'Negara',
+              label: l.country,
               controller: _countryController,
               onChanged: (_) => setState(() {}),
             ),
@@ -1564,16 +1659,16 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
               onPostalCodeChanged: (v) => _postalCode = v,
             ),
             AppTextField(
-              label: 'Detail Alamat',
+              label: l.fullAddress,
               controller: _addressController,
               maxLines: 2,
             ),
             _buildPhoneField(),
             const SizedBox(height: AppSizes.md),
-            Text('Jenis Kelamin', style: AppTextStyles.titleSmall),
+            Text(l.gender, style: AppTextStyles.titleSmall),
             SizedBox(height: AppSizes.sm),
             GestureDetector(
-              onTap: () => _showPickerSheet('Pilih Jenis Kelamin', ['Pria', 'Wanita'], (v) => setState(() => _gender = v)),
+              onTap: () => _showPickerSheet(l.selectGender, [l.male, l.female], (v) => setState(() => _gender = v)),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                 decoration: BoxDecoration(
@@ -1587,7 +1682,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
                     SizedBox(width: AppSizes.md),
                     Expanded(
                       child: Text(
-                        _gender.isEmpty ? 'Pilih Jenis Kelamin' : _gender,
+                        _gender.isEmpty ? l.selectGender : _gender,
                         style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                       ),
                     ),
@@ -1597,10 +1692,10 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
               ),
             ),
             SizedBox(height: AppSizes.md),
-            Text('Agama', style: AppTextStyles.titleSmall),
+            Text(l.religionLabel, style: AppTextStyles.titleSmall),
             SizedBox(height: AppSizes.sm),
             GestureDetector(
-              onTap: () => _showPickerSheet('Pilih Agama', ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu'], (v) => setState(() => _religion = v)),
+              onTap: () => _showPickerSheet(l.selectReligion, [l.islam, l.christian, l.catholic, l.hindu, l.buddha, l.confucian], (v) => setState(() => _religion = v)),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                 decoration: BoxDecoration(
@@ -1614,7 +1709,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
                     SizedBox(width: AppSizes.md),
                     Expanded(
                       child: Text(
-                        _religion.isEmpty ? 'Pilih Agama' : _religion,
+                        _religion.isEmpty ? l.selectReligion : _religion,
                         style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                       ),
                     ),
@@ -1624,10 +1719,10 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
               ),
             ),
             SizedBox(height: AppSizes.md),
-            Text('Status Pernikahan', style: AppTextStyles.titleSmall),
+            Text(l.maritalStatusLabel, style: AppTextStyles.titleSmall),
             SizedBox(height: AppSizes.sm),
             GestureDetector(
-              onTap: () => _showPickerSheet('Pilih Status Pernikahan', ['Belum Menikah', 'Menikah', 'Cerai'], (v) => setState(() => _maritalStatus = v)),
+              onTap: () => _showPickerSheet(l.selectMaritalStatus, [l.single, l.married, l.divorced], (v) => setState(() => _maritalStatus = v)),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                 decoration: BoxDecoration(
@@ -1641,7 +1736,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
                     SizedBox(width: AppSizes.md),
                     Expanded(
                       child: Text(
-                        _maritalStatus.isEmpty ? 'Pilih Status Pernikahan' : _maritalStatus,
+                        _maritalStatus.isEmpty ? l.selectMaritalStatus : _maritalStatus,
                         style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                       ),
                     ),
@@ -1652,14 +1747,14 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
             ),
             SizedBox(height: AppSizes.md),
             AppTextField(
-              label: 'Nama Ibu Kandung',
+              label: l.motherNameLabel,
               controller: _motherNameController,
             ),
             SizedBox(height: AppSizes.md),
-            Text('Pekerjaan', style: AppTextStyles.titleSmall),
+            Text(l.occupationLabel, style: AppTextStyles.titleSmall),
             SizedBox(height: AppSizes.sm),
             GestureDetector(
-              onTap: () => _showPickerSheet('Pilih Pekerjaan', ['Karyawan', 'Wiraswasta', 'Pelajar/Mahasiswa', 'Ibu Rumah Tangga', 'Profesional', 'Lainnya'], (v) => setState(() => _occupation = v)),
+              onTap: () => _showPickerSheet(l.selectOccupation, [l.employee, l.entrepreneur, l.student, l.housewife, l.professional, l.other], (v) => setState(() => _occupation = v)),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                 decoration: BoxDecoration(
@@ -1673,7 +1768,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
                     SizedBox(width: AppSizes.md),
                     Expanded(
                       child: Text(
-                        _occupation.isEmpty ? 'Pilih Pekerjaan' : _occupation,
+                        _occupation.isEmpty ? l.selectOccupation : _occupation,
                         style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                       ),
                     ),
@@ -1683,10 +1778,10 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
               ),
             ),
             SizedBox(height: AppSizes.md),
-            Text('Rentang Penghasilan', style: AppTextStyles.titleSmall),
+            Text(l.incomeRangeLabel, style: AppTextStyles.titleSmall),
             SizedBox(height: AppSizes.sm),
             GestureDetector(
-              onTap: () => _showPickerSheet('Pilih Rentang Penghasilan', ['< Rp 1 Juta', 'Rp 1-5 Juta', 'Rp 5-10 Juta', 'Rp 10-50 Juta', '> Rp 50 Juta'], (v) => setState(() => _incomeRange = v)),
+              onTap: () => _showPickerSheet(l.selectIncomeRange, [l.lessThan1M, l.range1to5M, l.range5to10M, l.range10to50M, l.moreThan50M], (v) => setState(() => _incomeRange = v)),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                 decoration: BoxDecoration(
@@ -1700,7 +1795,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
                     SizedBox(width: AppSizes.md),
                     Expanded(
                       child: Text(
-                        _incomeRange.isEmpty ? 'Pilih Rentang Penghasilan' : _incomeRange,
+                        _incomeRange.isEmpty ? l.selectIncomeRange : _incomeRange,
                         style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                       ),
                     ),
@@ -1710,10 +1805,10 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
               ),
             ),
             SizedBox(height: AppSizes.md),
-            Text('Sumber Dana', style: AppTextStyles.titleSmall),
+            Text(l.sourceOfFundsLabel, style: AppTextStyles.titleSmall),
             SizedBox(height: AppSizes.sm),
             GestureDetector(
-              onTap: () => _showPickerSheet('Pilih Sumber Dana', ['Gaji', 'Bisnis/Usaha', 'Investasi', 'Hadiah/Warisan', 'Lainnya'], (v) => setState(() => _sourceOfFunds = v)),
+              onTap: () => _showPickerSheet(l.selectSourceOfFunds, [l.salary, l.business, l.investment, l.gift, l.other], (v) => setState(() => _sourceOfFunds = v)),
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                 decoration: BoxDecoration(
@@ -1727,7 +1822,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
                     SizedBox(width: AppSizes.md),
                     Expanded(
                       child: Text(
-                        _sourceOfFunds.isEmpty ? 'Pilih Sumber Dana' : _sourceOfFunds,
+                        _sourceOfFunds.isEmpty ? l.selectSourceOfFunds : _sourceOfFunds,
                         style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                       ),
                     ),
@@ -1738,7 +1833,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
             ),
             SizedBox(height: AppSizes.md),
             AppTextField(
-              label: 'Kata Sandi',
+              label: l.password,
               controller: _passwordController,
               obscureText: _obscurePassword,
               validator: Validators.password,
@@ -1754,7 +1849,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
             ],
             const SizedBox(height: AppSizes.md),
             AppTextField(
-              label: 'Konfirmasi Kata Sandi',
+              label: l.confirmPasswordLabel,
               controller: _confirmPasswordController,
               obscureText: _obscureConfirmPassword,
               validator: (v) => Validators.confirmPassword(v, _passwordController.text),
@@ -1769,7 +1864,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
             _agreementCheckbox(),
             const SizedBox(height: AppSizes.lg),
             AppButton(
-              label: 'Daftar Sekarang',
+              label: l.signUpNow,
               loading: isLoading,
               disabled: !_agreeTerms || !_rememberMe,
               onPressed: _onRegister,
@@ -1778,13 +1873,13 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('Sudah punya akun?', style: AppTextStyles.bodyMedium),
+                Text(l.alreadyHaveAccount, style: AppTextStyles.bodyMedium),
                 GestureDetector(
                   onTap: () {
                     Navigator.of(context).pop();
                     showSignInSheet(context);
                   },
-                  child: Text('Masuk', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w600)),
+                  child: Text(l.signIn, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w600)),
                 ),
               ],
             ),
@@ -1796,6 +1891,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
   }
 
   Widget _agreementCheckbox() {
+    final l = AppLocalizations.of(context)!;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -1834,49 +1930,37 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
               text: TextSpan(
                 style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
                 children: [
-                  const TextSpan(text: 'Dengan mencentang Setuju & Bergabung atau Lanjutkan, Anda menyetujui '),
-                  WidgetSpan(
-                    child: GestureDetector(
-                      onTap: () => showAgreementModal(context, mode: AgreementMode.terms),
-                      child: Text(
-                        'Perjanjian Pengguna',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.primaryColor,
-                          fontWeight: FontWeight.w600,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
+                  TextSpan(text: l.agreeJoinText),
+                  TextSpan(
+                    text: l.userAgreement,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.primaryColor,
+                      fontWeight: FontWeight.w600,
+                      decoration: TextDecoration.underline,
                     ),
+                    recognizer: TapGestureRecognizer()..onTap = () => showAgreementModal(context, mode: AgreementMode.terms),
                   ),
-                  const TextSpan(text: ', '),
-                  WidgetSpan(
-                    child: GestureDetector(
-                      onTap: () => showAgreementModal(context, mode: AgreementMode.privacy),
-                      child: Text(
-                        'Kebijakan Privasi',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.primaryColor,
-                          fontWeight: FontWeight.w600,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
+                  TextSpan(text: l.agreeComma),
+                  TextSpan(
+                    text: l.privacyPolicy,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.primaryColor,
+                      fontWeight: FontWeight.w600,
+                      decoration: TextDecoration.underline,
                     ),
+                    recognizer: TapGestureRecognizer()..onTap = () => showAgreementModal(context, mode: AgreementMode.privacy),
                   ),
-                  const TextSpan(text: ' dan '),
-                  WidgetSpan(
-                    child: GestureDetector(
-                      onTap: () => showAgreementModal(context, mode: AgreementMode.weddingPolicy),
-                      child: Text(
-                        'Kebijakan Aplikasi',
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: AppColors.primaryColor,
-                          fontWeight: FontWeight.w600,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
+                  TextSpan(text: l.agreeAnd),
+                  TextSpan(
+                    text: l.appPolicy,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: AppColors.primaryColor,
+                      fontWeight: FontWeight.w600,
+                      decoration: TextDecoration.underline,
                     ),
+                    recognizer: TapGestureRecognizer()..onTap = () => showAgreementModal(context, mode: AgreementMode.weddingPolicy),
                   ),
-                  const TextSpan(text: ' Wedding Flowers Decorasi.'),
+                  TextSpan(text: l.agreeSuffix),
                 ],
               ),
             ),
@@ -1887,6 +1971,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
   }
 
   Widget _rememberCheckbox() {
+    final l = AppLocalizations.of(context)!;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -1905,12 +1990,409 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
           child: GestureDetector(
             onTap: () => setState(() => _rememberMe = !_rememberMe),
             child: Text(
-              'Ingat Saya',
+              l.rememberMe,
               style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
             ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _OtpVerificationSheetContent extends StatefulWidget {
+  final String? email;
+  final String purpose;
+  const _OtpVerificationSheetContent({this.email, this.purpose = 'forgot_password'});
+
+  @override
+  State<_OtpVerificationSheetContent> createState() => _OtpVerificationSheetContentState();
+}
+
+class _OtpVerificationSheetContentState extends State<_OtpVerificationSheetContent> {
+  final _otpControllers = List.generate(6, (_) => TextEditingController());
+  final _otpFocusNodes = List.generate(6, (_) => FocusNode());
+  int _resendSeconds = 0;
+  Timer? _resendTimer;
+  bool _verifying = false;
+  bool _sending = false;
+  bool _showPaste = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _autoSendOtp();
+    _checkClipboard();
+  }
+
+  Future<void> _autoSendOtp() async {
+    if (widget.email == null || widget.email!.isEmpty) return;
+    setState(() => _sending = true);
+    try {
+      await DioClient.instance.post(
+        ApiEndpoints.sendOtp,
+        data: {'email': widget.email, 'purpose': widget.purpose},
+      );
+      if (mounted) _startResendTimer();
+    } on DioException {
+      // caller may have sent OTP already; auto-resend handles retry
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  Future<void> _checkClipboard() async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    if (data?.text == null) return;
+    final digits = data!.text!.replaceAll(RegExp(r'\D'), '');
+    if (digits.length >= 6 && mounted) {
+      setState(() => _showPaste = true);
+    }
+  }
+
+  Future<void> _pasteOtp() async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    if (data?.text == null) return;
+    final digits = data!.text!.replaceAll(RegExp(r'\D'), '');
+    for (int i = 0; i < 6 && i < digits.length; i++) {
+      _otpControllers[i].text = digits[i];
+    }
+    _otpFocusNodes[5].requestFocus();
+    if (mounted) setState(() => _showPaste = false);
+  }
+
+  void _clearAll() {
+    for (final c in _otpControllers) { c.clear(); }
+    _otpFocusNodes[0].requestFocus();
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    for (final c in _otpControllers) { c.dispose(); }
+    for (final f in _otpFocusNodes) { f.dispose(); }
+    _resendTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _startResendTimer() async {
+    _resendSeconds = 120;
+    _resendTimer?.cancel();
+    _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_resendSeconds <= 0) {
+        timer.cancel();
+        _onResend();
+        return;
+      }
+      setState(() => _resendSeconds--);
+    });
+  }
+
+  void _onOtpChanged(int index, String value) {
+    if (value.length > 1) {
+      final digits = value.replaceAll(RegExp(r'\D'), '');
+      for (int i = 0; i < 6 && i < digits.length; i++) {
+        _otpControllers[i].text = digits[i];
+      }
+      final nextIndex = digits.length < 6 ? digits.length : 5;
+      _otpFocusNodes[nextIndex].requestFocus();
+      return;
+    }
+    if (value.isNotEmpty && index < 5) {
+      _otpFocusNodes[index + 1].requestFocus();
+    } else if (value.isEmpty && index == 0) {
+      _clearAll();
+    } else if (value.isEmpty && index > 0) {
+      _otpFocusNodes[index - 1].requestFocus();
+    }
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _onVerify() async {
+    final l = AppLocalizations.of(context)!;
+    final otp = _otpControllers.map((c) => c.text).join();
+    if (otp.length < 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l.enter6DigitOtp), backgroundColor: AppColors.errorColor),
+      );
+      return;
+    }
+    setState(() => _verifying = true);
+    try {
+      await DioClient.instance.post(
+        ApiEndpoints.verifyOtp,
+        data: {'email': widget.email, 'otp': otp, 'purpose': widget.purpose},
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l.verificationCodeSent), backgroundColor: AppColors.successColor),
+      );
+      Navigator.of(context).pop();
+      if (widget.purpose == 'forgot_password') {
+        showResetPasswordSheet(context);
+      } else if (widget.purpose == 'google_register') {
+        context.go('/complete-profile');
+      } else if (widget.purpose == 'verify_email') {
+        context.go('/home');
+      }
+    } on DioException catch (e) {
+      final msg = e.response?.data?['message'] as String? ?? l.failedVerifyOtp;
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(msg), backgroundColor: AppColors.errorColor),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _verifying = false);
+    }
+  }
+
+  Future<void> _onResend() async {
+    final l = AppLocalizations.of(context)!;
+    if (_resendSeconds > 0 || _sending) return;
+    setState(() => _sending = true);
+    try {
+      await DioClient.instance.post(
+        ApiEndpoints.sendOtp,
+        data: {'email': widget.email, 'purpose': widget.purpose},
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l.verificationCodeSent), backgroundColor: AppColors.successColor),
+        );
+        _startResendTimer();
+      }
+    } on DioException catch (e) {
+      final msg = e.response?.data?['message'] as String? ?? l.failedSendVerificationCode;
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(msg), backgroundColor: AppColors.errorColor),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _sending = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(AppSizes.lg, AppSizes.sm, AppSizes.lg, AppSizes.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: AppSizes.sm),
+          Text(l.verify, style: AppTextStyles.headlineMedium),
+          const SizedBox(height: AppSizes.xs),
+          Text(
+            widget.email != null
+                ? '${l.enterOtpSentTo} ${widget.email!}'
+                : '${l.enterOtpSentTo} ${l.email}',
+            style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: AppSizes.lg),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: List.generate(6, (i) {
+              return SizedBox(
+                width: 52, height: 58,
+                child: TextFormField(
+                  controller: _otpControllers[i],
+                  focusNode: _otpFocusNodes[i],
+                  textAlign: TextAlign.center,
+                  keyboardType: TextInputType.number,
+                  maxLength: 1,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                  ],
+                  style: GoogleFonts.inter(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : const Color(0xFF1A1A2E),
+                  ),
+                  decoration: InputDecoration(
+                    counterText: '',
+                    isDense: true,
+                    contentPadding: EdgeInsets.zero,
+                    filled: true,
+                    fillColor: Theme.of(context).brightness == Brightness.dark
+                        ? const Color(0xFF2C2C2C)
+                        : Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? const Color(0xFF3A3A3A)
+                            : AppColors.secondaryColor,
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.primaryColor, width: 2),
+                    ),
+                  ),
+                  onChanged: (v) => _onOtpChanged(i, v),
+                ),
+              );
+            }),
+          ),
+          const SizedBox(height: 8),
+          if (_showPaste)
+            Center(
+              child: GestureDetector(
+                onTap: _pasteOtp,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryColor.withAlpha(20),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.content_paste, size: 16, color: AppColors.primaryColor),
+                      const SizedBox(width: 4),
+                      Text(
+                        l.pasteOtp,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: theme.brightness == Brightness.dark ? Colors.white70 : AppColors.primaryColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          const SizedBox(height: 4),
+          AppButton(
+            label: l.verify,
+            loading: _verifying,
+            onPressed: _onVerify,
+          ),
+          const SizedBox(height: AppSizes.md),
+          Center(
+            child: Text(
+              _sending
+                  ? l.sending
+                  : _resendSeconds > 0
+                      ? '${l.resendOtp} ($_resendSeconds)'
+                      : l.sending,
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSizes.md),
+        ],
+      ),
+    );
+  }
+}
+
+class _ResetPasswordSheetContent extends StatefulWidget {
+  const _ResetPasswordSheetContent();
+
+  @override
+  State<_ResetPasswordSheetContent> createState() => _ResetPasswordSheetContentState();
+}
+
+class _ResetPasswordSheetContentState extends State<_ResetPasswordSheetContent> {
+  final _formKey = GlobalKey<FormState>();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
+  bool _loading = false;
+
+  @override
+  void dispose() {
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  void _onResetPassword() async {
+    final l = AppLocalizations.of(context)!;
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _loading = true);
+    try {
+      await DioClient.instance.post(
+        ApiEndpoints.resetPassword,
+        data: {
+          'password': _passwordController.text,
+          'password_confirmation': _confirmPasswordController.text,
+        },
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l.passwordResetSuccess), backgroundColor: AppColors.successColor),
+      );
+      Navigator.of(context).pop();
+      showSignInSheet(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l.passwordResetFailed), backgroundColor: AppColors.errorColor),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(AppSizes.lg, AppSizes.sm, AppSizes.lg, AppSizes.lg),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: AppSizes.sm),
+            Text(l.resetPassword, style: AppTextStyles.headlineMedium),
+            const SizedBox(height: AppSizes.xs),
+            Text(
+              l.createNewPassword,
+              style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: AppSizes.xl),
+            AppTextField(
+              label: l.newPassword,
+              controller: _passwordController,
+              obscureText: _obscurePassword,
+              validator: Validators.password,
+              suffixIcon: IconButton(
+                icon: Icon(_obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+              ),
+            ),
+            const SizedBox(height: AppSizes.md),
+            AppTextField(
+              label: l.confirmNewPassword,
+              controller: _confirmPasswordController,
+              obscureText: _obscureConfirmPassword,
+              validator: (v) => Validators.confirmPassword(v, _passwordController.text),
+              suffixIcon: IconButton(
+                icon: Icon(_obscureConfirmPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+              ),
+            ),
+            const SizedBox(height: AppSizes.xl),
+            AppButton(
+              label: l.resetPassword,
+              loading: _loading,
+              onPressed: _onResetPassword,
+            ),
+            const SizedBox(height: AppSizes.md),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -1934,6 +2416,7 @@ class _ForgotPasswordSheetContentState extends State<_ForgotPasswordSheetContent
   }
 
   void _onSendResetCode() async {
+    final l = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
 
@@ -1944,13 +2427,14 @@ class _ForgotPasswordSheetContentState extends State<_ForgotPasswordSheetContent
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Kode reset telah dikirim ke email Anda'), backgroundColor: AppColors.successColor),
+        SnackBar(content: Text(l.resetCodeSentToEmail), backgroundColor: AppColors.successColor),
       );
       Navigator.of(context).pop();
+      showOtpVerificationSheet(context, email: _emailController.text.trim());
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal mengirim kode reset. Coba lagi.'), backgroundColor: AppColors.errorColor),
+        SnackBar(content: Text(l.failedSendResetCode), backgroundColor: AppColors.errorColor),
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -1959,30 +2443,31 @@ class _ForgotPasswordSheetContentState extends State<_ForgotPasswordSheetContent
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(AppSizes.lg, AppSizes.sm, AppSizes.lg, AppSizes.lg),
       child: Form(
         key: _formKey,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(height: AppSizes.sm),
-            Text('Lupa Password?', style: AppTextStyles.headlineMedium),
+            Text(l.forgotPassword, style: AppTextStyles.headlineMedium),
             const SizedBox(height: AppSizes.xs),
             Text(
-              'Masukkan email Anda untuk menerima kode reset password',
+              l.enterEmailForResetPassword,
               style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary),
             ),
             const SizedBox(height: AppSizes.xl),
             AppTextField(
-              label: 'Email',
+              label: l.email,
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
               validator: Validators.email,
             ),
             const SizedBox(height: AppSizes.xl),
             AppButton(
-              label: 'Kirim Kode Reset',
+              label: l.sendResetCode,
               loading: _loading,
               onPressed: _onSendResetCode,
             ),

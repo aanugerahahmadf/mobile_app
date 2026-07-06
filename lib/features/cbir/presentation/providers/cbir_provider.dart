@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/cbir_repository_impl.dart';
 import '../../data/models/cbir_result_model.dart';
 import '../../domain/cbir_repository.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 final cbirRepositoryProvider = Provider<CbirRepository>((ref) {
   return CbirRepositoryImpl();
@@ -20,6 +21,10 @@ class CbirState {
   final bool? hasDiscount;
   final int? minRating;
 
+  final File? arithmeticImage1;
+  final File? arithmeticImage2;
+  final String? operation;
+
   const CbirState({
     this.results = const [],
     this.loading = false,
@@ -29,6 +34,9 @@ class CbirState {
     this.categoryId,
     this.hasDiscount,
     this.minRating,
+    this.arithmeticImage1,
+    this.arithmeticImage2,
+    this.operation,
   });
 
   List<CbirResultItem> get filteredResults {
@@ -80,6 +88,12 @@ class CbirState {
     bool clearHasDiscount = false,
     int? minRating,
     bool clearMinRating = false,
+    File? arithmeticImage1,
+    bool clearArithmeticImage1 = false,
+    File? arithmeticImage2,
+    bool clearArithmeticImage2 = false,
+    String? operation,
+    bool clearOperation = false,
   }) {
     return CbirState(
       results: results ?? this.results,
@@ -90,14 +104,23 @@ class CbirState {
       categoryId: clearCategoryId ? null : (categoryId ?? this.categoryId),
       hasDiscount: clearHasDiscount ? null : (hasDiscount ?? this.hasDiscount),
       minRating: clearMinRating ? null : (minRating ?? this.minRating),
+      arithmeticImage1: clearArithmeticImage1 ? null : (arithmeticImage1 ?? this.arithmeticImage1),
+      arithmeticImage2: clearArithmeticImage2 ? null : (arithmeticImage2 ?? this.arithmeticImage2),
+      operation: clearOperation ? null : (operation ?? this.operation),
     );
   }
 }
 
 class CbirNotifier extends StateNotifier<CbirState> {
   final CbirRepository _repository;
+  final Ref _ref;
 
-  CbirNotifier(this._repository) : super(const CbirState());
+  CbirNotifier(this._repository, this._ref) : super(const CbirState());
+
+  bool get _isAdmin {
+    final authState = _ref.read(authProvider);
+    return authState is AuthAuthenticated && authState.user.isAdmin;
+  }
 
   Future<void> search(File image) async {
     state = state.copyWith(
@@ -108,7 +131,7 @@ class CbirNotifier extends StateNotifier<CbirState> {
     );
 
     try {
-      final results = await _repository.searchByImage(image);
+      final results = await _repository.searchByImage(image, isAdmin: _isAdmin);
       state = state.copyWith(results: results, loading: false);
     } on DioException catch (e) {
       final message = e.response?.data?['message'] as String? ?? 'Pencarian gagal. Silakan coba lagi.';
@@ -116,6 +139,42 @@ class CbirNotifier extends StateNotifier<CbirState> {
     } catch (e) {
       state = state.copyWith(loading: false, error: e.toString());
     }
+  }
+
+  Future<void> arithmeticSearch() async {
+    if (state.arithmeticImage1 == null || state.arithmeticImage2 == null || state.operation == null) {
+      state = state.copyWith(error: 'Pilih 2 gambar dan operasi aritmetika');
+      return;
+    }
+
+    state = state.copyWith(loading: true, error: null, clearError: true);
+
+    try {
+      final results = await _repository.arithmeticSearch(
+        image1: state.arithmeticImage1!,
+        image2: state.arithmeticImage2!,
+        operation: state.operation!,
+        isAdmin: _isAdmin,
+      );
+      state = state.copyWith(results: results, loading: false);
+    } on DioException catch (e) {
+      final message = e.response?.data?['message'] as String? ?? 'Pencarian aritmetika gagal';
+      state = state.copyWith(loading: false, error: message);
+    } catch (e) {
+      state = state.copyWith(loading: false, error: e.toString());
+    }
+  }
+
+  void setArithmeticImage1(File? file) {
+    state = state.copyWith(arithmeticImage1: file, clearArithmeticImage1: file == null);
+  }
+
+  void setArithmeticImage2(File? file) {
+    state = state.copyWith(arithmeticImage2: file, clearArithmeticImage2: file == null);
+  }
+
+  void setOperation(String? value) {
+    state = state.copyWith(operation: value, clearOperation: value == null);
   }
 
   void setSortBy(String? value) {
@@ -134,11 +193,21 @@ class CbirNotifier extends StateNotifier<CbirState> {
     state = state.copyWith(minRating: value, clearMinRating: value == null);
   }
 
-  void reset() {
-    state = const CbirState();
+  void reset({
+    bool keepArithmetic = false,
+  }) {
+    if (keepArithmetic) {
+      state = CbirState(
+        arithmeticImage1: state.arithmeticImage1,
+        arithmeticImage2: state.arithmeticImage2,
+        operation: state.operation,
+      );
+    } else {
+      state = const CbirState();
+    }
   }
 }
 
 final cbirProvider = StateNotifierProvider<CbirNotifier, CbirState>((ref) {
-  return CbirNotifier(ref.watch(cbirRepositoryProvider));
+  return CbirNotifier(ref.watch(cbirRepositoryProvider), ref);
 });

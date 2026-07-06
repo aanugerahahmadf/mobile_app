@@ -13,6 +13,7 @@ import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../data/order_repository_impl.dart';
 import '../../../chat/presentation/providers/chat_provider.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 
 class OrderDetailPage extends ConsumerStatefulWidget {
   final String id;
@@ -49,26 +50,28 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
   }
 
   String _statusLabel(String? status) {
+    final l = AppLocalizations.of(context)!;
     switch (status) {
-      case 'pending': return 'Menunggu Konfirmasi';
-      case 'confirmed': return 'Dikonfirmasi';
-      case 'preparing': return 'Diproses';
-      case 'event_day': return 'Hari-H';
-      case 'completed': return 'Selesai';
-      case 'cancelled': return 'Dibatalkan';
+      case 'pending': return l.awaitingConfirmation;
+      case 'confirmed': return l.confirmed;
+      case 'preparing': return l.processed;
+      case 'event_day': return l.eventDay;
+      case 'completed': return l.completed;
+      case 'cancelled': return l.cancelled;
       default: return status ?? '-';
     }
   }
 
   String _payStatusLabel(String? status) {
+    final l = AppLocalizations.of(context)!;
     switch (status) {
-      case 'unpaid': return 'Belum Dibayar';
-      case 'pending': return 'Menunggu Pembayaran';
-      case 'partial': return 'Dibayar Sebagian';
-      case 'paid': return 'Lunas';
-      case 'failed': return 'Gagal';
-      case 'refunded': return 'Dikembalikan';
-      case 'cancelled': return 'Dibatalkan';
+      case 'unpaid': return l.unpaid;
+      case 'pending': return l.awaitingPayment;
+      case 'partial': return l.partiallyPaid;
+      case 'paid': return l.paidInFull;
+      case 'failed': return l.failed;
+      case 'refunded': return l.refunded;
+      case 'cancelled': return l.cancelled;
       default: return status ?? '-';
     }
   }
@@ -77,7 +80,7 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
     switch (status) {
       case 'pending': return AppColors.warningColor;
       case 'confirmed': case 'preparing': return AppColors.primaryColor;
-      case 'event_day': return const Color(0xFF9C27B0);
+      case 'event_day': return AppColors.eventDayColor;
       case 'completed': return AppColors.successColor;
       case 'cancelled': case 'failed': case 'refunded': return AppColors.errorColor;
       default: return AppColors.textSecondary;
@@ -143,14 +146,15 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
   }
 
   void _cancelOrder() async {
+    final l = AppLocalizations.of(context)!;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Batalkan Pesanan'),
-        content: Text('Yakin ingin membatalkan pesanan ini? Tindakan ini tidak dapat dibatalkan.'),
+        title: Text(l.cancelOrder),
+        content: Text(l.confirmCancelOrder),
         actions: [
-          TextButton(onPressed: () => context.pop(false), child: Text('Tidak')),
-          AppButton(label: 'Ya, Batalkan', onPressed: () => context.pop(true), type: ButtonType.text),
+          TextButton(onPressed: () => context.pop(false), child: Text(l.no)),
+          AppButton(label: l.yesCancel, onPressed: () => context.pop(true), type: ButtonType.text),
         ],
       ),
     );
@@ -161,19 +165,20 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
       final repo = OrderRepositoryImpl();
       await repo.cancelOrder(widget.id);
       if (mounted) {
-        AppSnackBar.show(context, 'Pesanan dibatalkan', type: SnackBarType.success);
+        AppSnackBar.show(context, l.orderCancelled, type: SnackBarType.success);
         _loadOrder();
       }
     } catch (e) {
-      if (mounted) AppSnackBar.show(context, 'Gagal membatalkan', type: SnackBarType.error);
+      if (mounted) AppSnackBar.show(context, l.failedCancelOrder, type: SnackBarType.error);
     }
     if (mounted) setState(() => _cancelLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text('Detail Pesanan')),
+      appBar: AppBar(title: Text(l.orderDetail)),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
@@ -195,7 +200,7 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text('${'Pesanan'} #${_order!['order_number'] ?? widget.id}', style: AppTextStyles.titleMedium),
+                                    Text('${l.order} #${_order!['order_number'] ?? widget.id}', style: AppTextStyles.titleMedium),
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                       decoration: BoxDecoration(
@@ -217,19 +222,19 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                                   ],
                                 ),
                                 const SizedBox(height: 8),
-                                _buildInfoRow('Tanggal', Formatters.date(_order!['created_at'] as String? ?? '')),
-                                _buildInfoRow('Lokasi', _order!['location_address'] as String? ?? _order!['notes'] as String? ?? '-'),
+                                _buildInfoRow(l.date, Formatters.date(_order!['created_at'] as String? ?? '')),
+                                _buildInfoRow(l.location, _order!['location_address'] as String? ?? _order!['notes'] as String? ?? '-'),
                                 if (_order!['event_date'] != null)
-                                  _buildInfoRow('Tanggal Acara', Formatters.date(_order!['event_date'] as String)),
+                                  _buildInfoRow(l.eventDate, Formatters.date(_order!['event_date'] as String)),
                                 if (_order!['booking_date'] != null)
-                                  _buildInfoRow('Tanggal Booking', Formatters.date(_order!['booking_date'] as String)),
-                                _buildInfoRow('Pembayaran', _payStatusLabel(_order!['payment_status'] as String?)),
+                                  _buildInfoRow(l.bookingDate, Formatters.date(_order!['booking_date'] as String)),
+                                _buildInfoRow(l.payment, _payStatusLabel(_order!['payment_status'] as String?)),
                               ],
                             ),
                           ),
                         ),
                         const SizedBox(height: 12),
-                        Text('Item', style: AppTextStyles.titleMedium),
+                        Text(l.orderItems, style: AppTextStyles.titleMedium),
                         const SizedBox(height: 8),
                         () {
                           final pkg = _order!['package'] as Map<String, dynamic>?;
@@ -237,7 +242,7 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                           final item = pkg ?? prod;
                           if (item == null) return const SizedBox.shrink();
                           final imageUrl = item['image_url'] as String? ?? '';
-                          final name = item['name'] as String? ?? 'Item';
+                          final name = item['name'] as String? ?? l.orderItems;
                           final price = (item['price'] as num?)?.toDouble() ?? 0;
                           return Card(
                             child: ListTile(
@@ -247,12 +252,12 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                                   imageUrl: imageUrl,
                                   width: 60, height: 60, fit: BoxFit.cover,
                                   placeholder: (_, _) => Shimmer.fromColors(
-                                    baseColor: Colors.grey[300]!, highlightColor: Colors.grey[100]!,
-                                    child: Container(color: Colors.white),
+                                    baseColor: AppColors.shimmerBase, highlightColor: AppColors.shimmerHighlight,
+                                    child: Container(color: AppColors.surfaceColor),
                                   ),
                                   errorWidget: (_, _, _) => Container(
-                                    color: Colors.grey[200],
-                                    child: const Icon(Icons.broken_image, color: Colors.grey),
+                                    color: AppColors.secondaryColor,
+                                    child: Icon(Icons.broken_image, color: AppColors.textTertiary),
                                   ),
                                 ),
                               ),
@@ -268,36 +273,36 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                             padding: const EdgeInsets.all(AppSizes.md),
                             child: Column(
                               children: [
-                                _buildPriceRow('Subtotal', (_order!['total_price'] as num?)?.toInt() ?? 0),
+                                _buildPriceRow(l.subtotal, (_order!['total_price'] as num?)?.toInt() ?? 0),
                                 const Divider(),
-                                _buildPriceRow('Total', (_order!['total_price'] as num?)?.toInt() ?? 0, bold: true),
+                                _buildPriceRow(l.total, (_order!['total_price'] as num?)?.toInt() ?? 0, bold: true),
                               ],
                             ),
                           ),
                         ),
                         const SizedBox(height: 16),
-                        Text('Aksi', style: AppTextStyles.titleMedium),
+                        Text(l.actions, style: AppTextStyles.titleMedium),
                         const SizedBox(height: 8),
-                        _buildActionButton(Icons.picture_as_pdf, 'Download Invoice PDF', _downloadPdf, loading: _pdfLoading),
-                        _buildActionButton(Icons.email_outlined, 'Kirim ke Email (Gmail)', _sendEmail, loading: _emailLoading),
-                        _buildActionButton(Icons.chat_outlined, 'Kirim ke WhatsApp', _sendWhatsapp),
+                        _buildActionButton(Icons.picture_as_pdf, l.downloadPdf, _downloadPdf, loading: _pdfLoading),
+                        _buildActionButton(Icons.email_outlined, l.sendViaGmail, _sendEmail, loading: _emailLoading),
+                        _buildActionButton(Icons.chat_outlined, l.sendToWhatsapp, _sendWhatsapp),
 
                         if (_order!['status'] == 'pending') ...[
                           const SizedBox(height: 8),
                           AppButton(
-                            label: 'Bayar Sekarang',
+                            label: l.payNow,
                             onPressed: () => context.push('/payment/${widget.id}'),
                           ),
                           const SizedBox(height: 8),
                           AppButton(
-                            label: 'Batalkan Pesanan',
+                            label: l.cancelOrder,
                             onPressed: _cancelLoading ? null : _cancelOrder,
                             type: ButtonType.outline,
                           ),
                         ],
                         const SizedBox(height: 8),
                         AppButton(
-                          label: 'Chat Admin',
+                          label: l.chatWithAdmin,
                           onPressed: () async {
                             try {
                               final notifier = ref.read(chatProvider.notifier);
@@ -307,8 +312,9 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                               if (context.mounted) context.push('/chat/$inboxId');
                             } catch (_) {
                               if (context.mounted) {
+                                final l = AppLocalizations.of(context)!;
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Gagal memulai percakapan')),
+                                  SnackBar(content: Text(l.failedStartConversation)),
                                 );
                               }
                             }
@@ -331,7 +337,7 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
             ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 2))
             : Icon(icon, color: AppColors.primaryColor),
         title: Text(label, style: AppTextStyles.bodyMedium),
-        trailing: const Icon(Icons.chevron_right, color: AppColors.textSecondary),
+        trailing: Icon(Icons.chevron_right, color: AppColors.textSecondary),
         onTap: loading ? null : onPressed,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),

@@ -25,14 +25,14 @@ class CategoryModel {
       icon: json['icon'] as String?,
       color: json['color'] as String?,
       description: json['description'] as String?,
-      packagesCount: json['packages_count'] as int?,
+      packagesCount: json['category_packages_count'] as int?,
     );
   }
 
   Map<String, dynamic> toJson() => {
     'id': id, 'name': name, 'slug': slug, 'icon': icon,
     'color': color, 'description': description,
-    'packages_count': packagesCount,
+    'category_packages_count': packagesCount,
   };
 
   CategoryModel copyWith({

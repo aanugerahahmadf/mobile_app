@@ -10,6 +10,7 @@ import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../widgets/auth_modals.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 class OtpEmailVerificationPage extends StatefulWidget {
   final String? email;
   final String purpose;
@@ -64,9 +65,10 @@ class _OtpEmailVerificationPageState extends State<OtpEmailVerificationPage> {
   }
 
   Future<void> _onVerify() async {
+    final l = AppLocalizations.of(context)!;
     final otp = _otpControllers.map((c) => c.text).join();
     if (otp.length < 6) {
-      AppSnackBar.show(context, 'Masukkan 6 digit kode OTP', type: SnackBarType.error);
+      AppSnackBar.show(context, l.enter6DigitOtp, type: SnackBarType.error);
       return;
     }
 
@@ -83,15 +85,17 @@ class _OtpEmailVerificationPageState extends State<OtpEmailVerificationPage> {
       );
 
       if (mounted) {
-        AppSnackBar.show(context, 'Email berhasil diverifikasi', type: SnackBarType.success);
-        if (widget.purpose == 'google_register' || widget.purpose == 'verify_email') {
+        AppSnackBar.show(context, l.verificationCodeSent, type: SnackBarType.success);
+        if (widget.purpose == 'google_register') {
+          context.pushReplacement('/complete-profile');
+        } else if (widget.purpose == 'verify_email') {
           context.pushReplacement('/edit-profile');
         } else {
           showSignInSheet(context);
         }
       }
     } on DioException catch (e) {
-      final msg = e.response?.data?['message'] as String? ?? 'Gagal memverifikasi OTP';
+      final msg = e.response?.data?['message'] as String? ?? l.failedVerifyOtp;
       if (mounted) {
         AppSnackBar.show(context, msg, type: SnackBarType.error);
       }
@@ -101,6 +105,7 @@ class _OtpEmailVerificationPageState extends State<OtpEmailVerificationPage> {
   }
 
   Future<void> _onResend() async {
+    final l = AppLocalizations.of(context)!;
     if (_resendSeconds > 0 || _sending) return;
 
     setState(() => _sending = true);
@@ -112,11 +117,11 @@ class _OtpEmailVerificationPageState extends State<OtpEmailVerificationPage> {
       );
 
       if (mounted) {
-        AppSnackBar.show(context, 'Kode OTP telah dikirim ulang', type: SnackBarType.success);
+        AppSnackBar.show(context, l.verificationCodeSent, type: SnackBarType.success);
         _startResendTimer();
       }
     } on DioException catch (e) {
-      final msg = e.response?.data?['message'] as String? ?? 'Gagal mengirim ulang OTP';
+      final msg = e.response?.data?['message'] as String? ?? l.failedSendVerificationCode;
       if (mounted) {
         AppSnackBar.show(context, msg, type: SnackBarType.error);
       }
@@ -127,8 +132,9 @@ class _OtpEmailVerificationPageState extends State<OtpEmailVerificationPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.backgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -142,12 +148,12 @@ class _OtpEmailVerificationPageState extends State<OtpEmailVerificationPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Verifikasi Email', style: AppTextStyles.headlineMedium),
+            Text(l.verify, style: AppTextStyles.headlineMedium),
             SizedBox(height: AppSizes.xs),
             Text(
               widget.email != null
-                  ? 'Masukkan kode OTP yang telah dikirim ke ${widget.email!}'
-                  : 'Masukkan kode OTP yang telah dikirim ke email Anda',
+                  ? '${l.enterOtpSentTo} ${widget.email!}'
+                  : '${l.enterOtpSentTo} ${l.email}',
               style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary),
             ),
             SizedBox(height: AppSizes.xl),
@@ -186,7 +192,7 @@ class _OtpEmailVerificationPageState extends State<OtpEmailVerificationPage> {
             ),
             SizedBox(height: AppSizes.xl),
             AppButton(
-              label: 'Verifikasi',
+              label: l.verify,
               loading: _verifying,
               onPressed: _onVerify,
             ),
@@ -196,10 +202,10 @@ class _OtpEmailVerificationPageState extends State<OtpEmailVerificationPage> {
                 onPressed: _resendSeconds > 0 || _sending ? null : _onResend,
                 child: Text(
                   _sending
-                      ? 'Mengirim...'
+                      ? l.sending
                       : _resendSeconds > 0
-                          ? '${'Kirim Ulang'} ($_resendSeconds)'
-                          : 'Kirim Ulang',
+                          ? '${l.resendOtp} ($_resendSeconds)'
+                          : l.resendOtp,
                   style: AppTextStyles.bodyMedium.copyWith(
                     color: _resendSeconds > 0 ? AppColors.textSecondary : AppColors.primaryColor,
                   ),

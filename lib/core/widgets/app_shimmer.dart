@@ -24,7 +24,7 @@ class AppShimmer extends StatelessWidget {
         width: width,
         height: height,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surfaceColor,
           borderRadius: BorderRadius.circular(borderRadius),
         ),
       ),
@@ -56,37 +56,31 @@ class AppShimmerGrid extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: Shimmer.fromColors(
-                baseColor: AppColors.shimmerBase,
-                highlightColor: AppColors.shimmerHighlight,
+              child: _shimmer(
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.surfaceColor,
                     borderRadius: BorderRadius.circular(AppSizes.cardRadius),
                   ),
                 ),
               ),
             ),
             const SizedBox(height: 8),
-            Shimmer.fromColors(
-              baseColor: AppColors.shimmerBase,
-              highlightColor: AppColors.shimmerHighlight,
+            _shimmer(
               child: Container(
                 height: 14, width: 120,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.surfaceColor,
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
             ),
             const SizedBox(height: 6),
-            Shimmer.fromColors(
-              baseColor: AppColors.shimmerBase,
-              highlightColor: AppColors.shimmerHighlight,
+            _shimmer(
               child: Container(
                 height: 14, width: 80,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.surfaceColor,
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
@@ -95,6 +89,14 @@ class AppShimmerGrid extends StatelessWidget {
         ),
         childCount: itemCount,
       ),
+    );
+  }
+
+  Widget _shimmer({required Widget child}) {
+    return Shimmer.fromColors(
+      baseColor: AppColors.shimmerBase,
+      highlightColor: AppColors.shimmerHighlight,
+      child: child,
     );
   }
 }

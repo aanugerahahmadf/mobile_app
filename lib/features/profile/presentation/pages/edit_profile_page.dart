@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -18,7 +17,9 @@ import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/utils/country_codes.dart';
+import '../../../auth/presentation/widgets/auth_modals.dart';
 import '../providers/profile_provider.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 
 class EditProfilePage extends ConsumerStatefulWidget {
@@ -102,6 +103,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   }
 
   Future<void> _pickAvatar() async {
+    final l = AppLocalizations.of(context)!;
     if (!_editing) return;
     final action = await showModalBottomSheet<String>(
       context: context,
@@ -117,29 +119,29 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               Container(
                 width: 40, height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: AppColors.dividerColor,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
               const SizedBox(height: 16),
               ListTile(
                 leading: const Icon(Icons.camera_alt),
-                title: const Text('Kamera'),
+                title: Text(l.camera),
                 onTap: () => Navigator.pop(ctx, 'camera'),
               ),
               ListTile(
                 leading: const Icon(Icons.photo_library),
-                title: const Text('Galeri'),
+                title: Text(l.gallery),
                 onTap: () => Navigator.pop(ctx, 'gallery'),
               ),
               ListTile(
                 leading: const Icon(Icons.folder_open),
-                title: const Text('File Manager'),
+                title: Text(l.fileManager),
                 onTap: () => Navigator.pop(ctx, 'file'),
               ),
               ListTile(
                 leading: const Icon(Icons.cloud),
-                title: const Text('Google Drive'),
+                title: Text(l.googleDrive),
                 onTap: () => Navigator.pop(ctx, 'drive'),
               ),
             ],
@@ -170,6 +172,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   }
 
   Future<void> _pickFromDrive() async {
+    final l = AppLocalizations.of(context)!;
     try {
       const scopes = ['email', 'https://www.googleapis.com/auth/drive.readonly'];
       final googleSignIn = GoogleSignIn(scopes: scopes);
@@ -198,7 +201,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       if (files.isEmpty || !mounted) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Tidak ada gambar di Google Drive')),
+            SnackBar(content: Text(l.noImagesInGoogleDrive)),
           );
         }
         return;
@@ -216,11 +219,11 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
             children: [
               Container(
                 width: 36, height: 4, margin: const EdgeInsets.only(top: 12),
-                decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+                decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2)),
               ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                child: Text('Pilih dari Google Drive',
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: Text(l.pickFromGoogleDrive,
                   style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
                 ),
               ),
@@ -232,7 +235,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                   itemBuilder: (_, i) {
                     final file = files[i];
                     return ListTile(
-                      leading: const Icon(Icons.image_rounded, size: 40, color: Colors.grey),
+                      leading: Icon(Icons.image_rounded, size: 40, color: AppColors.textTertiary),
                       title: Text(file['name'] as String? ?? '', maxLines: 1, overflow: TextOverflow.ellipsis),
                       onTap: () => Navigator.pop(ctx, file as Map<String, dynamic>),
                     );
@@ -265,23 +268,24 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal mengambil dari Google Drive: $e')),
+          SnackBar(content: Text(l.failedFetchFromDrive.replaceFirst('%s', '$e'))),
         );
       }
     }
   }
 
   Future<void> _save() async {
+    final l = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
 
     // Validasi konfirmasi password jika diisi
     if (_passwordController.text.isNotEmpty) {
       if (_confirmPasswordController.text.isEmpty) {
-        AppSnackBar.show(context, 'Konfirmasi kata sandi wajib diisi', type: SnackBarType.error);
+        AppSnackBar.show(context, l.confirmPasswordRequired, type: SnackBarType.error);
         return;
       }
       if (_passwordController.text != _confirmPasswordController.text) {
-        AppSnackBar.show(context, 'Kata sandi dan konfirmasi tidak cocok', type: SnackBarType.error);
+        AppSnackBar.show(context, l.passwordAndConfirmMismatch, type: SnackBarType.error);
         return;
       }
     }
@@ -326,16 +330,16 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
           if (mounted) {
             AppSnackBar.show(
               context,
-              'Profil disimpan. Verifikasi email baru Anda.',
+              l.profileSavedVerifyEmail,
               type: SnackBarType.success,
             );
-            context.push('/verify-otp', extra: {'email': newEmail, 'purpose': 'verify_email'});
+            showOtpVerificationSheet(context, email: newEmail, purpose: 'verify_email');
           }
         } catch (_) {
           if (mounted) {
             AppSnackBar.show(
               context,
-              'Profil disimpan. Gagal kirim OTP verifikasi email.',
+              l.profileSavedFailedSendOtp,
               type: SnackBarType.warning,
             );
             setState(() { _editing = false; _saving = false; });
@@ -343,7 +347,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
         }
       } else {
         if (mounted) {
-          AppSnackBar.show(context, 'Profil berhasil diperbarui', type: SnackBarType.success);
+          AppSnackBar.show(context, l.profileUpdated, type: SnackBarType.success);
           setState(() { _editing = false; _saving = false; });
           _passwordController.clear();
           _confirmPasswordController.clear();
@@ -351,7 +355,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       }
     } catch (e) {
       if (mounted) {
-        AppSnackBar.show(context, 'Gagal menyimpan profil', type: SnackBarType.error);
+        AppSnackBar.show(context, l.profileUpdateFailed, type: SnackBarType.error);
         setState(() => _saving = false);
       }
     }
@@ -361,6 +365,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final l        = AppLocalizations.of(context)!;
     final state    = ref.watch(profileProvider);
     final userData = state.userData;
     final avatarUrl = Formatters.avatarUrl(userData);
@@ -372,23 +377,23 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
       appBar: AppBar(
-        title: const Text('Edit Profil'),
+        title: Text(l.editProfile),
         centerTitle: true,
         actions: [
           if (!_editing)
             TextButton(
               onPressed: () => setState(() => _editing = true),
-              child: const Text('Edit'),
+              child: Text(l.edit),
             )
           else
-            TextButton(
-              onPressed: () => setState(() {
+              TextButton(
+                onPressed: () => setState(() {
                 _editing = false;
                 _passwordController.clear();
                 _confirmPasswordController.clear();
                 _loadFromProfile();
               }),
-              child: const Text('Batal'),
+              child: Text(l.cancel),
             ),
         ],
       ),
@@ -427,7 +432,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                           color: AppColors.secondaryColor.withAlpha(60),
                         ),
                         child: (_avatarFile == null && avatarUrl == null)
-                            ? const Icon(Icons.person, size: 48, color: AppColors.textTertiary)
+                            ? Icon(Icons.person, size: 48, color: AppColors.textTertiary)
                             : null,
                       ),
                       if (_editing)
@@ -455,17 +460,17 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
 
               // ── Nama (READ-ONLY, hanya tampil) ──────────────────────────
               _buildReadOnlySection(
-                label: 'Nama Depan',
+                label: l.firstName,
                 value: firstName.isEmpty ? '-' : firstName,
               ),
               const SizedBox(height: AppSizes.sm),
               _buildReadOnlySection(
-                label: 'Nama Tengah',
+                label: l.middleName,
                 value: midName.isEmpty ? '-' : midName,
               ),
               const SizedBox(height: AppSizes.sm),
               _buildReadOnlySection(
-                label: 'Nama Belakang',
+                label: l.lastName,
                 value: lastName.isEmpty ? '-' : lastName,
               ),
 
@@ -475,7 +480,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
 
               // ── Username ─────────────────────────────────────────────────
               AppTextField(
-                label: 'Username',
+                label: l.username,
                 controller: _usernameController,
                 readOnly: !_editing,
                 validator: _editing ? Validators.required : null,
@@ -484,7 +489,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
 
               // ── Email ────────────────────────────────────────────────────
               AppTextField(
-                label: 'Email',
+                label: l.email,
                 controller: _emailController,
                 readOnly: !_editing,
                 keyboardType: TextInputType.emailAddress,
@@ -498,7 +503,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                     const SizedBox(width: 5),
                     Expanded(
                       child: Text(
-                        'Jika email diubah, Anda perlu verifikasi OTP',
+                        l.emailChangeRequiresOtp,
                         style: AppTextStyles.bodySmall.copyWith(color: Colors.orange.shade700),
                       ),
                     ),
@@ -531,7 +536,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                               children: [
                                 Text(_countryCode, style: AppTextStyles.bodyMedium),
                                 const SizedBox(width: 4),
-                                const Icon(Icons.arrow_drop_down, size: 18, color: AppColors.textSecondary),
+                                Icon(Icons.arrow_drop_down, size: 18, color: AppColors.textSecondary),
                               ],
                             ),
                           ),
@@ -550,7 +555,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                       ],
                     )
                   : _buildReadOnlySection(
-                      label: 'WhatsApp',
+                      label: l.whatsapp,
                       value: _whatsappController.text.isEmpty
                           ? '-'
                           : '$_countryCode ${_whatsappController.text}',
@@ -560,7 +565,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               if (!_editing) ...[
                 const SizedBox(height: AppSizes.sm),
                 _buildReadOnlySection(
-                  label: 'Kata Sandi',
+                  label: l.password,
                   value: '●●●●●●●●',
                 ),
               ],
@@ -569,7 +574,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               if (_editing) ...[
                 const SizedBox(height: AppSizes.sm),
                 AppTextField(
-                  label: 'Kata Sandi Baru (kosongkan jika tidak diubah)',
+                  label: l.newPasswordLeaveBlank,
                   controller: _passwordController,
                   obscureText: _obscurePassword,
                   suffixIcon: IconButton(
@@ -582,14 +587,14 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                   ),
                   validator: (v) {
                     if (v != null && v.isNotEmpty && v.length < 8) {
-                      return 'Kata sandi minimal 8 karakter';
+                      return l.passwordMin8Chars;
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: AppSizes.sm),
                 AppTextField(
-                  label: 'Konfirmasi Kata Sandi Baru',
+                  label: l.confirmNewPassword,
                   controller: _confirmPasswordController,
                   obscureText: _obscureConfirmPass,
                   suffixIcon: IconButton(
@@ -602,8 +607,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                   ),
                   validator: (v) {
                     if (_passwordController.text.isNotEmpty) {
-                      if (v == null || v.isEmpty) return 'Konfirmasi kata sandi wajib diisi';
-                      if (v != _passwordController.text) return 'Kata sandi tidak cocok';
+                      if (v == null || v.isEmpty) return l.confirmPasswordRequired;
+                      if (v != _passwordController.text) return l.passwordMismatch;
                     }
                     return null;
                   },
@@ -615,7 +620,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               // ── Tombol Simpan (hanya saat edit) ──────────────────────────
               if (_editing)
                 AppButton(
-                  label: 'Simpan Perubahan',
+                  label: l.saveChanges,
                   loading: _saving,
                   onPressed: _save,
                   type: ButtonType.primary,
@@ -667,6 +672,7 @@ class _CountryCodeSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return SizedBox(
       height: MediaQuery.of(context).size.height * 0.6,
       child: Column(
@@ -675,10 +681,10 @@ class _CountryCodeSheet extends StatelessWidget {
           Container(
             width: 40,
             height: 4,
-            decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+            decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2)),
           ),
           const SizedBox(height: 12),
-          Text('Pilih Kode Negara', style: AppTextStyles.titleSmall),
+          Text(l.selectCountryCode, style: AppTextStyles.titleSmall),
           const Divider(),
           Expanded(
             child: ListView.builder(

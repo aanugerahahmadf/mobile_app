@@ -31,7 +31,7 @@ class AppCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.surfaceColor,
           borderRadius: BorderRadius.circular(8),
           boxShadow: [
             BoxShadow(
@@ -62,7 +62,7 @@ class AppCard extends StatelessWidget {
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
                           color: AppColors.shimmerBase,
-                          child: const Icon(Icons.broken_image, color: Colors.grey),
+                          child: Icon(Icons.broken_image, color: AppColors.textTertiary),
                         );
                       },
                     ),

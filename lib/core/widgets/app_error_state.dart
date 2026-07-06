@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 import '../constants/app_text_styles.dart';
 import '../constants/app_colors.dart';
 import 'app_button.dart';
@@ -33,7 +34,7 @@ class AppErrorState extends StatelessWidget {
             Text(message, style: AppTextStyles.bodyLarge, textAlign: TextAlign.center),
             if (onRetry != null) ...[
               const SizedBox(height: 24),
-              AppButton(label: 'Coba Lagi', onPressed: onRetry, type: ButtonType.outline),
+              AppButton(label: AppLocalizations.of(context)!.tryAgain, onPressed: onRetry, type: ButtonType.outline),
             ],
           ],
         ),

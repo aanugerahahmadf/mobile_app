@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/widgets/app_button.dart';
 
 class OnboardingPage extends StatefulWidget {
@@ -14,18 +15,18 @@ class _OnboardingPageState extends State<OnboardingPage> {
   final _pageController = PageController();
   int _currentPage = 0;
 
-  List<_OnboardingSlide> get _slides => [
+  List<_OnboardingSlide> _slides(AppLocalizations l) => [
     _OnboardingSlide(
-      title: 'Dekorasi Pernikahan Impian',
-      description: 'Temukan rangkaian bunga pernikahan terindah untuk hari spesial Anda',
+      title: l.weddingDecorationDreams,
+      description: l.findBeautifulFlowers,
     ),
     _OnboardingSlide(
-      title: 'Cari dengan Gambar',
-      description: 'Gunakan fitur CBIR untuk mencari dekorasi hanya dengan foto',
+      title: l.searchWithImage,
+      description: l.useCbirFeature,
     ),
     _OnboardingSlide(
-      title: 'Pesan Mudah & Cepat',
-      description: 'Pesan paket bunga favorit Anda dalam hitungan menit',
+      title: l.easyQuickOrder,
+      description: l.orderFavoritePackages,
     ),
   ];
 
@@ -43,14 +44,15 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       body: Stack(
         children: [
           PageView.builder(
             controller: _pageController,
-            itemCount: _slides.length,
+            itemCount: _slides(l).length,
             onPageChanged: (i) => setState(() => _currentPage = i),
-            itemBuilder: (_, i) => _slides[i],
+            itemBuilder: (_, i) => _slides(l)[i],
           ),
           Positioned(
             top: MediaQuery.of(context).padding.top + 8,
@@ -73,7 +75,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
             child: TextButton(
               onPressed: _onFinish,
               child: Text(
-                'Lewati',
+                l.skip,
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.white.withValues(alpha: 0.85),
@@ -90,7 +92,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(_slides.length, (i) {
+                  children: List.generate(_slides(l).length, (i) {
                     return AnimatedContainer(
                       duration: const Duration(milliseconds: 300),
                       margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -107,9 +109,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: AppButton(
-                    label: _currentPage == _slides.length - 1 ? 'Mulai Sekarang' : 'Selanjutnya',
+                    label: _currentPage == _slides(l).length - 1 ? l.getStarted : l.next,
                     onPressed: () {
-                      if (_currentPage == _slides.length - 1) {
+                      if (_currentPage == _slides(l).length - 1) {
                         _onFinish();
                       } else {
                         _pageController.nextPage(

@@ -1,6 +1,8 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/widgets/app_shimmer.dart';
@@ -25,10 +27,11 @@ class _MyReviewsPageState extends ConsumerState<MyReviewsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final state = ref.watch(myReviewsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text('Ulasan Saya')),
+      appBar: AppBar(title: Text(l.myReviews)),
       body: state.loading
           ? const Center(child: CircularProgressIndicator())
           : state.error != null
@@ -36,8 +39,8 @@ class _MyReviewsPageState extends ConsumerState<MyReviewsPage> {
               : state.reviews.isEmpty
                   ? AppEmptyState(
                       icon: Icons.star_border,
-                      title: 'Belum ada ulasan',
-                      subtitle: 'Anda belum memberikan ulasan apapun',
+                      title: l.noReviews,
+                      subtitle: l.noReviewsYet,
                     )
                   : RefreshIndicator(
                       onRefresh: () => ref.read(myReviewsProvider.notifier).fetchMyReviews(),
@@ -71,7 +74,7 @@ class _MyReviewsPageState extends ConsumerState<MyReviewsPage> {
                                       height: 72,
                                       fit: BoxFit.cover,
                                       placeholder: (_, _) => AppShimmer(width: 72, height: 72),
-                                      errorWidget: (_, _, _) => Container(width: 72, height: 72, color: Colors.grey[200], child: const Icon(Icons.broken_image, size: 32)),
+                                      errorWidget: (_, _, _) => Container(width: 72, height: 72, color: AppColors.secondaryColor, child: const Icon(Icons.broken_image, size: 32)),
                                     ),
                                   ),
                                   const SizedBox(width: 12),

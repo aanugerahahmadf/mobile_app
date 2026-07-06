@@ -21,6 +21,7 @@ import '../../../../core/utils/npwp_utils.dart';
 import '../../../../core/utils/country_codes.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/auth_modals.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 
 class SignUpPage extends ConsumerStatefulWidget {
   const SignUpPage({super.key});
@@ -73,31 +74,31 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
   String _incomeRange = '';
   String _sourceOfFunds = '';
 
-  String get _idLabel {
+  String _idLabel(AppLocalizations l) {
     switch (_identityType) {
-      case 'ktp': return 'Nomer Induk Kependudukan (NIK)';
-      case 'passport': return 'Nomer Passport';
-      case 'sim': return 'Surat Izin Mengemudi (SIM)';
-      case 'npwp': return 'Nomor Pokok Wajib Pajak (NPWP)';
-      default: return 'Nomor Identitas';
+      case 'ktp': return l.nikLabel;
+      case 'passport': return l.passportLabel;
+      case 'sim': return l.simLabel;
+      case 'npwp': return l.npwpLabel;
+      default: return l.identityNumber;
     }
   }
-  String get _idPhotoLabel {
+  String _idPhotoLabel(AppLocalizations l) {
     switch (_identityType) {
-      case 'ktp': return 'Foto KTP';
-      case 'passport': return 'Foto Passport';
-      case 'sim': return 'Foto SIM';
-      case 'npwp': return 'Foto NPWP';
-      default: return 'Foto Identitas';
+      case 'ktp': return l.ktpPhoto;
+      case 'passport': return l.passportPhoto;
+      case 'sim': return l.simPhoto;
+      case 'npwp': return l.npwpPhoto;
+      default: return l.identityPhoto;
     }
   }
-  String get _idSelfieLabel {
+  String _idSelfieLabel(AppLocalizations l) {
     switch (_identityType) {
-      case 'ktp': return 'Foto Selfie + KTP';
-      case 'passport': return 'Foto Selfie + Passport';
-      case 'sim': return 'Foto Selfie + SIM';
-      case 'npwp': return 'Foto Selfie + NPWP';
-      default: return 'Foto Selfie + Identitas';
+      case 'ktp': return l.selfieKtp;
+      case 'passport': return l.selfiePassport;
+      case 'sim': return l.selfieSim;
+      case 'npwp': return l.selfieNpwp;
+      default: return l.selfieIdentity;
     }
   }
 
@@ -138,7 +139,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2))),
               const SizedBox(height: 8),
               Text(title, style: AppTextStyles.titleMedium),
               const SizedBox(height: 8),
@@ -168,13 +169,13 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2))),
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2))),
               const SizedBox(height: 8),
-              Text('Pilih Jenis Identitas', style: AppTextStyles.titleMedium),
+              Text(AppLocalizations.of(context)!.idType, style: AppTextStyles.titleMedium),
               const SizedBox(height: 8),
               ListTile(
                 leading: Icon(Icons.credit_card, color: _identityType == 'ktp' ? AppColors.primaryColor : null),
-                title: Text('Kartu Tanda Kependudukan (KTP)', style: AppTextStyles.bodyMedium),
+                title: Text(AppLocalizations.of(context)!.ktp, style: AppTextStyles.bodyMedium),
                 trailing: _identityType == 'ktp' ? Icon(Icons.check, color: AppColors.primaryColor) : null,
                 onTap: () {
                   setState(() {
@@ -189,7 +190,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
               ),
               ListTile(
                 leading: Icon(Icons.card_travel, color: _identityType == 'passport' ? AppColors.primaryColor : null),
-                title: Text('Passport', style: AppTextStyles.bodyMedium),
+                title: Text(AppLocalizations.of(context)!.passport, style: AppTextStyles.bodyMedium),
                 trailing: _identityType == 'passport' ? Icon(Icons.check, color: AppColors.primaryColor) : null,
                 onTap: () {
                   setState(() {
@@ -204,7 +205,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
               ),
               ListTile(
                 leading: Icon(Icons.drive_eta, color: _identityType == 'sim' ? AppColors.primaryColor : null),
-                title: Text('Surat Izin Mengemudi (SIM)', style: AppTextStyles.bodyMedium),
+                title: Text(AppLocalizations.of(context)!.sim, style: AppTextStyles.bodyMedium),
                 trailing: _identityType == 'sim' ? Icon(Icons.check, color: AppColors.primaryColor) : null,
                 onTap: () {
                   setState(() {
@@ -219,7 +220,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
               ),
               ListTile(
                 leading: Icon(Icons.receipt_long, color: _identityType == 'npwp' ? AppColors.primaryColor : null),
-                title: Text('Nomor Pokok Wajib Pajak (NPWP)', style: AppTextStyles.bodyMedium),
+                title: Text(AppLocalizations.of(context)!.npwp, style: AppTextStyles.bodyMedium),
                 trailing: _identityType == 'npwp' ? Icon(Icons.check, color: AppColors.primaryColor) : null,
                 onTap: () {
                   setState(() {
@@ -240,12 +241,13 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
   }
 
   Widget _buildIdentityTypePicker() {
+    final l10n = AppLocalizations.of(context)!;
     final (icon, label) = switch (_identityType) {
-      'ktp' => (Icons.credit_card, 'Kartu Tanda Kependudukan (KTP)'),
-      'passport' => (Icons.card_travel, 'Passport'),
-      'sim' => (Icons.drive_eta, 'Surat Izin Mengemudi (SIM)'),
-      'npwp' => (Icons.receipt_long, 'Nomor Pokok Wajib Pajak (NPWP)'),
-      _ => (Icons.credit_card, 'Pilih Jenis Identitas'),
+      'ktp' => (Icons.credit_card, l10n.ktp),
+      'passport' => (Icons.card_travel, l10n.passport),
+      'sim' => (Icons.drive_eta, l10n.sim),
+      'npwp' => (Icons.receipt_long, l10n.npwp),
+      _ => (Icons.credit_card, l10n.idType),
     };
     return GestureDetector(
       onTap: _showIdentityTypeSheet,
@@ -274,12 +276,13 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
   }
 
   Widget _buildPhoneField() {
+    final l = AppLocalizations.of(context)!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.only(bottom: 8),
-          child: Text('WhatsApp', style: AppTextStyles.titleSmall),
+          child: Text(l.whatsappNumber, style: AppTextStyles.titleSmall),
         ),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -346,14 +349,14 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const SizedBox(height: 8),
-                Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2))),
+                Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2))),
                 const SizedBox(height: 12),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: TextField(
                     controller: searchController,
                     decoration: InputDecoration(
-                      hintText: 'Cari negara...',
+                      hintText: AppLocalizations.of(this.context)!.searchCountry,
                       prefixIcon: const Icon(Icons.search, size: 20),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                       contentPadding: const EdgeInsets.symmetric(vertical: 12),
@@ -437,6 +440,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
   }
 
   Widget _buildPasswordStrength(String password) {
+    final l = AppLocalizations.of(context)!;
     final checks = [
       password.length >= 12,
       password.contains(RegExp(r'[A-Z]')),
@@ -446,9 +450,9 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
     ];
     final score = checks.where((c) => c).length;
     final (label, color, value) = switch (score) {
-      0 || 1 => ('Lemah', AppColors.errorColor, 0.2),
-      2 || 3 => ('Sedang', AppColors.warningColor, 0.5),
-      _ => ('Kuat', AppColors.successColor, 0.9),
+      0 || 1 => (l.passwordStrengthWeak, AppColors.errorColor, 0.2),
+      2 || 3 => (l.passwordStrengthMedium, AppColors.warningColor, 0.5),
+      _ => (l.passwordStrengthStrong, AppColors.successColor, 0.9),
     };
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -471,23 +475,25 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
   Future<void> _onRegister() async {
     if (!_formKey.currentState!.validate()) return;
     if (!_agreeTerms) {
-      AppSnackBar.show(context, 'Anda harus menyetujui perjanjian untuk melanjutkan.', type: SnackBarType.warning);
+      AppSnackBar.show(context, AppLocalizations.of(context)!.youMustAgree, type: SnackBarType.warning);
       return;
     }
     if (!_rememberMe) {
-      AppSnackBar.show(context, 'Centang Ingat Saya untuk melanjutkan', type: SnackBarType.warning);
+      AppSnackBar.show(context, AppLocalizations.of(context)!.rememberMe, type: SnackBarType.warning);
       return;
     }
     if (_ktpFile != null) {
       if (!_namesLocked && _ocrExtractedName.isEmpty) {
-        AppSnackBar.show(context, 'Nama gagal diverifikasi dari $_idPhotoLabel. Upload ulang dengan foto yang jelas.', type: SnackBarType.error);
+        final l = AppLocalizations.of(context)!;
+        AppSnackBar.show(context, '${l.nameVerificationFailed} ${_idPhotoLabel(l)}. ${l.uploadPhoto} ${l.selfieTips}', type: SnackBarType.error);
         return;
       }
       if (_ocrExtractedName.isNotEmpty) {
         final enteredName = _fullName.toUpperCase().replaceAll(RegExp(r'\s+'), ' ');
         final ocrName = _ocrExtractedName.toUpperCase().replaceAll(RegExp(r'\s+'), ' ');
         if (!enteredName.contains(ocrName) && !ocrName.contains(enteredName)) {
-          AppSnackBar.show(context, 'Nama tidak sesuai dengan $_idPhotoLabel', type: SnackBarType.error);
+          final l = AppLocalizations.of(context)!;
+          AppSnackBar.show(context, '${l.nameNotMatch} ${_idPhotoLabel(l)}', type: SnackBarType.error);
           return;
         }
       }
@@ -535,6 +541,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final authState = ref.watch(authProvider);
 
     ref.listen<AuthState>(authProvider, (_, state) {
@@ -549,7 +556,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
     final isLoading = authState is AuthLoading;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.backgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -566,9 +573,9 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: AppSizes.sm),
-              Center(child: Text('Daftar Akun', style: AppTextStyles.headlineMedium)),
+              Center(child: Text(l.createAccount, style: AppTextStyles.headlineMedium)),
               SizedBox(height: AppSizes.xs),
-              Center(child: Text('Isi data diri Anda dengan benar', style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary))),
+              Center(child: Text(l.fillDataCorrectly, style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary))),
               SizedBox(height: AppSizes.lg),
               Center(
                 child: GestureDetector(
@@ -601,7 +608,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
               ),
               SizedBox(height: AppSizes.lg),
               AppTextField(
-                label: 'Nama Depan',
+                label: l.firstName,
                 controller: _firstNameController,
                 readOnly: _namesLocked,
                 validator: Validators.required,
@@ -609,14 +616,14 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
               ),
               SizedBox(height: AppSizes.md),
               AppTextField(
-                label: 'Nama Tengah',
+                label: l.middleName,
                 controller: _middleNameController,
                 readOnly: _namesLocked,
                 onChanged: (_) => setState(() {}),
               ),
               SizedBox(height: AppSizes.md),
               AppTextField(
-                label: 'Nama Belakang',
+                label: l.lastName,
                 controller: _lastNameController,
                 readOnly: _namesLocked,
                 validator: Validators.required,
@@ -635,7 +642,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                     SizedBox(width: AppSizes.sm),
                     Expanded(
                       child: Text(
-                        _fullName.isEmpty ? 'Nama Lengkap' : _fullName,
+                        _fullName.isEmpty ? l.fullName : _fullName,
                         style: AppTextStyles.bodyMedium.copyWith(
                           color: _fullName.isEmpty ? AppColors.textTertiary : AppColors.textPrimary,
                         ),
@@ -646,13 +653,13 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
               ),
               SizedBox(height: AppSizes.lg),
               AppTextField(
-                label: 'Username',
+                label: l.username,
                 controller: _usernameController,
                 validator: Validators.required,
               ),
               SizedBox(height: AppSizes.md),
               AppTextField(
-                label: 'Email',
+                label: l.email,
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
                 validator: Validators.email,
@@ -660,7 +667,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
               SizedBox(height: AppSizes.md),
               _buildPhoneField(),
               SizedBox(height: AppSizes.lg),
-              Text('Pilih Jenis Identitas', style: AppTextStyles.titleSmall),
+              Text(l.idType, style: AppTextStyles.titleSmall),
               SizedBox(height: AppSizes.sm),
               _buildIdentityTypePicker(),
               SizedBox(height: AppSizes.md),
@@ -691,10 +698,10 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(_idPhotoLabel, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+                            Text(_idPhotoLabel(l), style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
                             SizedBox(height: 2),
                             Text(
-                              _ktpFile != null ? '$_idPhotoLabel berhasil diupload' : 'Upload $_idPhotoLabel',
+                              _ktpFile != null ? l.idPhotoUploaded : l.uploadIdPhotoAction,
                               style: AppTextStyles.bodySmall.copyWith(
                                 color: _ktpFile != null ? AppColors.successColor : AppColors.textTertiary,
                               ),
@@ -742,10 +749,10 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(_idSelfieLabel, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+                            Text(_idSelfieLabel(l), style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
                             SizedBox(height: 2),
                             Text(
-                              _selfieKtpFile != null ? '$_idSelfieLabel berhasil diupload' : 'Upload $_idSelfieLabel',
+                              _selfieKtpFile != null ? l.selfiePhotoUploaded : l.uploadSelfiePhotoAction,
                               style: AppTextStyles.bodySmall.copyWith(
                                 color: _selfieKtpFile != null ? AppColors.successColor : AppColors.textTertiary,
                               ),
@@ -793,10 +800,10 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text('Verifikasi Wajah', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+                            Text(l.faceVerification, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
                             SizedBox(height: 2),
                             Text(
-                              _faceScanPath != null ? 'Wajah terverifikasi' : 'Scan wajah dengan kamera',
+                              _faceScanPath != null ? l.faceScanSuccess : l.scanFace,
                               style: AppTextStyles.bodySmall.copyWith(
                                 color: _faceScanPath != null ? AppColors.successColor : AppColors.textTertiary,
                               ),
@@ -815,31 +822,31 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
               ),
               SizedBox(height: AppSizes.md),
               AppTextField(
-                label: _idLabel,
+                label: _idLabel(l),
                 controller: _nikController,
                 keyboardType: _identityType == 'ktp' ? TextInputType.number : TextInputType.text,
                 validator: (v) {
-                  if (v == null || v.trim().isEmpty) return '$_idLabel wajib diisi';
-                  if (_identityType == 'ktp' && v.trim().length != 16) return 'NIK harus 16 digit';
-                  if (_identityType == 'sim' && v.trim().length < 6) return 'Nomor SIM minimal 6 karakter';
-                  if (_identityType == 'npwp' && v.trim().length < 15) return 'Nomor NPWP minimal 15 digit';
-                  if (!['ktp', 'sim', 'npwp'].contains(_identityType) && v.trim().length < 6) return '$_idLabel minimal 6 karakter';
+                  if (v == null || v.trim().isEmpty) return l.identityNumberRequired(_idLabel(l));
+                  if (_identityType == 'ktp' && v.trim().length != 16) return l.nikMustBe16Digits;
+                  if (_identityType == 'sim' && v.trim().length < 6) return l.simMin6Chars;
+                  if (_identityType == 'npwp' && v.trim().length < 15) return l.npwpMin15Chars;
+                  if (!['ktp', 'sim', 'npwp'].contains(_identityType) && v.trim().length < 6) return l.nikMin6Chars;
                   return null;
                 },
               ),
               SizedBox(height: AppSizes.md),
               AppTextField(
-                label: 'Tempat Lahir',
+                label: l.placeOfBirth,
                 controller: _birthPlaceController,
               ),
               SizedBox(height: AppSizes.md),
               AppDatePickerField(
-                label: 'Tanggal Lahir',
+                label: l.dateOfBirth,
                 controller: _birthDateController,
               ),
               SizedBox(height: AppSizes.md),
               AppCountryPickerField(
-                label: 'Negara',
+                label: l.country,
                 controller: _countryController,
                 onChanged: (_) => setState(() {}),
               ),
@@ -857,15 +864,15 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                 onPostalCodeChanged: (v) => _postalCode = v,
               ),
               AppTextField(
-                label: 'Detail Alamat',
+                label: l.fullAddress,
                 controller: _addressController,
                 maxLines: 2,
               ),
               SizedBox(height: AppSizes.md),
-              Text('Jenis Kelamin', style: AppTextStyles.titleSmall),
+              Text(l.gender, style: AppTextStyles.titleSmall),
               SizedBox(height: AppSizes.sm),
               GestureDetector(
-                onTap: () => _showPickerSheet('Pilih Jenis Kelamin', ['Pria', 'Wanita'], (v) => setState(() => _gender = v)),
+                onTap: () => _showPickerSheet(l.selectGender, [l.male, l.female], (v) => setState(() => _gender = v)),
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                   decoration: BoxDecoration(
@@ -879,7 +886,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                       SizedBox(width: AppSizes.md),
                       Expanded(
                         child: Text(
-                          _gender.isEmpty ? 'Pilih Jenis Kelamin' : _gender,
+                          _gender.isEmpty ? l.selectGender : _gender,
                           style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                         ),
                       ),
@@ -889,10 +896,10 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                 ),
               ),
               SizedBox(height: AppSizes.md),
-              Text('Agama', style: AppTextStyles.titleSmall),
+              Text(l.religion, style: AppTextStyles.titleSmall),
               SizedBox(height: AppSizes.sm),
               GestureDetector(
-                onTap: () => _showPickerSheet('Pilih Agama', ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu'], (v) => setState(() => _religion = v)),
+                onTap: () => _showPickerSheet(l.selectReligion, ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu'], (v) => setState(() => _religion = v)),
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                   decoration: BoxDecoration(
@@ -906,7 +913,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                       SizedBox(width: AppSizes.md),
                       Expanded(
                         child: Text(
-                          _religion.isEmpty ? 'Pilih Agama' : _religion,
+                          _religion.isEmpty ? l.selectReligion : _religion,
                           style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                         ),
                       ),
@@ -916,10 +923,10 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                 ),
               ),
               SizedBox(height: AppSizes.md),
-              Text('Status Pernikahan', style: AppTextStyles.titleSmall),
+              Text(l.maritalStatus, style: AppTextStyles.titleSmall),
               SizedBox(height: AppSizes.sm),
               GestureDetector(
-                onTap: () => _showPickerSheet('Pilih Status Pernikahan', ['Belum Menikah', 'Menikah', 'Cerai'], (v) => setState(() => _maritalStatus = v)),
+                onTap: () => _showPickerSheet(l.selectMaritalStatus, [l.single, l.married, l.divorced], (v) => setState(() => _maritalStatus = v)),
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                   decoration: BoxDecoration(
@@ -933,7 +940,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                       SizedBox(width: AppSizes.md),
                       Expanded(
                         child: Text(
-                          _maritalStatus.isEmpty ? 'Pilih Status Pernikahan' : _maritalStatus,
+                          _maritalStatus.isEmpty ? l.selectMaritalStatus : _maritalStatus,
                           style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                         ),
                       ),
@@ -944,14 +951,14 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
               ),
               SizedBox(height: AppSizes.md),
               AppTextField(
-                label: 'Nama Ibu Kandung',
+                label: l.motherName,
                 controller: _motherNameController,
               ),
               SizedBox(height: AppSizes.md),
-              Text('Pekerjaan', style: AppTextStyles.titleSmall),
+              Text(l.occupation, style: AppTextStyles.titleSmall),
               SizedBox(height: AppSizes.sm),
               GestureDetector(
-                onTap: () => _showPickerSheet('Pilih Pekerjaan', ['Karyawan', 'Wiraswasta', 'Pelajar/Mahasiswa', 'Ibu Rumah Tangga', 'Profesional', 'Lainnya'], (v) => setState(() => _occupation = v)),
+                onTap: () => _showPickerSheet(l.selectOccupation, ['Karyawan', 'Wiraswasta', 'Pelajar/Mahasiswa', 'Ibu Rumah Tangga', 'Profesional', 'Lainnya'], (v) => setState(() => _occupation = v)),
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                   decoration: BoxDecoration(
@@ -965,7 +972,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                       SizedBox(width: AppSizes.md),
                       Expanded(
                         child: Text(
-                          _occupation.isEmpty ? 'Pilih Pekerjaan' : _occupation,
+                          _occupation.isEmpty ? l.selectOccupation : _occupation,
                           style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                         ),
                       ),
@@ -975,10 +982,10 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                 ),
               ),
               SizedBox(height: AppSizes.md),
-              Text('Rentang Penghasilan', style: AppTextStyles.titleSmall),
+              Text(l.incomeRange, style: AppTextStyles.titleSmall),
               SizedBox(height: AppSizes.sm),
               GestureDetector(
-                onTap: () => _showPickerSheet('Pilih Rentang Penghasilan', ['< Rp 1 Juta', 'Rp 1-5 Juta', 'Rp 5-10 Juta', 'Rp 10-50 Juta', '> Rp 50 Juta'], (v) => setState(() => _incomeRange = v)),
+                onTap: () => _showPickerSheet(l.selectIncomeRange, ['< Rp 1 Juta', 'Rp 1-5 Juta', 'Rp 5-10 Juta', 'Rp 10-50 Juta', '> Rp 50 Juta'], (v) => setState(() => _incomeRange = v)),
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                   decoration: BoxDecoration(
@@ -992,7 +999,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                       SizedBox(width: AppSizes.md),
                       Expanded(
                         child: Text(
-                          _incomeRange.isEmpty ? 'Pilih Rentang Penghasilan' : _incomeRange,
+                          _incomeRange.isEmpty ? l.selectIncomeRange : _incomeRange,
                           style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                         ),
                       ),
@@ -1002,10 +1009,10 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                 ),
               ),
               SizedBox(height: AppSizes.md),
-              Text('Sumber Dana', style: AppTextStyles.titleSmall),
+              Text(l.sourceOfFunds, style: AppTextStyles.titleSmall),
               SizedBox(height: AppSizes.sm),
               GestureDetector(
-                onTap: () => _showPickerSheet('Pilih Sumber Dana', ['Gaji', 'Bisnis/Usaha', 'Investasi', 'Hadiah/Warisan', 'Lainnya'], (v) => setState(() => _sourceOfFunds = v)),
+                onTap: () => _showPickerSheet(l.selectSourceOfFunds, ['Gaji', 'Bisnis/Usaha', 'Investasi', 'Hadiah/Warisan', 'Lainnya'], (v) => setState(() => _sourceOfFunds = v)),
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
                   decoration: BoxDecoration(
@@ -1019,7 +1026,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                       SizedBox(width: AppSizes.md),
                       Expanded(
                         child: Text(
-                          _sourceOfFunds.isEmpty ? 'Pilih Sumber Dana' : _sourceOfFunds,
+                          _sourceOfFunds.isEmpty ? l.selectSourceOfFunds : _sourceOfFunds,
                           style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
                         ),
                       ),
@@ -1030,7 +1037,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
               ),
               SizedBox(height: AppSizes.md),
               AppTextField(
-                label: 'Kata Sandi',
+                label: l.password,
                 controller: _passwordController,
                 obscureText: _obscurePassword,
                 validator: Validators.password,
@@ -1046,7 +1053,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
               ],
               SizedBox(height: AppSizes.md),
               AppTextField(
-                label: 'Konfirmasi Kata Sandi',
+                label: l.confirmPassword,
                 controller: _confirmPasswordController,
                 obscureText: _obscureConfirmPassword,
                 validator: (v) => Validators.confirmPassword(v, _passwordController.text),
@@ -1075,7 +1082,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                     child: GestureDetector(
                       onTap: () => setState(() => _rememberMe = !_rememberMe),
                       child: Text(
-                        'Ingat Saya',
+                        l.rememberMe,
                         style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
                       ),
                     ),
@@ -1122,12 +1129,12 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                           text: TextSpan(
                             style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
                             children: [
-                              TextSpan(text: 'Saya menyetujui '),
+                              TextSpan(text: l.agreeTerms),
                               WidgetSpan(
                                 child: GestureDetector(
                                   onTap: () => context.push('/terms-of-service'),
                                   child: Text(
-                                    'Syarat & Ketentuan',
+                                    l.termsOfService,
                                     style: AppTextStyles.bodySmall.copyWith(
                                       color: AppColors.primaryColor,
                                       fontWeight: FontWeight.w600,
@@ -1141,7 +1148,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                                 child: GestureDetector(
                                   onTap: () => context.push('/privacy-policy'),
                                   child: Text(
-                                    'Kebijakan Privasi',
+                                    l.privacyPolicy,
                                     style: AppTextStyles.bodySmall.copyWith(
                                       color: AppColors.primaryColor,
                                       fontWeight: FontWeight.w600,
@@ -1159,7 +1166,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
               ),
               SizedBox(height: AppSizes.lg),
               AppButton(
-                label: 'Daftar Sekarang',
+                label: l.signUp,
                 loading: isLoading,
                 disabled: !_agreeTerms || !_rememberMe,
                 onPressed: _onRegister,
@@ -1168,10 +1175,10 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Sudah punya akun?', style: AppTextStyles.bodyMedium),
+                  Text(l.alreadyHaveAccount, style: AppTextStyles.bodyMedium),
                   GestureDetector(
                     onTap: () => showSignInSheet(context),
-                    child: Text('Masuk', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w600)),
+                    child: Text(l.signIn, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w600)),
                   ),
                 ],
               ),

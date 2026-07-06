@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_error_state.dart';
@@ -55,13 +56,14 @@ class _CatalogCombinedPageState extends ConsumerState<CatalogCombinedPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text('Katalog'), centerTitle: true),
-      body: _buildBody(),
+      appBar: AppBar(title: Text(l.catalog), centerTitle: true),
+      body: _buildBody(l),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(AppLocalizations l) {
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -69,7 +71,7 @@ class _CatalogCombinedPageState extends ConsumerState<CatalogCombinedPage> {
       return AppErrorState(message: _error!, onRetry: _fetchAll);
     }
     if (_items.isEmpty) {
-      return AppEmptyState(title: 'Belum ada katalog', subtitle: 'Belum tersedia paket atau bunga');
+      return AppEmptyState(title: l.catalogEmpty, subtitle: l.catalogEmptyDesc);
     }
     return RefreshIndicator(
       onRefresh: _fetchAll,

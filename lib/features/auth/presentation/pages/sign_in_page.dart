@@ -11,6 +11,7 @@ import '../../../../core/utils/validators.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/auth_modals.dart';
 import '../widgets/social_login_button.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 
 class SignInPage extends ConsumerStatefulWidget {
   const SignInPage({super.key});
@@ -37,7 +38,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
   void _onLogin() {
     if (!_formKey.currentState!.validate()) return;
     if (!_agreeTerms) {
-      AppSnackBar.show(context, 'Anda harus menyetujui perjanjian untuk melanjutkan.', type: SnackBarType.warning);
+      AppSnackBar.show(context, AppLocalizations.of(context)!.youMustAgree, type: SnackBarType.warning);
       return;
     }
     ref.read(authProvider.notifier).login(
@@ -48,7 +49,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
 
   Future<void> _onGoogleLogin() async {
     if (!_agreeTerms) {
-      AppSnackBar.show(context, 'Anda harus menyetujui perjanjian untuk melanjutkan.', type: SnackBarType.warning);
+      AppSnackBar.show(context, AppLocalizations.of(context)!.youMustAgree, type: SnackBarType.warning);
       return;
     }
     await ref.read(authProvider.notifier).googleLogin();
@@ -56,17 +57,18 @@ class _SignInPageState extends ConsumerState<SignInPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final authState = ref.watch(authProvider);
 
     ref.listen<AuthState>(authProvider, (_, state) {
       if (state is AuthAuthenticated) {
         if (state.needsOtp) {
-          context.push('/verify-otp', extra: {'email': state.user.email, 'purpose': 'google_register'});
+          showOtpVerificationSheet(context, email: state.user.email, purpose: 'google_register');
         } else if (state.needsCompletion) {
-          AppSnackBar.show(context, 'Lengkapi profil Anda terlebih dahulu', type: SnackBarType.info);
+          AppSnackBar.show(context, l.completeYourProfile, type: SnackBarType.info);
           context.push('/edit-profile');
         } else {
-          AppSnackBar.show(context, 'Login berhasil', type: SnackBarType.success);
+          AppSnackBar.show(context, l.success, type: SnackBarType.success);
           context.go('/home');
         }
       } else if (state is AuthError) {
@@ -78,11 +80,11 @@ class _SignInPageState extends ConsumerState<SignInPage> {
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.center,
-            colors: [Color(0xFFEEF2FF), Colors.white],
+            colors: [AppColors.primaryLight, AppColors.surfaceColor],
           ),
         ),
         child: SafeArea(
@@ -95,7 +97,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                   const SizedBox(height: AppSizes.lg),
                   // Email
                 AppTextField(
-                  label: 'Email',
+                  label: l.email,
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   validator: Validators.email,
@@ -105,7 +107,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('Kata Sandi', style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+                      Text(l.password, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
                       TextButton(
                         style: TextButton.styleFrom(
                           padding: EdgeInsets.zero,
@@ -113,7 +115,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                         onPressed: () => showForgotPasswordSheet(context),
-                        child: Text('Lupa Password?', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primaryColor)),
+                        child: Text(l.forgotPassword, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primaryColor)),
                       ),
                     ],
                   ),
@@ -147,7 +149,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                       const SizedBox(width: 8),
                       GestureDetector(
                         onTap: () => setState(() => _rememberMe = !_rememberMe),
-                        child: Text('Ingat Saya', style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
+                        child: Text(l.rememberMe, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
                       ),
                     ],
                   ),
@@ -190,12 +192,12 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                             text: TextSpan(
                               style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
                               children: [
-                                const TextSpan(text: 'Dengan mencentang Setuju & Bergabung atau Lanjutkan, Anda menyetujui '),
+                                TextSpan(text: l.agreementPrefix),
                                 WidgetSpan(
                                   child: GestureDetector(
                                     onTap: () => context.push('/terms-of-service'),
                                     child: Text(
-                                      'Perjanjian Pengguna',
+                                      l.userAgreement,
                                       style: AppTextStyles.bodySmall.copyWith(
                                         color: AppColors.primaryColor,
                                         fontWeight: FontWeight.w600,
@@ -204,12 +206,12 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                                     ),
                                   ),
                                 ),
-                                const TextSpan(text: ', '),
+                                TextSpan(text: l.comma),
                                 WidgetSpan(
                                   child: GestureDetector(
                                     onTap: () => context.push('/privacy-policy'),
                                     child: Text(
-                                      'Kebijakan Privasi',
+                                      l.privacyPolicy,
                                       style: AppTextStyles.bodySmall.copyWith(
                                         color: AppColors.primaryColor,
                                         fontWeight: FontWeight.w600,
@@ -218,12 +220,12 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                                     ),
                                   ),
                                 ),
-                                const TextSpan(text: ' dan '),
+                                TextSpan(text: l.andWord),
                                 WidgetSpan(
                                   child: GestureDetector(
                                     onTap: () => showAgreementModal(context, mode: AgreementMode.weddingPolicy),
                                     child: Text(
-                                      'Kebijakan Aplikasi',
+                                      l.appPolicy,
                                       style: AppTextStyles.bodySmall.copyWith(
                                         color: AppColors.primaryColor,
                                         fontWeight: FontWeight.w600,
@@ -232,7 +234,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                                     ),
                                   ),
                                 ),
-                                const TextSpan(text: ' Wedding Flowers Decorasi.'),
+                                TextSpan(text: l.agreementSuffix),
                               ],
                             ),
                           ),
@@ -243,7 +245,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                   const SizedBox(height: AppSizes.lg),
                   // Tombol Masuk
                   AppButton(
-                    label: 'Masuk',
+                    label: l.signIn,
                     loading: isLoading,
                     disabled: !_agreeTerms,
                     onPressed: _onLogin,
@@ -256,7 +258,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                       const Expanded(child: Divider()),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
-                        child: Text('Atau', style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
+                        child: Text(l.or, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
                       ),
                       const Expanded(child: Divider()),
                     ],
@@ -272,11 +274,11 @@ class _SignInPageState extends ConsumerState<SignInPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('Belum punya akun?', style: AppTextStyles.bodyMedium),
+                      Text(l.dontHaveAccount, style: AppTextStyles.bodyMedium),
                       GestureDetector(
                         onTap: () => showSignUpSheet(context),
                         child: Text(
-                          ' Daftar',
+                          ' ${l.signUp}',
                           style: AppTextStyles.bodyMedium.copyWith(
                             color: AppColors.primaryColor,
                             fontWeight: FontWeight.w600,

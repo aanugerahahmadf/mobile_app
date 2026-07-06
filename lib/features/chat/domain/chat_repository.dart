@@ -1,6 +1,7 @@
 abstract class ChatRepository {
-  Future<List<Map<String, dynamic>>> getConversations();
-  Future<List<Map<String, dynamic>>> getMessages(String inboxId);
+  Future<Map<String, dynamic>> getConversations();
+  Future<List<Map<String, dynamic>>> getCustomersForChat();
+  Future<Map<String, dynamic>> getMessages(String inboxId);
   Future<int> getUnreadCount();
   Future<Map<String, dynamic>> sendMessage({
     required int inboxId,

@@ -14,13 +14,15 @@ class ChatLoading extends ChatState {
 class ChatConversationsLoaded extends ChatState {
   final List<Map<String, dynamic>> conversations;
   final int unreadCount;
-  const ChatConversationsLoaded(this.conversations, {this.unreadCount = 0});
+  final bool isSuperAdmin;
+  const ChatConversationsLoaded(this.conversations, {this.unreadCount = 0, this.isSuperAdmin = false});
 }
 
 class ChatMessagesLoaded extends ChatState {
   final Map<String, dynamic> conversation;
   final List<Map<String, dynamic>> messages;
-  const ChatMessagesLoaded(this.conversation, this.messages);
+  final Map<String, dynamic>? otherUser;
+  const ChatMessagesLoaded(this.conversation, this.messages, {this.otherUser});
 }
 
 class ChatError extends ChatState {
@@ -36,9 +38,10 @@ class ChatNotifier extends StateNotifier<ChatState> {
   Future<void> loadConversations() async {
     state = const ChatLoading();
     try {
-      final conversations = await _repository.getConversations();
-      final unreadCount = await _repository.getUnreadCount();
-      state = ChatConversationsLoaded(conversations, unreadCount: unreadCount);
+      final result = await _repository.getConversations();
+      final conversations = (result['conversations'] as List<dynamic>?)?.cast<Map<String, dynamic>>() ?? [];
+      final isAdmin = result['is_super_admin'] as bool? ?? false;
+      state = ChatConversationsLoaded(conversations, unreadCount: 0, isSuperAdmin: isAdmin);
     } on DioException catch (e) {
       state = ChatError(e.error?.toString() ?? 'Gagal memuat percakapan');
     } catch (e) {
@@ -49,9 +52,11 @@ class ChatNotifier extends StateNotifier<ChatState> {
   Future<void> loadMessages(String conversationId) async {
     state = const ChatLoading();
     try {
-      final messages = await _repository.getMessages(conversationId);
+      final result = await _repository.getMessages(conversationId);
+      final messages = (result['messages'] as List<dynamic>?)?.cast<Map<String, dynamic>>() ?? [];
+      final otherUser = result['other_user'] as Map<String, dynamic>?;
       final conversation = <String, dynamic>{'id': conversationId};
-      state = ChatMessagesLoaded(conversation, messages);
+      state = ChatMessagesLoaded(conversation, messages, otherUser: otherUser);
     } on DioException catch (e) {
       state = ChatError(e.error?.toString() ?? 'Gagal memuat pesan');
     } catch (e) {
@@ -61,10 +66,12 @@ class ChatNotifier extends StateNotifier<ChatState> {
 
   Future<void> refreshMessages(String conversationId) async {
     try {
-      final messages = await _repository.getMessages(conversationId);
+      final result = await _repository.getMessages(conversationId);
+      final messages = (result['messages'] as List<dynamic>?)?.cast<Map<String, dynamic>>() ?? [];
+      final otherUser = result['other_user'] as Map<String, dynamic>?;
       if (state is ChatMessagesLoaded) {
         final current = state as ChatMessagesLoaded;
-        state = ChatMessagesLoaded(current.conversation, messages);
+        state = ChatMessagesLoaded(current.conversation, messages, otherUser: otherUser ?? current.otherUser);
       }
     } catch (_) {}
   }
@@ -92,7 +99,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
       if (state is ChatMessagesLoaded) {
         final current = state as ChatMessagesLoaded;
         final updatedMessages = [...current.messages, constructed];
-        state = ChatMessagesLoaded(current.conversation, updatedMessages);
+        state = ChatMessagesLoaded(current.conversation, updatedMessages, otherUser: current.otherUser);
       }
     } on DioException catch (e) {
       throw Exception(e.error?.toString() ?? 'Gagal mengirim pesan');
@@ -102,6 +109,10 @@ class ChatNotifier extends StateNotifier<ChatState> {
   Future<int> startConversation({Map<String, dynamic>? itemContext}) async {
     final result = await _repository.startConversation(itemContext: itemContext);
     return result['id'] as int;
+  }
+
+  Future<List<Map<String, dynamic>>> getCustomersForChat() async {
+    return await _repository.getCustomersForChat();
   }
 }
 

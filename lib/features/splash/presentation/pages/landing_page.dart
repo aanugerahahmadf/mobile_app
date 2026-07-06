@@ -7,6 +7,7 @@ import '../../../../core/constants/app_sizes.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/providers/biometric_settings_provider.dart';
 import '../../../auth/presentation/widgets/auth_modals.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 
 class LandingPage extends ConsumerStatefulWidget {
   const LandingPage({super.key});
@@ -28,22 +29,25 @@ class _LandingPageState extends ConsumerState<LandingPage> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
 
-    // Redirect to home if already authenticated
+    // Redirect to home if already authenticated (skip if needs OTP/completion)
     if (authState is AuthAuthenticated) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          final fingerprintEnabled = ref.read(fingerprintUnlockProvider);
-          if (fingerprintEnabled) {
-            context.go('/app-lock');
-          } else {
-            context.go('/home');
+      if (!authState.needsOtp && !authState.needsCompletion) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            final fingerprintEnabled = ref.read(fingerprintUnlockProvider);
+            if (fingerprintEnabled) {
+              context.go('/app-lock');
+            } else {
+              context.go('/home');
+            }
           }
-        }
-      });
+        });
+      }
     }
 
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (next is AuthAuthenticated) {
+        if (next.needsOtp || next.needsCompletion) return;
         final fingerprintEnabled = ref.read(fingerprintUnlockProvider);
         if (fingerprintEnabled) {
           context.go('/app-lock');
@@ -60,14 +64,14 @@ class _LandingPageState extends ConsumerState<LandingPage> {
           children: [
             Image.asset('assets/images/article/article-4.png', fit: BoxFit.cover),
             Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
                     Colors.transparent,
-                    Color(0x800F1B33),
-                    Color(0xCC080E1E),
+                    AppColors.primaryDark.withAlpha(128),
+                    AppColors.primaryDark.withAlpha(204),
                   ],
                 ),
               ),
@@ -102,14 +106,14 @@ class _LandingPageState extends ConsumerState<LandingPage> {
           children: [
             Image.asset('assets/images/article/article-4.png', fit: BoxFit.cover),
             Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
                     Colors.transparent,
-                    Color(0x800F1B33),
-                    Color(0xCC080E1E),
+                    AppColors.primaryDark.withAlpha(128),
+                    AppColors.primaryDark.withAlpha(204),
                   ],
                 ),
               ),
@@ -159,6 +163,7 @@ class _LandingPageState extends ConsumerState<LandingPage> {
   }
 
   Widget _buildButtons(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
       child: Column(
@@ -169,7 +174,7 @@ class _LandingPageState extends ConsumerState<LandingPage> {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(18),
               gradient: const LinearGradient(
-                colors: [Color(0xFF0F1B33), Color(0xFF1E3050)],
+                colors: [AppColors.primaryColor, AppColors.primaryDark],
                 begin: Alignment.centerLeft,
                 end: Alignment.centerRight,
               ),
@@ -193,7 +198,7 @@ class _LandingPageState extends ConsumerState<LandingPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Masuk',
+                    l.signIn,
                     style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, letterSpacing: 0.5, color: Colors.white),
                   ),
                   const SizedBox(width: 8),
@@ -215,7 +220,7 @@ class _LandingPageState extends ConsumerState<LandingPage> {
                 backgroundColor: Colors.white.withValues(alpha: 0.06),
               ),
               child: Text(
-                'Daftar',
+                l.signUp,
                 style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, letterSpacing: 0.5),
               ),
             ),

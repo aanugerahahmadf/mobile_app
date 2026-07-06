@@ -10,6 +10,7 @@ import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/utils/validators.dart';
 import '../widgets/auth_modals.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 
 class ResetPasswordPage extends StatefulWidget {
   const ResetPasswordPage({super.key});
@@ -34,6 +35,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
   }
 
   void _onResetPassword() async {
+    final l = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
 
@@ -46,11 +48,11 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         },
       );
       if (!mounted) return;
-      AppSnackBar.show(context, 'Password berhasil direset. Silakan masuk.', type: SnackBarType.success);
+      AppSnackBar.show(context, l.passwordResetSuccess, type: SnackBarType.success);
       showSignInSheet(context);
     } catch (e) {
       if (!mounted) return;
-      AppSnackBar.show(context, 'Gagal mereset password. Coba lagi.', type: SnackBarType.error);
+      AppSnackBar.show(context, l.passwordResetFailed, type: SnackBarType.error);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -58,8 +60,9 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.backgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -75,15 +78,15 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Reset Password', style: AppTextStyles.headlineMedium),
+              Text(l.resetPassword, style: AppTextStyles.headlineMedium),
               SizedBox(height: AppSizes.xs),
               Text(
-                'Buat password baru untuk akun Anda',
+                l.createNewPassword,
                 style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary),
               ),
               SizedBox(height: AppSizes.xl),
               AppTextField(
-                label: 'Password Baru',
+                label: l.newPassword,
                 controller: _passwordController,
                 obscureText: _obscurePassword,
                 validator: Validators.password,
@@ -94,7 +97,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
               ),
               SizedBox(height: AppSizes.md),
               AppTextField(
-                label: 'Konfirmasi Password Baru',
+                label: l.confirmNewPassword,
                 controller: _confirmPasswordController,
                 obscureText: _obscureConfirmPassword,
                 validator: (v) => Validators.confirmPassword(v, _passwordController.text),
@@ -105,7 +108,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
               ),
               SizedBox(height: AppSizes.xl),
               AppButton(
-                label: 'Reset Password',
+                label: l.resetPassword,
                 loading: _loading,
                 onPressed: _onResetPassword,
               ),

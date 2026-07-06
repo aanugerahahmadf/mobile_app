@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../errors/failures.dart';
 
 class AuthInterceptor extends Interceptor {
@@ -12,6 +13,20 @@ class AuthInterceptor extends Interceptor {
     final token = await _storage.read(key: 'auth_token');
     if (token != null) {
       options.headers['Authorization'] = 'Bearer $token';
+    }
+    handler.next(options);
+  }
+}
+
+class LocaleInterceptor extends Interceptor {
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final locale = prefs.getString('app_locale') ?? 'id';
+      options.headers['Accept-Language'] = locale;
+    } catch (_) {
+      options.headers['Accept-Language'] = 'id';
     }
     handler.next(options);
   }
@@ -65,6 +80,7 @@ class DioClient {
 
     dio.interceptors.addAll([
       AuthInterceptor(),
+      LocaleInterceptor(),
       PrettyDioLogger(requestBody: true, responseBody: true),
       ErrorInterceptor(),
     ]);

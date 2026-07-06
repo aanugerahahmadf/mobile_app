@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
 import '../constants/app_countries.dart';
@@ -46,7 +47,7 @@ class AppCountryPickerField extends StatelessWidget {
                     Container(
                       width: 40, height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.grey[300],
+                        color: AppColors.dividerColor,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -55,7 +56,7 @@ class AppCountryPickerField extends StatelessWidget {
                       child: TextField(
                         controller: searchController,
                         decoration: InputDecoration(
-                          hintText: 'Cari negara...',
+                          hintText: AppLocalizations.of(context)!.searchCountry,
                           prefixIcon: const Icon(Icons.search, size: 20),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(10),

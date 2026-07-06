@@ -3,18 +3,21 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:dio/dio.dart';
+import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_shadows.dart';
 import '../../data/models/search_suggestion.dart';
 import '../../data/search_repository_impl.dart';
 import '../../../cbir/presentation/providers/cbir_provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 class GlobalSearchBar extends ConsumerStatefulWidget {
   final bool translucent;
@@ -29,9 +32,16 @@ class GlobalSearchBar extends ConsumerStatefulWidget {
 class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
   final _controller = TextEditingController();
   final _focusNode = FocusNode();
-  final _repo = SearchRepositoryImpl();
   Timer? _debounce;
   OverlayEntry? _overlay;
+
+  SearchRepositoryImpl get _repo {
+    final authState = ref.read(authProvider);
+    if (authState is AuthAuthenticated && authState.user.isAdmin) {
+      return SearchRepositoryImpl(endpoint: ApiEndpoints.adminSearch);
+    }
+    return SearchRepositoryImpl();
+  }
 
   List<SearchSuggestion> _suggestions = [];
   bool _loadingSuggestions = false;
@@ -155,6 +165,7 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
       final files = (response.data['files'] as List?)?.cast<Map<String, dynamic>>() ?? [];
       if (files.isEmpty || !mounted) return;
 
+      final l = AppLocalizations.of(context)!;
       final selected = await showModalBottomSheet<String>(
         context: context,
         isScrollControlled: true,
@@ -167,12 +178,12 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
             children: [
               Container(
                 width: 36, height: 4, margin: const EdgeInsets.only(top: 12),
-                decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+                decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2)),
               ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                child: Text('Pilih dari Google Drive',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                child: Text(l.pickFromGoogleDrive,
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
                 ),
               ),
               SizedBox(
@@ -223,14 +234,16 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
       if (mounted) context.push('/cbir-result');
     } catch (e) {
       if (mounted) {
+        final l = AppLocalizations.of(context)!;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Gagal: $e')),
+          SnackBar(content: Text(l.failedWithMessage.replaceFirst('%s', e.toString()))),
         );
       }
     }
   }
 
   void _showPickerOptions() {
+    final l = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -245,35 +258,35 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
               children: [
                 Container(
                   width: 36, height: 4,
-                  decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)),
+                  decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2)),
                 ),
                 const SizedBox(height: 24),
-                Text('Cari dengan Gambar',
-                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: Color(0xFF1A1A2E)),
+                Text(l.searchByImage,
+                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 24),
                 _sheetOption(
                   icon: Icons.camera_alt_rounded,
-                  title: 'Kamera',
-                  subtitle: 'Ambil foto langsung',
+                  title: l.camera,
+                  subtitle: l.takePhotoDirect,
                   onTap: () { context.pop(); _pickImage(ImageSource.camera); },
                 ),
                 _sheetOption(
                   icon: Icons.photo_library,
-                  title: 'Galeri',
-                  subtitle: 'Pilih dari Galeri',
+                  title: l.gallery,
+                  subtitle: l.chooseFromGallery,
                   onTap: () { context.pop(); _pickImage(ImageSource.gallery); },
                 ),
                 _sheetOption(
                   icon: Icons.folder,
-                  title: 'File Manager',
-                  subtitle: 'Pilih dari penyimpanan',
+                  title: l.fileManager,
+                  subtitle: l.chooseFromStorage,
                   onTap: () { context.pop(); _pickFile(); },
                 ),
                 _sheetOption(
                   icon: Icons.cloud,
-                  title: 'Google Drive',
-                  subtitle: 'Pilih file dari Drive',
+                  title: l.googleDrive,
+                  subtitle: l.chooseFromDrive,
                   onTap: () { context.pop(); _pickFromDrive(); },
                 ),
               ],
@@ -290,15 +303,16 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
     required String subtitle,
     VoidCallback? onTap,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 2),
       leading: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: AppColors.primaryLight,
+          color: isDark ? AppColors.primaryColor.withAlpha(60) : AppColors.primaryLight,
           borderRadius: BorderRadius.circular(14),
         ),
-        child: Icon(icon, color: AppColors.primaryColor, size: 22),
+        child: Icon(icon, color: isDark ? Colors.white : AppColors.primaryColor, size: 22),
       ),
       title: Text(title, style: AppTextStyles.titleMedium),
       subtitle: Text(subtitle, style: AppTextStyles.bodySmall),
@@ -306,10 +320,10 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
     );
   }
 
-  Color get _textColor => widget.translucent ? Colors.white : const Color(0xFF1A1A2E);
+  Color get _textColor => widget.translucent ? Colors.white : AppColors.textPrimary;
   Color get _hintColor => widget.translucent ? Colors.white.withAlpha(170) : AppColors.textSecondary.withAlpha(170);
   Color get _iconColor => widget.translucent ? Colors.white.withAlpha(170) : AppColors.textSecondary;
-  Color get _fillColor => widget.translucent ? Colors.white.withAlpha(40) : const Color(0xFFF5F5F5);
+  Color get _fillColor => widget.translucent ? Colors.white.withAlpha(40) : AppColors.secondaryColor;
 
   Widget _buildImageButton() {
     return Container(
@@ -328,6 +342,7 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final vPadding = widget.compact ? 0.0 : 2.0;
     final cbirState = ref.watch(cbirProvider);
 
@@ -345,7 +360,7 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
                 if (q.length >= 2) _openSearchResults(q);
               },
               decoration: InputDecoration(
-                hintText: 'Pencarian...',
+                hintText: l.searchPlaceholder,
                 hintStyle: TextStyle(color: _hintColor, fontWeight: FontWeight.w400),
                 prefixIconConstraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                 prefixIcon: cbirState.uploadedImagePath != null
@@ -439,6 +454,10 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
         return _iconBox(const Color(0xFFE0F7FA), Icons.help_outline_rounded, const Color(0xFF00838F));
       case SuggestionType.histories:
         return _iconBox(const Color(0xFFECEFF1), Icons.history_rounded, const Color(0xFF546E7A));
+      case SuggestionType.users:
+        return _iconBox(const Color(0xFFE8F5E9), Icons.people_rounded, const Color(0xFF2E7D32));
+      case SuggestionType.transactions:
+        return _iconBox(const Color(0xFFFCE4EC), Icons.payments_rounded, const Color(0xFFD32F2F));
       case SuggestionType.packages:
       case SuggestionType.products:
         if (item.imageUrl != null && item.imageUrl!.isNotEmpty) {
@@ -467,12 +486,14 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
   }
 
   Widget _buildTitle(SearchSuggestion item) {
+    final authState = ref.watch(authProvider);
+    final isAdmin = authState is AuthAuthenticated && authState.user.isAdmin;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (item.name != null && item.name!.isNotEmpty)
           Text(item.name!,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Color(0xFF1A1A2E)),
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.textPrimary),
             maxLines: item.type == SuggestionType.terms || item.type == SuggestionType.privacy || item.type == SuggestionType.weddingPolicy ? 2 : 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -484,6 +505,13 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
               color: AppColors.textSecondary,
               fontWeight: item.type == SuggestionType.vouchers || item.type == SuggestionType.orders ? FontWeight.w600 : FontWeight.w400,
             ),
+            maxLines: 1, overflow: TextOverflow.ellipsis,
+          ),
+        ],
+        if (isAdmin && item.subtitle2 != null && item.subtitle2!.isNotEmpty) ...[
+          const SizedBox(height: 2),
+          Text(item.subtitle2!,
+            style: TextStyle(fontSize: 10, color: AppColors.textTertiary, fontStyle: FontStyle.italic),
             maxLines: 1, overflow: TextOverflow.ellipsis,
           ),
         ],
@@ -524,6 +552,12 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
       case SuggestionType.histories:
         bgColor = const Color(0xFFECEFF1);
         textColor = const Color(0xFF546E7A);
+      case SuggestionType.users:
+        bgColor = const Color(0xFFE8F5E9);
+        textColor = const Color(0xFF2E7D32);
+      case SuggestionType.transactions:
+        bgColor = const Color(0xFFFCE4EC);
+        textColor = const Color(0xFFD32F2F);
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -535,6 +569,7 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
   }
 
   Widget _buildDropdown() {
+    final l = AppLocalizations.of(context)!;
     final renderBox = context.findRenderObject() as RenderBox?;
     if (renderBox == null) return const SizedBox.shrink();
     final offset = renderBox.localToGlobal(Offset.zero);
@@ -573,8 +608,8 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
                         ? Padding(
                             padding: const EdgeInsets.all(20),
                             child: Center(
-                              child: Text('Hasil tidak ditemukan',
-                                style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
+                              child: Text(l.noResults,
+                                style: TextStyle(color: AppColors.textSecondary, fontSize: 13),
                               ),
                             ),
                           )

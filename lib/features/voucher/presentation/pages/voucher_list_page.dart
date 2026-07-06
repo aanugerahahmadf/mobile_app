@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
@@ -26,10 +27,11 @@ class _VoucherListPageState extends ConsumerState<VoucherListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final state = ref.watch(voucherProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text('Voucher Saya')),
+      appBar: AppBar(title: Text(l.myVouchers)),
       body: state.loading
           ? ListView.builder(
               padding: const EdgeInsets.all(AppSizes.md),
@@ -44,21 +46,21 @@ class _VoucherListPageState extends ConsumerState<VoucherListPage> {
               : state.vouchers.isEmpty
                   ? AppEmptyState(
                       icon: Icons.card_giftcard_outlined,
-                      title: 'Tidak Ada Voucher',
-                      subtitle: 'Belum ada voucher tersedia',
+                      title: l.noVouchers,
+                      subtitle: l.voucherEmpty,
                     )
                   : RefreshIndicator(
                       onRefresh: () => ref.read(voucherProvider.notifier).fetchVouchers(),
                       child: ListView.builder(
                         padding: const EdgeInsets.all(AppSizes.md),
                         itemCount: state.vouchers.length,
-                        itemBuilder: (_, i) => _buildVoucherCard(state.vouchers[i]),
+                        itemBuilder: (_, i) => _buildVoucherCard(state.vouchers[i], l),
                       ),
                     ),
     );
   }
 
-  Widget _buildVoucherCard(VoucherModel voucher) {
+  Widget _buildVoucherCard(VoucherModel voucher, AppLocalizations l) {
     final name = voucher.code;
     final desc = voucher.description ?? '';
     final discount = voucher.discountAmount.toInt();
@@ -75,7 +77,7 @@ class _VoucherListPageState extends ConsumerState<VoucherListPage> {
         gradient: isExpired
             ? null
             : AppColors.primaryGradient,
-        color: isExpired ? Colors.grey[200] : null,
+        color: isExpired ? AppColors.secondaryColor : null,
         borderRadius: BorderRadius.circular(AppSizes.cardRadius),
         boxShadow: [
           BoxShadow(
@@ -94,7 +96,7 @@ class _VoucherListPageState extends ConsumerState<VoucherListPage> {
               Container(
                 width: 72, height: 72,
                 decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(51),
+                  color: AppColors.surfaceColor.withAlpha(51),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Icon(Icons.card_giftcard, color: Colors.white, size: 32),
@@ -110,7 +112,7 @@ class _VoucherListPageState extends ConsumerState<VoucherListPage> {
                     )),
                     const SizedBox(height: 4),
                     Text(desc, style: AppTextStyles.bodySmall.copyWith(
-                      color: isExpired ? AppColors.textTertiary : Colors.white70,
+                      color: isExpired ? AppColors.textTertiary : AppColors.surfaceColor.withAlpha(179),
                     )),
                     const SizedBox(height: 6),
                     Row(
@@ -119,7 +121,7 @@ class _VoucherListPageState extends ConsumerState<VoucherListPage> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: Colors.white.withAlpha(51),
+                              color: AppColors.surfaceColor.withAlpha(51),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(discountLabel, style: AppTextStyles.labelSmall.copyWith(
@@ -147,12 +149,12 @@ class _VoucherListPageState extends ConsumerState<VoucherListPage> {
               ),
               const SizedBox(width: AppSizes.sm),
               if (isExpired)
-                Text('Kedaluwarsa', style: AppTextStyles.labelSmall.copyWith(color: AppColors.textSecondary))
+                Text(l.tryAgain, style: AppTextStyles.labelSmall.copyWith(color: AppColors.textSecondary))
               else
                 SizedBox(
                   width: 72,
                   child: AppButton(
-                    label: 'Klaim',
+                    label: l.use,
                     onPressed: () => _claimVoucher(id),
                     type: ButtonType.primary,
                     padding: EdgeInsets.zero,
@@ -166,10 +168,11 @@ class _VoucherListPageState extends ConsumerState<VoucherListPage> {
   }
 
   Future<void> _claimVoucher(String id) async {
+    final sl = AppLocalizations.of(context)!;
     final success = await ref.read(voucherProvider.notifier).claimVoucher(id);
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(success ? 'Voucher berhasil diklaim' : 'Gagal mengklaim voucher'),
+        content: Text(success ? sl.voucherUsed : sl.failedUseVoucher),
         backgroundColor: success ? AppColors.successColor : AppColors.errorColor,
       ));
     }

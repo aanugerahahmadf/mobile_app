@@ -164,7 +164,7 @@ class UserModel {
       dreamVenue: json['dream_venue'] as String?,
       activeStatus: toBool(json['active_status']),
       isAdmin: toBool(json['is_admin']),
-      roles: (json['roles'] as List<dynamic>?)?.cast<String>() ?? [],
+      roles: (json['role_names'] as List<dynamic>?)?.cast<String>() ?? [],
       createdAt: json['created_at'] as String?,
       updatedAt: json['updated_at'] as String?,
     );
@@ -218,7 +218,7 @@ class UserModel {
       'dream_venue': dreamVenue,
       'active_status': activeStatus,
       'is_admin': isAdmin,
-      'roles': roles,
+      'role_names': roles,
       'created_at': createdAt,
       'updated_at': updatedAt,
     };

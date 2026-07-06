@@ -1,49 +1,39 @@
 import 'package:flutter/material.dart';
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_text_styles.dart';
 
 class MenuCard extends StatelessWidget {
-  final String label;
   final IconData icon;
-  final Color? color;
+  final Color bgColor;
+  final Color iconColor;
   final VoidCallback? onTap;
 
   const MenuCard({
     super.key,
-    required this.label,
     required this.icon,
-    this.color,
+    required this.bgColor,
+    required this.iconColor,
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final bgColor = color ?? AppColors.primaryLight.withAlpha(77);
-
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 76,
-        margin: const EdgeInsets.only(right: 12),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: bgColor,
-                borderRadius: BorderRadius.circular(18),
+        margin: const EdgeInsets.symmetric(horizontal: 6),
+        child: Container(
+          width: 56, height: 56,
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: iconColor.withAlpha(50),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-              child: Icon(icon, color: AppColors.primaryColor, size: 22),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: AppTextStyles.labelMedium,
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+            ],
+          ),
+          child: Icon(icon, color: iconColor, size: 26),
         ),
       ),
     );

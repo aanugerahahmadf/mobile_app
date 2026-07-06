@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/api/api_endpoints.dart';
 import '../../data/models/search_result.dart';
 import '../../data/search_repository_impl.dart';
 import '../../domain/search_repository.dart';
@@ -32,4 +33,8 @@ class SearchNotifier extends StateNotifier<SearchState> {
 
 final searchProvider = StateNotifierProvider<SearchNotifier, SearchState>((ref) {
   return SearchNotifier(SearchRepositoryImpl());
+});
+
+final adminSearchProvider = StateNotifierProvider<SearchNotifier, SearchState>((ref) {
+  return SearchNotifier(SearchRepositoryImpl(endpoint: ApiEndpoints.adminSearch));
 });

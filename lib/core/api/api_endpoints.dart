@@ -52,11 +52,18 @@ class ApiEndpoints {
   // Search
   static const String search = '/search';
   static const String searchImage = '/search/image';
+  static const String adminSearch = '/admin/search';
 
   // CBIR
   static const String cbirSearch = '/cbir/search';
+  static const String cbirArithmetic = '/cbir/arithmetic';
+  static const String cbirArithmeticOps = '/cbir/arithmetic/ops';
   static const String cbirStats = '/cbir/stats';
   static const String cbirHealth = '/cbir/health';
+
+  // Admin CBIR
+  static const String adminSearchImage = '/admin/search/image';
+  static const String adminCbirArithmetic = '/admin/cbir/arithmetic';
 
   // Vouchers
   static const String vouchers = '/vouchers';
@@ -66,6 +73,7 @@ class ApiEndpoints {
   static const String notificationReadAll = '/notifications/read-all';
   static const String notificationUnreadCount = '/notifications/unread-count';
   static const String registerFcmToken = '/notifications/fcm-token';
+  static String notificationDelete(String id) => '/notifications/$id';
 
   // Reviews
   static const String reviews = '/reviews';
@@ -76,12 +84,60 @@ class ApiEndpoints {
   static const String messagesSend = '/messages/send';
   static const String messagesStart = '/messages/start';
   static const String unreadCount = '/messages/unread-count';
+  static const String customersForChat = '/messages/customers';
 
   // Legal
   static const String legalTerms = '/legal/terms';
   static const String legalPrivacy = '/legal/privacy';
   static const String legalWeddingPolicy = '/legal/wedding-decoration-policy';
   static const String legalHelp = '/legal/help';
+
+  // ─── Admin CRUD ──────────────────────────────────────────────────────────────
+  static const String adminDashboard = '/admin/dashboard';
+  static const String adminUsers = '/admin/users';
+  static String adminUser(int id) => '/admin/users/$id';
+  static String adminUserToggle(int id) => '/admin/users/$id/toggle-active';
+  static const String adminPackages = '/admin/packages';
+  static String adminPackage(int id) => '/admin/packages/$id';
+  static String adminPackageUpload(int id) => '/admin/packages/$id/upload-image';
+  static const String adminProducts = '/admin/products';
+  static String adminProduct(int id) => '/admin/products/$id';
+  static String adminProductUpload(int id) => '/admin/products/$id/upload-image';
+  static const String adminCategories = '/admin/categories';
+  static String adminCategory(int id) => '/admin/categories/$id';
+  static const String adminOrders = '/admin/orders';
+  static String adminOrder(int id) => '/admin/orders/$id';
+  static String adminOrderStatus(int id) => '/admin/orders/$id/status';
+  static const String adminVouchers = '/admin/vouchers';
+  static String adminVoucher(int id) => '/admin/vouchers/$id';
+  static const String adminReviews = '/admin/reviews';
+  static String adminReview(int id) => '/admin/reviews/$id';
+  static const String adminTransactions = '/admin/transactions';
+  static String adminTransaction(int id) => '/admin/transactions/$id';
+  static const String adminBanks = '/admin/banks';
+  static String adminBank(int id) => '/admin/banks/$id';
+  static const String adminPaymentMethods = '/admin/payment-methods';
+  static String adminPaymentMethod(int id) => '/admin/payment-methods/$id';
+  static const String adminHelp = '/admin/helps';
+  static String adminHelpItem(int id) => '/admin/helps/$id';
+  static const String adminLegalPages = '/admin/legal-pages';
+  static String adminLegalPage(int id) => '/admin/legal-pages/$id';
+  static const String adminTerms = '/admin/terms';
+  static String adminTerm(int id) => '/admin/terms/$id';
+  static const String adminPrivacyPolicies = '/admin/privacy-policies';
+  static String adminPrivacyPolicy(int id) => '/admin/privacy-policies/$id';
+  static const String adminWeddingPolicies = '/admin/wedding-policies';
+  static String adminWeddingPolicy(int id) => '/admin/wedding-policies/$id';
+  static const String adminNotifications = '/admin/notifications';
+  static String adminNotification(int id) => '/admin/notifications/$id';
+  static const String adminSendNotification = '/admin/notifications/send';
+  static const String adminSendBulkNotification = '/admin/notifications/send-bulk';
+  static const String adminInboxes = '/admin/messages/inboxes';
+  static String adminInbox(int id) => '/admin/messages/inboxes/$id';
+  static const String adminSendMessage = '/admin/messages/send';
+  static String adminMessage(int id) => '/admin/messages/$id';
+  static const String adminWishlists = '/admin/wishlists';
+  static String adminWishlist(int id) => '/admin/wishlists/$id';
 
   // Wallet
   static const String wallet = '/wallet';

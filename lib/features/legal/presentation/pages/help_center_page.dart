@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/widgets/app_shimmer.dart';
@@ -17,10 +18,11 @@ class _HelpCenterPageState extends ConsumerState<HelpCenterPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final async = ref.watch(helpCenterProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text('Pusat Bantuan')),
+      appBar: AppBar(title: Text(l.helpCenter)),
       body: async.when(
         loading: () => const Center(child: AppShimmer(width: 200, height: 16)),
         error: (err, _) => Center(
@@ -29,15 +31,15 @@ class _HelpCenterPageState extends ConsumerState<HelpCenterPage> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.error_outline, size: 48, color: AppColors.textSecondary),
+                Icon(Icons.error_outline, size: 48, color: AppColors.textSecondary),
                 const SizedBox(height: 12),
-                Text('Gagal memuat halaman', textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 14, color: AppColors.textSecondary)),
+                Text(l.failedLoadPage, textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 14, color: AppColors.textSecondary)),
                 const SizedBox(height: 16),
                 FilledButton.icon(
                   onPressed: () => ref.invalidate(helpCenterProvider),
                   icon: const Icon(Icons.refresh, size: 18),
-                  label: Text('Coba Lagi'),
+                  label: Text(l.tryAgain),
                 ),
               ],
             ),

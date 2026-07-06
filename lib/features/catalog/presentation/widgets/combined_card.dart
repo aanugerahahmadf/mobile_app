@@ -12,6 +12,7 @@ class CombinedCard extends ConsumerStatefulWidget {
   final String type;
   final double? similarity;
   final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
 
   const CombinedCard({
     super.key,
@@ -19,6 +20,7 @@ class CombinedCard extends ConsumerStatefulWidget {
     required this.type,
     this.similarity,
     this.onTap,
+    this.onLongPress,
   });
 
   @override
@@ -78,13 +80,14 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
         widget.onTap?.call();
       },
       onTapCancel: () => setState(() => _isPressed = false),
+      onLongPress: widget.onLongPress,
       child: AnimatedScale(
         scale: _isPressed ? 0.97 : 1.0,
         duration: const Duration(milliseconds: 150),
         curve: Curves.easeOut,
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.surfaceColor,
             borderRadius: BorderRadius.circular(8),
             boxShadow: AppShadows.card,
           ),
@@ -108,8 +111,8 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
                       },
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
-                          color: const Color(0xFFF5F5F5),
-                          child: const Icon(Icons.image_outlined, color: Color(0xFFD0D0D0), size: 40),
+                          color: AppColors.surfaceColor,
+                          child: Icon(Icons.image_outlined, color: AppColors.textTertiary, size: 40),
                         );
                       },
                     ),
@@ -130,7 +133,7 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
                     // Discount badge
                     if (hasDiscount)
                       Positioned(
-                        top: 8, right: 8,
+                        top: 8, left: 8,
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
@@ -213,70 +216,72 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
               // ── Text info section ────────────────────────────────────────
               Expanded(
                 flex: 2,
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 6, 8, 8),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // Name
-                      Text(
-                        name,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF1A1A2E),
-                          height: 1.3,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      // Price and rating row/column
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            Formatters.currency(price),
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.primaryColor,
-                            ),
-                            overflow: TextOverflow.ellipsis,
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Name
+                        Text(
+                          name,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textPrimary,
+                            height: 1.2,
                           ),
-                          if (hasDiscount) ...[
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        // Price and rating row/column
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
                             Text(
-                              Formatters.currency(originalPrice),
+                              Formatters.currency(price),
                               style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w400,
-                                color: AppColors.textTertiary,
-                                decoration: TextDecoration.lineThrough,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.primaryColor,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
-                          ],
-                          if (rating > 0) ...[
-                            const SizedBox(height: 2),
-                            Row(
-                              children: [
-                                Icon(Icons.star_rounded, size: 13, color: AppColors.warningColor.withAlpha(200)),
-                                const SizedBox(width: 2),
-                                Text(
-                                  rating.toStringAsFixed(1),
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppColors.textSecondary,
-                                  ),
+                            if (hasDiscount) ...[
+                              Text(
+                                Formatters.currency(originalPrice),
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w400,
+                                  color: AppColors.textTertiary,
+                                  decoration: TextDecoration.lineThrough,
                                 ),
-                              ],
-                            ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                            if (rating > 0) ...[
+                              const SizedBox(height: 1),
+                              Row(
+                                children: [
+                                  Icon(Icons.star_rounded, size: 11, color: AppColors.warningColor.withAlpha(200)),
+                                  const SizedBox(width: 2),
+                                  Text(
+                                    rating.toStringAsFixed(1),
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ],
-                        ],
-                      ),
-                    ],
-                  ),
+                        ),
+                      ],
+                    ),
                 ),
               ),
             ],

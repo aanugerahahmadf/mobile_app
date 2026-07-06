@@ -11,7 +11,9 @@ enum SuggestionType {
   privacy,
   helps,
   histories,
-  weddingPolicy;
+  weddingPolicy,
+  users,
+  transactions;
 
   String get badgeLabel {
     switch (this) {
@@ -37,6 +39,10 @@ enum SuggestionType {
         return 'riwayat';
       case SuggestionType.weddingPolicy:
         return 'kebijakan';
+      case SuggestionType.users:
+        return 'pengguna';
+      case SuggestionType.transactions:
+        return 'transaksi';
     }
   }
 }
@@ -50,6 +56,7 @@ class SearchSuggestion {
   final String? imageUrl;
   final String routePath;
   final Map<String, dynamic>? routeExtra;
+  final Map<String, dynamic>? rawData;
 
   const SearchSuggestion({
     required this.type,
@@ -60,6 +67,7 @@ class SearchSuggestion {
     this.imageUrl,
     required this.routePath,
     this.routeExtra,
+    this.rawData,
   });
 
   factory SearchSuggestion.fromJson(SuggestionType type, Map<String, dynamic> json) {
@@ -72,37 +80,63 @@ class SearchSuggestion {
           type: type,
           id: id,
           name: json['name'] as String?,
+          subtitle2: json['description'] as String?,
           routePath: '/catalog',
           routeExtra: {'category_id': '$id', 'category_name': json['name']},
+          rawData: json,
         );
 
       case SuggestionType.vouchers:
+        final discount = json['discount'] ?? json['discount_value'] ?? json['amount'] ?? '';
+        final validUntil = json['valid_until'] as String? ?? json['expired_at'] as String? ?? '';
+        final sub2 = [
+          if (discount.toString().isNotEmpty) 'Diskon: $discount',
+          if (validUntil.isNotEmpty) 'Sampai: $validUntil',
+        ].join(' • ');
         return SearchSuggestion(
           type: type,
           id: id,
           name: json['code'] as String?,
           subtitle: json['description'] as String?,
+          subtitle2: sub2.isNotEmpty ? sub2 : null,
           routePath: '/vouchers/$id',
           routeExtra: {...json, 'id': id},
+          rawData: json,
         );
 
       case SuggestionType.orders:
+        final total = json['total'] ?? json['grand_total'] ?? json['amount'] ?? '';
+        final customer = json['user'] is Map ? (json['user'] as Map)['name'] as String? : json['customer_name'] as String?;
+        final sub2 = [
+          if (total.toString().isNotEmpty) _formatCurrency(_parsePrice(total)),
+          if (customer != null && customer.isNotEmpty) customer,
+        ].join(' • ');
         return SearchSuggestion(
           type: type,
           id: id,
           name: json['order_number'] as String?,
           subtitle: json['status'] as String?,
+          subtitle2: sub2.isNotEmpty ? sub2 : null,
           routePath: '/order/$id',
+          rawData: json,
         );
 
       case SuggestionType.reviews:
         final package = json['package'] as Map<String, dynamic>?;
+        final rating = json['rating'] as num?;
+        final user = json['user'] is Map ? (json['user'] as Map)['name'] as String? : json['customer_name'] as String?;
+        final sub2 = [
+          if (rating != null) '★ $rating',
+          if (user != null && user.isNotEmpty) user,
+        ].join(' • ');
         return SearchSuggestion(
           type: type,
           id: id,
           name: json['comment'] as String?,
           subtitle: package?['name'] as String?,
+          subtitle2: sub2.isNotEmpty ? sub2 : null,
           routePath: '/my-reviews',
+          rawData: json,
         );
 
       case SuggestionType.terms:
@@ -111,7 +145,9 @@ class SearchSuggestion {
           id: id,
           name: json['name'] as String?,
           subtitle: json['title'] as String?,
+          subtitle2: json['description'] as String? ?? json['content'] as String?,
           routePath: '/terms-of-service',
+          rawData: json,
         );
 
       case SuggestionType.privacy:
@@ -120,7 +156,9 @@ class SearchSuggestion {
           id: id,
           name: json['name'] as String?,
           subtitle: json['title'] as String?,
+          subtitle2: json['description'] as String? ?? json['content'] as String?,
           routePath: '/privacy-policy',
+          rawData: json,
         );
 
       case SuggestionType.helps:
@@ -129,7 +167,9 @@ class SearchSuggestion {
           id: id,
           name: json['name'] as String?,
           subtitle: json['title'] as String?,
+          subtitle2: json['description'] as String? ?? json['content'] as String?,
           routePath: '/help-center',
+          rawData: json,
         );
 
       case SuggestionType.weddingPolicy:
@@ -138,7 +178,9 @@ class SearchSuggestion {
           id: id,
           name: json['name'] as String?,
           subtitle: json['title'] as String?,
+          subtitle2: json['description'] as String? ?? json['content'] as String?,
           routePath: '/wedding-policy',
+          rawData: json,
         );
 
       case SuggestionType.histories:
@@ -156,7 +198,41 @@ class SearchSuggestion {
           id: id,
           name: refNumber,
           subtitle: subtitle.isNotEmpty ? subtitle : null,
+          rawData: json,
           routePath: '/history',
+        );
+
+      case SuggestionType.users:
+        final email = json['email'] as String?;
+        final role = json['role'] is List
+            ? (json['role'] as List).join(', ')
+            : json['role']?.toString() ?? json['roles']?.toString() ?? '';
+        return SearchSuggestion(
+          type: type,
+          id: id,
+          name: json['name'] as String? ?? json['full_name'] as String?,
+          subtitle: email,
+          subtitle2: role.isNotEmpty ? role : null,
+          imageUrl: imageUrl,
+          routePath: '/admin/users',
+          rawData: json,
+        );
+
+      case SuggestionType.transactions:
+        final amount = json['amount'] ?? json['total'] ?? json['gross_amount'] ?? '';
+        final method = json['payment_method'] as String? ?? json['method'] as String? ?? '';
+        final sub2 = [
+          if (amount.toString().isNotEmpty) _formatCurrency(_parsePrice(amount)),
+          if (method.isNotEmpty) method,
+        ].join(' • ');
+        return SearchSuggestion(
+          type: type,
+          id: id,
+          name: json['transaction_id'] as String? ?? json['order_id'] as String?,
+          subtitle: json['status'] as String?,
+          subtitle2: sub2.isNotEmpty ? sub2 : null,
+          routePath: '/admin/transactions',
+          rawData: json,
         );
 
       case SuggestionType.packages:
@@ -164,13 +240,23 @@ class SearchSuggestion {
         final price = _pickPrice(json);
         final name = json['name'] as String? ?? '';
         final subtitle = price > 0 ? _formatCurrency(price) : null;
+        final desc = json['description'] as String? ?? '';
+        final category = json['category'] is Map
+            ? (json['category'] as Map)['name'] as String?
+            : json['category_name'] as String?;
+        final sub2 = [
+          if (desc.isNotEmpty) desc,
+          if (category != null && category.isNotEmpty) category,
+        ].join(' • ');
         return SearchSuggestion(
           type: type,
           id: id,
           name: name,
           subtitle: subtitle,
+          subtitle2: sub2.isNotEmpty ? sub2 : null,
           imageUrl: imageUrl,
           routePath: '/catalog/${type.name}/$id',
+          rawData: json,
         );
     }
   }

@@ -8,17 +8,22 @@ import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/auth_modals.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 
 class SwitchAccountPage extends ConsumerWidget {
   const SwitchAccountPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final authState = ref.watch(authProvider);
     final user = authState is AuthAuthenticated ? authState.user : null;
 
     return Scaffold(
-      appBar: AppBar(title: Text('Ganti Akun')),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: Text(l.switchAccount),
+      ),
       body: ListView(
         padding: const EdgeInsets.all(AppSizes.md),
         children: [
@@ -44,7 +49,7 @@ class SwitchAccountPage extends ConsumerWidget {
             SizedBox(height: AppSizes.lg),
           ],
           AppButton(
-            label: 'Tambah Akun',
+            label: l.switchAccount,
             onPressed: () async {
               await ref.read(authProvider.notifier).logout();
               if (context.mounted) {
@@ -57,7 +62,7 @@ class SwitchAccountPage extends ConsumerWidget {
           ),
           SizedBox(height: AppSizes.md),
           AppButton(
-            label: 'Keluar',
+            label: l.signOut,
             onPressed: () async {
               await ref.read(authProvider.notifier).logout();
               if (context.mounted) {
