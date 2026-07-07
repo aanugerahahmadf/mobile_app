@@ -380,7 +380,6 @@ class _AuthSheetWrapper extends StatelessWidget {
         ),
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         children: [
           const SizedBox(height: 8),
           Container(
@@ -391,7 +390,7 @@ class _AuthSheetWrapper extends StatelessWidget {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          Flexible(child: child),
+          Expanded(child: child),
         ],
       ),
     );
@@ -583,7 +582,7 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
     final isLoading = authState is AuthLoading;
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(AppSizes.lg, AppSizes.sm, AppSizes.lg, AppSizes.lg),
+      padding: EdgeInsets.fromLTRB(AppSizes.lg, AppSizes.sm, AppSizes.lg, AppSizes.lg + MediaQuery.of(context).viewInsets.bottom),
       child: Form(
         key: _formKey,
         child: Column(
@@ -880,6 +879,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
   void _showPickerSheet(String title, List<String> options, Function(String) onSelected) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
@@ -896,15 +896,13 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: Column(
-              mainAxisSize: MainAxisSize.max,
               children: [
                 Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2))),
                 const SizedBox(height: 8),
                 Text(title, style: AppTextStyles.titleMedium),
                 const SizedBox(height: 8),
-                Flexible(
+                Expanded(
                   child: ListView(
-                    shrinkWrap: true,
                     children: options.map((option) => ListTile(
                       title: Text(option, style: AppTextStyles.bodyMedium),
                       onTap: () {
@@ -926,6 +924,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
     final l = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
@@ -942,15 +941,13 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
           child: Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: Column(
-              mainAxisSize: MainAxisSize.max,
               children: [
                 Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2))),
                 const SizedBox(height: 8),
                 Text(l.selectIdentityType, style: AppTextStyles.titleMedium),
                 const SizedBox(height: 8),
-                Flexible(
+                Expanded(
                   child: ListView(
-                    shrinkWrap: true,
                     children: [
                       ListTile(
                         leading: const Icon(Icons.credit_card),
@@ -1175,58 +1172,34 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
 
   Widget _buildPhoneField() {
     final l = AppLocalizations.of(context)!;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: Text(l.whatsappNumber, style: AppTextStyles.titleSmall),
-        ),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Country code button
-            GestureDetector(
-              onTap: _showCountryCodePicker,
-              child: Container(
-                height: 54,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  color: AppColors.backgroundColor,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.dividerColor),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      _countryCode,
-                      style: AppTextStyles.bodyLarge.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(width: 2),
-                    Icon(Icons.arrow_drop_down, size: 20, color: AppColors.textSecondary),
-                  ],
-                ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: TextFormField(
+        controller: _whatsappController,
+        keyboardType: TextInputType.number,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        validator: Validators.phone,
+        style: AppTextStyles.bodyLarge,
+        decoration: InputDecoration(
+          labelText: l.whatsappNumber,
+          labelStyle: AppTextStyles.titleSmall,
+          prefix: GestureDetector(
+            onTap: _showCountryCodePicker,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(flagFromDialCode(_countryCode) ?? '', style: const TextStyle(fontSize: 20)),
+                  const SizedBox(width: 4),
+                  Text(_countryCode, style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600)),
+                  Icon(Icons.arrow_drop_down, size: 20, color: AppColors.textSecondary),
+                ],
               ),
             ),
-            const SizedBox(width: 8),
-            // Phone number field
-            Expanded(
-              child: TextFormField(
-                controller: _whatsappController,
-                keyboardType: TextInputType.number,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                validator: Validators.phone,
-                style: AppTextStyles.bodyLarge,
-                decoration: const InputDecoration(),
-              ),
-            ),
-          ],
+          ),
         ),
-      ],
+      ),
     );
   }
 
@@ -2178,89 +2151,109 @@ class _OtpVerificationSheetContentState extends State<_OtpVerificationSheetConte
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final boxFg = isDark ? Colors.white : const Color(0xFF1A1A2E);
+    final boxBg = isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF5F5F5);
+    final boxBorder = isDark ? const Color(0xFF333333) : const Color(0xFFE0E0E0);
+    final boxFocusedBorder = AppColors.primaryColor;
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(AppSizes.lg, AppSizes.sm, AppSizes.lg, AppSizes.lg),
+      padding: EdgeInsets.fromLTRB(AppSizes.lg, AppSizes.sm, AppSizes.lg, AppSizes.lg + MediaQuery.of(context).viewInsets.bottom),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: AppSizes.sm),
-          Text(l.verify, style: AppTextStyles.headlineMedium),
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => Navigator.of(context).pop(),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+              const SizedBox(width: AppSizes.sm),
+              Expanded(
+                child: Text(l.verify, style: AppTextStyles.headlineMedium),
+              ),
+            ],
+          ),
           const SizedBox(height: AppSizes.xs),
           Text(
             widget.email != null
                 ? '${l.enterOtpSentTo} ${widget.email!}'
                 : '${l.enterOtpSentTo} ${l.email}',
-            style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary),
+            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: AppSizes.lg),
+          const SizedBox(height: 28),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(6, (i) {
-              return SizedBox(
-                width: 52, height: 58,
-                child: TextFormField(
-                  controller: _otpControllers[i],
-                  focusNode: _otpFocusNodes[i],
-                  textAlign: TextAlign.center,
-                  keyboardType: TextInputType.number,
-                  maxLength: 1,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                  ],
-                  style: GoogleFonts.inter(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w700,
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.white
-                        : const Color(0xFF1A1A2E),
-                  ),
-                  decoration: InputDecoration(
-                    counterText: '',
-                    isDense: true,
-                    contentPadding: EdgeInsets.zero,
-                    filled: true,
-                    fillColor: Theme.of(context).brightness == Brightness.dark
-                        ? const Color(0xFF2C2C2C)
-                        : Colors.white,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(
-                        color: Theme.of(context).brightness == Brightness.dark
-                            ? const Color(0xFF3A3A3A)
-                            : AppColors.secondaryColor,
+              return Padding(
+                padding: EdgeInsets.only(left: i > 0 ? 8 : 0),
+                child: SizedBox(
+                    width: 44,
+                    height: 54,
+                    child: TextFormField(
+                      controller: _otpControllers[i],
+                      focusNode: _otpFocusNodes[i],
+                      textAlign: TextAlign.center,
+                      keyboardType: TextInputType.number,
+                      maxLength: 1,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                      ],
+                      style: GoogleFonts.inter(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w600,
+                        color: boxFg,
                       ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: AppColors.primaryColor, width: 2),
+                      decoration: InputDecoration(
+                        counterText: '',
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                        filled: true,
+                        fillColor: boxBg,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(color: boxBorder),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(color: boxBorder),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                          borderSide: BorderSide(color: boxFocusedBorder, width: 1.8),
+                        ),
+                      ),
+                      onChanged: (v) => _onOtpChanged(i, v),
                     ),
                   ),
-                  onChanged: (v) => _onOtpChanged(i, v),
-                ),
-              );
-            }),
-          ),
-          const SizedBox(height: 8),
+                );
+              }),
+            ),
+          const SizedBox(height: 16),
           if (_showPaste)
-            Center(
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
               child: GestureDetector(
                 onTap: _pasteOtp,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryColor.withAlpha(20),
+                    color: AppColors.primaryColor.withAlpha(15),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.content_paste, size: 16, color: AppColors.primaryColor),
-                      const SizedBox(width: 4),
+                      Icon(Icons.content_paste_rounded, size: 16, color: AppColors.primaryColor),
+                      const SizedBox(width: 6),
                       Text(
                         l.pasteOtp,
                         style: TextStyle(
-                          fontSize: 12,
-                          color: theme.brightness == Brightness.dark ? Colors.white70 : AppColors.primaryColor,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.primaryColor,
                         ),
                       ),
                     ],
@@ -2268,26 +2261,30 @@ class _OtpVerificationSheetContentState extends State<_OtpVerificationSheetConte
                 ),
               ),
             ),
-          const SizedBox(height: 4),
-          AppButton(
-            label: l.verify,
-            loading: _verifying,
-            onPressed: _onVerify,
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: AppButton(
+              label: l.verify,
+              loading: _verifying,
+              onPressed: _onVerify,
+            ),
           ),
-          const SizedBox(height: AppSizes.md),
+          const SizedBox(height: 16),
           Center(
             child: Text(
               _sending
                   ? l.sending
                   : _resendSeconds > 0
-                      ? '${l.resendOtp} ($_resendSeconds)'
+                      ? '${l.resendOtp} · ${_resendSeconds}s'
                       : l.sending,
-              style: AppTextStyles.bodyMedium.copyWith(
+              style: GoogleFonts.inter(
+                fontSize: 13,
                 color: AppColors.textSecondary,
               ),
             ),
           ),
-          const SizedBox(height: AppSizes.md),
+          const SizedBox(height: AppSizes.sm),
         ],
       ),
     );
@@ -2348,14 +2345,27 @@ class _ResetPasswordSheetContentState extends State<_ResetPasswordSheetContent> 
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(AppSizes.lg, AppSizes.sm, AppSizes.lg, AppSizes.lg),
+      padding: EdgeInsets.fromLTRB(AppSizes.lg, AppSizes.sm, AppSizes.lg, AppSizes.lg + MediaQuery.of(context).viewInsets.bottom),
       child: Form(
         key: _formKey,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: AppSizes.sm),
-            Text(l.resetPassword, style: AppTextStyles.headlineMedium),
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => Navigator.of(context).pop(),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+                const SizedBox(width: AppSizes.sm),
+                Expanded(
+                  child: Text(l.resetPassword, style: AppTextStyles.headlineMedium),
+                ),
+              ],
+            ),
             const SizedBox(height: AppSizes.xs),
             Text(
               l.createNewPassword,
@@ -2445,14 +2455,27 @@ class _ForgotPasswordSheetContentState extends State<_ForgotPasswordSheetContent
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(AppSizes.lg, AppSizes.sm, AppSizes.lg, AppSizes.lg),
+      padding: EdgeInsets.fromLTRB(AppSizes.lg, AppSizes.sm, AppSizes.lg, AppSizes.lg + MediaQuery.of(context).viewInsets.bottom),
       child: Form(
         key: _formKey,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: AppSizes.sm),
-            Text(l.forgotPassword, style: AppTextStyles.headlineMedium),
+            Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => Navigator.of(context).pop(),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+                const SizedBox(width: AppSizes.sm),
+                Expanded(
+                  child: Text(l.forgotPassword, style: AppTextStyles.headlineMedium),
+                ),
+              ],
+            ),
             const SizedBox(height: AppSizes.xs),
             Text(
               l.enterEmailForResetPassword,

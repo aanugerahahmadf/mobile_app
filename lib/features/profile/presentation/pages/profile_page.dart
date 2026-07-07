@@ -86,20 +86,27 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     padding: const EdgeInsets.fromLTRB(AppSizes.md, AppSizes.xxl, AppSizes.md, AppSizes.lg),
                     child: Column(
                       children: [
-                        CircleAvatar(
-                          radius: 48,
-                          backgroundColor: AppColors.primaryColor.withAlpha(25),
-                          backgroundImage: Formatters.avatarUrl(userData) != null
-                              ? CachedNetworkImageProvider(Formatters.avatarUrl(userData)!)
-                              : null,
-                          child: Formatters.avatarUrl(userData) == null
-                              ? Icon(Icons.person, size: 48, color: AppColors.primaryColor)
-                              : null,
+                        GestureDetector(
+                          onTap: () => context.push('/edit-profile'),
+                          child: CircleAvatar(
+                            radius: 48,
+                            backgroundColor: AppColors.primaryColor.withAlpha(25),
+                            backgroundImage: Formatters.avatarUrl(userData) != null
+                                ? CachedNetworkImageProvider(Formatters.avatarUrl(userData)!)
+                                : null,
+                            child: Formatters.avatarUrl(userData) == null
+                                ? Icon(Icons.person, size: 48, color: AppColors.primaryColor)
+                                : null,
+                          ),
                         ),
                         SizedBox(height: AppSizes.md),
-                        Text(
-                          userData?['full_name'] as String? ?? '',
-                          style: AppTextStyles.titleLarge.copyWith(color: AppColors.textPrimary),
+                        FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            userData?['full_name'] as String? ?? '',
+                            style: AppTextStyles.titleLarge.copyWith(color: AppColors.textPrimary),
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -118,7 +125,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
                     child: Column(
                       children: [
-                        _menuTile(Icons.edit, l.editProfile, () => context.push('/edit-profile')),
                         _menuTile(Icons.settings, l.settings, () => context.push('/settings')),
                         if (!isAdmin)
                           _menuTile(Icons.card_giftcard, l.myVouchers, () => context.push('/vouchers')),

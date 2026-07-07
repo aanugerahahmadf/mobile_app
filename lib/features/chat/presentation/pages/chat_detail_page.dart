@@ -104,6 +104,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
     final l = AppLocalizations.of(context)!;
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),

@@ -1,7 +1,6 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import '../api/api_endpoints.dart';
 import '../api/dio_client.dart';
@@ -29,6 +28,9 @@ class NotificationService {
     enableVibration: true,
   );
   String? _fcmToken;
+
+  // Navigation callback set from app-level where GoRouter is accessible
+  void Function(String route)? onNavigate;
 
   String? get fcmToken => _fcmToken;
 
@@ -85,10 +87,14 @@ class NotificationService {
     FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
 
     FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationOpened);
+  }
 
-    final initialMessage = await messaging.getInitialMessage();
+  Future<void> handleInitialMessage() async {
+    final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
     if (initialMessage != null) {
-      _handleNotificationOpened(initialMessage);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _handleNotificationOpened(initialMessage);
+      });
     }
   }
 
@@ -119,7 +125,20 @@ class NotificationService {
   void _showLocalNotification(RemoteMessage message) {
     final notification = message.notification;
     final data = message.data;
-    final route = data['route'] as String? ?? data['type'] as String? ?? '';
+    final route = data['route'] as String?;
+    final type = data['type'] as String?;
+    final id = data['id'] as String?;
+
+    String payload;
+    if (route != null && route.isNotEmpty) {
+      payload = route;
+    } else if (type != null && id != null) {
+      payload = _mapTypeToRoute(type, id);
+    } else if (type != null) {
+      payload = type;
+    } else {
+      payload = '/notifications';
+    }
 
     final androidDetails = AndroidNotificationDetails(
       _channel.id,
@@ -137,7 +156,7 @@ class NotificationService {
       title: notification?.title ?? 'Notifikasi',
       body: notification?.body ?? '',
       notificationDetails: details,
-      payload: route,
+      payload: payload,
     );
   }
 
@@ -160,25 +179,66 @@ class NotificationService {
   }
 
   void _navigateToRoute(String route) {
-    final element = WidgetsBinding.instance.rootElement;
-    if (element == null) return;
-    final router = GoRouter.of(element);
-    router.go(route);
+    final cb = onNavigate;
+    if (cb != null) {
+      cb(route);
+    }
   }
 
   String _mapTypeToRoute(String type, String id) {
     switch (type) {
+      // ── User order / payment ──
       case 'order':
       case 'payment':
         return '/order/$id';
+
+      // ── All chat variants ──
       case 'chat':
+      case 'message':
+      case 'new_message':
         return '/chat/$id';
+
+      // ── Catalog ──
       case 'package':
         return '/catalog/packages/$id';
       case 'product':
         return '/catalog/products/$id';
+
+      // ── Promo / voucher ──
       case 'promo':
         return '/vouchers';
+
+      // ── Admin-specific types ──
+      case 'new_user':
+      case 'admin_user':
+        return '/admin/users';
+      case 'new_order':
+      case 'admin_order':
+        return '/admin/orders';
+      case 'new_help':
+      case 'admin_help':
+        return '/admin/helps';
+      case 'new_review':
+      case 'admin_review':
+      case 'review':
+        return '/admin/reviews';
+      case 'new_voucher':
+      case 'admin_voucher':
+        return '/admin/vouchers';
+      case 'new_transaction':
+      case 'admin_transaction':
+        return '/admin/transactions';
+      case 'new_category':
+      case 'admin_category':
+        return '/admin/categories';
+      case 'new_package':
+      case 'admin_package':
+        return '/admin/packages';
+      case 'new_product':
+      case 'admin_product':
+        return '/admin/products';
+
+      // ── Other / fallback ──
       default:
         return '/notifications';
     }

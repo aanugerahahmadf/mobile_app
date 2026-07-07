@@ -659,6 +659,8 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
                   ),
                   child: Row(
                     children: [
+                      Text(flagFromDialCode(_countryCode) ?? '', style: const TextStyle(fontSize: 20)),
+                      const SizedBox(width: 4),
                       Text(_countryCode, style: AppTextStyles.bodyMedium),
                       const SizedBox(width: 4),
                       Icon(Icons.arrow_drop_down, size: 18, color: AppColors.textSecondary),
@@ -1111,6 +1113,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
   void _showPickerSheet(String title, List<String> options, Function(String) onSelected) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -1118,24 +1121,20 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 16),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             children: [
               Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2))),
               const SizedBox(height: 8),
               Text(title, style: AppTextStyles.titleMedium),
               const SizedBox(height: 8),
-              Flexible(
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: options.map((option) => ListTile(
-                      title: Text(option, style: AppTextStyles.bodyMedium),
-                      onTap: () {
-                        onSelected(option);
-                        Navigator.pop(ctx);
-                      },
-                    )).toList(),
-                  ),
+              Expanded(
+                child: ListView(
+                  children: options.map((option) => ListTile(
+                    title: Text(option, style: AppTextStyles.bodyMedium),
+                    onTap: () {
+                      onSelected(option);
+                      Navigator.pop(ctx);
+                    },
+                  )).toList(),
                 ),
               ),
             ],

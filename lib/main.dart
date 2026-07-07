@@ -38,6 +38,10 @@ class _WeddingAppState extends ConsumerState<WeddingApp> with WidgetsBindingObse
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      NotificationService.instance.onNavigate = (route) => appRouter.go(route);
+      NotificationService.instance.handleInitialMessage();
+    });
   }
 
   @override

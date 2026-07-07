@@ -22,8 +22,9 @@ import '../../../auth/presentation/providers/auth_provider.dart';
 class GlobalSearchBar extends ConsumerStatefulWidget {
   final bool translucent;
   final bool compact;
+  final bool showChat;
 
-  const GlobalSearchBar({super.key, this.translucent = false, this.compact = false});
+  const GlobalSearchBar({super.key, this.translucent = false, this.compact = false, this.showChat = true});
 
   @override
   ConsumerState<GlobalSearchBar> createState() => _GlobalSearchBarState();
@@ -325,21 +326,6 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
   Color get _iconColor => widget.translucent ? Colors.white.withAlpha(170) : AppColors.textSecondary;
   Color get _fillColor => widget.translucent ? Colors.white.withAlpha(40) : AppColors.secondaryColor;
 
-  Widget _buildImageButton() {
-    return Container(
-      decoration: BoxDecoration(
-        color: _fillColor,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: IconButton(
-        icon: Icon(Icons.camera_alt_rounded, color: _iconColor, size: 22),
-        onPressed: _showPickerOptions,
-        constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-        splashRadius: 22,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
@@ -403,12 +389,26 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
                         padding: const EdgeInsets.all(12),
                         child: Icon(Icons.search_rounded, size: 24, color: _iconColor),
                       ),
-                suffixIcon: _controller.text.isNotEmpty
-                    ? IconButton(
+                suffixIcon: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.camera_alt_rounded, color: _iconColor, size: 20),
+                      onPressed: _showPickerOptions,
+                      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                      splashRadius: 18,
+                      padding: EdgeInsets.zero,
+                    ),
+                    if (_controller.text.isNotEmpty)
+                      IconButton(
                         icon: Icon(Icons.close_rounded, color: _iconColor, size: 20),
                         onPressed: () { _controller.clear(); _removeOverlay(); setState(() {}); },
-                      )
-                    : null,
+                        constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                        splashRadius: 18,
+                        padding: EdgeInsets.zero,
+                      ),
+                  ],
+                ),
                 filled: true,
                 fillColor: _fillColor,
                 border: OutlineInputBorder(
@@ -428,9 +428,13 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
               style: TextStyle(color: _textColor, fontWeight: FontWeight.w400),
             ),
           ),
-          const SizedBox(width: 8),
-          _buildImageButton(),
-
+          if (widget.showChat)
+            IconButton(
+              icon: Icon(Icons.chat_outlined, color: _iconColor, size: 22),
+              onPressed: () => context.push('/chat-list'),
+              constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+              splashRadius: 22,
+            ),
         ],
       ),
     );
@@ -519,55 +523,6 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
     );
   }
 
-  Widget _buildBadge(SuggestionType type) {
-    Color bgColor;
-    Color textColor;
-    switch (type) {
-      case SuggestionType.packages:
-        bgColor = AppColors.primaryLight;
-        textColor = AppColors.primaryColor;
-      case SuggestionType.products:
-        bgColor = const Color(0xFFEEF2FF);
-        textColor = const Color(0xFF4F46E5);
-      case SuggestionType.categories:
-        bgColor = const Color(0xFFE8F5E9);
-        textColor = const Color(0xFF2E7D32);
-      case SuggestionType.vouchers:
-        bgColor = const Color(0xFFFFF3E0);
-        textColor = const Color(0xFFF57C00);
-      case SuggestionType.orders:
-        bgColor = const Color(0xFFE3F2FD);
-        textColor = const Color(0xFF1565C0);
-      case SuggestionType.reviews:
-        bgColor = const Color(0xFFFFF8E1);
-        textColor = const Color(0xFFF9A825);
-      case SuggestionType.terms:
-      case SuggestionType.privacy:
-      case SuggestionType.weddingPolicy:
-        bgColor = const Color(0xFFF3E5F5);
-        textColor = const Color(0xFF7B1FA2);
-      case SuggestionType.helps:
-        bgColor = const Color(0xFFE0F7FA);
-        textColor = const Color(0xFF00838F);
-      case SuggestionType.histories:
-        bgColor = const Color(0xFFECEFF1);
-        textColor = const Color(0xFF546E7A);
-      case SuggestionType.users:
-        bgColor = const Color(0xFFE8F5E9);
-        textColor = const Color(0xFF2E7D32);
-      case SuggestionType.transactions:
-        bgColor = const Color(0xFFFCE4EC);
-        textColor = const Color(0xFFD32F2F);
-    }
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(6)),
-      child: Text(type.badgeLabel,
-        style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: textColor),
-      ),
-    );
-  }
-
   Widget _buildDropdown() {
     final l = AppLocalizations.of(context)!;
     final renderBox = context.findRenderObject() as RenderBox?;
@@ -593,16 +548,16 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
             child: Container(
               constraints: const BoxConstraints(maxHeight: 340),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.surfaceColor,
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: AppShadows.elevated,
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
                 child: _loadingSuggestions
-                    ? const Padding(
-                        padding: EdgeInsets.all(16),
-                        child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                    ? Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.textSecondary)),
                       )
                     : _suggestions.isEmpty
                         ? Padding(
@@ -617,7 +572,7 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
                             shrinkWrap: true,
                             padding: EdgeInsets.zero,
                             itemCount: _suggestions.length,
-                            separatorBuilder: (_, _) => const Divider(height: 1, indent: 64),
+                            separatorBuilder: (_, _) => const SizedBox.shrink(),
                             itemBuilder: (_, i) {
                               final item = _suggestions[i];
                               return InkWell(
@@ -629,7 +584,6 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
                                       _buildLeading(item),
                                       const SizedBox(width: 14),
                                       Expanded(child: _buildTitle(item)),
-                                      _buildBadge(item.type),
                                     ],
                                   ),
                                 ),

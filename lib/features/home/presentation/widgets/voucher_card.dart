@@ -29,13 +29,11 @@ class VoucherCard extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
-        child: SizedBox(
-          height: 124,
-          child: ClipPath(
+        child: ClipPath(
         clipper: TicketClipper(),
         child: Container(
           decoration: BoxDecoration(
@@ -125,12 +123,12 @@ class VoucherCard extends StatelessWidget {
                   ),
 
                   // Sisi Kanan: Detail & Kode Voucher
-                  Expanded(
+                  Flexible(
                     child: Padding(
-                      padding: const EdgeInsets.all(AppSizes.md),
+                      padding: const EdgeInsets.fromLTRB(AppSizes.md, 8, AppSizes.md, 8),
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -177,10 +175,8 @@ class VoucherCard extends StatelessWidget {
             ],
           ),
         ),
-        ),
       ),
-      ),
-    );
+    ));
   }
 }
 

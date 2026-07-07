@@ -63,7 +63,7 @@ class _HelpCenterPageState extends ConsumerState<HelpCenterPage> {
                 child: Column(
                   children: [
                     ListTile(
-                      title: Text(faq.question ?? '', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                      title: Text(faq.question ?? '', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: AppColors.textPrimary)),
                       trailing: Icon(isExpanded ? Icons.expand_less : Icons.expand_more, color: AppColors.textSecondary),
                       onTap: () {
                         setState(() {

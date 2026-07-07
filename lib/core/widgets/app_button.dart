@@ -41,11 +41,11 @@ class AppButton extends StatelessWidget {
       );
     } else {
       child = Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: MainAxisSize.max,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           if (icon != null) ...[Icon(icon, size: 20), const SizedBox(width: 8)],
-          Text(label),
+          Expanded(child: Text(label, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center)),
         ],
       );
     }

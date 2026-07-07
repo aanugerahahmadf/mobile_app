@@ -130,6 +130,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
   void _showPickerSheet(String title, List<String> options, Function(String) onSelected) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -160,6 +161,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
   void _showIdentityTypeSheet() {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -346,7 +348,6 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
         return StatefulBuilder(
           builder: (context, setSheetState) {
             return Column(
-              mainAxisSize: MainAxisSize.min,
               children: [
                 const SizedBox(height: 8),
                 Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2))),
@@ -371,9 +372,8 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Flexible(
+                Expanded(
                   child: ListView.separated(
-                    shrinkWrap: true,
                     itemCount: codes.length,
                     separatorBuilder: (_, _) => const Divider(height: 1),
                     itemBuilder: (_, i) => ListTile(

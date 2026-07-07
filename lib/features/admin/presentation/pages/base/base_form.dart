@@ -93,6 +93,7 @@ class _AdminFormDialogState extends State<AdminFormDialog> {
   Future<void> _pickImage(String key) async {
     final source = await showModalBottomSheet<int>(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),

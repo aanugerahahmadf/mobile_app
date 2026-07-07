@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_shadows.dart';
 import '../../../../core/widgets/app_shimmer.dart';
@@ -88,7 +89,7 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
         child: Container(
           decoration: BoxDecoration(
             color: AppColors.surfaceColor,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(6),
             boxShadow: AppShadows.card,
           ),
           clipBehavior: Clip.antiAlias,
@@ -209,6 +210,19 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
                         ),
                       ),
                     ),
+                    Positioned(
+                      bottom: 8, left: 8,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _actionIcon(Icons.shopping_cart_outlined, () => context.push('/cart')),
+                          const SizedBox(width: 4),
+                          _actionIcon(Icons.chat_bubble_outline, () => context.push('/chat-list')),
+                          const SizedBox(width: 4),
+                          _actionIcon(Icons.payment_outlined, () => context.push('/checkout', extra: {'type': widget.type, 'id': '${widget.item.id}'})),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -220,9 +234,7 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
                     padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Name
                         Text(
                           name,
                           style: TextStyle(
@@ -235,7 +247,6 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         const SizedBox(height: 2),
-                        // Price and rating row/column
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
@@ -287,6 +298,27 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _actionIcon(IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceColor,
+          borderRadius: BorderRadius.circular(4),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 2,
+              offset: Offset(0, 1),
+            ),
+          ],
+        ),
+        child: Icon(icon, size: 14, color: AppColors.textSecondary),
       ),
     );
   }

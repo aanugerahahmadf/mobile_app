@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
-import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_shimmer.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../providers/voucher_provider.dart';
@@ -65,7 +65,6 @@ class _VoucherListPageState extends ConsumerState<VoucherListPage> {
     final desc = voucher.description ?? '';
     final discount = voucher.discountAmount.toInt();
     final isExpired = voucher.isExpired;
-    final id = voucher.id.toString();
 
     final discountLabel = voucher.isPercentage
         ? '$discount% OFF'
@@ -89,92 +88,106 @@ class _VoucherListPageState extends ConsumerState<VoucherListPage> {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppSizes.cardRadius),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSizes.md),
-          child: Row(
-            children: [
-              Container(
-                width: 72, height: 72,
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceColor.withAlpha(51),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(Icons.card_giftcard, color: Colors.white, size: 32),
-              ),
-              const SizedBox(width: AppSizes.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(name, style: AppTextStyles.titleMedium.copyWith(
-                      color: isExpired ? AppColors.textSecondary : Colors.white,
-                      fontWeight: FontWeight.w600,
-                    )),
-                    const SizedBox(height: 4),
-                    Text(desc, style: AppTextStyles.bodySmall.copyWith(
-                      color: isExpired ? AppColors.textTertiary : AppColors.surfaceColor.withAlpha(179),
-                    )),
-                    const SizedBox(height: 6),
-                    Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(AppSizes.md),
+              child: Row(
+                children: [
+                  Container(
+                    width: 72, height: 72,
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceColor.withAlpha(51),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: const Icon(Icons.card_giftcard, color: Colors.white, size: 32),
+                  ),
+                  const SizedBox(width: AppSizes.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (discount > 0) ...[
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: AppColors.surfaceColor.withAlpha(51),
-                              borderRadius: BorderRadius.circular(4),
+                        Text(name, style: AppTextStyles.titleMedium.copyWith(
+                          color: isExpired ? AppColors.textSecondary : Colors.white,
+                          fontWeight: FontWeight.w600,
+                        )),
+                        const SizedBox(height: 4),
+                        Text(desc, style: AppTextStyles.bodySmall.copyWith(
+                          color: isExpired ? AppColors.textTertiary : AppColors.surfaceColor.withAlpha(179),
+                        )),
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            if (discount > 0) ...[
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: AppColors.surfaceColor.withAlpha(51),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(discountLabel, style: AppTextStyles.labelSmall.copyWith(
+                                  color: isExpired ? AppColors.textSecondary : Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                )),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                            Expanded(
+                              child: Text(
+                                name,
+                                style: AppTextStyles.labelSmall.copyWith(
+                                  color: isExpired ? AppColors.textTertiary : Colors.white60,
+                                  letterSpacing: 1.5,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                            child: Text(discountLabel, style: AppTextStyles.labelSmall.copyWith(
-                              color: isExpired ? AppColors.textSecondary : Colors.white,
-                              fontWeight: FontWeight.w600,
-                            )),
-                          ),
-                          const SizedBox(width: 8),
-                        ],
-                        Expanded(
-                          child: Text(
-                            name,
-                            style: AppTextStyles.labelSmall.copyWith(
-                              color: isExpired ? AppColors.textTertiary : Colors.white60,
-                              letterSpacing: 1.5,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: isExpired
+                    ? Theme.of(context).colorScheme.surface.withAlpha(40)
+                    : Colors.white.withAlpha(25),
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(AppSizes.cardRadius),
+                  bottomRight: Radius.circular(AppSizes.cardRadius),
                 ),
               ),
-              const SizedBox(width: AppSizes.sm),
-              if (isExpired)
-                Text(l.tryAgain, style: AppTextStyles.labelSmall.copyWith(color: AppColors.textSecondary))
-              else
-                SizedBox(
-                  width: 72,
-                  child: AppButton(
-                    label: l.use,
-                    onPressed: () => _claimVoucher(id),
-                    type: ButtonType.primary,
-                    padding: EdgeInsets.zero,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: isExpired ? null : () => context.push('/vouchers/${voucher.id}', extra: voucher.toJson()),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(AppSizes.cardRadius),
+                    bottomRight: Radius.circular(AppSizes.cardRadius),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    child: Text(
+                      l.viewDetail,
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.labelMedium.copyWith(
+                        color: isExpired ? AppColors.textTertiary : Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
-            ],
-          ),
+              ),
+            ),
+          ],
         ),
       ),
     );
-  }
-
-  Future<void> _claimVoucher(String id) async {
-    final sl = AppLocalizations.of(context)!;
-    final success = await ref.read(voucherProvider.notifier).claimVoucher(id);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(success ? sl.voucherUsed : sl.failedUseVoucher),
-        backgroundColor: success ? AppColors.successColor : AppColors.errorColor,
-      ));
-    }
   }
 }

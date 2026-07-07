@@ -79,7 +79,7 @@ class _CbirResultPageState extends ConsumerState<CbirResultPage> {
                     context.pop();
                   },
                 ),
-                const Expanded(child: GlobalSearchBar()),
+                const Expanded(child: GlobalSearchBar(showChat: false)),
               ],
             ),
             ),

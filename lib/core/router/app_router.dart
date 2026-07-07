@@ -17,6 +17,8 @@ import '../../features/chat/presentation/pages/chat_list_page.dart';
 import '../../features/chat/presentation/pages/chat_detail_page.dart';
 import '../../features/search/presentation/pages/search_results_page.dart';
 import '../../features/notification/presentation/pages/notification_page.dart';
+import '../../features/notification/presentation/pages/notification_detail_page.dart';
+import '../../features/notification/data/models/notification_model.dart';
 import '../../features/profile/presentation/pages/notification_settings_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/profile/presentation/pages/edit_profile_page.dart';
@@ -110,6 +112,10 @@ final appRouter = GoRouter(
     GoRoute(path: '/order/:id', builder: (_, state) => OrderDetailPage(id: state.pathParameters['id']!)),
     GoRoute(path: '/chat/:id', builder: (_, state) => ChatDetailPage(id: state.pathParameters['id']!)),
     GoRoute(path: '/notifications', builder: (_, _) => const NotificationPage()),
+    GoRoute(
+      path: '/notification/:id',
+      builder: (_, state) => NotificationDetailPage(notification: state.extra as NotificationModel),
+    ),
     GoRoute(path: '/notification-settings', builder: (_, _) => const NotificationSettingsPage()),
     GoRoute(
       path: '/search',

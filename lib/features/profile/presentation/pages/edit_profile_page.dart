@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:image_picker/image_picker.dart';
@@ -34,6 +33,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   final _formKey            = GlobalKey<FormState>();
   final _scrollController   = ScrollController();
 
+  final _firstNameController       = TextEditingController();
+  final _midNameController         = TextEditingController();
+  final _lastNameController        = TextEditingController();
   final _usernameController        = TextEditingController();
   final _emailController           = TextEditingController();
   final _whatsappController        = TextEditingController();
@@ -57,8 +59,11 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     final userData = ref.read(profileProvider).userData;
     if (userData == null) return;
 
-    _usernameController.text = userData['username'] as String? ?? '';
-    _emailController.text    = userData['email']    as String? ?? '';
+    _firstNameController.text = userData['first_name'] as String? ?? '';
+    _midNameController.text   = userData['mid_name']   as String? ?? '';
+    _lastNameController.text  = userData['last_name']  as String? ?? '';
+    _usernameController.text  = userData['username'] as String? ?? '';
+    _emailController.text     = userData['email']    as String? ?? '';
 
     // Parse WhatsApp
     String rawWa = (userData['whatsapp'] as String? ?? '').trim();
@@ -93,6 +98,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
 
   @override
   void dispose() {
+    _firstNameController.dispose();
+    _midNameController.dispose();
+    _lastNameController.dispose();
     _usernameController.dispose();
     _emailController.dispose();
     _whatsappController.dispose();
@@ -107,6 +115,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     if (!_editing) return;
     final action = await showModalBottomSheet<String>(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -304,11 +313,14 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
         newAvatarUrl = await notifier.uploadAvatar(_avatarFile!.path);
       }
 
-      // 2. Update profil (username, whatsapp, email, password)
+      // 2. Update profil (first_name, mid_name, last_name, username, whatsapp, email, password)
       final data = <String, dynamic>{
-        'username': _usernameController.text.trim(),
-        'email':    _emailController.text.trim(),
-        'whatsapp': '$_countryCode ${_whatsappController.text.trim()}',
+        'first_name': _firstNameController.text.trim(),
+        'mid_name':   _midNameController.text.trim(),
+        'last_name':  _lastNameController.text.trim(),
+        'username':   _usernameController.text.trim(),
+        'email':      _emailController.text.trim(),
+        'whatsapp':   '$_countryCode ${_whatsappController.text.trim()}',
       };
       if (_passwordController.text.isNotEmpty) {
         data['password']              = _passwordController.text;
@@ -369,10 +381,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     final state    = ref.watch(profileProvider);
     final userData = state.userData;
     final avatarUrl = Formatters.avatarUrl(userData);
-
-    final firstName = userData?['first_name'] as String? ?? '';
-    final midName   = userData?['mid_name']   as String? ?? '';
-    final lastName  = userData?['last_name']  as String? ?? '';
 
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
@@ -458,20 +466,23 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               const Divider(),
               const SizedBox(height: AppSizes.sm),
 
-              // ── Nama (READ-ONLY, hanya tampil) ──────────────────────────
-              _buildReadOnlySection(
+              // ── Nama ────────────────────────────────────────────────────
+              AppTextField(
                 label: l.firstName,
-                value: firstName.isEmpty ? '-' : firstName,
+                controller: _firstNameController,
+                readOnly: !_editing,
               ),
               const SizedBox(height: AppSizes.sm),
-              _buildReadOnlySection(
+              AppTextField(
                 label: l.middleName,
-                value: midName.isEmpty ? '-' : midName,
+                controller: _midNameController,
+                readOnly: !_editing,
               ),
               const SizedBox(height: AppSizes.sm),
-              _buildReadOnlySection(
+              AppTextField(
                 label: l.lastName,
-                value: lastName.isEmpty ? '-' : lastName,
+                controller: _lastNameController,
+                readOnly: !_editing,
               ),
 
               const SizedBox(height: AppSizes.md),
@@ -514,45 +525,33 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
 
               // ── WhatsApp ─────────────────────────────────────────────────
               _editing
-                  ? Row(
-                      children: [
-                        GestureDetector(
-                          onTap: () async {
-                            final code = await showModalBottomSheet<String>(
-                              context: context,
-                              isScrollControlled: true,
-                              builder: (_) => _CountryCodeSheet(selectedCode: _countryCode),
-                            );
-                            if (code != null) setState(() => _countryCode = code);
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                            decoration: BoxDecoration(
-                              color: AppColors.secondaryColor.withAlpha(30),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: AppColors.dividerColor),
-                            ),
-                            child: Row(
-                              children: [
-                                Text(_countryCode, style: AppTextStyles.bodyMedium),
-                                const SizedBox(width: 4),
-                                Icon(Icons.arrow_drop_down, size: 18, color: AppColors.textSecondary),
-                              ],
-                            ),
+                  ? AppTextField(
+                      label: l.whatsapp,
+                      controller: _whatsappController,
+                      keyboardType: TextInputType.number,
+                      validator: Validators.phone,
+                      prefix: GestureDetector(
+                        onTap: () async {
+                          final code = await showModalBottomSheet<String>(
+                            context: context,
+                            isScrollControlled: true,
+                            builder: (_) => _CountryCodeSheet(selectedCode: _countryCode),
+                          );
+                          if (code != null) setState(() => _countryCode = code);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(flagFromDialCode(_countryCode) ?? '', style: const TextStyle(fontSize: 20)),
+                              const SizedBox(width: 4),
+                              Text(_countryCode, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+                              Icon(Icons.arrow_drop_down, size: 18, color: AppColors.textSecondary),
+                            ],
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: TextFormField(
-                            controller: _whatsappController,
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                            validator: Validators.phone,
-                            style: AppTextStyles.bodyLarge,
-                            decoration: const InputDecoration(),
-                          ),
-                        ),
-                      ],
+                      ),
                     )
                   : _buildReadOnlySection(
                       label: l.whatsapp,

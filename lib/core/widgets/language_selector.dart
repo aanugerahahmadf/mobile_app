@@ -9,6 +9,28 @@ import 'app_bottom_sheet.dart';
 class LanguageSelector extends ConsumerWidget {
   const LanguageSelector({super.key});
 
+  static String? _localeToFlag(String code) {
+    const map = <String, String>{
+      'id': '🇮🇩', 'ms': '🇲🇾', 'en_US': '🇺🇸',
+      'zh_CN': '🇨🇳', 'zh_TW': '🇹🇼',
+      'ja': '🇯🇵', 'ko': '🇰🇷', 'th': '🇹🇭', 'vi': '🇻🇳',
+      'hi': '🇮🇳', 'bn': '🇧🇩', 'ur': '🇵🇰', 'fa': '🇮🇷',
+      'pt_BR': '🇧🇷', 'pt_PT': '🇵🇹',
+      'fr': '🇫🇷', 'de': '🇩🇪', 'it': '🇮🇹', 'nl': '🇳🇱',
+      'ru': '🇷🇺', 'tr': '🇹🇷', 'pl': '🇵🇱', 'uk': '🇺🇦',
+      'ro': '🇷🇴', 'cs': '🇨🇿', 'hu': '🇭🇺', 'el': '🇬🇷',
+      'sv': '🇸🇪', 'da': '🇩🇰', 'fi': '🇫🇮', 'no': '🇳🇴',
+      'fil': '🇵🇭', 'my': '🇲🇲', 'km': '🇰🇭', 'he': '🇮🇱',
+      'sr': '🇷🇸', 'hr': '🇭🇷', 'sk': '🇸🇰', 'bg': '🇧🇬',
+      'lt': '🇱🇹', 'lv': '🇱🇻', 'et': '🇪🇪', 'sl': '🇸🇮',
+      'sq': '🇦🇱', 'bs': '🇧🇦', 'hy': '🇦🇲', 'ka': '🇬🇪',
+      'az': '🇦🇿', 'kk': '🇰🇿', 'mn': '🇲🇳', 'ne': '🇳🇵',
+      'tl': '🇵🇭', 'sw': '🇹🇿', 'am': '🇪🇹', 'ca': '🇪🇸',
+      'cy': '🇬🇧', 'uz': '🇺🇿', 'zu': '🇿🇦',
+    };
+    return map[code];
+  }
+
   static const _languages = [
     ('id', 'Bahasa Indonesia'),
     ('ms', 'Bahasa Melayu'),
@@ -91,11 +113,11 @@ class LanguageSelector extends ConsumerWidget {
           final code = entry.$1;
           final name = entry.$2;
           final isSelected = code == currentCode;
+          final flag = _localeToFlag(code);
           return ListTile(
-            leading: Icon(
-              isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
-              color: isSelected ? AppColors.primaryColor : AppColors.textSecondary,
-            ),
+            leading: flag != null
+                ? Text(flag, style: const TextStyle(fontSize: 22))
+                : Icon(Icons.language, color: isSelected ? AppColors.primaryColor : AppColors.textTertiary, size: 22),
             title: Text(name, style: AppTextStyles.bodyMedium),
             trailing: isSelected
                 ? Icon(Icons.check, color: AppColors.primaryColor)
@@ -123,8 +145,12 @@ class LanguageSelector extends ConsumerWidget {
       orElse: () => ('', currentCode),
     ).$2;
 
+    final flag = _localeToFlag(currentCode);
+
     return ListTile(
-      leading: Icon(Icons.language, color: AppColors.primaryColor),
+      leading: flag != null
+          ? Text(flag, style: const TextStyle(fontSize: 28))
+          : Icon(Icons.language, color: AppColors.primaryColor),
       title: Text(l.language, style: AppTextStyles.bodyMedium),
       subtitle: Text(currentName.isNotEmpty ? currentName : l.indonesian,
           style: AppTextStyles.bodySmall),

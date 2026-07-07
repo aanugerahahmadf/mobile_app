@@ -8,6 +8,7 @@ import '../constants/app_colors.dart';
 Future<File?> pickSimPhoto(BuildContext context) async {
   final source = await showModalBottomSheet<ImageSource>(
     context: context,
+    isScrollControlled: true,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),

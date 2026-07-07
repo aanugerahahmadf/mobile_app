@@ -104,7 +104,7 @@ class _MidtransWebviewPageState extends ConsumerState<MidtransWebviewPage> {
               label: success ? l.viewOrder : l.back,
               onPressed: () {
                 context.pop();
-                context.pop();
+                if (context.canPop()) context.pop();
                 if (success) context.push('/orders');
               },
             ),
@@ -143,7 +143,7 @@ class _MidtransWebviewPageState extends ConsumerState<MidtransWebviewPage> {
             const SizedBox(height: 20),
             AppButton(label: AppLocalizations.of(context)!.tryAgain, onPressed: () { context.pop(); _initPayment(); }),
             const SizedBox(height: 8),
-            AppButton(label: AppLocalizations.of(context)!.back, onPressed: () { context.pop(); context.pop(); }, type: ButtonType.text),
+            AppButton(label: AppLocalizations.of(context)!.back, onPressed: () { context.pop(); if (context.canPop()) context.pop(); }, type: ButtonType.text),
           ],
         ),
       ),
@@ -168,7 +168,7 @@ class _MidtransWebviewPageState extends ConsumerState<MidtransWebviewPage> {
                 content: Text(l.confirmLeavePayment),
                 actions: [
                   TextButton(onPressed: () => context.pop(), child: Text(l.continuePayment)),
-                  TextButton(onPressed: () { context.pop(); context.pop(); }, child: Text(l.yesCancel)),
+                  TextButton(onPressed: () { context.pop(); if (context.canPop()) context.pop(); }, child: Text(l.yesCancel)),
                 ],
               ),
             );

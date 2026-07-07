@@ -243,9 +243,9 @@ class _AdminVoucherFormDialogState extends State<AdminVoucherFormDialog> {
     );
   }
 
-  Widget _buildDropdown(String label, String value, List<String> options, ValueChanged<String?> onChanged) {
+  Widget _buildDropdown(String label, String initialValue, List<String> options, ValueChanged<String?> onChanged) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: initialValue,
       decoration: InputDecoration(
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),

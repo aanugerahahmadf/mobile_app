@@ -1,8 +1,9 @@
 import '../data/models/legal_model.dart';
 
 abstract class LegalRepository {
-  Future<LegalContent> getPrivacyPolicy();
-  Future<LegalContent> getTermsOfService();
-  Future<LegalContent> getWeddingDecorationPolicy();
-  Future<HelpModel> getHelpCenter();
+  Future<LegalContent> getPrivacyPolicy({String locale = 'id'});
+  Future<LegalContent> getTermsOfService({String locale = 'id'});
+  Future<LegalContent> getWeddingDecorationPolicy({String locale = 'id'});
+  Future<HelpModel> getHelpCenter({String locale = 'id'});
+  Future<AboutModel> getAbout({String locale = 'id'});
 }

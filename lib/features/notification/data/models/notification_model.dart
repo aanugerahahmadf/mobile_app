@@ -36,9 +36,14 @@ class NotificationModel {
 
   factory NotificationModel.fromJson(Map<String, dynamic> json) {
     final dataRaw = json['data'] as Map<String, dynamic>?;
+    final rawType = json['type'] as String?;
+    String? effectiveType = rawType;
+    if (rawType != null && rawType.contains('\\')) {
+      effectiveType = dataRaw?['type'] as String?;
+    }
     return NotificationModel(
       id: json['id'] is String ? json['id'] as String : json['id'].toString(),
-      type: json['type'] as String?,
+      type: effectiveType,
       title: json['title'] as String? ?? dataRaw?['title'] as String?,
       body: json['body'] as String? ?? dataRaw?['body'] as String? ?? json['message'] as String?,
       data: dataRaw,

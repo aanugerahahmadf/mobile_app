@@ -181,7 +181,7 @@ class _PaymentResultContent extends StatelessWidget {
               label: l.viewOrder,
               onPressed: () {
                 context.pop();
-                context.pop();
+                if (context.canPop()) context.pop();
                 context.push('/order/${config.orderId}');
               },
             ),
@@ -194,7 +194,7 @@ class _PaymentResultContent extends StatelessWidget {
                     label: l.back,
                   onPressed: () {
                     context.pop();
-                    context.pop();
+                    if (context.canPop()) context.pop();
                     context.push('/order/${config.orderId}');
                   },
                   type: ButtonType.outline,

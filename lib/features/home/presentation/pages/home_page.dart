@@ -51,6 +51,9 @@ class _AdminHomeState extends ConsumerState<_AdminHome> {
     _fetchCatalog();
     _fetchPackageCategories();
     _fetchProductCategories();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(notificationListProvider.notifier).fetchUnreadCount();
+    });
   }
 
   Future<void> _fetchPackageCategories() async {
@@ -258,9 +261,10 @@ class _AdminHomeState extends ConsumerState<_AdminHome> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     return Scaffold(
-      body: Column(
-        children: [
-          _buildAdminSearchBar(l),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildAdminSearchBar(l),
           Expanded(
             child: RefreshIndicator(
               onRefresh: _fetchCatalog,
@@ -274,108 +278,28 @@ class _AdminHomeState extends ConsumerState<_AdminHome> {
                       padding: EdgeInsets.symmetric(horizontal: AppSizes.md),
                       sliver: AppShimmerGrid(),
                     )
-                  else if (_combinedItems.isEmpty)
-                    SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: Center(child: Text(l.noProductsFound, style: AppTextStyles.bodyMedium)),
-                    )
-                  else
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(AppSizes.md, AppSizes.lg, AppSizes.md, AppSizes.xxl),
-                      sliver: SliverToBoxAdapter(
+                  else ...[
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(AppSizes.md, AppSizes.lg, AppSizes.md, AppSizes.sm),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(16),
                           child: BackdropFilter(
                             filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
                             child: Container(
                               decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.6),
+                                color: Theme.of(context).colorScheme.surface,
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               padding: const EdgeInsets.all(AppSizes.md),
-                              child: Column(
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(l.adminCatalogTitle, style: AppTextStyles.titleLarge),
-                                      IconButton(
-                                        icon: const Icon(Icons.add_circle_outline),
-                                        color: AppColors.primaryColor,
-                                        onPressed: () => _createItem(l),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: AppSizes.sm),
-                                  GridView.builder(
-                                    shrinkWrap: true,
-                                    physics: const NeverScrollableScrollPhysics(),
-                                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                      crossAxisCount: 2,
-                                      childAspectRatio: 0.55,
-                                      crossAxisSpacing: AppSizes.md,
-                                      mainAxisSpacing: AppSizes.sm,
-                                    ),
-                                    itemCount: _combinedItems.length,
-                                    itemBuilder: (_, i) {
-                                      final item = _combinedItems[i];
-                                      final type = item['_type'] as String? ?? 'packages';
-                                      return Stack(
-                                        children: [
-                                          CombinedCard(
-                                            item: ItemModel.fromJson(item),
-                                            type: type,
-                                            onTap: () => context.push('/catalog/$type/${item['id']}'),
-                                          ),
-                                          Positioned(
-                                            top: 6,
-                                            right: 6,
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                GestureDetector(
-                                                  onTap: () => _editItem(item, type, l),
-                                                  child: Container(
-                                                    padding: const EdgeInsets.all(5),
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.white,
-                                                      borderRadius: BorderRadius.circular(6),
-                                                      boxShadow: [
-                                                        BoxShadow(
-                                                          color: Colors.black.withValues(alpha: 0.15),
-                                                          blurRadius: 4,
-                                                          offset: const Offset(0, 2),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    child: Icon(Icons.edit_outlined, size: 14, color: AppColors.primaryColor),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 6),
-                                                GestureDetector(
-                                                  onTap: () => _deleteItem(item, type, l),
-                                                  child: Container(
-                                                    padding: const EdgeInsets.all(5),
-                                                    decoration: BoxDecoration(
-                                                      color: Colors.white,
-                                                      borderRadius: BorderRadius.circular(6),
-                                                      boxShadow: [
-                                                        BoxShadow(
-                                                          color: Colors.black.withValues(alpha: 0.15),
-                                                          blurRadius: 4,
-                                                          offset: const Offset(0, 2),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                    child: Icon(Icons.delete_outline, size: 14, color: AppColors.errorColor),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      );
-                                    },
+                                  Text(l.adminCatalogTitle, style: AppTextStyles.titleLarge),
+                                  IconButton(
+                                    icon: const Icon(Icons.add_circle_outline),
+                                    color: AppColors.primaryColor,
+                                    onPressed: () => _createItem(l),
                                   ),
                                 ],
                               ),
@@ -384,33 +308,121 @@ class _AdminHomeState extends ConsumerState<_AdminHome> {
                         ),
                       ),
                     ),
+                    if (_combinedItems.isEmpty)
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: Center(child: Text(l.noProductsFound, style: AppTextStyles.bodyMedium)),
+                      )
+                    else
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(AppSizes.md, AppSizes.sm, AppSizes.md, AppSizes.xxl),
+                        sliver: SliverToBoxAdapter(
+                          child: GridView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              childAspectRatio: 0.55,
+                              crossAxisSpacing: AppSizes.xs,
+                              mainAxisSpacing: AppSizes.xs,
+                            ),
+                            itemCount: _combinedItems.length,
+                            itemBuilder: (_, i) {
+                              final item = _combinedItems[i];
+                              final type = item['_type'] as String? ?? 'packages';
+                              return Stack(
+                                children: [
+                                  CombinedCard(
+                                    item: ItemModel.fromJson(item),
+                                    type: type,
+                                    onTap: () => context.push('/catalog/$type/${item['id']}'),
+                                  ),
+                                  Positioned(
+                                    top: 6,
+                                    right: 6,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        GestureDetector(
+                                          onTap: () => _editItem(item, type, l),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(5),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius: BorderRadius.circular(6),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black.withValues(alpha: 0.15),
+                                                  blurRadius: 4,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                              ],
+                                            ),
+                                            child: Icon(Icons.edit_outlined, size: 14, color: AppColors.primaryColor),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        GestureDetector(
+                                          onTap: () => _deleteItem(item, type, l),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(5),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              borderRadius: BorderRadius.circular(6),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black.withValues(alpha: 0.15),
+                                                  blurRadius: 4,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                              ],
+                                            ),
+                                            child: Icon(Icons.delete_outline, size: 14, color: AppColors.errorColor),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                  ],
                 ],
               ),
             ),
           ),
         ],
       ),
+      ),
     );
   }
 
   Widget _buildAdminSearchBar(AppLocalizations l) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSizes.md, AppSizes.xxl, AppSizes.md, AppSizes.sm),
+      padding: const EdgeInsets.fromLTRB(AppSizes.md, AppSizes.sm, AppSizes.md, AppSizes.md),
       child: const GlobalSearchBar(),
     );
   }
 
   Widget _buildAdminWelcomeRow(BuildContext context, AppLocalizations l) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-        child: Container(
-          margin: const EdgeInsets.fromLTRB(AppSizes.md, 0, AppSizes.md, 0),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.6),
-            borderRadius: BorderRadius.circular(16),
+    return Container(
+      margin: const EdgeInsets.fromLTRB(AppSizes.md, 0, AppSizes.md, 0),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.black.withValues(alpha: 0.3)
+                : Colors.black.withValues(alpha: 0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
+        ],
+      ),
           padding: const EdgeInsets.fromLTRB(AppSizes.sm, AppSizes.sm, AppSizes.sm, AppSizes.sm),
           child: Row(
             children: [
@@ -456,37 +468,27 @@ class _AdminHomeState extends ConsumerState<_AdminHome> {
                 ),
               ),
               Consumer(builder: (_, ref, _) {
-                final isDark = Theme.of(context).brightness == Brightness.dark;
                 final unread = ref.watch(notificationListProvider).unreadCount;
-                final notifColor = isDark ? Colors.white70 : AppColors.primaryColor;
-                return Container(
-                  decoration: BoxDecoration(
-                    color: notifColor.withAlpha(25),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: IconButton(
-                    icon: unread > 0
-                        ? Badge(
-                            label: Text(unread > 99 ? '99+' : '$unread'),
-                            child: Icon(Icons.notifications_outlined, color: notifColor),
-                          )
-                        : Icon(Icons.notifications_outlined, color: notifColor),
-                    onPressed: () => context.push('/notifications'),
-                  ),
+                return IconButton(
+                  icon: unread > 0
+                      ? Badge(
+                          label: Text(unread > 99 ? '99+' : '$unread'),
+                          child: const Icon(Icons.notifications_outlined),
+                        )
+                      : const Icon(Icons.notifications_outlined),
+                  onPressed: () => context.push('/notifications'),
                 );
               }),
             ],
           ),
-        ),
-      ),
-    );
+        );
   }
 }
 
 class _HomePageState extends ConsumerState<HomePage> {
   Map<String, dynamic>? _homeData;
   bool _loading = true;
-  final _pageController = PageController();
+  final _pageController = PageController(initialPage: 0x3FFFFFFF ~/ 2);
   List<Map<String, dynamic>> _combinedItems = [];
   bool _catalogLoading = false;
   List<Map<String, dynamic>> _categories = [];
@@ -540,7 +542,6 @@ class _HomePageState extends ConsumerState<HomePage> {
     _fetchHome();
     _fetchCatalog();
     _fetchCategories();
-    _startAutoScroll();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(notificationListProvider.notifier).fetchUnreadCount();
     });
@@ -599,20 +600,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     } catch (_) {}
   }
 
-  void _startAutoScroll() {
-    Future.delayed(const Duration(seconds: 3), () {
-      if (!mounted) return;
-      final vouchers = _homeData?['vouchers'] as List? ?? [];
-      if (vouchers.isEmpty) return;
-      final next = (_pageController.page?.toInt() ?? 0) + 1;
-      if (next < vouchers.length) {
-        _pageController.animateToPage(next, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
-      } else {
-        _pageController.animateToPage(0, duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
-      }
-      _startAutoScroll();
-    });
-  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -624,11 +612,12 @@ class _HomePageState extends ConsumerState<HomePage> {
     final vouchers = (_homeData?['vouchers'] as List?)?.cast<Map<String, dynamic>>() ?? [];
 
     return Scaffold(
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                _buildSearchBar(l),
+      body: SafeArea(
+        child: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
+                children: [
+                  _buildSearchBar(l),
                 Expanded(
                   child: RefreshIndicator(
                     onRefresh: () async {
@@ -645,123 +634,99 @@ class _HomePageState extends ConsumerState<HomePage> {
                             padding: EdgeInsets.symmetric(horizontal: AppSizes.md),
                             sliver: AppShimmerGrid(),
                           )
-                        else if (_filteredItems.isEmpty)
-                          SliverPadding(
-                            padding: const EdgeInsets.fromLTRB(AppSizes.md, 0, AppSizes.md, AppSizes.xxl),
-                            sliver: SliverToBoxAdapter(
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(16),
-                                child: BackdropFilter(
-                                  filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.6),
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    padding: const EdgeInsets.all(AppSizes.md),
-                                    child: Column(
-                                      children: [
-                                        _buildCatalogHeader(l),
-                                        const SizedBox(height: AppSizes.sm),
-                                        GridView.builder(
-                                          shrinkWrap: true,
-                                          physics: const NeverScrollableScrollPhysics(),
-                                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                            crossAxisCount: 2,
-                                            childAspectRatio: 0.61,
-                                            crossAxisSpacing: AppSizes.md,
-                                            mainAxisSpacing: AppSizes.md,
-                                          ),
-                                          itemCount: _filteredItems.length,
-                                          itemBuilder: (_, i) {
-                                            final item = _filteredItems[i];
-                                            final type = item['_type'] as String? ?? 'packages';
-                                            return CombinedCard(
-                                              item: ItemModel.fromJson(item),
-                                              type: type,
-                                              onTap: () => context.push('/catalog/$type/${item['id']}'),
-                                            );
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
+                        else ...[
+                          SliverToBoxAdapter(
+                            child: Padding(
+                              padding: EdgeInsets.fromLTRB(
+                                AppSizes.md,
+                                _filteredItems.isNotEmpty ? AppSizes.md : 0,
+                                AppSizes.md,
+                                _filteredItems.isNotEmpty ? AppSizes.sm : 0,
                               ),
-                            ),
-                          )
-                        else
-                          SliverPadding(
-                            padding: const EdgeInsets.fromLTRB(AppSizes.md, AppSizes.md, AppSizes.md, AppSizes.xxl),
-                            sliver: SliverToBoxAdapter(
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(16),
                                 child: BackdropFilter(
                                   filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
                                   child: Container(
                                     decoration: BoxDecoration(
-                                      color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.6),
+                                      color: Theme.of(context).colorScheme.surface,
                                       borderRadius: BorderRadius.circular(16),
                                     ),
                                     padding: const EdgeInsets.all(AppSizes.md),
-                                    child: Column(
-                                      children: [
-                                        _buildCatalogHeader(l),
-                                        const SizedBox(height: AppSizes.sm),
-                                        GridView.builder(
-                                          shrinkWrap: true,
-                                          physics: const NeverScrollableScrollPhysics(),
-                                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                            crossAxisCount: 2,
-                                            childAspectRatio: 0.61,
-                                            crossAxisSpacing: AppSizes.md,
-                                            mainAxisSpacing: AppSizes.md,
-                                          ),
-                                          itemCount: _filteredItems.length,
-                                          itemBuilder: (_, i) {
-                                            final item = _filteredItems[i];
-                                            final type = item['_type'] as String? ?? 'packages';
-                                            return CombinedCard(
-                                              item: ItemModel.fromJson(item),
-                                              type: type,
-                                              onTap: () => context.push('/catalog/$type/${item['id']}'),
-                                            );
-                                          },
-                                        ),
-                                      ],
-                                    ),
+                                    child: _buildCatalogHeader(l),
                                   ),
                                 ),
                               ),
                             ),
                           ),
+                          if (_filteredItems.isEmpty)
+                            SliverFillRemaining(
+                              hasScrollBody: false,
+                              child: Center(
+                                child: Text(l.noProductsFound, style: AppTextStyles.bodyMedium),
+                              ),
+                            )
+                          else
+                            SliverPadding(
+                              padding: const EdgeInsets.fromLTRB(AppSizes.md, 0, AppSizes.md, AppSizes.xxl),
+                              sliver: SliverToBoxAdapter(
+                                child: GridView.builder(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    childAspectRatio: 0.61,
+                                    crossAxisSpacing: AppSizes.xs,
+                                    mainAxisSpacing: AppSizes.xs,
+                                  ),
+                                  itemCount: _filteredItems.length,
+                                  itemBuilder: (_, i) {
+                                    final item = _filteredItems[i];
+                                    final type = item['_type'] as String? ?? 'packages';
+                                    return CombinedCard(
+                                      item: ItemModel.fromJson(item),
+                                      type: type,
+                                      onTap: () => context.push('/catalog/$type/${item['id']}'),
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          const SliverToBoxAdapter(child: SizedBox(height: 32)),
+                        ],
                       ],
                     ),
                   ),
                 ),
               ],
             ),
-    );
+          ),
+      );
   }
 
   Widget _buildSearchBar(AppLocalizations l) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(AppSizes.md, AppSizes.xxl, AppSizes.md, AppSizes.sm),
+      padding: const EdgeInsets.fromLTRB(AppSizes.md, AppSizes.sm, AppSizes.md, AppSizes.md),
       child: const GlobalSearchBar(),
     );
   }
 
   Widget _buildWelcomeRow(AppLocalizations l) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-        child: Container(
-          margin: const EdgeInsets.fromLTRB(AppSizes.md, 0, AppSizes.md, 0),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.6),
-            borderRadius: BorderRadius.circular(16),
+    return Container(
+      margin: const EdgeInsets.fromLTRB(AppSizes.md, 0, AppSizes.md, 0),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.black.withValues(alpha: 0.3)
+                : Colors.black.withValues(alpha: 0.08),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
+        ],
+      ),
           padding: const EdgeInsets.fromLTRB(AppSizes.sm, AppSizes.sm, AppSizes.sm, AppSizes.sm),
           child: Row(
             children: [
@@ -807,30 +772,20 @@ class _HomePageState extends ConsumerState<HomePage> {
                 ),
               ),
               Consumer(builder: (_, ref, _) {
-                final isDark = Theme.of(context).brightness == Brightness.dark;
                 final unread = ref.watch(notificationListProvider).unreadCount;
-                final notifColor = isDark ? Colors.white70 : AppColors.primaryColor;
-                return Container(
-                  decoration: BoxDecoration(
-                    color: notifColor.withAlpha(25),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: IconButton(
-                    icon: unread > 0
-                        ? Badge(
-                            label: Text(unread > 99 ? '99+' : '$unread'),
-                            child: Icon(Icons.notifications_outlined, color: notifColor),
-                          )
-                        : Icon(Icons.notifications_outlined, color: notifColor),
-                    onPressed: () => context.push('/notifications'),
-                  ),
+                return IconButton(
+                  icon: unread > 0
+                      ? Badge(
+                          label: Text(unread > 99 ? '99+' : '$unread'),
+                          child: const Icon(Icons.notifications_outlined),
+                        )
+                      : const Icon(Icons.notifications_outlined),
+                  onPressed: () => context.push('/notifications'),
                 );
               }),
             ],
           ),
-        ),
-      ),
-    );
+        );
   }
 
   Widget _buildMenuSection(AppLocalizations l) {
@@ -842,7 +797,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           margin: const EdgeInsets.fromLTRB(AppSizes.md, AppSizes.sm, AppSizes.md, 0),
           padding: const EdgeInsets.fromLTRB(AppSizes.sm, AppSizes.md, AppSizes.sm, AppSizes.md),
           decoration: BoxDecoration(
-            color: AppColors.surfaceColor.withAlpha(60),
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
@@ -899,7 +854,7 @@ class _HomePageState extends ConsumerState<HomePage> {
           margin: const EdgeInsets.fromLTRB(AppSizes.md, AppSizes.sm, AppSizes.md, 0),
           padding: const EdgeInsets.fromLTRB(AppSizes.sm, AppSizes.md, AppSizes.sm, AppSizes.md),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.6),
+            color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
@@ -911,11 +866,14 @@ class _HomePageState extends ConsumerState<HomePage> {
                 height: 140,
                 child: PageView.builder(
                   controller: _pageController,
-                  itemCount: vouchers.length,
-                  itemBuilder: (context, index) => VoucherCard(
-                    voucher: vouchers[index],
-                    onTap: () => context.push('/vouchers/${vouchers[index]['id']}', extra: vouchers[index]),
-                  ),
+                  itemCount: 0x3FFFFFFF,
+                  itemBuilder: (context, index) {
+                    final i = index % vouchers.length;
+                    return VoucherCard(
+                      voucher: vouchers[i],
+                      onTap: () => context.push('/vouchers/${vouchers[i]['id']}', extra: vouchers[i]),
+                    );
+                  },
                 ),
               ),
             ],
@@ -962,10 +920,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
                         value: _selectedCategoryId,
-                        hint: Text(l.category, style: const TextStyle(fontSize: 12)),
+                        hint: Text('${l.all} ${l.category}', style: const TextStyle(fontSize: 12)),
                         isDense: true,
                         items: [
-                          const DropdownMenuItem(value: null, child: Text('Semua', style: TextStyle(fontSize: 12))),
+                          DropdownMenuItem(value: null, child: Text('${l.all} ${l.category}', style: const TextStyle(fontSize: 12))),
                           ..._categories.map((c) {
                             final name = '${c['name']}'.replaceAll(RegExp(r'^(Paket |Produk )'), '');
                             return DropdownMenuItem(
@@ -1016,6 +974,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     final l = AppLocalizations.of(context)!;
     final result = await showModalBottomSheet<double>(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),

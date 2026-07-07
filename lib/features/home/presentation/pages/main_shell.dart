@@ -31,15 +31,18 @@ class MainShell extends ConsumerWidget {
       },
       child: Scaffold(
         body: navigationShell,
-        bottomNavigationBar: _ModernBottomBar(
-          ref: ref,
-          currentIndex: currentIndex,
-          avatarUrl: avatarUrl,
-          isAdmin: isAdmin,
-          onTap: (index) {
-            ref.read(bottomNavIndexProvider.notifier).state = index;
-            navigationShell.goBranch(index);
-          },
+        bottomNavigationBar: Material(
+          type: MaterialType.transparency,
+          child: _ModernBottomBar(
+            ref: ref,
+            currentIndex: currentIndex,
+            avatarUrl: avatarUrl,
+            isAdmin: isAdmin,
+            onTap: (index) {
+              ref.read(bottomNavIndexProvider.notifier).state = index;
+              navigationShell.goBranch(index);
+            },
+          ),
         ),
       ),
     );
@@ -78,6 +81,7 @@ class _ModernBottomBar extends StatelessWidget {
 
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       useSafeArea: true,
       builder: (ctx) => Container(
@@ -90,107 +94,109 @@ class _ModernBottomBar extends StatelessWidget {
         ),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(8, 12, 8, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(width: 36, height: 4, decoration: BoxDecoration(color: AppColors.textTertiary.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2))),
-              const SizedBox(height: 4),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-                child: Row(
-                  children: [
-                    Icon(Icons.swap_horiz_rounded, size: 18, color: AppColors.textSecondary),
-                    const SizedBox(width: 6),
-                    Text(l.switchAccount, style: AppTextStyles.titleSmall.copyWith(color: AppColors.textSecondary)),
-                  ],
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(width: 36, height: 4, decoration: BoxDecoration(color: AppColors.textTertiary.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2))),
+                const SizedBox(height: 4),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                  child: Row(
+                    children: [
+                      Icon(Icons.swap_horiz_rounded, size: 18, color: AppColors.textSecondary),
+                      const SizedBox(width: 6),
+                      Text(l.switchAccount, style: AppTextStyles.titleSmall.copyWith(color: AppColors.textSecondary)),
+                    ],
+                  ),
                 ),
-              ),
-              ...List.generate(accounts.length, (i) {
-                final acc = accounts[i];
-                final isActive = i == activeIdx;
-                return Padding(
+                ...List.generate(accounts.length, (i) {
+                  final acc = accounts[i];
+                  final isActive = i == activeIdx;
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Material(
+                      color: isActive ? AppColors.primaryColor.withValues(alpha: 0.08) : Colors.transparent,
+                      borderRadius: BorderRadius.circular(14),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(14),
+                        onTap: isActive ? null : () { Navigator.pop(ctx); notifier.switchToAccount(i); },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 44, height: 44,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  border: isActive ? Border.all(color: AppColors.primaryColor, width: 2) : null,
+                                ),
+                                child: CircleAvatar(
+                                  backgroundColor: AppColors.secondaryColor,
+                                  backgroundImage: acc.avatarUrl != null ? CachedNetworkImageProvider(acc.avatarUrl!) : null,
+                                  child: acc.avatarUrl == null
+                                      ? Icon(Icons.person, size: 22, color: isActive ? AppColors.primaryColor : AppColors.textTertiary)
+                                      : null,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(acc.fullName, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+                                    const SizedBox(height: 2),
+                                    Text(acc.email, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
+                                  ],
+                                ),
+                              ),
+                              if (isActive)
+                                Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(color: AppColors.primaryColor, shape: BoxShape.circle),
+                                  child: const Icon(Icons.check, size: 14, color: Colors.white),
+                                ),
+                             ],
+                            ),
+                          ),
+                         ),
+                        ),
+                      );
+                    }),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Divider(height: 1),
+                ),
+                Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: Material(
-                    color: isActive ? AppColors.primaryColor.withValues(alpha: 0.08) : Colors.transparent,
+                    color: Colors.transparent,
                     borderRadius: BorderRadius.circular(14),
                     child: InkWell(
                       borderRadius: BorderRadius.circular(14),
-                      onTap: isActive ? null : () { Navigator.pop(ctx); notifier.switchToAccount(i); },
+                      onTap: () { Navigator.pop(ctx); showSignInSheet(context); },
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                         child: Row(
                           children: [
                             Container(
                               width: 44, height: 44,
                               decoration: BoxDecoration(
+                                color: AppColors.successColor.withValues(alpha: 0.12),
                                 shape: BoxShape.circle,
-                                border: isActive ? Border.all(color: AppColors.primaryColor, width: 2) : null,
                               ),
-                              child: CircleAvatar(
-                                backgroundColor: AppColors.secondaryColor,
-                                backgroundImage: acc.avatarUrl != null ? CachedNetworkImageProvider(acc.avatarUrl!) : null,
-                                child: acc.avatarUrl == null
-                                    ? Icon(Icons.person, size: 22, color: isActive ? AppColors.primaryColor : AppColors.textTertiary)
-                                    : null,
-                              ),
+                              child: Icon(Icons.person_add, color: AppColors.successColor, size: 22),
                             ),
                             const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(acc.fullName, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
-                                  const SizedBox(height: 2),
-                                  Text(acc.email, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
-                                ],
-                              ),
-                            ),
-                            if (isActive)
-                              Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(color: AppColors.primaryColor, shape: BoxShape.circle),
-                                child: const Icon(Icons.check, size: 14, color: Colors.white),
-                              ),
+                            Text(l.addAccount, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
                           ],
                         ),
                       ),
                     ),
                   ),
-                );
-              }),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Divider(height: 1),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Material(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(14),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(14),
-                    onTap: () { Navigator.pop(ctx); showSignInSheet(context); },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 44, height: 44,
-                            decoration: BoxDecoration(
-                              color: AppColors.successColor.withValues(alpha: 0.12),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(Icons.person_add, color: AppColors.successColor, size: 22),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(l.addAccount, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
-                        ],
-                      ),
-                    ),
-                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -200,7 +206,7 @@ class _ModernBottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final visibleIndices = isAdmin ? _adminIndices : List.generate(5, (i) => i);
+    final visibleIndices = isAdmin ? _adminIndices : [0, 1, 3, 4];
     final visibleItems = visibleIndices.map((i) => _allItems[i]).toList();
     final visibleLabels = visibleIndices.map((i) => _allLabels(l)[i]).toList();
 
@@ -265,21 +271,13 @@ class _ModernBottomBar extends StatelessWidget {
         onTap: onTap,
         onDoubleTap: onDoubleTap,
         onLongPress: onLongPress,
-        behavior: HitTestBehavior.opaque,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeInOut,
+        child: Container(
           padding: const EdgeInsets.symmetric(vertical: 6),
-          decoration: BoxDecoration(
-            color: isSelected ? AppColors.primaryColor.withAlpha(15) : Colors.transparent,
-            borderRadius: BorderRadius.circular(14),
-          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               isProfile
-                  ? AnimatedContainer(
-                      duration: const Duration(milliseconds: 250),
+                  ? Container(
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
@@ -296,15 +294,11 @@ class _ModernBottomBar extends StatelessWidget {
                             : null,
                       ),
                     )
-                  : AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 200),
-                      transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
-                      child: Icon(
-                        isSelected ? item.activeIcon : item.icon,
-                        key: ValueKey(isSelected),
-                        size: 24,
-                        color: isSelected ? AppColors.primaryColor : AppColors.textTertiary,
-                      ),
+                  : Icon(
+                      isSelected ? item.activeIcon : item.icon,
+                      key: ValueKey(isSelected),
+                      size: 24,
+                      color: isSelected ? AppColors.primaryColor : AppColors.textTertiary,
                     ),
               const SizedBox(height: 2),
               Text(
@@ -315,15 +309,6 @@ class _ModernBottomBar extends StatelessWidget {
                   color: isSelected ? AppColors.primaryColor : AppColors.textTertiary,
                 ),
               ),
-              if (isSelected)
-                Container(
-                  margin: const EdgeInsets.only(top: 2),
-                  width: 4, height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryColor,
-                    shape: BoxShape.circle,
-                  ),
-                ),
             ],
           ),
         ),
@@ -334,9 +319,7 @@ class _ModernBottomBar extends StatelessWidget {
   Widget _buildCenterButton(_BarItem item, bool isSelected, {required VoidCallback onTap}) {
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOutBack,
+      child: Container(
         width: 52,
         height: 52,
         decoration: BoxDecoration(
@@ -348,13 +331,6 @@ class _ModernBottomBar extends StatelessWidget {
             end: Alignment.bottomRight,
           ),
           shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primaryColor.withAlpha(isSelected ? 100 : 50),
-              blurRadius: isSelected ? 16 : 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
         ),
         child: Icon(
           isSelected ? Icons.chat : Icons.chat_outlined,

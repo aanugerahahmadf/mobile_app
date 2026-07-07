@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../../core/api/dio_client.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../core/constants/app_sizes.dart';
 import '../../../../../core/constants/app_text_styles.dart';
 import '../../../data/repositories/admin_repository.dart';
 import 'base_card.dart';
@@ -202,8 +203,8 @@ class _AdminCrudPageState extends ConsumerState<AdminCrudPage> {
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       childAspectRatio: 0.85,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
+                      crossAxisSpacing: AppSizes.xs,
+                      mainAxisSpacing: AppSizes.xs,
                     ),
                     itemCount: _items.length,
                     itemBuilder: (_, i) {

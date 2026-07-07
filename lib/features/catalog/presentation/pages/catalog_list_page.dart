@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,7 +7,8 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/api/dio_client.dart';
 import '../../../../core/api/api_endpoints.dart';
-import '../widgets/product_card.dart';
+import '../widgets/combined_card.dart';
+import '../../data/models/item_model.dart';
 import '../../../../core/widgets/app_shimmer.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_error_state.dart';
@@ -119,7 +121,7 @@ class _CatalogListPageState extends ConsumerState<CatalogListPage> {
     final l = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.type == 'packages' ? l.flowerPackages : l.flowers),
+        title: Text(widget.type == 'packages' ? '${l.catalog} ${l.flowerPackages}' : '${l.catalog} ${l.flowers}'),
         centerTitle: true,
         titleTextStyle: TextStyle(
           color: Theme.of(context).brightness == Brightness.dark
@@ -133,6 +135,7 @@ class _CatalogListPageState extends ConsumerState<CatalogListPage> {
         children: [
           _buildFilterChips(l),
           Expanded(child: _buildBody(l)),
+          const SizedBox(height: 1),
         ],
       ),
     );
@@ -144,41 +147,56 @@ class _CatalogListPageState extends ConsumerState<CatalogListPage> {
       (l.cheapest, 'price_asc'),
       (l.mostExpensive, 'price_desc'),
       (l.newest, 'newest'),
+      ('Rating Tertinggi', 'rating_desc'),
+      ('Rating Terendah', 'rating_asc'),
     ];
-    return SizedBox(
-      height: 48,
-      child: ListView.separated(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(AppSizes.md, AppSizes.sm, AppSizes.md, 0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Container(
+            height: 48,
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            alignment: Alignment.centerLeft,
+            child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
+        padding: const EdgeInsets.symmetric(horizontal: AppSizes.sm),
         itemCount: sortOptions.length + (_categories.isNotEmpty ? 1 : 0),
-        separatorBuilder: (_, _) => SizedBox(width: AppSizes.sm),
+        separatorBuilder: (_, _) => SizedBox(width: AppSizes.xs),
         itemBuilder: (_, i) {
           if (_categories.isNotEmpty && i == 0) {
-            return Container(
-              height: 34,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              decoration: BoxDecoration(
-                color: AppColors.secondaryColor.withAlpha(30),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: _selectedCategoryId,
-                  hint: Text(l.category, style: const TextStyle(fontSize: 12)),
-                  isDense: true,
-                  items: [
-                    DropdownMenuItem(value: null, child: Text(l.all, style: const TextStyle(fontSize: 12))),
-                    ..._categories.map((c) {
-                      return DropdownMenuItem(
-                        value: '${c['id']}',
-                        child: Text('${c['name']}', style: const TextStyle(fontSize: 12)),
-                      );
-                    }),
-                  ],
-                  onChanged: (v) {
-                    setState(() => _selectedCategoryId = v);
-                    _fetchData();
-                  },
+            return Center(
+              child: Container(
+                height: 34,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.secondaryColor.withAlpha(50),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    value: _selectedCategoryId,
+                    hint: Text('${l.all} ${l.category}', style: const TextStyle(fontSize: 12)),
+                    isDense: true,
+                    items: [
+                      DropdownMenuItem(value: null, child: Text('${l.all} ${l.category}', style: const TextStyle(fontSize: 12))),
+                      ..._categories.map((c) {
+                        return DropdownMenuItem(
+                          value: '${c['id']}',
+                          child: Text('${c['name']}', style: const TextStyle(fontSize: 12)),
+                        );
+                      }),
+                    ],
+                    onChanged: (v) {
+                      setState(() => _selectedCategoryId = v);
+                      _fetchData();
+                    },
+                  ),
                 ),
               ),
             );
@@ -186,24 +204,29 @@ class _CatalogListPageState extends ConsumerState<CatalogListPage> {
           final chipIdx = _categories.isNotEmpty ? i - 1 : i;
           final (label, value) = sortOptions[chipIdx];
           final isSelected = _selectedSort == value;
-          return FilterChip(
-            label: Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? AppColors.primaryColor : AppColors.textSecondary,
+          return Center(
+            child: FilterChip(
+              label: Text(
+                label,
+                style: TextStyle(
+                  color: isSelected ? AppColors.primaryColor : AppColors.textSecondary,
+                ),
               ),
+              selected: isSelected,
+              onSelected: (_) {
+                setState(() => _selectedSort = value);
+                _fetchData();
+              },
+              selectedColor: AppColors.secondaryColor,
+              checkmarkColor: AppColors.primaryColor,
             ),
-            selected: isSelected,
-            onSelected: (_) {
-              setState(() => _selectedSort = value);
-              _fetchData();
-            },
-            selectedColor: AppColors.secondaryColor,
-            checkmarkColor: AppColors.primaryColor,
           );
         },
       ),
-    );
+      ),
+    ),
+  ),
+);
   }
 
   Widget _buildBody(AppLocalizations l) {
@@ -240,16 +263,16 @@ class _CatalogListPageState extends ConsumerState<CatalogListPage> {
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
                 childAspectRatio: 0.61,
-                crossAxisSpacing: AppSizes.md,
-                mainAxisSpacing: AppSizes.md,
+                crossAxisSpacing: AppSizes.xs,
+                mainAxisSpacing: AppSizes.xs,
               ),
               delegate: SliverChildBuilderDelegate(
                 (_, i) {
-                  return ProductCard(
-                    item: _items[i],
+                  return CombinedCard(
+                    item: ItemModel.fromJson(_items[i]),
                     type: widget.type,
                     onTap: () =>
-                        context.go('/catalog/${widget.type}/${_items[i]['id']}'),
+                        context.push('/catalog/${widget.type}/${_items[i]['id']}'),
                   );
                 },
                 childCount: _items.length,

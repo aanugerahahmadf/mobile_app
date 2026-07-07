@@ -91,6 +91,7 @@ class ApiEndpoints {
   static const String legalPrivacy = '/legal/privacy';
   static const String legalWeddingPolicy = '/legal/wedding-decoration-policy';
   static const String legalHelp = '/legal/help';
+  static const String legalAbout = '/legal/about';
 
   // ─── Admin CRUD ──────────────────────────────────────────────────────────────
   static const String adminDashboard = '/admin/dashboard';

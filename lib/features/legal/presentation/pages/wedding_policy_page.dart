@@ -44,7 +44,7 @@ class WeddingPolicyPage extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(content.title, style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700)),
+              Text(content.title, style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
               if (content.updatedAt != null) ...[
                 const SizedBox(height: 8),
                 Text(l.lastUpdatedFormat(content.updatedAt!),
@@ -63,9 +63,9 @@ class WeddingPolicyPage extends ConsumerWidget {
                         if (heading != null)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 4),
-                            child: Text(heading, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold)),
+                            child: Text(heading, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
                           ),
-                        Text(body ?? '', style: GoogleFonts.inter(fontSize: 14, height: 1.6)),
+                        Text(body ?? '', style: GoogleFonts.inter(fontSize: 14, height: 1.6, color: AppColors.textPrimary)),
                       ],
                     ),
                   );
@@ -75,7 +75,7 @@ class WeddingPolicyPage extends ConsumerWidget {
                   content.content is String
                       ? content.content as String
                       : (content.content is Map ? (content.content?['text'] as String? ?? (content.content?['content'] as String? ?? '')) : ''),
-                  style: GoogleFonts.inter(fontSize: 14, height: 1.6),
+                  style: GoogleFonts.inter(fontSize: 14, height: 1.6, color: AppColors.textPrimary),
                 ),
             ],
           ),

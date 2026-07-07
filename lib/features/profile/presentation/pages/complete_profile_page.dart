@@ -402,6 +402,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
   void _showPickerSheet(String title, List<String> options, Function(String) onSelected) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -409,24 +410,20 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 16),
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             children: [
               Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2))),
               const SizedBox(height: 8),
               Text(title, style: AppTextStyles.titleMedium),
               const SizedBox(height: 8),
-              Flexible(
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: options.map((option) => ListTile(
-                      title: Text(option, style: AppTextStyles.bodyMedium),
-                      onTap: () {
-                        onSelected(option);
-                        Navigator.pop(ctx);
-                      },
-                    )).toList(),
-                  ),
+              Expanded(
+                child: ListView(
+                  children: options.map((option) => ListTile(
+                    title: Text(option, style: AppTextStyles.bodyMedium),
+                    onTap: () {
+                      onSelected(option);
+                      Navigator.pop(ctx);
+                    },
+                  )).toList(),
                 ),
               ),
             ],
@@ -564,7 +561,6 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
     final firstName  = _firstNameController.text.trim();
     final lastName   = _lastNameController.text.trim();
     final needsName  = firstName.isEmpty && lastName.isEmpty;
-    final needsUsername  = (userData?['username'] as String? ?? '').isEmpty;
     final needsAvatar    = avatarUrl == null && _avatarFile == null;
     final needsWhatsapp  = _whatsappController.text.trim().isEmpty;
     final needsNik       = _nikController.text.trim().isEmpty;
@@ -701,76 +697,62 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
                   key: _keyName,
                   child: _buildSectionHeader(l.fullName, icon: Icons.person_outline_rounded),
                 ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: AppTextField(
-                        label: l.firstName,
-                        controller: _firstNameController,
-                        readOnly: _namesLocked,
-                        validator: Validators.required,
-                        onChanged: (_) => setState(() {}),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: AppTextField(
-                        label: l.middleName,
-                        controller: _midNameController,
-                        readOnly: _namesLocked,
-                        onChanged: (_) => setState(() {}),
-                      ),
-                    ),
-                  ],
+                AppTextField(
+                  label: l.firstName,
+                  controller: _firstNameController,
+                  readOnly: _namesLocked,
+                  validator: Validators.required,
+                  onChanged: (_) => setState(() {}),
                 ),
                 const SizedBox(height: AppSizes.sm),
-                Row(
-                  children: [
-                    Expanded(
-                      child: AppTextField(
-                        label: l.lastName,
-                        controller: _lastNameController,
-                        readOnly: _namesLocked,
-                        validator: Validators.required,
-                        onChanged: (_) => setState(() {}),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                        decoration: BoxDecoration(
-                          color: AppColors.secondaryColor.withAlpha(30),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: Text(
-                          _fullName.isEmpty ? l.fullName : _fullName,
-                          style: AppTextStyles.bodySmall.copyWith(
-                            color: _fullName.isEmpty ? AppColors.textTertiary : AppColors.textPrimary,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                AppTextField(
+                  label: l.middleName,
+                  controller: _midNameController,
+                  readOnly: _namesLocked,
+                  onChanged: (_) => setState(() {}),
                 ),
+                const SizedBox(height: AppSizes.sm),
+                AppTextField(
+                  label: l.lastName,
+                  controller: _lastNameController,
+                  readOnly: _namesLocked,
+                  validator: Validators.required,
+                  onChanged: (_) => setState(() {}),
+                ),
+                if (_fullName.isNotEmpty) ...[
+                  const SizedBox(height: AppSizes.sm),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: AppColors.successColor.withAlpha(15),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.successColor.withAlpha(60)),
+                    ),
+                    child: Text(
+                      '${l.fullName}: $_fullName',
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: AppColors.successColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
                 const SizedBox(height: AppSizes.md),
               ] else
                 SizedBox(key: _keyName),
 
               // ── Username ──────────────────────────────────────────────────
-              if (needsUsername) ...[
-                KeyedSubtree(
-                  key: _keyUsername,
-                  child: _buildSectionHeader(l.username, icon: Icons.alternate_email_rounded),
-                ),
-                AppTextField(
-                  label: l.username,
-                  controller: _usernameController,
-                  validator: Validators.required,
-                ),
-                const SizedBox(height: AppSizes.md),
-              ] else
-                SizedBox(key: _keyUsername),
+              KeyedSubtree(
+                key: _keyUsername,
+                child: _buildSectionHeader(l.username, icon: Icons.alternate_email_rounded),
+              ),
+              AppTextField(
+                label: l.username,
+                controller: _usernameController,
+                validator: Validators.required,
+              ),
+              const SizedBox(height: AppSizes.md),
 
               // ── WhatsApp ──────────────────────────────────────────────────
               if (needsWhatsapp) ...[

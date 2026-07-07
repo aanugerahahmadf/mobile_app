@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../../../core/widgets/app_button.dart';
+import '../providers/voucher_provider.dart';
 import '../../data/models/voucher_model.dart';
 
 class VoucherDetailPage extends ConsumerWidget {
@@ -69,10 +72,28 @@ class VoucherDetailPage extends ConsumerWidget {
                 ),
               ),
             ),
+            const SizedBox(height: AppSizes.lg),
+            AppButton(
+              label: voucher.isExpired ? l.tryAgain : l.use,
+              onPressed: voucher.isExpired ? null : () => _claimVoucher(context, ref),
+              type: ButtonType.primary,
+            ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _claimVoucher(BuildContext context, WidgetRef ref) async {
+    final sl = AppLocalizations.of(context)!;
+    final success = await ref.read(voucherProvider.notifier).claimVoucher(voucher.id.toString());
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(success ? sl.voucherUsed : sl.failedUseVoucher),
+        backgroundColor: success ? AppColors.successColor : AppColors.errorColor,
+      ));
+      if (success) context.pop();
+    }
   }
 
   Widget _infoRow(IconData icon, String label, String value) {
@@ -85,7 +106,13 @@ class VoucherDetailPage extends ConsumerWidget {
           Expanded(
             child: Text(label, style: AppTextStyles.bodyMedium),
           ),
-          Text(value, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600)),
+          Flexible(
+            child: Text(value,
+              style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+              textAlign: TextAlign.right,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
       ),
     );

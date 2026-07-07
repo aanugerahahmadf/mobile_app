@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
-import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_error_state.dart';
-import '../../../catalog/presentation/widgets/product_card.dart';
+import '../../../catalog/presentation/widgets/combined_card.dart';
+import '../../../catalog/data/models/item_model.dart';
 import '../providers/wishlist_provider.dart';
 
 class WishlistPage extends ConsumerStatefulWidget {
@@ -47,43 +47,23 @@ class _WishlistPageState extends ConsumerState<WishlistPage> {
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
                           childAspectRatio: 0.61,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
+                          crossAxisSpacing: AppSizes.xs,
+                          mainAxisSpacing: AppSizes.xs,
                         ),
                         itemCount: state.items.length,
                         itemBuilder: (_, i) {
-                          final item = state.items[i];
+                          final item = Map<String, dynamic>.from(state.items[i]);
                           final resourceType = item['resource_type'] as String? ?? 'product';
                           final type = resourceType == 'package' ? 'packages' : 'products';
-                          final pkg = item;
+                          final itemId = item['product_id'] ?? item['package_id'] ?? item['id'];
+                          if (item['id'] == null && itemId != null) {
+                            item['id'] = itemId;
+                          }
 
-                          return Stack(
-                            children: [
-                              Positioned.fill(
-                                child: ProductCard(
-                                  item: pkg,
-                                  type: type,
-                                  onTap: () => context.go('/catalog/$type/${pkg['id']}'),
-                                ),
-                              ),
-                              Positioned(
-                                top: 6, right: 6,
-                                child: GestureDetector(
-                                  onTap: () => ref.read(wishlistProvider.notifier).remove(item),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(4),
-                                    decoration: const BoxDecoration(
-                                      color: Colors.white,
-                                      shape: BoxShape.circle,
-                                      boxShadow: [
-                                        BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 1)),
-                                      ],
-                                    ),
-                                    child: const Icon(Icons.close, size: 16, color: AppColors.errorColor),
-                                  ),
-                                ),
-                              ),
-                            ],
+                          return CombinedCard(
+                            item: ItemModel.fromJson(item),
+                            type: type,
+                            onTap: () => context.go('/catalog/$type/$itemId'),
                           );
                         },
                       ),

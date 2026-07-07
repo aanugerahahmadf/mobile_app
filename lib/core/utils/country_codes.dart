@@ -6,6 +6,13 @@ class CountryCode {
   const CountryCode(this.name, this.dialCode, this.flag);
 }
 
+String? flagFromDialCode(String dialCode) {
+  for (final c in countryCodes) {
+    if (c.dialCode == dialCode) return c.flag;
+  }
+  return null;
+}
+
 const List<CountryCode> countryCodes = [
   CountryCode('Afghanistan', '+93', '🇦🇫'),
   CountryCode('Albania', '+355', '🇦🇱'),
