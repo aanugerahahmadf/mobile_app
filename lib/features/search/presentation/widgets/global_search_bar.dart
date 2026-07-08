@@ -331,6 +331,8 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
     final l = AppLocalizations.of(context)!;
     final vPadding = widget.compact ? 0.0 : 2.0;
     final cbirState = ref.watch(cbirProvider);
+    final authState = ref.watch(authProvider);
+    final isAdmin = authState is AuthAuthenticated && authState.user.isAdmin;
 
     return Padding(
       padding: EdgeInsets.symmetric(vertical: vPadding),
@@ -428,7 +430,7 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
               style: TextStyle(color: _textColor, fontWeight: FontWeight.w400),
             ),
           ),
-          if (widget.showChat)
+          if (widget.showChat && !isAdmin)
             IconButton(
               icon: Icon(Icons.chat_outlined, color: _iconColor, size: 22),
               onPressed: () => context.push('/chat-list'),

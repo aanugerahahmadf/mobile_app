@@ -25,6 +25,24 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     _checkBiometric();
   }
 
+  Future<void> _toggleFingerprint(bool enable, AppLocalizations l) async {
+    if (!enable) {
+      ref.read(fingerprintUnlockProvider.notifier).setEnabled(false);
+      return;
+    }
+    final service = BiometricAuthService();
+    final typeName = await service.biometricTypeName;
+    final reason = l.unlockWith.replaceFirst('%s', typeName);
+    final success = await service.authenticate(reason: reason);
+    if (success && mounted) {
+      ref.read(fingerprintUnlockProvider.notifier).setEnabled(true);
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l.failed)),
+      );
+    }
+  }
+
   Future<void> _checkBiometric() async {
     final available = await BiometricAuthService().isAvailable();
     if (mounted) setState(() => _biometricAvailable = available);
@@ -57,7 +75,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             ),
-            if (_biometricAvailable) ...[
+              if (_biometricAvailable) ...[
               const SizedBox(height: AppSizes.sm),
               Card(
                 margin: EdgeInsets.zero,
@@ -67,7 +85,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   title: Text(l.biometricLock, style: AppTextStyles.bodyMedium),
                   subtitle: Text(l.useFingerprint, style: AppTextStyles.bodySmall),
                   value: fingerprintEnabled,
-                  onChanged: (v) => ref.read(fingerprintUnlockProvider.notifier).setEnabled(v),
+                  onChanged: (v) => _toggleFingerprint(v, l),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
               ),

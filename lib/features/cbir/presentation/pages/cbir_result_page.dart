@@ -69,7 +69,7 @@ class _CbirResultPageState extends ConsumerState<CbirResultPage> {
           SafeArea(
             bottom: false,
             child: Padding(
-            padding: const EdgeInsets.fromLTRB(0, AppSizes.sm, 0, AppSizes.md),
+            padding: const EdgeInsets.fromLTRB(AppSizes.md, AppSizes.sm, AppSizes.md, AppSizes.md),
             child: Row(
               children: [
                 IconButton(

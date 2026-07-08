@@ -55,7 +55,11 @@ class _WeddingAppState extends ConsumerState<WeddingApp> with WidgetsBindingObse
     if (state == AppLifecycleState.resumed) {
       final enabled = ref.read(fingerprintUnlockProvider);
       if (enabled && mounted) {
-        appRouter.go('/app-lock');
+        final routerState = appRouter.routerDelegate.currentConfiguration;
+        final uri = routerState.uri.toString();
+        if (!uri.contains('/app-lock')) {
+          appRouter.go('/app-lock');
+        }
       }
     }
   }

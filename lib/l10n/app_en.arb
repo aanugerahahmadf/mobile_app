@@ -718,6 +718,7 @@
     "unlockApp": "Unlock App",
     "unlockWith": "Unlock app with %s",
     "unlockWithFingerprint": "Unlock with Fingerprint",
+    "unlockWithFaceId": "Unlock with Face ID",
     "unpaid": "Unpaid",
     "updateFailed": "Failed to update",
     "updatedSuccess": "Updated successfully",

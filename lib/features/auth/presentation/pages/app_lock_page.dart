@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:local_auth/local_auth.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../providers/biometric_settings_provider.dart';
@@ -15,11 +16,13 @@ class AppLockPage extends ConsumerStatefulWidget {
 
 class _AppLockPageState extends ConsumerState<AppLockPage> with WidgetsBindingObserver {
   bool _authenticating = false;
+  BiometricType? _biometricType;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    _detectBiometric();
     Future.microtask(_authenticate);
   }
 
@@ -29,13 +32,23 @@ class _AppLockPageState extends ConsumerState<AppLockPage> with WidgetsBindingOb
     super.dispose();
   }
 
+  Future<void> _detectBiometric() async {
+    final types = await BiometricAuthService().getAvailableBiometrics();
+    if (mounted) {
+      setState(() {
+        if (types.contains(BiometricType.fingerprint)) {
+          _biometricType = BiometricType.fingerprint;
+        } else if (types.contains(BiometricType.face)) {
+          _biometricType = BiometricType.face;
+        }
+      });
+    }
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      final enabled = ref.read(fingerprintUnlockProvider);
-      if (enabled && !_authenticating) {
-        _authenticate();
-      }
+    if (state == AppLifecycleState.resumed && !_authenticating) {
+      _authenticate();
     }
   }
 
@@ -74,6 +87,16 @@ class _AppLockPageState extends ConsumerState<AppLockPage> with WidgetsBindingOb
     }
   }
 
+  IconData get _biometricIcon {
+    if (_biometricType == BiometricType.face) return Icons.face;
+    return Icons.fingerprint;
+  }
+
+  String _unlockLabel(AppLocalizations l) {
+    if (_biometricType == BiometricType.face) return l.unlockWithFaceId;
+    return l.unlockWithFingerprint;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
@@ -100,7 +123,7 @@ class _AppLockPageState extends ConsumerState<AppLockPage> with WidgetsBindingOb
                       color: Colors.white.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.fingerprint, size: 56, color: Colors.white),
+                    child: Icon(_biometricIcon, size: 56, color: Colors.white),
                   ),
                   const SizedBox(height: 32),
                   Text(
@@ -122,8 +145,8 @@ class _AppLockPageState extends ConsumerState<AppLockPage> with WidgetsBindingOb
                       height: 48,
                       child: ElevatedButton.icon(
                         onPressed: _authenticate,
-                        icon: const Icon(Icons.fingerprint, color: AppColors.primaryDark),
-                        label: Text(l.unlockWithFingerprint,
+                        icon: Icon(_biometricIcon, color: AppColors.primaryDark),
+                        label: Text(_unlockLabel(l),
                             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppColors.primaryDark)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,

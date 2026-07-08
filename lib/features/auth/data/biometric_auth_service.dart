@@ -5,7 +5,10 @@ class BiometricAuthService {
 
   Future<bool> isAvailable() async {
     try {
-      return await _localAuth.canCheckBiometrics || await _localAuth.isDeviceSupported();
+      final canCheck = await _localAuth.canCheckBiometrics || await _localAuth.isDeviceSupported();
+      if (!canCheck) return false;
+      final enrolled = await _localAuth.getAvailableBiometrics();
+      return enrolled.isNotEmpty;
     } on PlatformException {
       return false;
     }
