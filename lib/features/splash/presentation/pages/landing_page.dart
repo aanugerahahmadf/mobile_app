@@ -25,6 +25,16 @@ class _LandingPageState extends ConsumerState<LandingPage> {
     });
   }
 
+  Future<void> _routeAfterAuth() async {
+    final flags = await loadAppLockFlags(email: ref.read(currentAccountEmailProvider));
+    if (!mounted) return;
+    if (flags.any) {
+      context.go('/app-lock');
+    } else {
+      context.go('/home');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
@@ -33,14 +43,7 @@ class _LandingPageState extends ConsumerState<LandingPage> {
     if (authState is AuthAuthenticated) {
       if (!authState.needsOtp && !authState.needsCompletion) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            final fingerprintEnabled = ref.read(fingerprintUnlockProvider);
-            if (fingerprintEnabled) {
-              context.go('/app-lock');
-            } else {
-              context.go('/home');
-            }
-          }
+          _routeAfterAuth();
         });
       }
     }
@@ -48,12 +51,7 @@ class _LandingPageState extends ConsumerState<LandingPage> {
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (next is AuthAuthenticated) {
         if (next.needsOtp || next.needsCompletion) return;
-        final fingerprintEnabled = ref.read(fingerprintUnlockProvider);
-        if (fingerprintEnabled) {
-          context.go('/app-lock');
-        } else {
-          context.go('/home');
-        }
+        _routeAfterAuth();
       }
     });
 
@@ -80,12 +78,6 @@ class _LandingPageState extends ConsumerState<LandingPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Image.asset(
-                    'assets/images/logo.png',
-                    width: 100,
-                    height: 100,
-                  ),
-                  const SizedBox(height: 24),
                   const CircularProgressIndicator(
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                   ),

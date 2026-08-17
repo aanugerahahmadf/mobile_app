@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -53,14 +54,24 @@ class _WeddingAppState extends ConsumerState<WeddingApp> with WidgetsBindingObse
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      final enabled = ref.read(fingerprintUnlockProvider);
-      if (enabled && mounted) {
-        final routerState = appRouter.routerDelegate.currentConfiguration;
-        final uri = routerState.uri.toString();
-        if (!uri.contains('/app-lock')) {
-          appRouter.go('/app-lock');
-        }
-      }
+      _maybeShowLock();
+    }
+  }
+
+  Future<void> _maybeShowLock() async {
+    if (isAppLockSuppressed()) return;
+    final flags = await loadAppLockFlags(email: ref.read(currentAccountEmailProvider));
+    if (!flags.any || !mounted) return;
+    final routerState = appRouter.routerDelegate.currentConfiguration;
+    final uri = routerState.uri.toString();
+    // Landing/onboarding handle the cold-start lock themselves; locking here
+    // would store "/landing" and loop back to the lock after unlocking.
+    if (!uri.contains('/app-lock') &&
+        !uri.contains('/landing') &&
+        !uri.contains('/onboarding')) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('pre_lock_route', uri);
+      appRouter.go('/app-lock');
     }
   }
 
@@ -91,6 +102,23 @@ class _WeddingAppState extends ConsumerState<WeddingApp> with WidgetsBindingObse
 
       locale: locale,
       supportedLocales: AppLocalizations.supportedLocales,
+      localeResolutionCallback: (deviceLocale, supportedLocales) {
+        if (deviceLocale != null) {
+          for (final supported in supportedLocales) {
+            if (supported.languageCode == deviceLocale.languageCode &&
+                (supported.countryCode == null ||
+                 supported.countryCode == deviceLocale.countryCode)) {
+              return supported;
+            }
+          }
+          for (final supported in supportedLocales) {
+            if (supported.languageCode == deviceLocale.languageCode) {
+              return supported;
+            }
+          }
+        }
+        return const Locale('id');
+      },
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,

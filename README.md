@@ -9,7 +9,7 @@ A Flutter-based mobile application for wedding flower decoration services, featu
 - **Catalog** — Browse flower packages and products with filtering and search
 - **Order Management** — Cart, checkout, payment (Midtrans), order history
 - **Face Verification** — Real-time face scanning with ML Kit for identity verification in profile
-- **Profile** — Edit profile with first/middle/last name auto-sync, identity fields (NIK, KTP photo, birth place, birth date, country, address), profile completion bar
+- **Profile** — Edit profile with first/middle/last name auto-sync, identity fields (KTP, SIM, Passport, NPWP, KTP photo, birth place, birth date, country, address), profile completion bar
 - **Multi-language** — 10 languages: Indonesian, English, Arabic, Spanish, Japanese, Korean, Malay, Thai, Vietnamese, Chinese
 - **Notifications** — Firebase Cloud Messaging, push notifications for orders, chat, promotions
 - **Chat** — Real-time chat with admin via Pusher

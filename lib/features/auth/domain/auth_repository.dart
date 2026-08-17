@@ -14,7 +14,7 @@ abstract class AuthRepository {
     required String username,
     required String email,
     required String whatsapp,
-    required String nik,
+    required String ktpNumber,
     String? birthPlace,
     String? birthDate,
     String? country,

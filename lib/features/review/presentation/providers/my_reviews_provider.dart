@@ -5,12 +5,28 @@ import '../../domain/review_repository.dart';
 class MyReviewsState {
   final List<Map<String, dynamic>> reviews;
   final bool loading;
+  final bool submitting;
   final String? error;
 
-  const MyReviewsState({this.reviews = const [], this.loading = false, this.error});
+  const MyReviewsState({
+    this.reviews = const [],
+    this.loading = false,
+    this.submitting = false,
+    this.error,
+  });
 
-  MyReviewsState copyWith({List<Map<String, dynamic>>? reviews, bool? loading, String? error}) {
-    return MyReviewsState(reviews: reviews ?? this.reviews, loading: loading ?? this.loading, error: error);
+  MyReviewsState copyWith({
+    List<Map<String, dynamic>>? reviews,
+    bool? loading,
+    bool? submitting,
+    String? error,
+  }) {
+    return MyReviewsState(
+      reviews: reviews ?? this.reviews,
+      loading: loading ?? this.loading,
+      submitting: submitting ?? this.submitting,
+      error: error,
+    );
   }
 }
 
@@ -25,6 +41,37 @@ class MyReviewsNotifier extends StateNotifier<MyReviewsState> {
       state = state.copyWith(reviews: reviews, loading: false);
     } catch (e) {
       state = state.copyWith(loading: false, error: e.toString());
+    }
+  }
+
+  Future<void> updateReview(int id, Map<String, dynamic> data, {List<String>? photoPaths}) async {
+    state = state.copyWith(submitting: true, error: null);
+    try {
+      final updated = await _repository.updateReview(id, data, photoPaths: photoPaths);
+      state = state.copyWith(
+        reviews: [
+          for (final r in state.reviews)
+            if ((r['id'] as num?)?.toInt() == id) updated else r,
+        ],
+        submitting: false,
+      );
+    } catch (e) {
+      state = state.copyWith(submitting: false, error: e.toString());
+      rethrow;
+    }
+  }
+
+  Future<void> deleteReview(int id) async {
+    state = state.copyWith(submitting: true, error: null);
+    try {
+      await _repository.deleteReview(id);
+      state = state.copyWith(
+        reviews: state.reviews.where((r) => (r['id'] as num?)?.toInt() != id).toList(),
+        submitting: false,
+      );
+    } catch (e) {
+      state = state.copyWith(submitting: false, error: e.toString());
+      rethrow;
     }
   }
 }

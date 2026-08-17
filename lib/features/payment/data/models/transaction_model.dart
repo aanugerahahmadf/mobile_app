@@ -9,10 +9,9 @@ class TransactionModel {
   final double amount;
   final double adminFee;
   final double totalAmount;
-  final String? paymentGateway;
   final String? paymentMethod;
-  final String? snapToken;
-  final String? paymentUrl;
+  final String? virtualAccountNo;
+  final String? virtualAccountExpiry;
   final String status;
   final String? paidAt;
   final String? notes;
@@ -29,10 +28,9 @@ class TransactionModel {
     required this.amount,
     this.adminFee = 0,
     required this.totalAmount,
-    this.paymentGateway,
     this.paymentMethod,
-    this.snapToken,
-    this.paymentUrl,
+    this.virtualAccountNo,
+    this.virtualAccountExpiry,
     required this.status,
     this.paidAt,
     this.notes,
@@ -51,11 +49,10 @@ class TransactionModel {
       amount: parseDouble(json['amount']),
       adminFee: parseDouble(json['admin_fee']),
       totalAmount: parseDouble(json['total_amount']),
-      paymentGateway: json['payment_gateway'] as String?,
       paymentMethod: json['payment_method'] as String?,
-      snapToken: json['snap_token'] as String?,
-      paymentUrl: json['payment_url'] as String?,
-      status: (json['status'] ?? 'pending') as String,
+      virtualAccountNo: json['virtual_account_no'] as String? ?? (json['metadata'] as Map<String, dynamic>?)?['virtual_account_no'] as String?,
+      virtualAccountExpiry: json['virtual_account_expiry'] as String?,
+      status: (json['status'] ?? 'unpaid') as String,
       paidAt: json['paid_at'] as String?,
       notes: json['notes'] as String?,
       metadata: json['metadata'] as Map<String, dynamic>?,
@@ -64,7 +61,7 @@ class TransactionModel {
     );
   }
 
-  bool get isSuccess => status == 'success' || status == 'settlement' || status == 'capture';
-  bool get isPending => status == 'pending' || status == 'authorize';
-  bool get isFailed => status == 'failed' || status == 'deny' || status == 'cancel' || status == 'expire';
+  bool get isSuccess => status == 'paid' || status == 'success' || status == 'completed';
+  bool get isPending => status == 'pending' || status == 'unpaid';
+  bool get isFailed => status == 'failed' || status == 'cancelled' || status == 'expired';
 }

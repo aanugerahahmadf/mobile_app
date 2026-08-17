@@ -1,0 +1,4 @@
+template-arb-file: app_en.arb
+arb-dir: lib/l10n
+output-dir: lib/l10n
+untranslated-messages-file: untranslated.json

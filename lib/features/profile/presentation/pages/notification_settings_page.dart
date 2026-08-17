@@ -50,7 +50,7 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text(l.notificationSettings)),
+      appBar: AppBar(title: Text(l.notificationSettings), backgroundColor: Colors.transparent, elevation: 0),
       body: _loaded
           ? ListView(
               padding: const EdgeInsets.all(AppSizes.md),

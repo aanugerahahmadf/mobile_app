@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "125956093579",
+    "firebase_url": "https://wedding-flower-decorasi-default-rtdb.firebaseio.com",
+    "project_id": "wedding-flower-decorasi",
+    "storage_bucket": "wedding-flower-decorasi.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:125956093579:android:241e27bb44b40b54c3868e",
+        "android_client_info": {
+          "package_name": "com.example.mobile_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "125956093579-rcm25oq9bn8cmmv71qdacbdmrfv98j6r.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.mobile_app",
+            "certificate_hash": "a7e14554c6ebc80bb9b723eebdbc2df96078ca2d"
+          }
+        },
+        {
+          "client_id": "125956093579-hfa57cd8pipj91736p5639v5nadolj6m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD1o1LaFuIcGTOQrpyMplqbEhPntnKwPFo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "125956093579-hfa57cd8pipj91736p5639v5nadolj6m.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "125956093579-v2hohvhcq2b69nca5oaqrq4ihkent742.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.mobileApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

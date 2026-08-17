@@ -23,6 +23,8 @@ class SwitchAccountPage extends ConsumerWidget {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: Text(l.switchAccount),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
       body: ListView(
         padding: const EdgeInsets.all(AppSizes.md),

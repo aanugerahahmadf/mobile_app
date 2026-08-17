@@ -1,4 +1,10 @@
 class Validators {
+  /// Strip non-digit characters from phone number, keep leading +
+  static String cleanPhone(String value) {
+    final cleaned = value.replaceAll(RegExp(r'[^\d]'), '');
+    if (value.trim().startsWith('+')) return '+$cleaned';
+    return cleaned;
+  }
   static String? required(String? value) {
     if (value == null || value.trim().isEmpty) return 'Wajib diisi';
     return null;
@@ -37,8 +43,9 @@ class Validators {
 
   static String? phone(String? value) {
     if (value == null || value.trim().isEmpty) return 'Wajib diisi';
+    final cleaned = value.replaceAll(RegExp(r'[\s\-\(\)\.]'), '');
     final regex = RegExp(r'^\+?[0-9]{10,15}$');
-    if (!regex.hasMatch(value)) return 'Format nomor tidak valid';
+    if (!regex.hasMatch(cleaned)) return 'Format nomor tidak valid';
     return null;
   }
 }

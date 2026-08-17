@@ -12,7 +12,7 @@ class PrivacyAndTermPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text(l.privacyAndTerms)),
+      appBar: AppBar(title: Text(l.privacyAndTerms), backgroundColor: Colors.transparent, elevation: 0),
       body: ListView(
         padding: const EdgeInsets.all(AppSizes.md),
         children: [

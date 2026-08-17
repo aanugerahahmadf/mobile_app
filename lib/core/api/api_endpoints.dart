@@ -10,14 +10,17 @@ class ApiEndpoints {
   static const String sendOtp = '/auth/send-otp';
   static const String verifyOtp = '/auth/verify-otp';
   static const String googleLogin = '/auth/google';
+  static const String facebookLogin = '/auth/facebook';
+  static const String appleLogin = '/auth/apple';
 
   // User & Profile
   static const String user = '/user';
+  static const String deleteAccount = '/user/account';
   static const String profile = '/profile';
   static const String profileAvatar = '/profile/avatar';
   static const String changePassword = '/profile/change-password';
   static const String dashboard = '/profile/dashboard';
-  static const String profileNik = '/profile/nik';
+  static const String profileKtpNumber = '/profile/ktp';
   static const String profileKtp = '/profile/ktp-photo';
   static const String profileSelfie = '/profile/selfie';
   static const String profileFaceScan = '/profile/face-scan';
@@ -59,14 +62,20 @@ class ApiEndpoints {
   static const String cbirArithmetic = '/cbir/arithmetic';
   static const String cbirArithmeticOps = '/cbir/arithmetic/ops';
   static const String cbirStats = '/cbir/stats';
+  static const String cbirEvaluate = '/cbir/evaluate';
   static const String cbirHealth = '/cbir/health';
 
   // Admin CBIR
   static const String adminSearchImage = '/admin/search/image';
   static const String adminCbirArithmetic = '/admin/cbir/arithmetic';
 
+  // Vendors
+  static const String vendors = '/vendors';
+  static String vendorDetail(String id) => '/vendors/$id';
+
   // Vouchers
   static const String vouchers = '/vouchers';
+  static const String voucherValidate = '/vouchers/validate';
 
   // Notifications
   static const String notifications = '/notifications';
@@ -78,6 +87,8 @@ class ApiEndpoints {
   // Reviews
   static const String reviews = '/reviews';
   static const String myReviews = '/reviews/user';
+  static String userReviews(String userId) => '/reviews/user/$userId';
+  static String review(int id) => '/reviews/$id';
 
   // Chat / Messages
   static const String conversations = '/messages/conversations';
@@ -96,6 +107,7 @@ class ApiEndpoints {
   // ─── Admin CRUD ──────────────────────────────────────────────────────────────
   static const String adminDashboard = '/admin/dashboard';
   static const String adminUsers = '/admin/users';
+  static const String adminVendors = '/admin/vendors';
   static String adminUser(int id) => '/admin/users/$id';
   static String adminUserToggle(int id) => '/admin/users/$id/toggle-active';
   static const String adminPackages = '/admin/packages';
@@ -111,6 +123,8 @@ class ApiEndpoints {
   static String adminOrderStatus(int id) => '/admin/orders/$id/status';
   static const String adminVouchers = '/admin/vouchers';
   static String adminVoucher(int id) => '/admin/vouchers/$id';
+  static const String adminDiscounts = '/admin/discounts';
+  static String adminDiscount(int id) => '/admin/discounts/$id';
   static const String adminReviews = '/admin/reviews';
   static String adminReview(int id) => '/admin/reviews/$id';
   static const String adminTransactions = '/admin/transactions';
@@ -156,14 +170,29 @@ class ApiEndpoints {
   static String voucherClaim(String id) => '/vouchers/$id/claim';
   static String notificationRead(String id) => '/notifications/$id/read';
   static String packageReviews(String id) => '/reviews/package/$id';
+  static String productReviews(String id) => '/reviews/product/$id';
+  static String orderConfirmPayment(String id) => '/bookings/$id/confirm-payment';
+  static String orderVirtualAccount(String id) => '/bookings/$id/virtual-account';
+  static String orderQris(String id) => '/bookings/$id/qris';
+  static String bookingUploadProof(String id) => '/bookings/$id/upload-proof';
   static String invoiceDownload(String id) => '/bookings/$id/invoice';
   static String invoiceEmail(String id) => '/bookings/$id/invoice/email';
+
+  // Dropdown Options (KYC fields)
+  static const String dropdownOptions = '/dropdown-options';
 
   // Regions
   static const String regionProvinces = '/regions/provinces';
   static String regionCities(String provinceCode) => '/regions/cities/$provinceCode';
   static String regionDistricts(String cityCode) => '/regions/districts/$cityCode';
   static String regionVillages(String districtCode) => '/regions/villages/$districtCode';
+
+  // App Lock
+  static const String appLock = '/profile/app-lock';
+  static const String appLockPin = '/profile/app-lock/pin';
+  static const String appLockPinVerify = '/profile/app-lock/pin/verify';
+  static const String appLockFaceEnroll = '/profile/app-lock/face-enroll';
+  static const String appLockFaceVerify = '/profile/app-lock/face-verify';
 
   // World Regions
   static const String worldCountries = '/world-regions/countries';

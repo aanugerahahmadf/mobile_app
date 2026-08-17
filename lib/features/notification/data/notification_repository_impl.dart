@@ -19,7 +19,7 @@ class NotificationRepositoryImpl implements NotificationRepository {
   @override
   Future<int> getUnreadCount() async {
     final response = await _dio.get(ApiEndpoints.notificationUnreadCount);
-    return (response.data['data']['count'] as int?) ?? 0;
+    return ((response.data['data'] as Map<String, dynamic>?)?['count'] as int?) ?? 0;
   }
 
   @override

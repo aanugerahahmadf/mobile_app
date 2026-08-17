@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/app_button.dart';
 
 class OnboardingPage extends StatefulWidget {
@@ -14,6 +15,7 @@ class OnboardingPage extends StatefulWidget {
 class _OnboardingPageState extends State<OnboardingPage> {
   final _pageController = PageController();
   int _currentPage = 0;
+  bool _loading = false;
 
   List<_OnboardingSlide> _slides(AppLocalizations l) => [
     _OnboardingSlide(
@@ -37,6 +39,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 
   Future<void> _onFinish() async {
+    if (_loading) return;
+    setState(() => _loading = true);
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('onboarding_seen', true);
     if (mounted) context.go('/landing');
@@ -73,7 +77,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
             top: MediaQuery.of(context).padding.top + 8,
             right: 16,
             child: TextButton(
-              onPressed: _onFinish,
+              onPressed: _loading ? null : _onFinish,
               child: Text(
                 l.skip,
                 style: TextStyle(
@@ -110,7 +114,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: AppButton(
                     label: _currentPage == _slides(l).length - 1 ? l.getStarted : l.next,
-                    onPressed: () {
+                    loading: _loading,
+                    onPressed: _loading ? null : () {
                       if (_currentPage == _slides(l).length - 1) {
                         _onFinish();
                       } else {
@@ -140,6 +145,17 @@ class _OnboardingSlide extends StatelessWidget {
     required this.description,
   });
 
+  Widget _blob(double size, Color color) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -155,15 +171,24 @@ class _OnboardingSlide extends StatelessWidget {
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
               colors: [
-                Colors.black.withValues(alpha: 0.55),
-                Colors.black.withValues(alpha: 0.75),
+                Colors.transparent,
+                AppColors.primaryDark.withAlpha(128),
+                AppColors.primaryDark.withAlpha(204),
               ],
             ),
           ),
         ),
+        Positioned(top: -100, right: -50, child: _blob(300, AppColors.primaryColor.withValues(alpha: 0.15))),
+        Positioned(bottom: 80, left: -80, child: _blob(240, AppColors.secondaryColor.withValues(alpha: 0.12))),
+        Positioned(top: 240, left: -40, child: _blob(140, AppColors.accentColor.withValues(alpha: 0.08))),
+        Positioned(bottom: 340, right: -30, child: _blob(120, AppColors.infoColor.withValues(alpha: 0.06))),
         SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
+            padding: EdgeInsets.only(
+              left: 32,
+              right: 32,
+              bottom: MediaQuery.of(context).padding.bottom + 148,
+            ),
             child: Column(
               children: [
                 const SizedBox(height: 60),

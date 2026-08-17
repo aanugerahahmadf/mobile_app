@@ -1,23 +1,22 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:dio/dio.dart';
 import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_shadows.dart';
+import '../../../../core/services/image_scan_analyzer.dart';
+import '../../../../core/utils/camera_scan_utils.dart';
+import '../../../../core/widgets/media_viewer.dart';
 import '../../data/models/search_suggestion.dart';
 import '../../data/search_repository_impl.dart';
 import '../../../cbir/presentation/providers/cbir_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../chat/presentation/providers/chat_provider.dart';
 
 class GlobalSearchBar extends ConsumerStatefulWidget {
   final bool translucent;
@@ -126,120 +125,49 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
   }
 
   Future<void> _pickImage(ImageSource source) async {
-    final picked = await ImagePicker().pickImage(source: source, maxWidth: 1024);
-    if (picked != null && mounted) {
-      ref.read(cbirProvider.notifier).search(File(picked.path));
+    final file = await pickImageWithScanner(
+      context,
+      source,
+      title: AppLocalizations.of(context)!.searchByImage,
+      instruction: AppLocalizations.of(context)!.autoScanHint,
+      maxWidth: 1024,
+    );
+    if (file != null && mounted) {
+      ref.read(cbirProvider.notifier).search(file);
       if (mounted) context.push('/cbir-result');
     }
   }
 
   Future<void> _pickFile() async {
-    final result = await FilePicker.platform.pickFiles(type: FileType.image);
-    if (result != null && result.files.single.path != null && mounted) {
-      ref.read(cbirProvider.notifier).search(File(result.files.single.path!));
+    final file = await pickFileWithScanner(
+      context,
+      type: ScanContentType.generic,
+      title: AppLocalizations.of(context)!.searchByImage,
+      instruction: AppLocalizations.of(context)!.autoScanHint,
+    );
+    if (file != null && mounted) {
+      ref.read(cbirProvider.notifier).search(file);
       if (mounted) context.push('/cbir-result');
     }
   }
 
-  Future<void> _pickFromDrive() async {
-    try {
-      final googleUser = await GoogleSignIn(
-        serverClientId: dotenv.get('GOOGLE_CLIENT_ID'),
-        scopes: ['https://www.googleapis.com/auth/drive.readonly'],
-      ).signIn();
-      if (googleUser == null || !mounted) return;
-
-      final auth = await googleUser.authentication;
-      if (auth.accessToken == null) return;
-
-      final response = await Dio().get(
-        'https://www.googleapis.com/drive/v3/files',
-        queryParameters: {
-          'q': "mimeType contains 'image/' and trashed = false",
-          'fields': 'files(id, name, mimeType, thumbnailLink)',
-          'pageSize': '50',
-          'orderBy': 'modifiedTime desc',
-        },
-        options: Options(headers: {'Authorization': 'Bearer ${auth.accessToken}'}),
-      );
-
-      final files = (response.data['files'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-      if (files.isEmpty || !mounted) return;
-
-      final l = AppLocalizations.of(context)!;
-      final selected = await showModalBottomSheet<String>(
-        context: context,
-        isScrollControlled: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        builder: (ctx) => SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 36, height: 4, margin: const EdgeInsets.only(top: 12),
-                decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2)),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                child: Text(l.pickFromGoogleDrive,
-                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-                ),
-              ),
-              SizedBox(
-                height: MediaQuery.of(ctx).size.height * 0.45,
-                child: ListView.separated(
-                  itemCount: files.length,
-                  separatorBuilder: (_, _) => const Divider(height: 1, indent: 16, endIndent: 16),
-                  itemBuilder: (_, i) {
-                    final f = files[i];
-                    final thumb = f['thumbnailLink'] as String?;
-                    return ListTile(
-                      leading: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: thumb != null
-                            ? CachedNetworkImage(imageUrl: thumb, width: 48, height: 48, fit: BoxFit.cover)
-                            : Container(
-                                width: 48, height: 48,
-                                decoration: BoxDecoration(color: const Color(0xFFE8F5E9), borderRadius: BorderRadius.circular(8)),
-                                child: const Icon(Icons.cloud, color: Color(0xFF4CAF50), size: 24),
-                              ),
-                      ),
-                      title: Text(f['name'] as String? ?? '', maxLines: 1, overflow: TextOverflow.ellipsis),
-                      onTap: () => Navigator.pop(ctx, f['id'] as String?),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-
-      if (selected == null || !mounted) return;
-
-      final imageResponse = await Dio().get(
-        'https://www.googleapis.com/drive/v3/files/$selected?alt=media',
-        options: Options(
-          headers: {'Authorization': 'Bearer ${auth.accessToken}'},
-          responseType: ResponseType.bytes,
-        ),
-      );
-
-      final tempDir = await Directory.systemTemp.createTemp('drive_');
-      final file = File('${tempDir.path}/drive_image.jpg');
-      await file.writeAsBytes(imageResponse.data as List<int>);
-
+  Future<void> _pickVideo(ImageSource source) async {
+    final file = await pickVideo(source);
+    if (file != null && mounted) {
       ref.read(cbirProvider.notifier).search(file);
       if (mounted) context.push('/cbir-result');
-    } catch (e) {
-      if (mounted) {
-        final l = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l.failedWithMessage.replaceFirst('%s', e.toString()))),
-        );
-      }
+    }
+  }
+
+  Future<void> _openChat() async {
+    final notifier = ref.read(chatProvider.notifier);
+    await notifier.loadConversations();
+    final chatState = ref.read(chatProvider);
+    if (chatState is ChatConversationsLoaded && chatState.conversations.isNotEmpty) {
+      if (mounted) context.push('/chat/${chatState.conversations.first['id']}');
+    } else {
+      final inboxId = await notifier.startConversation();
+      if (mounted) context.push('/chat/$inboxId');
     }
   }
 
@@ -285,10 +213,16 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
                   onTap: () { context.pop(); _pickFile(); },
                 ),
                 _sheetOption(
-                  icon: Icons.cloud,
-                  title: l.googleDrive,
-                  subtitle: l.chooseFromDrive,
-                  onTap: () { context.pop(); _pickFromDrive(); },
+                  icon: Icons.videocam,
+                  title: l.takeVideo,
+                  subtitle: l.takeVideoDirect,
+                  onTap: () { context.pop(); _pickVideo(ImageSource.camera); },
+                ),
+                _sheetOption(
+                  icon: Icons.video_library,
+                  title: l.videoGallery,
+                  subtitle: l.chooseFromGallery,
+                  onTap: () { context.pop(); _pickVideo(ImageSource.gallery); },
                 ),
               ],
             ),
@@ -359,15 +293,10 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
                           child: Stack(
                             clipBehavior: Clip.none,
                             children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child: Image.file(
-                                  File(cbirState.uploadedImagePath!),
-                                  width: 40,
-                                  height: 40,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, _, _) => Icon(Icons.broken_image, color: _iconColor, size: 28),
-                                ),
+                              LocalMediaThumb(
+                                path: cbirState.uploadedImagePath!,
+                                width: 40,
+                                height: 40,
                               ),
                               Positioned(
                                 top: -6, right: -6,
@@ -431,11 +360,23 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
             ),
           ),
           if (widget.showChat && !isAdmin)
-            IconButton(
-              icon: Icon(Icons.chat_outlined, color: _iconColor, size: 22),
-              onPressed: () => context.push('/chat-list'),
-              constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-              splashRadius: 22,
+            Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: _iconColor.withAlpha(30),
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: Transform.rotate(angle: -0.4, child: Icon(Icons.send_outlined, color: _iconColor, size: 20)),
+                  onPressed: _openChat,
+                  constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                  splashRadius: 22,
+                  padding: EdgeInsets.zero,
+                ),
+              ),
             ),
         ],
       ),
@@ -464,6 +405,21 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
         return _iconBox(const Color(0xFFE8F5E9), Icons.people_rounded, const Color(0xFF2E7D32));
       case SuggestionType.transactions:
         return _iconBox(const Color(0xFFFCE4EC), Icons.payments_rounded, const Color(0xFFD32F2F));
+      case SuggestionType.vendors:
+        if (item.imageUrl != null && item.imageUrl!.isNotEmpty) {
+          return ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: SizedBox(
+              width: 48, height: 48,
+              child: CachedNetworkImage(
+                imageUrl: item.imageUrl!,
+                fit: BoxFit.cover,
+                errorWidget: (_, _, _) => Container(color: const Color(0xFFF3E5F5), child: const Icon(Icons.store, size: 22, color: Color(0xFF9C27B0))),
+              ),
+            ),
+          );
+        }
+        return _iconBox(const Color(0xFFF3E5F5), Icons.store, const Color(0xFF9C27B0));
       case SuggestionType.packages:
       case SuggestionType.products:
         if (item.imageUrl != null && item.imageUrl!.isNotEmpty) {

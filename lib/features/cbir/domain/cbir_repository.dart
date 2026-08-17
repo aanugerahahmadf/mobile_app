@@ -8,7 +8,6 @@ abstract class CbirRepository {
     required File image1,
     required File image2,
     required String operation,
-    int topK = 20,
     List<double>? weights,
     bool isAdmin = false,
   });

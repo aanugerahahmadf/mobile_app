@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/errors/localized_error.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -38,6 +39,8 @@ class _NotificationPageState extends ConsumerState<NotificationPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l.notifications),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         actions: [
           if (state.notifications.any((n) => n.isUnread))
             TextButton(
@@ -57,7 +60,7 @@ class _NotificationPageState extends ConsumerState<NotificationPage> {
                       children: [
                         Icon(Icons.cloud_off, size: 64, color: AppColors.textTertiary),
                         SizedBox(height: AppSizes.md),
-                        Text(state.error!, style: AppTextStyles.bodyMedium, textAlign: TextAlign.center),
+                        Text(LocalizedError.of(l, state.error!), style: AppTextStyles.bodyMedium, textAlign: TextAlign.center),
                         SizedBox(height: AppSizes.md),
                         ElevatedButton.icon(
                           onPressed: () => notifier.fetchNotifications(),
@@ -71,7 +74,6 @@ class _NotificationPageState extends ConsumerState<NotificationPage> {
               : state.notifications.isEmpty
                   ? AppEmptyState(
                       title: l.noNotifications,
-                      subtitle: l.noNotifications,
                       icon: Icons.notifications_outlined,
                     )
                   : RefreshIndicator(

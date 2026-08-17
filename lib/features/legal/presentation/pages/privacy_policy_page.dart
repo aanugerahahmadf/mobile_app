@@ -16,7 +16,7 @@ class PrivacyPolicyPage extends ConsumerWidget {
     final async = ref.watch(privacyPolicyProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l.privacyPolicy)),
+      appBar: AppBar(title: Text(l.privacyPolicy), backgroundColor: Colors.transparent, elevation: 0),
       body: async.when(
         loading: () => const Center(child: AppShimmer(width: 200, height: 16)),
         error: (err, _) => Center(

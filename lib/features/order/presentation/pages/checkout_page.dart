@@ -1,21 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
+import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/constants/app_text_styles.dart';
+import '../../../../core/errors/app_error_codes.dart';
 import '../../../../core/widgets/app_button.dart';
-import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/widgets/app_country_picker_field.dart';
 import '../../../../core/widgets/app_region_picker_field.dart';
+import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/widgets/app_shimmer.dart';
 import '../../../../core/api/dio_client.dart';
-import '../../../../core/api/api_endpoints.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import 'package:mobile_app/l10n/app_localizations.dart';
+import '../../../voucher/presentation/providers/voucher_provider.dart';
+import '../../../voucher/data/models/voucher_model.dart';
+import '../../../payment/domain/payment_method_info.dart';
+import '../../../payment/presentation/widgets/payment_method_selector.dart';
+import '../../../payment/presentation/widgets/upload_payment_proof.dart';
 
 class CheckoutPage extends ConsumerStatefulWidget {
   final String? type;
@@ -59,7 +65,19 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   int _discountAmount = 0;
 
   Map<String, dynamic>? _itemData;
-  Map<String, dynamic>? _voucherData;
+  VoucherModel? _appliedVoucher;
+
+  Map<String, dynamic>? _orderData;
+  String? _orderId;
+  bool _paymentConfirmed = false;
+  bool _paymentPending = false;
+
+  bool get _orderIsPaid {
+    final ps = '${_orderData?['payment_status'] ?? ''}';
+    return ps == 'paid' || ps == 'success' || ps == 'completed';
+  }
+
+  bool get _orderIsPending => '${_orderData?['payment_status'] ?? ''}' == 'pending';
 
   @override
   void initState() {
@@ -68,6 +86,8 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     final user = authState is AuthAuthenticated ? authState.user : null;
     _nameController.text = user?.fullName ?? '';
     _whatsappController.text = user?.whatsapp ?? '';
+
+    Future.microtask(() => ref.read(voucherProvider.notifier).fetchVouchers());
 
     if (widget.type != null && widget.id != null) {
       _fetchItem();
@@ -98,7 +118,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       setState(() => _itemData = data);
     } catch (e) {
       if (mounted) {
-        AppSnackBar.show(context, 'Gagal memuat data item', type: SnackBarType.error);
+        AppSnackBar.show(context, AppLocalizations.of(context)!.failedLoadItem, type: SnackBarType.error);
       }
     } finally {
       if (mounted) setState(() => _loadingItem = false);
@@ -140,41 +160,65 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   }
 
   Future<void> _checkVoucher() async {
+    final l = AppLocalizations.of(context)!;
     final code = _voucherController.text.trim();
     if (code.isEmpty) {
-      setState(() { _voucherValid = false; _voucherData = null; _discountAmount = 0; });
+      setState(() { _voucherValid = false; _appliedVoucher = null; _discountAmount = 0; });
       return;
     }
     setState(() => _voucherChecking = true);
     try {
-      final res = await DioClient.instance.get(ApiEndpoints.vouchers, queryParameters: {'code': code});
-      final data = res.data['data'] as Map<String, dynamic>?;
-      if (data != null && data['is_valid'] == true) {
-        final total = _getTotalPrice();
-        final discType = data['discount_type'] as String? ?? 'fixed';
-        final discValueRaw = data['discount_amount'];
-        final discValue = discValueRaw is num
-            ? discValueRaw.toInt()
-            : (discValueRaw is String ? (double.tryParse(discValueRaw)?.toInt() ?? 0) : 0);
-        final amount = discType == 'percentage' ? (total * discValue ~/ 100) : discValue;
+      final voucherState = ref.read(voucherProvider);
+      final voucher = voucherState.vouchers.where((v) => v.code == code).firstOrNull;
+
+      if (voucher != null && voucher.isActive && !voucher.isExpired) {
+        final total = _getBaseTotal();
+        final amount = voucher.calculateDiscount(total.toDouble()).toInt();
         setState(() {
           _voucherValid = true;
-          _voucherData = data;
+          _appliedVoucher = voucher;
           _discountAmount = amount > total ? total : amount;
         });
       } else {
-        setState(() { _voucherValid = false; _voucherData = null; _discountAmount = 0; });
-        if (mounted) AppSnackBar.show(context, 'Voucher tidak valid', type: SnackBarType.warning);
+        final fallback = await _checkVoucherFallback(code);
+        if (!fallback) {
+          setState(() { _voucherValid = false; _appliedVoucher = null; _discountAmount = 0; });
+          if (mounted) AppSnackBar.show(context, l.invalidVoucherCode, type: SnackBarType.warning);
+        }
       }
     } catch (e) {
-      setState(() { _voucherValid = false; _voucherData = null; _discountAmount = 0; });
+      setState(() { _voucherValid = false; _appliedVoucher = null; _discountAmount = 0; });
     } finally {
       if (mounted) setState(() => _voucherChecking = false);
     }
   }
 
+  Future<bool> _checkVoucherFallback(String code) async {
+    try {
+      final total = _getBaseTotal();
+      final res = await DioClient.instance.post(
+        ApiEndpoints.voucherValidate,
+        data: {'code': code, 'amount': total},
+      );
+      final data = res.data['data'] as Map<String, dynamic>?;
+      if (data != null) {
+        final voucher = VoucherModel.fromJson(data);
+        final amount = voucher.calculateDiscount(total.toDouble()).toInt();
+        setState(() {
+          _voucherValid = true;
+          _appliedVoucher = voucher;
+          _discountAmount = amount > total ? total : amount;
+        });
+        return true;
+      }
+    } catch (_) {}
+    return false;
+  }
+
   int _getItemPrice() {
     if (_itemData != null) {
+      final fp = _itemData!['final_price'] ?? _itemData!['discount_price'];
+      if (fp != null && fp is num && fp > 0) return fp.toInt();
       final priceRaw = _itemData!['price'];
       return priceRaw is num
           ? priceRaw.toInt()
@@ -183,12 +227,10 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     return 0;
   }
 
-  int _getTotalPrice() {
-    return _getItemPrice() * _quantity;
-  }
+  int _getBaseTotal() => _getItemPrice() * _quantity;
 
   int _getFinalPrice() {
-    return _getTotalPrice() - _discountAmount;
+    return _getBaseTotal() - _discountAmount;
   }
 
   String _getItemName() {
@@ -210,7 +252,17 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   }
 
   void _nextStep() {
-    if (_currentStep < 3) {
+    final l = AppLocalizations.of(context)!;
+    if (_currentStep == 0) {
+      if (_eventDate == null || _eventTime == null) {
+        AppSnackBar.show(context, l.selectEventDateTime, type: SnackBarType.warning);
+        return;
+      }
+    }
+    if (_currentStep == 1) {
+      if (!_formKey.currentState!.validate()) return;
+    }
+    if (_currentStep < 4) {
       setState(() => _currentStep++);
     }
   }
@@ -225,14 +277,20 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     final l = AppLocalizations.of(context)!;
     setState(() => _submitting = true);
     try {
+      if (_eventDate == null || _eventTime == null) {
+        throw Exception(l.selectEventDateTime);
+      }
+      final itemId = widget.id ?? '${_itemData?['id'] ?? ''}';
+      if (itemId.isEmpty) throw Exception(AppErrorCodes.failedGetOrderId);
+      final isPackage = widget.type == 'packages' || _itemData?['type'] == 'package';
       final data = <String, dynamic>{
-        if (widget.type == 'packages') 'package_id': widget.id! else 'product_id': widget.id!,
+        if (isPackage) 'package_id': itemId else 'product_id': itemId,
         'event_date': _eventDate!.toIso8601String().split('T')[0],
         'event_time': '${_eventTime!.hour.toString().padLeft(2, '0')}:${_eventTime!.minute.toString().padLeft(2, '0')}',
         'quantity': _quantity,
         'notes': _notesController.text.trim(),
         'customer_name': _nameController.text.trim(),
-        'whatsapp': _whatsappController.text.trim(),
+        'whatsapp': Validators.cleanPhone(_whatsappController.text),
         'country': _countryController.text.trim(),
         'address': _addressController.text.trim(),
         'province_name': _provinceName,
@@ -245,26 +303,23 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       if (_cityId != null) data['city_id'] = _cityId;
       if (_districtId != null) data['district_id'] = _districtId;
       if (_villageId != null) data['village_id'] = _villageId;
-      if (_voucherValid && _voucherData != null) {
-        data['voucher_code'] = _voucherController.text.trim();
+      if (_voucherValid && _appliedVoucher != null) {
+        if (_appliedVoucher!.code != null) data['voucher_code'] = _appliedVoucher!.code;
       }
 
       final res = await DioClient.instance.post(ApiEndpoints.bookings, data: data);
       final respData = res.data as Map<String, dynamic>? ?? {};
       final orderData = respData['data'] as Map<String, dynamic>? ?? respData;
       final orderId = '${orderData['id']}';
-      if (orderId.isEmpty) throw Exception('Gagal mendapatkan ID pesanan');
+      if (orderId.isEmpty) throw Exception(AppErrorCodes.failedGetOrderId);
 
-      final snapToken = orderData['snap_token'] as String?;
-
-      if (mounted) {
-        AppSnackBar.show(context, l.orderCreated, type: SnackBarType.success);
-        if (snapToken != null && snapToken.isNotEmpty) {
-          context.push('/payment/$orderId', extra: {'snap_token': snapToken});
-        } else {
-          context.push('/payment/$orderId');
-        }
-      }
+      setState(() {
+        _orderId = orderId;
+        _orderData = orderData;
+        _paymentConfirmed = false;
+        _paymentPending = false;
+      });
+      setState(() => _currentStep = 4);
     } catch (e) {
       if (mounted) {
         AppSnackBar.show(context, l.orderFailed, type: SnackBarType.error);
@@ -274,15 +329,50 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     }
   }
 
+  Future<void> _refreshAfterUpload() async {
+    if (_orderId == null || !mounted) return;
+    try {
+      final updated = await DioClient.instance.get(ApiEndpoints.bookingDetail(_orderId!));
+      final data = updated.data['data'] as Map<String, dynamic>? ?? {};
+      if (!mounted) return;
+      setState(() {
+        _orderData = data;
+        final ps = '${data['payment_status'] ?? ''}';
+        _paymentConfirmed = ps == 'paid' || ps == 'success' || ps == 'completed';
+        _paymentPending = ps == 'pending';
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _openPaymentMethod(PaymentMethodInfo method) async {    if (_orderId == null) return;
+    final reload = await context.push<bool>('/payment-method/$_orderId', extra: method);
+    if (reload != true || !mounted) return;
+    try {
+      final updated = await DioClient.instance.get(ApiEndpoints.bookingDetail(_orderId!));
+      final data = updated.data['data'] as Map<String, dynamic>? ?? {};
+      final ps = '${data['payment_status'] ?? ''}';
+      setState(() {
+        _orderData = data;
+        _paymentConfirmed = ps == 'paid' || ps == 'success' || ps == 'completed';
+        _paymentPending = ps == 'pending';
+      });
+    } catch (_) {
+      if (mounted) AppSnackBar.show(context, AppLocalizations.of(context)!.orderFailed, type: SnackBarType.error);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Text(_getStepTitle()),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => context.pop(),
         ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
       body: _loadingItem
           ? const Center(child: AppShimmer(height: 400))
@@ -301,11 +391,16 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
 
   String _getStepTitle() {
     final l = AppLocalizations.of(context)!;
+    if (_currentStep == 4) {
+      if (_paymentConfirmed || _orderIsPaid) return l.paymentSuccess;
+      if (_paymentPending || _orderIsPending) return l.waitingVerification;
+      return l.paymentMethod;
+    }
     switch (_currentStep) {
       case 0: return l.eventDetail;
       case 1: return l.contactInfo;
       case 2: return l.voucherAndDiscount;
-      case 3: return l.confirm;
+      case 3: return l.paymentConfirmation;
       default: return l.checkout;
     }
   }
@@ -313,50 +408,51 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   Widget _buildStepIndicator() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg, vertical: AppSizes.md),
-      child: Row(
-        children: [
-          for (int i = 0; i < 4; i++) ...[
-            // Circle indikator step
-            Container(
-              width: 32, height: 32,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: (i <= _currentStep) ? AppColors.primaryColor : AppColors.dividerColor,
-              ),
-              child: Center(
-                child: (i < _currentStep)
-                    ? const Icon(Icons.check, size: 16, color: Colors.white)
-                    : Text(
-                        '${i + 1}',
-                        style: TextStyle(
-                          color: (i <= _currentStep) ? Colors.white : AppColors.textTertiary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            for (int i = 0; i < 5; i++) ...[
+              Container(
+                width: 32, height: 32,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: (i <= _currentStep) ? AppColors.primaryColor : AppColors.dividerColor,
+                ),
+                child: Center(
+                  child: (i < _currentStep)
+                      ? const Icon(Icons.check, size: 16, color: Colors.white)
+                      : Text(
+                          '${i + 1}',
+                          style: TextStyle(
+                            color: (i <= _currentStep) ? Colors.white : AppColors.textTertiary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
+                ),
               ),
-            ),
-            // Garis penghubung (hanya jika bukan step terakhir)
-            if (i < 3)
-              Expanded(
-                child: Container(
+              if (i < 4)
+                Container(
+                  width: 48,
                   height: 2,
                   color: (i < _currentStep) ? AppColors.primaryColor : AppColors.dividerColor,
                 ),
-              ),
+            ],
           ],
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildStepContent() {
+    if (_currentStep == 4) return _buildStep5();
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSizes.md),
       child: Form(
         key: _formKey,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (_currentStep == 0) _buildStep1(),
             if (_currentStep == 1) _buildStep2(),
@@ -526,7 +622,9 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
 
   Widget _buildStep3() {
     final l = AppLocalizations.of(context)!;
-    final total = _getTotalPrice();
+    final total = _getBaseTotal();
+    final voucherState = ref.watch(voucherProvider);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -547,10 +645,25 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
               label: l.check,
               onPressed: _voucherChecking ? null : _checkVoucher,
               type: ButtonType.outline,
+              width: 120,
               loading: _voucherChecking,
             ),
           ],
         ),
+        if (!voucherState.loading && voucherState.vouchers.isNotEmpty) ...[
+          SizedBox(height: AppSizes.md),
+          Text(l.myVouchers, style: AppTextStyles.titleSmall),
+          SizedBox(height: AppSizes.sm),
+          SizedBox(
+            height: 72,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: voucherState.vouchers.length,
+              separatorBuilder: (_, _) => const SizedBox(width: AppSizes.sm),
+              itemBuilder: (_, i) => _buildVoucherChip(voucherState.vouchers[i], l),
+            ),
+          ),
+        ],
         if (_voucherValid) ...[
           SizedBox(height: AppSizes.md),
           Container(
@@ -591,30 +704,179 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
 
   Widget _buildStep4() {
     final l = AppLocalizations.of(context)!;
-    final total = _getTotalPrice();
+    final total = _getBaseTotal();
+    final finalPrice = _getFinalPrice();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(l.orderSummary, style: AppTextStyles.titleMedium),
-        SizedBox(height: AppSizes.lg),
-        _buildSummaryCard(),
-        SizedBox(height: AppSizes.md),
-        _buildSummaryRow(l.orderItems, _getItemName()),
-        _buildSummaryRow(l.quantity, '$_quantity'),
-        _buildSummaryRow(l.date, _eventDate != null ? Formatters.date(_eventDate!.toIso8601String()) : '-'),
-        _buildSummaryRow(l.eventTime, _eventTime != null ? '${_eventTime!.hour.toString().padLeft(2, '0')}:${_eventTime!.minute.toString().padLeft(2, '0')} ${l.timezoneWIB}' : '-'),
-        _buildSummaryRow(l.whatsapp, _whatsappController.text.trim()),
-        if (_notesController.text.trim().isNotEmpty)
-          _buildSummaryRow(l.notes, _notesController.text.trim()),
+        _buildItemPreview(),
         SizedBox(height: AppSizes.lg),
         const Divider(),
-        SizedBox(height: AppSizes.sm),
         _buildPriceRow(l.subtotal, Formatters.currency(total)),
         if (_voucherValid)
           _buildPriceRow(l.discountVoucher, '- ${Formatters.currency(_discountAmount)}', color: AppColors.successColor),
         const Divider(height: AppSizes.md),
-        _buildPriceRow(l.total, Formatters.currency(_getFinalPrice()), bold: true),
+        _buildPriceRow(l.total, Formatters.currency(finalPrice), bold: true),
+        SizedBox(height: AppSizes.sm),
+        if (_eventDate != null || _eventTime != null) ...[
+          const Divider(),
+          if (_eventDate != null)
+            _buildPriceRow(l.eventDate, Formatters.date(_eventDate!.toIso8601String())),
+          if (_eventTime != null)
+            _buildPriceRow(l.eventTime, '${_eventTime!.hour.toString().padLeft(2, '0')}:${_eventTime!.minute.toString().padLeft(2, '0')} ${l.timezoneWIB}'),
+        ],
+        if (_nameController.text.isNotEmpty || _whatsappController.text.isNotEmpty) ...[
+          const Divider(),
+          if (_nameController.text.isNotEmpty)
+            _buildPriceRow(l.fullName, _nameController.text),
+          if (_whatsappController.text.isNotEmpty)
+            _buildPriceRow(l.whatsapp, _whatsappController.text),
+        ],
       ],
+    );
+  }
+
+  Widget _buildStep5() {
+    final l = AppLocalizations.of(context)!;
+    final order = _orderData;
+    final payStatus = '${order?['payment_status'] ?? 'unpaid'}';
+    final isPaid = _paymentConfirmed || payStatus == 'paid' || payStatus == 'success' || payStatus == 'completed';
+    final isPending = _paymentPending || payStatus == 'pending';
+
+    final paymentMethods = (order?['payment_methods'] as List?)
+            ?.cast<Map<String, dynamic>>()
+            .map((m) => PaymentMethodInfo.fromJson(m))
+            .toList() ??
+        [];
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppSizes.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Sukses ───────────────────────────────────────────────────
+          if (isPaid) ...[
+            Center(
+              child: Column(
+                children: [
+                  const Icon(Icons.check_circle, size: 72, color: AppColors.successColor),
+                  const SizedBox(height: 16),
+                  Text(l.paymentSuccess, style: AppTextStyles.titleLarge.copyWith(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 8),
+                  Text(l.paymentSuccessDesc, style: AppTextStyles.bodyMedium, textAlign: TextAlign.center),
+                  const SizedBox(height: 24),
+                  if (_orderId != null)
+                    Text('#$_orderId', style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
+                ],
+              ),
+            ),
+          ] else if (isPending) ...[
+            // ── Menunggu verifikasi admin ──────────────────────────────
+            Center(
+              child: Column(
+                children: [
+                  const Icon(Icons.access_time, size: 72, color: AppColors.warningColor),
+                  const SizedBox(height: 16),
+                  Text(l.waitingVerification, style: AppTextStyles.titleLarge.copyWith(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 8),
+                  Text(l.waitingVerificationDesc, style: AppTextStyles.bodyMedium, textAlign: TextAlign.center),
+                  const SizedBox(height: 24),
+                  if (_orderId != null) ...[
+                    SizedBox(
+                      width: double.infinity,
+                      child: AppButton(
+                        label: l.uploadProof,
+                        onPressed: () => uploadPaymentProof(context, ref, _orderId!, onUploaded: _refreshAfterUpload),
+                        type: ButtonType.outline,
+                      ),
+                    ),
+                    const SizedBox(height: AppSizes.sm),
+                  ],
+                  if (_orderId != null)
+                    Text('#$_orderId', style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
+                ],
+              ),
+            ),
+          ] else ...[
+            // ── Pilih metode bayar ─────────────────────────────────────
+            Text(l.paymentMethod, style: AppTextStyles.titleMedium),
+            const SizedBox(height: AppSizes.sm),
+            Text(l.selectPaymentMethod, style: AppTextStyles.bodySmall),
+            const SizedBox(height: AppSizes.md),
+            PaymentMethodSelector(
+              methods: paymentMethods,
+              selectedId: null,
+              onSelect: (id) {
+                PaymentMethodInfo? method;
+                for (final m in paymentMethods) {
+                  if (m.id == id) { method = m; break; }
+                }
+                if (method != null) _openPaymentMethod(method);
+              },
+            ),
+            const SizedBox(height: AppSizes.md),
+            Text(l.confirmAfterTransferHint,
+              style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVoucherChip(VoucherModel voucher, AppLocalizations l) {
+    final isSelected = _appliedVoucher?.id == voucher.id;
+    final expired = voucher.isExpired || !voucher.isActive;
+    final discountLabel = voucher.isPercentage
+        ? '${voucher.discountAmount.toInt()}%'
+        : Formatters.currency(voucher.discountAmount.toInt());
+
+    return GestureDetector(
+      onTap: expired
+          ? null
+          : () {
+              if (voucher.code != null) _voucherController.text = voucher.code!;
+              _checkVoucher();
+            },
+      child: Container(
+        width: 140,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          gradient: expired
+              ? null
+              : AppColors.primaryGradient,
+          color: expired
+              ? AppColors.dividerColor
+              : isSelected
+                  ? null
+                  : AppColors.primaryColor.withAlpha(20),
+          borderRadius: BorderRadius.circular(10),
+          border: isSelected
+              ? Border.all(color: AppColors.primaryColor, width: 2)
+              : null,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              discountLabel,
+              style: AppTextStyles.labelMedium.copyWith(
+                color: expired ? AppColors.textTertiary : (isSelected ? Colors.white : AppColors.primaryColor),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              (voucher.name != null && voucher.name!.isNotEmpty) ? voucher.name! : (voucher.code ?? 'Voucher'),
+              style: AppTextStyles.labelSmall.copyWith(
+                color: expired ? AppColors.textTertiary : (isSelected ? Colors.white70 : AppColors.textSecondary),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -656,72 +918,56 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     );
   }
 
-  Widget _buildSummaryCard() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: AppColors.secondaryColor.withAlpha(30),
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  _getItemImage(),
-                  width: 48, height: 48, fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => Container(
-                    width: 48, height: 48,
-                    color: AppColors.shimmerBase,
-                    child: Icon(Icons.image, color: AppColors.textTertiary),
-                  ),
-                ),
-              ),
-              SizedBox(width: AppSizes.sm),
-              Expanded(child: Text(_getItemName(), style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600))),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSummaryRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 80,
-            child: Text(label, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
-          ),
-          Expanded(child: Text(value, style: AppTextStyles.bodyMedium)),
-        ],
-      ),
-    );
-  }
-
   Widget _buildPriceRow(String label, String value, {bool bold = false, Color? color}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(label, style: bold ? AppTextStyles.titleSmall : AppTextStyles.bodyMedium),
-          Text(value, style: (bold ? AppTextStyles.titleMedium : AppTextStyles.bodyMedium).copyWith(color: color)),
+          const SizedBox(width: AppSizes.sm),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              overflow: TextOverflow.ellipsis,
+              style: (bold ? AppTextStyles.titleMedium : AppTextStyles.bodyMedium).copyWith(color: color),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildBottomBar() {
+  Widget? _buildBottomBar() {
     final l = AppLocalizations.of(context)!;
-    final isLastStep = _currentStep == 3;
+    if (_currentStep == 4) {
+      final isPaid = _paymentConfirmed || _orderIsPaid;
+      final isPending = _paymentPending || _orderIsPending;
+
+      if (isPaid || isPending) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(AppSizes.md, AppSizes.sm, AppSizes.md, AppSizes.md),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceColor,
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -2))],
+          ),
+          child: SafeArea(
+            child: Row(
+              children: [
+                Expanded(
+                  child: AppButton(
+                    label: l.viewOrder,
+                    onPressed: () => context.push('/order/$_orderId'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+      return null;
+    }
+    final isConfirmStep = _currentStep == 3;
     return Container(
       padding: const EdgeInsets.fromLTRB(AppSizes.md, AppSizes.sm, AppSizes.md, AppSizes.md),
       decoration: BoxDecoration(
@@ -732,17 +978,13 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
         child: Row(
           children: [
             if (_currentStep > 0)
-              AppButton(
-                label: l.back,
-                onPressed: _prevStep,
-                type: ButtonType.text,
-              ),
+              AppButton(label: l.back, onPressed: _prevStep, type: ButtonType.text),
             if (_currentStep > 0) SizedBox(width: AppSizes.md),
             Expanded(
               child: AppButton(
-                label: isLastStep ? l.confirmAndPay : l.proceed,
+                label: isConfirmStep ? l.confirmAndPay : l.proceed,
                 loading: _submitting,
-                onPressed: isLastStep ? _handleCheckout : _nextStep,
+                onPressed: isConfirmStep ? _handleCheckout : _nextStep,
               ),
             ),
           ],

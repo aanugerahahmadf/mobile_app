@@ -11,6 +11,7 @@ class AppColors {
   static const Color primaryDark = Color(0xFF0F2440);
   static Color get primaryLight => _isDark ? const Color(0xFF1A237E) : const Color(0xFFEEF2FF);
   static const Color accentColor = Color(0xFFC9A94E);
+  static Color get primaryTextColor => _isDark ? accentColor : primaryColor;
   static Color get secondaryColor => _isDark ? _secondaryColorDark : _secondaryColorLight;
 
   // Dynamic text colors (switch with theme)

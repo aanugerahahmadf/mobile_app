@@ -4,10 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/constants/app_sizes.dart';
-import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/app_filter_widgets.dart';
 import '../../../../core/api/dio_client.dart';
 import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/utils/number_utils.dart';
+import '../../../../core/errors/localized_error.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../data/models/item_model.dart';
@@ -27,7 +28,9 @@ class _CatalogCombinedPageState extends ConsumerState<CatalogCombinedPage> {
   final List<_CatalogItem> _items = [];
   String? _selectedSort;
   String? _selectedCategoryId;
-  List<Map<String, dynamic>> _categories = [];
+  String? _selectedType;
+  List<Map<String, dynamic>> _packageCategories = [];
+  List<Map<String, dynamic>> _productCategories = [];
 
   @override
   void initState() {
@@ -38,16 +41,40 @@ class _CatalogCombinedPageState extends ConsumerState<CatalogCombinedPage> {
 
   Future<void> _fetchCategories() async {
     try {
-      final res = await DioClient.instance.get(ApiEndpoints.categories);
-      final data = res.data['data'];
-      if (data is List && mounted) {
-        setState(() => _categories = data.cast<Map<String, dynamic>>());
+      final results = await Future.wait([
+        DioClient.instance.get('${ApiEndpoints.categories}?type=package'),
+        DioClient.instance.get('${ApiEndpoints.categories}?type=product'),
+      ]);
+      if (mounted) {
+        setState(() {
+          _packageCategories = _extractCategoryList(results[0]);
+          _productCategories = _extractCategoryList(results[1]);
+        });
       }
     } catch (_) {}
   }
 
+  List<Map<String, dynamic>> _extractCategoryList(dynamic res) {
+    final data = res.data['data'];
+    if (data is List) return data.cast<Map<String, dynamic>>();
+    return [];
+  }
+
+  List<Map<String, dynamic>> get _currentCategories {
+    if (_selectedType == 'packages') return _packageCategories;
+    if (_selectedType == 'products') return _productCategories;
+    final all = <String, Map<String, dynamic>>{};
+    for (final c in _packageCategories) { all['${c['id']}'] = c; }
+    for (final c in _productCategories) { all['${c['id']}'] = c; }
+    return all.values.toList();
+  }
+
   List<_CatalogItem> get _filteredItems {
     var items = List<_CatalogItem>.from(_items);
+
+    if (_selectedType != null) {
+      items = items.where((e) => e.type == _selectedType).toList();
+    }
 
     if (_selectedCategoryId != null) {
       items = items.where((e) => '${e.data['category_id']}' == _selectedCategoryId).toList();
@@ -74,8 +101,8 @@ class _CatalogCombinedPageState extends ConsumerState<CatalogCombinedPage> {
     try {
       final repo = ref.read(catalogRepositoryProvider);
       final results = await Future.wait([
-        repo.getPackages(page: 1),
-        repo.getProducts(page: 1),
+        repo.getPackages(),
+        repo.getProducts(),
       ]);
       final packages = _extractList(results[0]).map((e) => _CatalogItem(e, 'packages')).toList();
       final products = _extractList(results[1]).map((e) => _CatalogItem(e, 'products')).toList();
@@ -100,7 +127,7 @@ class _CatalogCombinedPageState extends ConsumerState<CatalogCombinedPage> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text('${l.all} ${l.catalog}'), centerTitle: true),
+      appBar: AppBar(title: Text('${l.all} ${l.catalog}'), centerTitle: true, backgroundColor: Colors.transparent, elevation: 0),
       body: Column(
         children: [
           _buildFilterChips(l),
@@ -112,13 +139,13 @@ class _CatalogCombinedPageState extends ConsumerState<CatalogCombinedPage> {
 
   Widget _buildFilterChips(AppLocalizations l) {
     final sortOptions = [
-      (l.all, null),
       (l.cheapest, 'price_asc'),
       (l.mostExpensive, 'price_desc'),
       (l.newest, 'newest'),
-      ('Rating Tertinggi', 'rating_desc'),
-      ('Rating Terendah', 'rating_asc'),
+      (l.highestRating, 'rating_desc'),
+      (l.lowestRating, 'rating_asc'),
     ];
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppSizes.md, AppSizes.sm, AppSizes.md, 0),
       child: ClipRRect(
@@ -126,70 +153,36 @@ class _CatalogCombinedPageState extends ConsumerState<CatalogCombinedPage> {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
           child: Container(
-            height: 48,
+            padding: const EdgeInsets.symmetric(horizontal: AppSizes.sm, vertical: 6),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(14),
             ),
-            alignment: Alignment.centerLeft,
-            child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: AppSizes.sm),
-        itemCount: sortOptions.length + (_categories.isNotEmpty ? 1 : 0),
-        separatorBuilder: (_, _) => const SizedBox(width: AppSizes.xs),
-        itemBuilder: (_, i) {
-          if (_categories.isNotEmpty && i == 0) {
-            return Center(
-              child: Container(
-                height: 34,
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                decoration: BoxDecoration(
-                  color: AppColors.secondaryColor.withAlpha(50),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: _selectedCategoryId,
-                    hint: Text(l.category, style: const TextStyle(fontSize: 12)),
-                    isDense: true,
-                    items: [
-                      DropdownMenuItem(value: null, child: Text(l.all, style: const TextStyle(fontSize: 12))),
-                      ..._categories.map((c) {
-                        return DropdownMenuItem(
-                          value: '${c['id']}',
-                          child: Text('${c['name']}', style: const TextStyle(fontSize: 12)),
-                        );
-                      }),
-                    ],
-                    onChanged: (v) => setState(() => _selectedCategoryId = v),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_currentCategories.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: StyledCategoryDropdown(
+                      value: _selectedCategoryId,
+                      hint: l.category,
+                      categories: _currentCategories,
+                      onChanged: (v) => setState(() => _selectedCategoryId = v),
+                    ),
                   ),
+                StyledSortChips(
+                  options: sortOptions,
+                  selectedValue: _selectedSort,
+                  onChanged: (v) => setState(() => _selectedSort = v),
                 ),
-              ),
-            );
-          }
-          final chipIdx = _categories.isNotEmpty ? i - 1 : i;
-          final (label, value) = sortOptions[chipIdx];
-          final isSelected = _selectedSort == value;
-          return Center(
-            child: FilterChip(
-              label: Text(
-                label,
-                style: TextStyle(
-                  color: isSelected ? AppColors.primaryColor : AppColors.textSecondary,
-                ),
-              ),
-              selected: isSelected,
-              onSelected: (_) => setState(() => _selectedSort = value),
-              selectedColor: AppColors.secondaryColor,
-              checkmarkColor: AppColors.primaryColor,
+              ],
             ),
-          );
-        },
+          ),
+        ),
       ),
-      ),
-    ),
-  ),
-);
+    );
   }
 
   Widget _buildBody(AppLocalizations l) {
@@ -197,7 +190,7 @@ class _CatalogCombinedPageState extends ConsumerState<CatalogCombinedPage> {
       return const Center(child: CircularProgressIndicator());
     }
     if (_error != null) {
-      return AppErrorState(message: _error!, onRetry: _fetchAll);
+      return AppErrorState(message: LocalizedError.of(l, _error!), onRetry: _fetchAll);
     }
     if (_filteredItems.isEmpty) {
       return AppEmptyState(title: l.catalogEmpty, subtitle: l.catalogEmptyDesc);

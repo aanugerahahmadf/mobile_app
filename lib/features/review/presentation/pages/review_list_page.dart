@@ -1,21 +1,27 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/errors/localized_error.dart';
 import '../../../../core/widgets/app_button.dart';
-import '../../../../core/widgets/app_empty_state.dart';
-import '../../../../core/utils/formatters.dart';
+import '../../../../core/widgets/app_snackbar.dart';
+import '../../../../core/widgets/media_viewer.dart';
 import '../providers/review_provider.dart';
 
 class ReviewListPage extends ConsumerStatefulWidget {
   final String packageId;
+  final String productId;
   final String packageName;
 
   const ReviewListPage({
     super.key,
-    required this.packageId,
+    this.packageId = '',
+    this.productId = '',
     this.packageName = '',
   });
 
@@ -26,15 +32,7 @@ class ReviewListPage extends ConsumerStatefulWidget {
 class _ReviewListPageState extends ConsumerState<ReviewListPage> {
   final _commentController = TextEditingController();
   int _rating = 5;
-  bool _showForm = false;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(reviewProvider.notifier).fetchReviews(widget.packageId);
-    });
-  }
+  List<String> _photoPaths = [];
 
   @override
   void dispose() {
@@ -43,27 +41,31 @@ class _ReviewListPageState extends ConsumerState<ReviewListPage> {
   }
 
   Future<void> _submitReview() async {
+    final l = AppLocalizations.of(context)!;
     final comment = _commentController.text.trim();
-    if (comment.isEmpty) return;
+    if (comment.isEmpty) {
+      AppSnackBar.show(context, l.writeYourReview, type: SnackBarType.warning);
+      return;
+    }
+    if (widget.packageId.isEmpty && widget.productId.isEmpty) {
+      AppSnackBar.show(context, l.reviewFailed, type: SnackBarType.error);
+      return;
+    }
 
     try {
       await ref.read(reviewProvider.notifier).createReview({
-        'package_id': widget.packageId,
+        if (widget.packageId.isNotEmpty) 'package_id': widget.packageId,
+        if (widget.productId.isNotEmpty) 'product_id': widget.productId,
         'rating': _rating,
         'comment': comment,
-      });
-      _commentController.clear();
-      setState(() => _showForm = false);
+      }, photoPaths: _photoPaths);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.reviewSubmitted)),
-        );
+        AppSnackBar.show(context, l.reviewSubmitted, type: SnackBarType.success);
+        context.pop(true);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${AppLocalizations.of(context)!.reviewFailed}: ${e.toString()}')),
-        );
+        AppSnackBar.show(context, '${l.reviewFailed}: ${LocalizedError.of(l, e.toString())}', type: SnackBarType.error);
       }
     }
   }
@@ -71,165 +73,190 @@ class _ReviewListPageState extends ConsumerState<ReviewListPage> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final state = ref.watch(reviewProvider);
+    final submitting = ref.watch(reviewProvider).submitting;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l.reviews),
+        title: Text(l.writeReview),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
-      body: Column(
-        children: [
-          if (!_showForm)
-            Padding(
-              padding: const EdgeInsets.all(AppSizes.md),
-              child: AppButton(
-                label: l.writeReview,
-                icon: Icons.edit,
-                onPressed: () => setState(() => _showForm = true),
-                type: ButtonType.outline,
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSizes.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (widget.packageName.isNotEmpty) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(AppSizes.md),
+                decoration: BoxDecoration(
+                  color: AppColors.secondaryColor.withAlpha(30),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(widget.packageName, style: AppTextStyles.titleMedium),
+              ),
+              const SizedBox(height: AppSizes.lg),
+            ],
+            Text(l.rating, style: AppTextStyles.bodyMedium),
+            const SizedBox(height: AppSizes.xs),
+            Row(
+              children: List.generate(
+                5,
+                (i) => IconButton(
+                  icon: Icon(
+                    i < _rating ? Icons.star : Icons.star_border,
+                    color: AppColors.warningColor,
+                    size: 32,
+                  ),
+                  onPressed: () => setState(() => _rating = i + 1),
+                ),
               ),
             ),
-          if (_showForm) _buildReviewForm(l),
-          Expanded(
-            child: state.loading
-                ? const Center(child: CircularProgressIndicator())
-                : state.error != null
-                    ? Center(child: Text(state.error!, style: AppTextStyles.bodyMedium))
-                    : state.reviews.isEmpty
-                        ? AppEmptyState(
-                            title: l.noReviews,
-                            subtitle: l.beFirstReview,
-                            icon: Icons.star_outline,
-                          )
-                        : RefreshIndicator(
-                            onRefresh: () => ref.read(reviewProvider.notifier).fetchReviews(widget.packageId),
-                            child: ListView.builder(
-                              padding: const EdgeInsets.all(AppSizes.md),
-                              itemCount: state.reviews.length,
-                              itemBuilder: (context, index) {
-                                final review = state.reviews[index];
-                                final userName = review['user_name'] as String? ?? 'Pengguna';
-                                final rating = (review['rating'] as num?)?.toInt() ?? 0;
-                                final comment = review['comment'] as String? ?? '';
-                                final time = review['created_at'] as String? ?? '';
-
-                                return Card(
-                                  margin: const EdgeInsets.only(bottom: AppSizes.sm),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(AppSizes.md),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            CircleAvatar(
-                                              radius: 16,
-                                              backgroundColor: AppColors.secondaryColor,
-                                              child: Text(
-                                                userName[0].toUpperCase(),
-                                                style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primaryColor),
-                                              ),
-                                            ),
-                                            SizedBox(width: AppSizes.sm),
-                                            Expanded(
-                                              child: Text(userName, style: AppTextStyles.bodyMedium),
-                                            ),
-                                            Row(
-                                              children: List.generate(
-                                                5,
-                                                (i) => Icon(
-                                                  Icons.star,
-                                                  size: 14,
-                                                  color: i < rating ? AppColors.warningColor : AppColors.textTertiary,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        if (comment.isNotEmpty) ...[
-                                          SizedBox(height: AppSizes.sm),
-                                          Text(comment, style: AppTextStyles.bodySmall),
-                                        ],
-                                        SizedBox(height: AppSizes.xs),
-                                        Text(
-                                          Formatters.timeAgo(time),
-                                          style: AppTextStyles.labelSmall,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-          ),
-        ],
+            const SizedBox(height: AppSizes.md),
+            TextField(
+              controller: _commentController,
+              decoration: InputDecoration(
+                hintText: l.writeYourReview,
+                border: const OutlineInputBorder(),
+              ),
+              maxLines: 4,
+            ),
+            const SizedBox(height: AppSizes.md),
+            _buildPhotoPicker(l),
+            const SizedBox(height: AppSizes.lg),
+            AppButton(
+              label: l.send,
+              loading: submitting,
+              onPressed: submitting ? null : _submitReview,
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildReviewForm(AppLocalizations l) {
-    return Container(
-      padding: const EdgeInsets.all(AppSizes.md),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceColor,
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10)],
+  Future<void> _pickPhotos() async {
+    final l = AppLocalizations.of(context)!;
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      builder: (_) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_camera),
+              title: Text(l.camera),
+              onTap: () => Navigator.pop(context, 'camera'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.videocam),
+              title: Text(l.takeVideo),
+              onTap: () => Navigator.pop(context, 'camera_video'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: Text(l.gallery),
+              onTap: () => Navigator.pop(context, 'gallery'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.folder_open),
+              title: Text(l.file),
+              onTap: () => Navigator.pop(context, 'file'),
+            ),
+          ],
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(l.rating, style: AppTextStyles.bodyMedium),
-              Row(
-                children: List.generate(
-                  5,
-                  (i) => IconButton(
-                    icon: Icon(
-                      i < _rating ? Icons.star : Icons.star_border,
-                      color: AppColors.warningColor,
-                      size: 28,
+    );
+    if (choice == null) return;
+    final remaining = 6 - _photoPaths.length;
+    if (remaining <= 0) return;
+
+    final picker = ImagePicker();
+    final List<String> accepted = [];
+    switch (choice) {
+      case 'camera':
+        final shot = await picker.pickImage(source: ImageSource.camera, maxWidth: 1280, imageQuality: 85);
+        if (shot != null) accepted.add(shot.path);
+      case 'camera_video':
+        final video = await picker.pickVideo(source: ImageSource.camera, maxDuration: const Duration(minutes: 5));
+        if (video != null) accepted.add(video.path);
+      case 'gallery':
+        final picked = await picker.pickMultipleMedia(limit: remaining);
+        for (final p in picked) {
+          if (accepted.length >= remaining) break;
+          accepted.add(p.path);
+        }
+      case 'file':
+        final result = await FilePicker.platform.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: const ['jpg', 'jpeg', 'png', 'webp', 'gif', 'heic', 'mp4', 'mov', 'm4v', 'webm', '3gp'],
+          allowMultiple: true,
+        );
+        for (final f in result?.files ?? <PlatformFile>[]) {
+          if (accepted.length >= remaining) break;
+          if (f.path != null) accepted.add(f.path!);
+        }
+    }
+    if (accepted.isNotEmpty && mounted) {
+      setState(() => _photoPaths = [..._photoPaths, ...accepted]);
+    }
+  }
+
+  void _removePhoto(int index) {
+    setState(() => _photoPaths = List.of(_photoPaths)..removeAt(index));
+  }
+
+  Widget _buildPhotoPicker(AppLocalizations l) {
+    final size = (MediaQuery.of(context).size.width - 32) / 3;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: [
+            ..._photoPaths.asMap().entries.map((e) => Stack(
+                  children: [
+                    LocalMediaThumb(path: e.value, width: size, height: size),
+                    Positioned(
+                      top: 2,
+                      right: 2,
+                      child: InkWell(
+                        onTap: () => _removePhoto(e.key),
+                        child: Container(
+                          padding: const EdgeInsets.all(3),
+                          decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+                          child: const Icon(Icons.close, size: 12, color: Colors.white),
+                        ),
+                      ),
                     ),
-                    onPressed: () => setState(() => _rating = i + 1),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
+                  ],
+                )),
+            if (_photoPaths.length < 6)
+              InkWell(
+                onTap: _pickPhotos,
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  width: size,
+                  height: size,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: AppColors.dividerColor),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.add_a_photo, color: AppColors.textTertiary),
+                      const SizedBox(height: 4),
+                      Text(l.uploadPhoto, style: AppTextStyles.bodyMedium),
+                    ],
                   ),
                 ),
               ),
-            ],
-          ),
-          SizedBox(height: AppSizes.sm),
-          TextField(
-            controller: _commentController,
-            decoration: InputDecoration(
-              hintText: l.writeYourReview,
-              border: const OutlineInputBorder(),
-            ),
-            maxLines: 3,
-          ),
-          SizedBox(height: AppSizes.sm),
-          Row(
-            children: [
-              Expanded(
-                child: AppButton(
-                  label: l.cancel,
-                  onPressed: () => setState(() => _showForm = false),
-                  type: ButtonType.outline,
-                ),
-              ),
-              SizedBox(width: AppSizes.sm),
-              Expanded(
-                child: AppButton(
-                  label: l.send,
-                  loading: ref.watch(reviewProvider).submitting,
-                  onPressed: _submitReview,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
+          ],
+        ),
+      ],
     );
   }
 }

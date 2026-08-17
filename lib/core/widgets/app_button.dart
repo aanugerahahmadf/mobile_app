@@ -41,11 +41,11 @@ class AppButton extends StatelessWidget {
       );
     } else {
       child = Row(
-        mainAxisSize: MainAxisSize.max,
+        mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           if (icon != null) ...[Icon(icon, size: 20), const SizedBox(width: 8)],
-          Expanded(child: Text(label, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center)),
+          Flexible(child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center)),
         ],
       );
     }
@@ -110,12 +110,12 @@ class AppButton extends StatelessWidget {
             style: OutlinedButton.styleFrom(
               side: BorderSide(
                 color: isDisabled
-                    ? AppColors.primaryColor.withAlpha(77)
-                    : AppColors.primaryColor,
+                    ? AppColors.accentColor.withAlpha(77)
+                    : AppColors.accentColor,
               ),
               foregroundColor: isDisabled
-                  ? AppColors.primaryColor.withAlpha(128)
-                  : AppColors.primaryColor,
+                  ? AppColors.accentColor.withAlpha(128)
+                  : AppColors.accentColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppSizes.buttonRadius),
               ),
@@ -129,8 +129,8 @@ class AppButton extends StatelessWidget {
           onPressed: isDisabled ? null : onPressed,
           style: TextButton.styleFrom(
             foregroundColor: isDisabled
-                ? AppColors.primaryColor.withAlpha(128)
-                : AppColors.primaryColor,
+                ? AppColors.accentColor.withAlpha(128)
+                : AppColors.accentColor,
             textStyle: const TextStyle(fontWeight: FontWeight.w600),
             padding: padding,
           ),

@@ -27,7 +27,7 @@ class AdminCrudPage extends ConsumerStatefulWidget {
   final String? iconField;
   final String? imageField;
   final FormDataTransformer? transformData;
-  final Future<Map<String, dynamic>?> Function(Map<String, dynamic>? item, Map<String, List<Map<String, dynamic>>> preloadedOptions)? customFormBuilder;
+  final Future<Map<String, dynamic>?> Function(BuildContext context, Map<String, dynamic>? item, Map<String, List<Map<String, dynamic>>> preloadedOptions)? customFormBuilder;
 
   const AdminCrudPage({
     super.key,
@@ -118,7 +118,7 @@ class _AdminCrudPageState extends ConsumerState<AdminCrudPage> {
     }
     if (!mounted) return;
     final result = widget.customFormBuilder != null
-        ? await widget.customFormBuilder!(item, preloaded)
+        ? await widget.customFormBuilder!(context, item, preloaded)
         : await showModalBottomSheet<Map<String, dynamic>>(
             context: context,
             isScrollControlled: true,
@@ -187,7 +187,7 @@ class _AdminCrudPageState extends ConsumerState<AdminCrudPage> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text(widget.title)),
+      appBar: AppBar(title: Text(widget.title), backgroundColor: Colors.transparent, elevation: 0),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showForm(),
         child: const Icon(Icons.add),

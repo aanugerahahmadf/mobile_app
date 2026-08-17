@@ -1,7 +1,10 @@
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/reference/dropdown_option.dart';
+import '../../../../core/reference/dropdown_options_provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -10,15 +13,15 @@ import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
-import '../../../../core/widgets/app_date_picker_field.dart';
 import '../../../../core/widgets/app_country_picker_field.dart';
 import '../../../../core/widgets/app_region_picker_field.dart';
 import '../../../../core/widgets/app_snackbar.dart';
+import '../../../../core/widgets/whatsapp_otp_verifier.dart';
 import '../../../../core/utils/validators.dart';
-import '../../../../core/utils/ktp_utils.dart';
-import '../../../../core/utils/passport_utils.dart';
-import '../../../../core/utils/sim_utils.dart';
-import '../../../../core/utils/npwp_utils.dart';
+import '../../../../core/utils/identity_document_utils.dart';
+import '../../../../core/utils/profile_media_picker.dart';
+import '../../../../core/utils/camera_scan_utils.dart';
+import '../../../../core/widgets/media_viewer.dart';
 import '../../../../core/utils/country_codes.dart';
 import '../providers/profile_provider.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
@@ -43,9 +46,8 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
   final _lastNameController   = TextEditingController();
   final _usernameController   = TextEditingController();
   final _whatsappController   = TextEditingController();
-  final _nikController        = TextEditingController();
+  final _ktpNumberController        = TextEditingController();
   final _birthPlaceController = TextEditingController();
-  final _birthDateController  = TextEditingController();
   final _countryController    = TextEditingController();
   final _emailController      = TextEditingController();
   final _postalCodeController = TextEditingController();
@@ -59,13 +61,22 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
   String _occupation = '';
   String _incomeRange = '';
   String _sourceOfFunds = '';
+  OverlayEntry? _dropdownOverlay;
+  Map<String, List<DropdownOption>> _dropdownOptions = {};
+  bool _optionsLoaded = false;
   String _identityType  = 'ktp';
   bool   _namesLocked   = false;
+  bool   _whatsappVerified = false;
+  String _initialWhatsapp = '';
+  bool   _dataLoaded    = false;
   bool   _saving        = false;
   File?  _avatarFile;
   File?  _ktpFile;
   File?  _selfieFile;
   File?  _faceScanFile;
+  Map<String, dynamic>? _ktpAiResult;
+  Map<String, dynamic>? _selfieAiResult;
+  Map<String, dynamic>? _faceAiResult;
 
   int?   _provinceId;
   int?   _cityId;
@@ -83,9 +94,11 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
     _lastNameController.text.trim(),
   ].where((s) => s.isNotEmpty).join(' ');
 
+  bool get _faceAiFailed => (_faceAiResult?['face_verified'] as bool?) == false;
+
   String _identityNumberLabel(AppLocalizations l) {
     switch (_identityType) {
-      case 'ktp':      return l.nikLabel;
+      case 'ktp':      return l.ktpNumberLabel;
       case 'passport': return l.passportLabel;
       case 'sim':      return l.simLabel;
       case 'npwp':     return l.npwpLabel;
@@ -99,7 +112,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
       case 'username':    return l.fieldUsername;
       case 'avatar':      return l.fieldAvatar;
       case 'whatsapp':    return l.fieldWhatsapp;
-      case 'nik':         return l.fieldNik;
+      case 'ktp_number':  return l.fieldKtpNumber;
       case 'birth':       return l.fieldBirth;
       case 'country':     return l.fieldCountry;
       case 'email':       return l.fieldEmail;
@@ -126,7 +139,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
       case 'username':    return l.subtitleUsername;
       case 'avatar':      return l.subtitleAvatar;
       case 'whatsapp':    return l.subtitleWhatsapp;
-      case 'nik':         return l.subtitleNik;
+      case 'ktp_number':  return l.subtitleKtpNumber;
       case 'birth':       return l.subtitleBirth;
       case 'country':     return l.subtitleCountry;
       case 'email':       return l.subtitleEmail;
@@ -147,10 +160,49 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
     }
   }
 
+  String _formatBirthDate(DateTime d) =>
+      '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+
+  DateTime? _parseBackendBirthDate(String? s) {
+    if (s == null || s.isEmpty) return null;
+    final m = RegExp(r'^(\d{4})-(\d{2})-(\d{2})$').firstMatch(s.trim());
+    if (m == null) return null;
+    return DateTime(int.parse(m.group(1)!), int.parse(m.group(2)!), int.parse(m.group(3)!));
+  }
+
+  String _extractBirthPlace(String combined) {
+    final t = combined.trim();
+    final m = RegExp(r'[,\s]*\d{2}/\d{2}/\d{4}\s*$').firstMatch(t);
+    if (m != null) return t.substring(0, m.start).trim();
+    return t;
+  }
+
+  String? _extractBirthDate(String combined) {
+    final m = RegExp(r'(\d{2})/(\d{2})/(\d{4})\s*$').firstMatch(combined.trim());
+    if (m == null) return null;
+    return '${m.group(3)}-${m.group(2)}-${m.group(1)}';
+  }
+
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadFromProfile());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadFromProfile();
+      // Verifikasi wajah profil: otomatis buka scanner begitu halaman terbuka.
+      if (widget.fieldKey == 'face_scan' && mounted) {
+        _openFaceScanner();
+      }
+    });
+  }
+
+  Future<void> _openFaceScanner() async {
+    final result = await context.push<String>('/face-scanner');
+    if (result != null && mounted) {
+      setState(() {
+        _faceScanFile = File(result);
+        _faceAiResult = null;
+      });
+    }
   }
 
   void _loadFromProfile() {
@@ -162,7 +214,11 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
     _lastNameController.text   = userData['last_name']  as String? ?? '';
     _usernameController.text   = userData['username']   as String? ?? '';
     _birthPlaceController.text = userData['birth_place'] as String? ?? '';
-    _birthDateController.text  = userData['birth_date']  as String? ?? '';
+    final parsedBirthDate = _parseBackendBirthDate(userData['birth_date'] as String?);
+    if (parsedBirthDate != null) {
+      final bp = _birthPlaceController.text.trim();
+      _birthPlaceController.text = bp.isNotEmpty ? '$bp, ${_formatBirthDate(parsedBirthDate)}' : _formatBirthDate(parsedBirthDate);
+    }
     _countryController.text    = userData['country']     as String? ?? '';
     _emailController.text      = userData['email']       as String? ?? '';
     _postalCodeController.text = userData['postal_code'] as String? ?? '';
@@ -186,6 +242,8 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
 
     // WhatsApp
     String rawWa = (userData['whatsapp'] as String? ?? '').trim();
+    _initialWhatsapp = rawWa;
+    _whatsappVerified = rawWa.isNotEmpty;
     rawWa = rawWa.replaceAll(RegExp(r'[\s\-()]'), '');
 
     if (rawWa.startsWith('+')) {
@@ -217,19 +275,20 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
     if (identityType != null && ['ktp', 'passport', 'sim', 'npwp'].contains(identityType)) {
       _identityType = identityType;
       if (identityType == 'passport') {
-        _nikController.text = userData['passport_number'] as String? ?? '';
+        _ktpNumberController.text = userData['passport_number'] as String? ?? '';
       } else if (identityType == 'sim') {
-        _nikController.text = userData['sim_number'] as String? ?? '';
+        _ktpNumberController.text = userData['sim_number'] as String? ?? '';
       } else if (identityType == 'npwp') {
-        _nikController.text = userData['npwp_number'] as String? ?? '';
+        _ktpNumberController.text = userData['npwp_number'] as String? ?? '';
       } else {
-        _nikController.text = userData['nik'] as String? ?? '';
+        _ktpNumberController.text = userData['ktp_number'] as String? ?? '';
       }
       _namesLocked = true;
     } else {
-      _nikController.text = userData['nik'] as String? ?? '';
-      if (_nikController.text.isNotEmpty) _namesLocked = true;
+      _ktpNumberController.text = userData['ktp_number'] as String? ?? '';
+      if (_ktpNumberController.text.isNotEmpty) _namesLocked = true;
     }
+    _dataLoaded = true;
     setState(() {});
   }
 
@@ -240,20 +299,26 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
     _lastNameController.dispose();
     _usernameController.dispose();
     _whatsappController.dispose();
-    _nikController.dispose();
+    _ktpNumberController.dispose();
     _birthPlaceController.dispose();
-    _birthDateController.dispose();
     _countryController.dispose();
     _emailController.dispose();
     _postalCodeController.dispose();
     _addressController.dispose();
     _motherNameController.dispose();
+    _removeDropdown();
     super.dispose();
   }
 
   Future<void> _save() async {
     final l = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
+
+    if (widget.fieldKey == 'whatsapp' && !_whatsappVerified) {
+      AppSnackBar.show(context, l.whatsappVerifyRequired, type: SnackBarType.warning);
+      return;
+    }
+
     setState(() => _saving = true);
 
     try {
@@ -288,19 +353,19 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
           });
           break;
 
-        case 'nik':
+        case 'ktp_number':
           final data = <String, dynamic>{'identity_type': _identityType};
-          if (_identityType == 'ktp')      data['nik']             = _nikController.text.trim();
-          if (_identityType == 'passport') data['passport_number'] = _nikController.text.trim();
-          if (_identityType == 'sim')      data['sim_number']      = _nikController.text.trim();
-          if (_identityType == 'npwp')     data['npwp_number']     = _nikController.text.trim();
+          if (_identityType == 'ktp')      data['ktp_number']      = _ktpNumberController.text.trim();
+          if (_identityType == 'passport') data['passport_number'] = _ktpNumberController.text.trim();
+          if (_identityType == 'sim')      data['sim_number']      = _ktpNumberController.text.trim();
+          if (_identityType == 'npwp')     data['npwp_number']     = _ktpNumberController.text.trim();
           await notifier.updateProfile(data);
           break;
 
         case 'birth':
           await notifier.updateProfile({
-            'birth_place': _birthPlaceController.text.trim(),
-            'birth_date':  _birthDateController.text.trim(),
+            'birth_place': _extractBirthPlace(_birthPlaceController.text),
+            'birth_date':  _extractBirthDate(_birthPlaceController.text),
           });
           break;
 
@@ -363,16 +428,56 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
           break;
 
         case 'ktp_photo':
-          if (_ktpFile != null) await notifier.uploadKtp(_ktpFile!.path);
+          if (_ktpFile != null) {
+            final result = await notifier.uploadKtp(_ktpFile!.path);
+            if (result != null && mounted) {
+              setState(() => _ktpAiResult = result);
+            }
+          }
           break;
 
         case 'selfie':
-          if (_selfieFile != null) await notifier.uploadSelfie(_selfieFile!.path);
+          if (_selfieFile != null) {
+            final result = await notifier.uploadSelfie(_selfieFile!.path);
+            if (result != null && mounted) {
+              setState(() => _selfieAiResult = result);
+            }
+          }
           break;
 
         case 'face_scan':
-          if (_faceScanFile != null) await notifier.uploadFaceScan(_faceScanFile!.path);
+          if (_faceScanFile != null) {
+            final result = await notifier.uploadFaceScan(_faceScanFile!.path, livenessCompleted: true);
+            if (result != null && mounted) {
+              setState(() => _faceAiResult = result);
+            }
+          }
           break;
+      }
+
+      // Jika file dipilih tetapi upload gagal, jangan lanjut.
+      final uploadFailed =
+          (widget.fieldKey == 'ktp_photo' && _ktpFile != null && _ktpAiResult == null) ||
+          (widget.fieldKey == 'selfie' && _selfieFile != null && _selfieAiResult == null) ||
+          (widget.fieldKey == 'face_scan' && _faceScanFile != null && _faceAiResult == null);
+      if (uploadFailed) {
+        if (mounted) {
+          AppSnackBar.show(context, l.failedSaveData, type: SnackBarType.error);
+        }
+        return;
+      }
+
+      // Gate verifikasi AI: wajah yang tidak cocok memblokir penyimpanan.
+      final faceResult = _faceAiResult ?? _selfieAiResult;
+      final faceVerified = (faceResult?['face_verified'] as bool?) ?? true;
+      if (faceResult != null && !faceVerified) {
+        if (mounted) {
+          await _showFaceMismatchDialog(
+            similarity: (faceResult['similarity'] as num?)?.toDouble(),
+            reason: faceResult['face_reason'] as String?,
+          );
+        }
+        return;
       }
 
       if (mounted) {
@@ -381,54 +486,244 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
       }
     } catch (e) {
       if (mounted) {
-        AppSnackBar.show(context, l.failedSaveData, type: SnackBarType.error);
+        final msg = _extractError(e) ?? l.failedSaveData;
+        AppSnackBar.show(context, msg, type: SnackBarType.error);
       }
     } finally {
       if (mounted) setState(() => _saving = false);
     }
   }
 
+  /// Extracts a user-friendly error message from an exception (e.g. DioException).
+  static String? _extractError(Object e) {
+    if (e is DioException) {
+      final data = e.response?.data;
+      if (data is Map<String, dynamic>) {
+        final errors = data['errors'] as Map<String, dynamic>?;
+        if (errors != null && errors.isNotEmpty) {
+          final firstKey = errors.keys.first;
+          final fieldErrors = errors[firstKey];
+          if (fieldErrors is List && fieldErrors.isNotEmpty) {
+            return fieldErrors.first.toString();
+          }
+        }
+        final msg = data['message'] as String?;
+        if (msg != null && msg.isNotEmpty) return msg;
+      }
+    }
+    return null;
+  }
+
+  Future<void> _showFaceMismatchDialog({double? similarity, String? reason}) async {
+    final l = AppLocalizations.of(context)!;
+    final similarityText = similarity != null
+        ? l.faceMatchPercent.replaceFirst('%s', similarity.toStringAsFixed(1))
+        : null;
+
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        icon: const Icon(Icons.error_outline, color: AppColors.errorColor, size: 40),
+        title: Text(l.faceMismatch, textAlign: TextAlign.center),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (similarityText != null) ...[
+              Text(l.aiComputerVision, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
+              const SizedBox(height: 4),
+              Text(similarityText, style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w700)),
+              const SizedBox(height: 8),
+            ],
+            Text(l.faceMismatchMessage, style: AppTextStyles.bodySmall),
+            if (reason != null && reason.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(reason, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary)),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(l.retake),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAiStatusChip({
+    required AppLocalizations l,
+    required bool uploading,
+    Map<String, dynamic>? result,
+  }) {
+    if (uploading) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 6),
+        child: Row(
+          children: [
+            const SizedBox(
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              l.verifying,
+              style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+            ),
+          ],
+        ),
+      );
+    }
+    if (result == null) return const SizedBox.shrink();
+
+    final isFace = result.containsKey('face_verified');
+    final verified = (result['face_verified'] as bool?) ??
+        (result['ktp_ai_verified'] as bool?) ??
+        false;
+    final similarity = (result['similarity'] as num?)?.toDouble();
+    final reason = (result['face_reason'] as String?) ??
+        (result['ktp_ai_reason'] as String?);
+    final isUnavailable = reason == 'AI_UNAVAILABLE';
+
+    final color = verified
+        ? AppColors.successColor
+        : (isUnavailable ? AppColors.warningColor : AppColors.errorColor);
+    final icon = verified
+        ? Icons.verified_outlined
+        : (isUnavailable ? Icons.cloud_off_outlined : Icons.error_outline);
+
+    String text;
+    if (isFace) {
+      text = verified
+          ? (similarity != null
+              ? l.faceMatchPercent.replaceFirst('%s', similarity.toStringAsFixed(1))
+              : l.aiVerified)
+          : (isUnavailable ? l.aiUnavailable : l.faceMismatch);
+    } else {
+      text = verified
+          ? l.aiVerifiedDocument
+          : (isUnavailable ? l.aiUnavailable : l.aiVerificationFailed);
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 16, color: color),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              text,
+              style: AppTextStyles.bodySmall.copyWith(
+                color: color,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ── Pick KTP/Selfie ───────────────────────────────────────────────────────
 
   Future<void> _pickKtp() async {
-    final file = await pickKtpPhoto(context);
-    if (file != null) {
-      setState(() => _ktpFile = file);
-      String nikVal  = '';
-      String nameVal = '';
-      if (_identityType == 'ktp') {
-        nikVal  = await extractNikFromKtp(file);
-        nameVal = await extractNameFromKtp(file);
-      } else if (_identityType == 'passport') {
-        nikVal  = await extractPassportNumber(file);
-        nameVal = await extractNameFromPassport(file);
-      } else if (_identityType == 'sim') {
-        nikVal  = await extractSimNumber(file);
-        nameVal = await extractNameFromSim(file);
-      } else if (_identityType == 'npwp') {
-        nikVal  = await extractNpwpNumber(file);
-        nameVal = await extractNameFromNpwp(file);
+    // Langsung buka kamera dengan panduan bingkai kartu (persegi panjang)
+    // untuk dokumen identitas KTP/SIM/NPWP/Paspor.
+    final l = AppLocalizations.of(context)!;
+    final file = await scanWithCamera(
+      context,
+      type: scanContentTypeForIdentity(_identityType),
+    );
+    if (file == null) return;
+    setState(() {
+      _ktpFile = file;
+      _ktpAiResult = null;
+    });
+    if (isVideoPath(file.path)) return;
+    final ktpData = await extractIdentityData(file, _identityType);
+    setState(() {
+      if (ktpData.number.isNotEmpty) {
+        _ktpNumberController.text = ktpData.number;
       }
-      if (nikVal.isNotEmpty) setState(() => _nikController.text = nikVal);
-      if (nameVal.isNotEmpty && !_namesLocked) {
-        final parts = nameVal.trim().split(RegExp(r'\s+'));
-        setState(() {
-          _firstNameController.text = parts.isNotEmpty ? parts[0] : '';
-          _midNameController.text   = parts.length > 2 ? parts.sublist(1, parts.length - 1).join(' ') : '';
-          _lastNameController.text  = parts.length > 1 ? parts.last : '';
-          _namesLocked = true;
-        });
+      if (ktpData.name.isNotEmpty && !_namesLocked) {
+        final parts = ktpData.name.trim().split(RegExp(r'\s+'));
+        _firstNameController.text = parts.isNotEmpty ? parts[0] : '';
+        _midNameController.text   = parts.length > 2 ? parts.sublist(1, parts.length - 1).join(' ') : '';
+        _lastNameController.text  = parts.length > 1 ? parts.last : '';
+        _namesLocked = true;
       }
-    }
+      if (ktpData.birthPlaceCombo.isNotEmpty && _birthPlaceController.text.trim().isEmpty) {
+        _birthPlaceController.text = ktpData.birthPlaceCombo;
+      }
+      if (_gender.isEmpty) {
+        _gender = matchOcrToDropdownLabel('gender', ktpData.gender, _optLabels('gender', [l.male, l.female]));
+      }
+      if (_religion.isEmpty) {
+        _religion = matchOcrToDropdownLabel('religion', ktpData.religion, _optLabels('religion', [l.islam, l.christian, l.catholic, l.hindu, l.buddha, l.confucian]));
+      }
+      if (_maritalStatus.isEmpty) {
+        _maritalStatus = matchOcrToDropdownLabel('marital_status', ktpData.maritalStatus, _optLabels('marital_status', [l.single, l.married, l.divorced]));
+      }
+      if (_occupation.isEmpty) {
+        _occupation = matchOcrToDropdownLabel('occupation', ktpData.occupation, _optLabels('occupation', [l.employee, l.entrepreneur, l.student, l.housewife, l.professional, l.other]));
+      }
+      if (ktpData.address.isNotEmpty && _addressController.text.trim().isEmpty) {
+        _addressController.text = ktpData.address;
+      }
+    });
   }
 
   Future<void> _pickSelfie() async {
-    final file = await pickKtpPhoto(context);
-    if (file != null) setState(() => _selfieFile = file);
+    // Langsung buka kamera depan dengan panduan oval wajah + bingkai kartu
+    // identitas (KTP/SIM/NPWP/Paspor) yang dipegang bersama wajah.
+    final l = AppLocalizations.of(context)!;
+    final file = await scanSelfieWithDocument(context, docType: _identityType);
+    if (file == null) return;
+    setState(() {
+      _selfieFile = file;
+      _selfieAiResult = null;
+    });
+    if (isVideoPath(file.path)) return;
+    final ktpData = await extractIdentityData(file, _identityType);
+    setState(() {
+      if (ktpData.number.isNotEmpty && _ktpNumberController.text.trim().isEmpty) {
+        _ktpNumberController.text = ktpData.number;
+      }
+      if (ktpData.name.isNotEmpty && !_namesLocked) {
+        final parts = ktpData.name.trim().split(RegExp(r'\s+'));
+        _firstNameController.text = parts.isNotEmpty ? parts[0] : '';
+        _midNameController.text   = parts.length > 2 ? parts.sublist(1, parts.length - 1).join(' ') : '';
+        _lastNameController.text  = parts.length > 1 ? parts.last : '';
+        _namesLocked = true;
+      }
+      if (ktpData.birthPlaceCombo.isNotEmpty && _birthPlaceController.text.trim().isEmpty) {
+        _birthPlaceController.text = ktpData.birthPlaceCombo;
+      }
+      if (_gender.isEmpty) {
+        _gender = matchOcrToDropdownLabel('gender', ktpData.gender, _optLabels('gender', [l.male, l.female]));
+      }
+      if (_religion.isEmpty) {
+        _religion = matchOcrToDropdownLabel('religion', ktpData.religion, _optLabels('religion', [l.islam, l.christian, l.catholic, l.hindu, l.buddha, l.confucian]));
+      }
+      if (_maritalStatus.isEmpty) {
+        _maritalStatus = matchOcrToDropdownLabel('marital_status', ktpData.maritalStatus, _optLabels('marital_status', [l.single, l.married, l.divorced]));
+      }
+      if (_occupation.isEmpty) {
+        _occupation = matchOcrToDropdownLabel('occupation', ktpData.occupation, _optLabels('occupation', [l.employee, l.entrepreneur, l.student, l.housewife, l.professional, l.other]));
+      }
+      if (ktpData.address.isNotEmpty && _addressController.text.trim().isEmpty) {
+        _addressController.text = ktpData.address;
+      }
+    });
   }
 
   Future<void> _pickAvatar() async {
-    final file = await pickKtpPhoto(context);
+    final file = await pickProfileMedia(context);
     if (file != null) setState(() => _avatarFile = file);
   }
 
@@ -443,11 +738,19 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
     final ktpUrl    = pState.ktpUrl    ?? userData?['ktp_photo_url']    as String?;
     final selfieUrl = pState.selfieUrl ?? userData?['selfie_photo_url'] as String?;
 
+    if (!_optionsLoaded) {
+      ref.read(dropdownOptionsProvider.future).then((opts) {
+        if (mounted) setState(() { _dropdownOptions = opts; _optionsLoaded = true; });
+      });
+    }
+
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
       appBar: AppBar(
         title: Text(_pageTitle(l)),
         centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
       body: Form(
         key: _formKey,
@@ -481,7 +784,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
               const SizedBox(height: AppSizes.lg),
 
               // ── CONTENT berdasarkan fieldKey ────────────────────────────
-              ..._buildFields(avatarUrl, ktpUrl, selfieUrl),
+              ..._buildFields(avatarUrl, ktpUrl, selfieUrl, pState),
 
               const SizedBox(height: AppSizes.xl),
               AppButton(
@@ -498,7 +801,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
     );
   }
 
-  List<Widget> _buildFields(String? avatarUrl, String? ktpUrl, String? selfieUrl) {
+  List<Widget> _buildFields(String? avatarUrl, String? ktpUrl, String? selfieUrl, ProfileState pState) {
     final l = AppLocalizations.of(context)!;
     switch (widget.fieldKey) {
 
@@ -587,12 +890,14 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
                   CircleAvatar(
                     radius: 64,
                     backgroundColor: AppColors.secondaryColor.withAlpha(60),
-                    backgroundImage: _avatarFile != null
+                    backgroundImage: (!(_avatarFile != null && isVideoPath(_avatarFile!.path)) && _avatarFile != null)
                         ? FileImage(_avatarFile!) as ImageProvider
                         : (avatarUrl != null ? CachedNetworkImageProvider(avatarUrl) : null),
-                    child: (_avatarFile == null && avatarUrl == null)
-                        ? Icon(Icons.person, size: 56, color: AppColors.textTertiary)
-                        : null,
+                    child: (_avatarFile != null && isVideoPath(_avatarFile!.path))
+                        ? Icon(Icons.videocam, size: 56, color: AppColors.textTertiary)
+                        : (_avatarFile == null && avatarUrl == null)
+                            ? Icon(Icons.person, size: 56, color: AppColors.textTertiary)
+                            : null,
                   ),
                   Positioned(
                     bottom: 4,
@@ -636,73 +941,88 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
       // ── WhatsApp ──────────────────────────────────────────────────────────
       case 'whatsapp':
         return [
-          Row(
-            children: [
-              GestureDetector(
-                onTap: () async {
-                  final code = await showModalBottomSheet<String>(
-                    context: context,
-                    isScrollControlled: true,
-                    builder: (_) => _CountryCodeSheet(
-                    selectedCode: _countryCode,
-                    l: AppLocalizations.of(context)!,
+          Builder(
+            builder: (fieldCtx) => Row(
+              children: [
+                GestureDetector(
+                  onTap: () => _showDropdown(
+                    fieldCtx,
+                    l.selectCountryCode,
+                    _countryCodeOptions(),
+                    _countryCodeLabel(),
+                    (v) {
+                      final code = _dialCodeFromOption(v);
+                      if (code != null) setState(() => _countryCode = code);
+                    },
                   ),
-                  );
-                  if (code != null) setState(() => _countryCode = code);
-                },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: AppColors.secondaryColor.withAlpha(30),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.dividerColor),
-                  ),
-                  child: Row(
-                    children: [
-                      Text(flagFromDialCode(_countryCode) ?? '', style: const TextStyle(fontSize: 20)),
-                      const SizedBox(width: 4),
-                      Text(_countryCode, style: AppTextStyles.bodyMedium),
-                      const SizedBox(width: 4),
-                      Icon(Icons.arrow_drop_down, size: 18, color: AppColors.textSecondary),
-                    ],
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondaryColor.withAlpha(30),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.dividerColor),
+                    ),
+                    child: Row(
+                      children: [
+                        Text(flagFromDialCode(_countryCode) ?? '', style: const TextStyle(fontSize: 20)),
+                        const SizedBox(width: 4),
+                        Text(_countryCode, style: AppTextStyles.bodyMedium),
+                        const SizedBox(width: 4),
+                        Icon(Icons.arrow_drop_down, size: 18, color: AppColors.textSecondary),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextFormField(
-                  controller: _whatsappController,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                  validator: Validators.phone,
-                  style: AppTextStyles.bodyLarge,
-                  decoration: const InputDecoration(),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextFormField(
+                    controller: _whatsappController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    validator: Validators.phone,
+                    style: AppTextStyles.bodyLarge,
+                    decoration: const InputDecoration(),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           const SizedBox(height: 6),
           Text(
             l.whatsappExample,
             style: AppTextStyles.bodySmall.copyWith(color: AppColors.textTertiary),
           ),
+          if (_dataLoaded) ...[
+            const SizedBox(height: AppSizes.sm),
+            WhatsappOtpVerifier(
+              numberController: _whatsappController,
+              countryCode: _countryCode,
+              initialFullNumber: _initialWhatsapp,
+              minDigits: 10,
+              onVerifiedChanged: (v) {
+                if (_whatsappVerified != v) {
+                  setState(() => _whatsappVerified = v);
+                }
+              },
+            ),
+          ],
         ];
 
       // ── Nomor Identitas ───────────────────────────────────────────────────
-      case 'nik':
+      case 'ktp_number':
         final idLabel = _identityNumberLabel(l);
         return [
           Text(l.selectIdentityType, style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
           const SizedBox(height: 8),
           _buildIdentityTypePicker(),
-          const SizedBox(height: AppSizes.sm),
+          const SizedBox(height: AppSizes.md),
           AppTextField(
             label: idLabel,
-            controller: _nikController,
+            controller: _ktpNumberController,
             keyboardType: _identityType == 'ktp' ? TextInputType.number : TextInputType.text,
             validator: (v) {
               if (v == null || v.trim().isEmpty) return l.identityNumberRequired(idLabel);
-              if (_identityType == 'ktp' && v.trim().length != 16) return l.nikMustBe16Digits;
+              if (_identityType == 'ktp' && v.trim().length != 16) return l.ktpNumberMustBe16Digits;
               return null;
             },
           ),
@@ -712,15 +1032,26 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
       case 'birth':
         return [
           AppTextField(
-            label: l.placeOfBirth,
+            label: l.placeAndDateOfBirth,
             controller: _birthPlaceController,
             validator: Validators.required,
-          ),
-          const SizedBox(height: AppSizes.sm),
-          AppDatePickerField(
-            label: l.dateOfBirth,
-            controller: _birthDateController,
-            validator: Validators.required,
+            suffixIcon: IconButton(
+              icon: const Icon(Icons.calendar_today, size: 20),
+              onPressed: () async {
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: DateTime.now(),
+                  firstDate: DateTime(1900),
+                  lastDate: DateTime.now(),
+                  locale: const Locale('id'),
+                );
+                if (picked != null) {
+                  final formatted = _formatBirthDate(picked);
+                  _birthPlaceController.text = '${_birthPlaceController.text.trim()}, $formatted';
+                  _birthPlaceController.selection = TextSelection.fromPosition(TextPosition(offset: _birthPlaceController.text.length));
+                }
+              },
+            ),
           ),
         ];
 
@@ -822,15 +1153,20 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
           const SizedBox(height: AppSizes.md),
           _buildUploadBox(
             icon: Icons.credit_card_outlined,
-            title: '${l.identityPhoto} ${_identityTypeLabel(l)}',
+            title: _idPhotoLabel(l),
             subtitle: _ktpFile != null
                 ? l.photoSelected
                 : ktpUrl != null
                     ? l.photoAlreadyExists
-                    : l.tapToSelectPhoto,
+                    : l.autoScanHint,
             hasFile: _ktpFile != null || ktpUrl != null,
             onTap: _pickKtp,
             onRemove: _ktpFile != null ? () => setState(() => _ktpFile = null) : null,
+          ),
+          _buildAiStatusChip(
+            l: l,
+            uploading: pState.ktpUploading,
+            result: _ktpAiResult,
           ),
           if (ktpUrl != null && _ktpFile == null) ...[
             const SizedBox(height: 8),
@@ -849,15 +1185,20 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
         return [
           _buildUploadBox(
             icon: Icons.face_outlined,
-            title: l.selfieImageTitle,
+            title: _idSelfieLabel(l),
             subtitle: _selfieFile != null
                 ? l.photoSelected
                 : selfieUrl != null
                     ? l.photoAlreadyExists
-                    : l.tapToSelectPhoto,
+                    : l.autoScanHint,
             hasFile: _selfieFile != null || selfieUrl != null,
             onTap: _pickSelfie,
             onRemove: _selfieFile != null ? () => setState(() => _selfieFile = null) : null,
+          ),
+          _buildAiStatusChip(
+            l: l,
+            uploading: pState.selfieUploading,
+            result: _selfieAiResult,
           ),
           const SizedBox(height: 12),
           Container(
@@ -900,12 +1241,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
             width: double.infinity,
             child: AppButton(
               label: l.scanFace,
-              onPressed: () async {
-                final result = await context.push<String>('/face-scanner');
-                if (result != null && mounted) {
-                  setState(() => _faceScanFile = File(result));
-                }
-              },
+              onPressed: _openFaceScanner,
               type: ButtonType.primary,
             ),
           ),
@@ -914,26 +1250,45 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppColors.successColor.withAlpha(15),
+                color: _faceAiFailed
+                    ? AppColors.errorColor.withAlpha(15)
+                    : AppColors.successColor.withAlpha(15),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.successColor.withAlpha(60)),
+                border: Border.all(
+                  color: _faceAiFailed
+                      ? AppColors.errorColor.withAlpha(60)
+                      : AppColors.successColor.withAlpha(60),
+                ),
               ),
               child: Row(
                 children: [
-                  Icon(Icons.check_circle, color: AppColors.successColor, size: 20),
+                  Icon(
+                    _faceAiFailed ? Icons.error_outline : Icons.check_circle,
+                    color: _faceAiFailed ? AppColors.errorColor : AppColors.successColor,
+                    size: 20,
+                  ),
                   const SizedBox(width: 8),
-                  Text(l.faceScanSuccess, style: AppTextStyles.bodySmall.copyWith(color: AppColors.successColor)),
+                  Expanded(
+                    child: Text(
+                      _faceAiFailed ? l.faceMismatch : l.faceScanSuccess,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: _faceAiFailed ? AppColors.errorColor : AppColors.successColor,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
           ],
+          _buildAiStatusChip(l: l, uploading: false, result: _faceAiResult),
         ];
 
       case 'gender':
         return [
-          GestureDetector(
-            onTap: () => _showPickerSheet(l.selectGender, [l.male, l.female], (v) => setState(() => _gender = v)),
-            child: Container(
+          Builder(
+            builder: (fieldCtx) => GestureDetector(
+              onTap: () => _showDropdown(fieldCtx, l.selectGender, _optLabels('gender', [l.male, l.female]), _gender, (v) => setState(() => _gender = v)),
+              child: Container(
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
               decoration: BoxDecoration(
                 color: AppColors.secondaryColor.withAlpha(30),
@@ -955,12 +1310,14 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
               ),
             ),
           ),
+          ),
         ];
 
       case 'religion':
         return [
-          GestureDetector(
-            onTap: () => _showPickerSheet(l.selectReligion, [l.islam, l.christian, l.catholic, l.hindu, l.buddha, l.confucian], (v) => setState(() => _religion = v)),
+          Builder(
+            builder: (fieldCtx) => GestureDetector(
+              onTap: () => _showDropdown(fieldCtx, l.selectReligion, _optLabels('religion', [l.islam, l.christian, l.catholic, l.hindu, l.buddha, l.confucian]), _religion, (v) => setState(() => _religion = v)),
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
               decoration: BoxDecoration(
@@ -983,31 +1340,34 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
               ),
             ),
           ),
+          ),
         ];
 
       case 'marital_status':
         return [
-          GestureDetector(
-            onTap: () => _showPickerSheet(l.selectMaritalStatus, [l.single, l.married, l.divorced], (v) => setState(() => _maritalStatus = v)),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-              decoration: BoxDecoration(
-                color: AppColors.secondaryColor.withAlpha(30),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.dividerColor),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.favorite_border, color: AppColors.primaryColor, size: 22),
-                  SizedBox(width: AppSizes.md),
-                  Expanded(
-                    child: Text(
-                      _maritalStatus.isEmpty ? l.selectMaritalStatus : _maritalStatus,
-                      style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+          Builder(
+            builder: (fieldCtx) => GestureDetector(
+              onTap: () => _showDropdown(fieldCtx, l.selectMaritalStatus, _optLabels('marital_status', [l.single, l.married, l.divorced]), _maritalStatus, (v) => setState(() => _maritalStatus = v)),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: AppColors.secondaryColor.withAlpha(30),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.dividerColor),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.favorite_border, color: AppColors.primaryColor, size: 22),
+                    SizedBox(width: AppSizes.md),
+                    Expanded(
+                      child: Text(
+                        _maritalStatus.isEmpty ? l.selectMaritalStatus : _maritalStatus,
+                        style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                      ),
                     ),
-                  ),
-                  Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
-                ],
+                    Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1023,27 +1383,29 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
 
       case 'occupation':
         return [
-          GestureDetector(
-            onTap: () => _showPickerSheet(l.selectOccupation, [l.employee, l.entrepreneur, l.student, l.housewife, l.professional, l.other], (v) => setState(() => _occupation = v)),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-              decoration: BoxDecoration(
-                color: AppColors.secondaryColor.withAlpha(30),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.dividerColor),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.work_outline, color: AppColors.primaryColor, size: 22),
-                  SizedBox(width: AppSizes.md),
-                  Expanded(
-                    child: Text(
-                      _occupation.isEmpty ? l.selectOccupation : _occupation,
-                      style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+          Builder(
+            builder: (fieldCtx) => GestureDetector(
+              onTap: () => _showDropdown(fieldCtx, l.selectOccupation, _optLabels('occupation', [l.employee, l.entrepreneur, l.student, l.housewife, l.professional, l.other]), _occupation, (v) => setState(() => _occupation = v)),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: AppColors.secondaryColor.withAlpha(30),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.dividerColor),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.work_outline, color: AppColors.primaryColor, size: 22),
+                    SizedBox(width: AppSizes.md),
+                    Expanded(
+                      child: Text(
+                        _occupation.isEmpty ? l.selectOccupation : _occupation,
+                        style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                      ),
                     ),
-                  ),
-                  Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
-                ],
+                    Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1051,27 +1413,29 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
 
       case 'income_range':
         return [
-          GestureDetector(
-            onTap: () => _showPickerSheet(l.selectIncomeRange, [l.lessThan1M, l.range1to5M, l.range5to10M, l.range10to50M, l.moreThan50M], (v) => setState(() => _incomeRange = v)),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-              decoration: BoxDecoration(
-                color: AppColors.secondaryColor.withAlpha(30),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.dividerColor),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.trending_up_outlined, color: AppColors.primaryColor, size: 22),
-                  SizedBox(width: AppSizes.md),
-                  Expanded(
-                    child: Text(
-                      _incomeRange.isEmpty ? l.selectIncomeRange : _incomeRange,
-                      style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+          Builder(
+            builder: (fieldCtx) => GestureDetector(
+              onTap: () => _showDropdown(fieldCtx, l.selectIncomeRange, _optLabels('income_range', [l.lessThan1M, l.range1to5M, l.range5to10M, l.range10to50M, l.moreThan50M]), _incomeRange, (v) => setState(() => _incomeRange = v)),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: AppColors.secondaryColor.withAlpha(30),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.dividerColor),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.trending_up_outlined, color: AppColors.primaryColor, size: 22),
+                    SizedBox(width: AppSizes.md),
+                    Expanded(
+                      child: Text(
+                        _incomeRange.isEmpty ? l.selectIncomeRange : _incomeRange,
+                        style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                      ),
                     ),
-                  ),
-                  Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
-                ],
+                    Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1079,27 +1443,29 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
 
       case 'source_of_funds':
         return [
-          GestureDetector(
-            onTap: () => _showPickerSheet(l.selectSourceOfFunds, [l.salary, l.business, l.investment, l.gift, l.other], (v) => setState(() => _sourceOfFunds = v)),
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-              decoration: BoxDecoration(
-                color: AppColors.secondaryColor.withAlpha(30),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: AppColors.dividerColor),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.account_balance_wallet_outlined, color: AppColors.primaryColor, size: 22),
-                  SizedBox(width: AppSizes.md),
-                  Expanded(
-                    child: Text(
-                      _sourceOfFunds.isEmpty ? l.selectSourceOfFunds : _sourceOfFunds,
-                      style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+          Builder(
+            builder: (fieldCtx) => GestureDetector(
+              onTap: () => _showDropdown(fieldCtx, l.selectSourceOfFunds, _optLabels('source_of_funds', [l.salary, l.business, l.investment, l.gift, l.other]), _sourceOfFunds, (v) => setState(() => _sourceOfFunds = v)),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                decoration: BoxDecoration(
+                  color: AppColors.secondaryColor.withAlpha(30),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.dividerColor),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.account_balance_wallet_outlined, color: AppColors.primaryColor, size: 22),
+                    SizedBox(width: AppSizes.md),
+                    Expanded(
+                      child: Text(
+                        _sourceOfFunds.isEmpty ? l.selectSourceOfFunds : _sourceOfFunds,
+                        style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                      ),
                     ),
-                  ),
-                  Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
-                ],
+                    Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1110,84 +1476,198 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
     }
   }
 
-  void _showPickerSheet(String title, List<String> options, Function(String) onSelected) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            children: [
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2))),
-              const SizedBox(height: 8),
-              Text(title, style: AppTextStyles.titleMedium),
-              const SizedBox(height: 8),
-              Expanded(
-                child: ListView(
-                  children: options.map((option) => ListTile(
-                    title: Text(option, style: AppTextStyles.bodyMedium),
-                    onTap: () {
-                      onSelected(option);
-                      Navigator.pop(ctx);
-                    },
-                  )).toList(),
-                ),
+  void _showDropdown(BuildContext fieldContext, String title, List<String> options, String currentValue, Function(String) onSelected) {
+    _removeDropdown();
+    final overlay = Overlay.of(fieldContext);
+    final renderBox = fieldContext.findRenderObject() as RenderBox;
+    final position = renderBox.localToGlobal(Offset.zero);
+    final size = renderBox.size;
+
+    final searchController = TextEditingController();
+
+    _dropdownOverlay = OverlayEntry(
+      builder: (ctx) {
+        List<String> filtered = List.of(options);
+        return StatefulBuilder(
+          builder: (_, setDropdownState) {
+            return GestureDetector(
+              onTap: () {},
+              child: Stack(
+                children: [
+                  GestureDetector(
+                    onTap: _removeDropdown,
+                    child: Container(color: Colors.transparent),
+                  ),
+                  Positioned(
+                    top: position.dy + size.height + 4,
+                    left: position.dx,
+                    width: size.width,
+                    child: Material(
+                      elevation: 8,
+                      borderRadius: BorderRadius.circular(10),
+                      color: AppColors.surfaceColor,
+                      surfaceTintColor: AppColors.surfaceColor,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 280),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+                              child: TextField(
+                                controller: searchController,
+                                decoration: InputDecoration(
+                                  hintText: title,
+                                  prefixIcon: const Icon(Icons.search, size: 20),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                                  isDense: true,
+                                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                                ),
+                                onChanged: (v) {
+                                  setDropdownState(() {
+                                    filtered = options.where((o) =>
+                                      o.toLowerCase().contains(v.toLowerCase())).toList();
+                                  });
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Flexible(
+                              child: ListView(
+                                shrinkWrap: true,
+                                padding: EdgeInsets.zero,
+                                children: filtered.map((option) => ListTile(
+                                  dense: true,
+                                  title: Text(option, style: AppTextStyles.bodyMedium),
+                                  trailing: option == currentValue
+                                      ? Icon(Icons.check, color: AppColors.primaryColor, size: 20)
+                                      : null,
+                                  onTap: () {
+                                    onSelected(option);
+                                    _removeDropdown();
+                                  },
+                                )).toList(),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
-      ),
+            );
+          },
+        );
+      },
     );
+    overlay.insert(_dropdownOverlay!);
   }
 
-  String _identityTypeLabel(AppLocalizations l) {
+  void _removeDropdown() {
+    _dropdownOverlay?.remove();
+    _dropdownOverlay = null;
+  }
+
+  List<String> _countryCodeOptions() =>
+      countryCodes.map((c) => '${c.flag} ${c.name} (${c.dialCode})').toList();
+
+  String _countryCodeLabel() {
+    for (final c in countryCodes) {
+      if (c.dialCode == _countryCode) {
+        return '${c.flag} ${c.name} (${c.dialCode})';
+      }
+    }
+    return _countryCode;
+  }
+
+  String? _dialCodeFromOption(String option) {
+    for (final c in countryCodes) {
+      if ('${c.flag} ${c.name} (${c.dialCode})' == option) return c.dialCode;
+    }
+    return null;
+  }
+
+  List<String> _optLabels(String type, List<String> fallback) {
+    return _dropdownOptions[type]?.map((o) => o.label).toList() ?? fallback;
+  }
+
+  String _idPhotoLabel(AppLocalizations l) {
     switch (_identityType) {
-      case 'ktp':      return l.nikShort;
-      case 'passport': return l.passport;
-      case 'sim':      return l.simShort;
-      case 'npwp':     return l.npwpShort;
-      default:         return l.identityShort;
+      case 'ktp':      return l.ktpPhoto;
+      case 'passport': return l.passportPhoto;
+      case 'sim':      return l.simPhoto;
+      case 'npwp':     return l.npwpPhoto;
+      default:         return l.identityPhoto;
+    }
+  }
+
+  String _idSelfieLabel(AppLocalizations l) {
+    switch (_identityType) {
+      case 'ktp':      return l.selfieKtp;
+      case 'passport': return l.selfiePassport;
+      case 'sim':      return l.selfieSim;
+      case 'npwp':     return l.selfieNpwp;
+      default:         return l.selfiePhoto;
     }
   }
 
   Widget _buildIdentityTypePicker() {
     final l = AppLocalizations.of(context)!;
-    final types = [
-      ('ktp',      l.idCardKtp, Icons.badge_outlined),
-      ('passport', l.passport,  Icons.book_outlined),
-      ('sim',      l.idCardSim, Icons.drive_eta_outlined),
-      ('npwp',     l.idCardNpwp,Icons.receipt_long_outlined),
-    ];
-    return Wrap(
-      spacing: 8,
-      runSpacing: 6,
-      children: types.map((t) {
-        final selected = _identityType == t.$1;
-        return ChoiceChip(
-          label: Row(
-            mainAxisSize: MainAxisSize.min,
+    final options = [l.idCardKtp, l.passport, l.idCardSim, l.idCardNpwp];
+    final currentLabel = switch (_identityType) {
+      'ktp' => l.idCardKtp,
+      'passport' => l.passport,
+      'sim' => l.idCardSim,
+      'npwp' => l.idCardNpwp,
+      _ => l.selectIdentityType,
+    };
+    final icon = switch (_identityType) {
+      'ktp' => Icons.badge_outlined,
+      'passport' => Icons.book_outlined,
+      'sim' => Icons.drive_eta_outlined,
+      'npwp' => Icons.receipt_long_outlined,
+      _ => Icons.badge_outlined,
+    };
+    return Builder(
+      builder: (fieldCtx) => GestureDetector(
+        onTap: () => _showDropdown(fieldCtx, l.selectIdentityType, options, currentLabel, (v) {
+          setState(() {
+            if (v == l.passport) {
+              _identityType = 'passport';
+            } else if (v == l.idCardSim) {
+              _identityType = 'sim';
+            } else if (v == l.idCardNpwp) {
+              _identityType = 'npwp';
+            } else {
+              _identityType = 'ktp';
+            }
+            _ktpFile = null;
+          });
+        }),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+          decoration: BoxDecoration(
+            color: AppColors.secondaryColor.withAlpha(30),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppColors.dividerColor),
+          ),
+          child: Row(
             children: [
-              Icon(t.$3, size: 14, color: selected ? Colors.white : AppColors.textSecondary),
-              const SizedBox(width: 4),
-              Text(t.$2),
+              Icon(icon, color: AppColors.primaryColor, size: 22),
+              SizedBox(width: AppSizes.md),
+              Expanded(
+                child: Text(
+                  currentLabel,
+                  style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                ),
+              ),
+              Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
             ],
           ),
-          selected: selected,
-          onSelected: (_) => setState(() {
-            _identityType = t.$1;
-            _ktpFile = null;
-          }),
-          selectedColor: AppColors.primaryColor,
-          labelStyle: TextStyle(
-            color: selected ? Colors.white : AppColors.textSecondary,
-            fontSize: 12,
-          ),
-        );
-      }).toList(),
+        ),
+      ),
     );
   }
 
@@ -1246,41 +1726,3 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
   }
 }
 
-// ── Country Code Bottom Sheet ─────────────────────────────────────────────────
-
-class _CountryCodeSheet extends StatelessWidget {
-  final String selectedCode;
-  final AppLocalizations l;
-  const _CountryCodeSheet({required this.selectedCode, required this.l});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: MediaQuery.of(context).size.height * 0.6,
-      child: Column(
-        children: [
-          const SizedBox(height: 12),
-          Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2))),
-          const SizedBox(height: 12),
-          Text(l.selectCountryCode, style: AppTextStyles.titleSmall),
-          const Divider(),
-          Expanded(
-            child: ListView.builder(
-              itemCount: countryCodes.length,
-              itemBuilder: (_, i) {
-                final c = countryCodes[i];
-                final isSelected = c.dialCode == selectedCode;
-                return ListTile(
-                  leading: Text(c.flag, style: const TextStyle(fontSize: 22)),
-                  title: Text('${c.name} (${c.dialCode})', style: AppTextStyles.bodySmall),
-                  trailing: isSelected ? const Icon(Icons.check, color: AppColors.primaryColor) : null,
-                  onTap: () => Navigator.pop(context, c.dialCode),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

@@ -79,7 +79,7 @@ class OrderModel {
       userName: json['user_name'] as String?,
       packageId: json['package_id'] as int?,
       productId: json['product_id'] as int?,
-      title: (json['title'] ?? 'Pesanan') as String,
+      title: (json['title'] ?? 'Order') as String,
       orderNumber: (json['order_number'] ?? '') as String,
       totalPrice: parseDouble(json['total_price']),
       status: (json['status'] ?? 'pending') as String,

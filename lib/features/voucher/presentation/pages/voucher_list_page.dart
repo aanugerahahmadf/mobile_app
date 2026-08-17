@@ -5,6 +5,7 @@ import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/errors/localized_error.dart';
 import '../../../../core/widgets/app_shimmer.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../providers/voucher_provider.dart';
@@ -31,7 +32,7 @@ class _VoucherListPageState extends ConsumerState<VoucherListPage> {
     final state = ref.watch(voucherProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l.myVouchers)),
+      appBar: AppBar(title: Text(l.myVouchers), backgroundColor: Colors.transparent, elevation: 0),
       body: state.loading
           ? ListView.builder(
               padding: const EdgeInsets.all(AppSizes.md),
@@ -42,7 +43,7 @@ class _VoucherListPageState extends ConsumerState<VoucherListPage> {
               ),
             )
           : state.error != null
-              ? Center(child: Text(state.error!, style: AppTextStyles.bodyMedium))
+              ? Center(child: Text(LocalizedError.of(l, state.error!), style: AppTextStyles.bodyMedium))
               : state.vouchers.isEmpty
                   ? AppEmptyState(
                       icon: Icons.card_giftcard_outlined,
@@ -61,10 +62,12 @@ class _VoucherListPageState extends ConsumerState<VoucherListPage> {
   }
 
   Widget _buildVoucherCard(VoucherModel voucher, AppLocalizations l) {
-    final name = voucher.code;
+    final code = voucher.code;
+    final name = (voucher.name != null && voucher.name!.isNotEmpty) ? voucher.name! : (code ?? 'Voucher');
     final desc = voucher.description ?? '';
     final discount = voucher.discountAmount.toInt();
     final isExpired = voucher.isExpired;
+    final isClaimed = voucher.isClaimed;
 
     final discountLabel = voucher.isPercentage
         ? '$discount% OFF'
@@ -133,17 +136,18 @@ class _VoucherListPageState extends ConsumerState<VoucherListPage> {
                               ),
                               const SizedBox(width: 8),
                             ],
-                            Expanded(
-                              child: Text(
-                                name,
-                                style: AppTextStyles.labelSmall.copyWith(
-                                  color: isExpired ? AppColors.textTertiary : Colors.white60,
-                                  letterSpacing: 1.5,
+                            if (isClaimed && code != null)
+                              Expanded(
+                                child: Text(
+                                  code,
+                                  style: AppTextStyles.labelSmall.copyWith(
+                                    color: isExpired ? AppColors.textTertiary : Colors.white60,
+                                    letterSpacing: 1.5,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
                           ],
                         ),
                       ],
@@ -174,7 +178,7 @@ class _VoucherListPageState extends ConsumerState<VoucherListPage> {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     child: Text(
-                      l.viewDetail,
+                      isClaimed ? l.viewDetail : (isExpired ? l.expired : l.claim),
                       textAlign: TextAlign.center,
                       style: AppTextStyles.labelMedium.copyWith(
                         color: isExpired ? AppColors.textTertiary : Colors.white,

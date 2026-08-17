@@ -6,25 +6,31 @@ import '../../domain/payment_repository.dart';
 class PaymentState {
   final bool loading;
   final String? error;
-  final String? snapToken;
-  final String? paymentUrl;
   final Map<String, dynamic>? transaction;
+  final Map<String, dynamic>? virtualAccount;
+  final bool proofUploaded;
 
-  const PaymentState({this.loading = false, this.error, this.snapToken, this.paymentUrl, this.transaction});
+  const PaymentState({
+    this.loading = false,
+    this.error,
+    this.transaction,
+    this.virtualAccount,
+    this.proofUploaded = false,
+  });
 
   PaymentState copyWith({
     bool? loading,
     String? error,
-    String? snapToken,
-    String? paymentUrl,
     Map<String, dynamic>? transaction,
+    Map<String, dynamic>? virtualAccount,
+    bool? proofUploaded,
   }) {
     return PaymentState(
       loading: loading ?? this.loading,
       error: error,
-      snapToken: snapToken ?? this.snapToken,
-      paymentUrl: paymentUrl ?? this.paymentUrl,
       transaction: transaction ?? this.transaction,
+      virtualAccount: virtualAccount ?? this.virtualAccount,
+      proofUploaded: proofUploaded ?? this.proofUploaded,
     );
   }
 }
@@ -34,23 +40,93 @@ class PaymentNotifier extends StateNotifier<PaymentState> {
 
   PaymentNotifier(this._repository) : super(const PaymentState());
 
-  Future<bool> initiatePayment(String orderId) async {
-    state = const PaymentState(loading: true);
+  Future<bool> confirmPayment(
+    String orderId,
+    int paymentMethodId, {
+    Map<String, dynamic>? cardDetails,
+  }) async {
+    state = state.copyWith(loading: true, error: null);
     try {
-      final data = await _repository.initiatePayment(orderId);
+      final data = await _repository.confirmPayment(
+        orderId,
+        paymentMethodId,
+        cardDetails: cardDetails,
+      );
       state = PaymentState(
         loading: false,
-        snapToken: data['snap_token'] as String?,
-        paymentUrl: data['payment_url'] as String?,
-        transaction: data['transaction'] as Map<String, dynamic>?,
+        transaction: data,
       );
       return true;
     } on DioException catch (e) {
-      state = PaymentState(loading: false, error: e.error?.toString() ?? 'Gagal memproses pembayaran');
+      state = state.copyWith(loading: false, error: e.response?.data?['message']?.toString() ?? e.error?.toString() ?? 'Gagal konfirmasi pembayaran');
       return false;
     } catch (e) {
-      state = PaymentState(loading: false, error: e.toString());
+      state = state.copyWith(loading: false, error: e.toString());
       return false;
+    }
+  }
+
+  Future<String?> payWithGateway(String orderId, int paymentMethodId) async {
+    state = state.copyWith(loading: true, error: null);
+    try {
+      final data = await _repository.payWithGateway(orderId, paymentMethodId);
+      state = state.copyWith(loading: false, transaction: data);
+      return data['redirect_url'] as String? ?? data['snap_token'] as String?;
+    } on DioException catch (e) {
+      state = state.copyWith(loading: false, error: e.response?.data?['message']?.toString() ?? e.error?.toString() ?? 'Gagal memproses pembayaran');
+      return null;
+    } catch (e) {
+      state = state.copyWith(loading: false, error: e.toString());
+      return null;
+    }
+  }
+
+  Future<bool> uploadProof(String orderId, List<String> paths) async {
+    state = state.copyWith(loading: true, error: null);
+    try {
+      final data = await _repository.uploadProof(orderId, paths);
+      state = PaymentState(
+        loading: false,
+        transaction: data,
+        proofUploaded: true,
+      );
+      return true;
+    } on DioException catch (e) {
+      state = state.copyWith(loading: false, error: e.response?.data?['message']?.toString() ?? e.error?.toString() ?? 'Gagal upload bukti pembayaran');
+      return false;
+    } catch (e) {
+      state = state.copyWith(loading: false, error: e.toString());
+      return false;
+    }
+  }
+
+  Future<Map<String, dynamic>?> createVirtualAccount(String orderId) async {
+    state = state.copyWith(loading: true, error: null);
+    try {
+      final data = await _repository.createVirtualAccount(orderId);
+      state = state.copyWith(loading: false, virtualAccount: data);
+      return data;
+    } on DioException catch (e) {
+      state = state.copyWith(loading: false, error: e.response?.data?['message']?.toString() ?? e.error?.toString() ?? 'Gagal membuat Virtual Account');
+      return null;
+    } catch (e) {
+      state = state.copyWith(loading: false, error: e.toString());
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> createQris(String orderId) async {
+    state = state.copyWith(loading: true, error: null);
+    try {
+      final data = await _repository.createQris(orderId);
+      state = state.copyWith(loading: false, virtualAccount: data);
+      return data;
+    } on DioException catch (e) {
+      state = state.copyWith(loading: false, error: e.response?.data?['message']?.toString() ?? e.error?.toString() ?? 'Gagal membuat QRIS');
+      return null;
+    } catch (e) {
+      state = state.copyWith(loading: false, error: e.toString());
+      return null;
     }
   }
 

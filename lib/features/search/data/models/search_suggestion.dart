@@ -1,3 +1,4 @@
+import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/utils/formatters.dart';
 
 enum SuggestionType {
@@ -13,36 +14,72 @@ enum SuggestionType {
   histories,
   weddingPolicy,
   users,
-  transactions;
+  transactions,
+  vendors;
 
   String get badgeLabel {
     switch (this) {
       case SuggestionType.packages:
-        return 'paket';
+        return 'Packages';
       case SuggestionType.products:
-        return 'bunga';
+        return 'Products';
       case SuggestionType.categories:
-        return 'kategori';
+        return 'Categories';
       case SuggestionType.vouchers:
-        return 'voucher';
+        return 'Vouchers';
       case SuggestionType.orders:
-        return 'pesanan';
+        return 'Orders';
       case SuggestionType.reviews:
-        return 'ulasan';
+        return 'Reviews';
       case SuggestionType.terms:
-        return 'syarat';
+        return 'Terms';
       case SuggestionType.privacy:
-        return 'privasi';
+        return 'Privacy';
       case SuggestionType.helps:
-        return 'bantuan';
+        return 'Help';
       case SuggestionType.histories:
-        return 'riwayat';
+        return 'History';
       case SuggestionType.weddingPolicy:
-        return 'kebijakan';
+        return 'Policy';
       case SuggestionType.users:
-        return 'pengguna';
+        return 'Users';
       case SuggestionType.transactions:
-        return 'transaksi';
+        return 'Transactions';
+      case SuggestionType.vendors:
+        return 'Vendors';
+    }
+  }
+
+  String localizedLabel(AppLocalizations l) {
+    switch (this) {
+      case SuggestionType.packages:
+        return l.adminPackages;
+      case SuggestionType.products:
+        return l.adminProducts;
+      case SuggestionType.categories:
+        return l.categories;
+      case SuggestionType.vouchers:
+        return l.vouchers;
+      case SuggestionType.orders:
+        return l.order;
+      case SuggestionType.reviews:
+        return l.reviews;
+      case SuggestionType.terms:
+        return l.termsAndConditions;
+      case SuggestionType.privacy:
+        return l.privacyPolicy;
+      case SuggestionType.helps:
+        return l.helpCenter;
+      case SuggestionType.histories:
+        return l.history;
+      case SuggestionType.weddingPolicy:
+        return l.weddingPolicy;
+      case SuggestionType.users:
+        return l.users;
+      case SuggestionType.transactions:
+        return l.transactions;
+      case SuggestionType.vendors:
+        return l.vendors;
     }
   }
 }
@@ -232,6 +269,25 @@ class SearchSuggestion {
           subtitle: json['status'] as String?,
           subtitle2: sub2.isNotEmpty ? sub2 : null,
           routePath: '/admin/transactions',
+          rawData: json,
+        );
+
+      case SuggestionType.vendors:
+        final logo = json['logo'] as String?;
+        final desc = json['store_description'] as String?;
+        final contact = json['contact_person'] as String?;
+        final sub2 = [
+          if (desc != null && desc.isNotEmpty) desc,
+          if (contact != null && contact.isNotEmpty) contact,
+        ].join(' • ');
+        return SearchSuggestion(
+          type: type,
+          id: id,
+          name: json['store_name'] as String?,
+          subtitle: sub2.isNotEmpty ? sub2 : null,
+          subtitle2: '${json['packages_count'] ?? 0} packages, ${json['products_count'] ?? 0} products',
+          imageUrl: logo != null && logo.isNotEmpty ? Formatters.imageUrl(logo) : null,
+          routePath: '/vendor/$id',
           rawData: json,
         );
 

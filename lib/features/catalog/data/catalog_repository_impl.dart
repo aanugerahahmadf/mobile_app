@@ -8,16 +8,16 @@ class CatalogRepositoryImpl implements CatalogRepository {
     String? categoryId,
     String? search,
     String? sort,
-    int page = 1,
+    int? perPage,
   }) async {
+    final q = <String, dynamic>{};
+    if (categoryId != null) q['category_id'] = categoryId;
+    if (search != null) q['search'] = search;
+    if (sort != null) q['sort'] = sort;
+    if (perPage != null) q['per_page'] = perPage;
     final response = await DioClient.instance.get(
       ApiEndpoints.packages,
-      queryParameters: {
-        'category_id': ?categoryId,
-        'search': ?search,
-        'sort': ?sort,
-        'page': page,
-      },
+      queryParameters: q,
     );
     return response.data as Map<String, dynamic>;
   }
@@ -35,16 +35,16 @@ class CatalogRepositoryImpl implements CatalogRepository {
     String? categoryId,
     String? search,
     String? sort,
-    int page = 1,
+    int? perPage,
   }) async {
+    final q = <String, dynamic>{};
+    if (categoryId != null) q['category_id'] = categoryId;
+    if (search != null) q['search'] = search;
+    if (sort != null) q['sort'] = sort;
+    if (perPage != null) q['per_page'] = perPage;
     final response = await DioClient.instance.get(
       ApiEndpoints.products,
-      queryParameters: {
-        'category_id': ?categoryId,
-        'search': ?search,
-        'sort': ?sort,
-        'page': page,
-      },
+      queryParameters: q,
     );
     return response.data as Map<String, dynamic>;
   }

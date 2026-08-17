@@ -2,6 +2,14 @@ import 'package:intl/intl.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class Formatters {
+  /// Parse price from dynamic (String or num) to int
+  static int parsePrice(dynamic price) {
+    if (price == null) return 0;
+    if (price is num) return price.toInt();
+    if (price is String) return (double.tryParse(price) ?? 0).toInt();
+    return 0;
+  }
+
   static String currency(int amount) {
     final format = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
     return format.format(amount);
@@ -55,6 +63,49 @@ class Formatters {
       return imageUrl('media/$avatar');
     }
     return null;
+  }
+
+  /// Ekstrak semua URL gambar dari raw item map (response API package/product).
+  ///
+  /// Menangani berbagai bentuk yang dikirim backend/Filament:
+  ///   1. `media`  — array object ({`original_url`/`url`}) ATAU array string URL
+  ///   2. `images` — array object/string (nama field alternatif)
+  ///   3. `image_url` / `image` — single URL (fallback)
+  ///
+  /// Return list URL penuh (sudah dinormalisasi via [imageUrl]).
+  static List<String> itemMediaUrls(Map<String, dynamic>? data) {
+    if (data == null) return const [];
+    final urls = <String>[];
+
+    void addUrl(String? url) {
+      final normalized = imageUrl(url);
+      if (normalized.isNotEmpty && !urls.contains(normalized)) {
+        urls.add(normalized);
+      }
+    }
+
+    void addFromList(dynamic raw) {
+      if (raw is! List) return;
+      for (final entry in raw) {
+        if (entry is String) {
+          addUrl(entry);
+        } else if (entry is Map) {
+          final map = Map<String, dynamic>.from(entry);
+          final src = (map['original_url'] as String?)?.isNotEmpty == true
+              ? map['original_url'] as String
+              : (map['url'] as String? ?? '');
+          addUrl(src);
+        }
+      }
+    }
+
+    addFromList(data['media']);
+    if (urls.isEmpty) addFromList(data['images']);
+    if (urls.isEmpty) {
+      addUrl(data['image_url'] as String?);
+      if (urls.isEmpty) addUrl(data['image'] as String?);
+    }
+    return urls;
   }
 
   static String imageUrl(String? url) {

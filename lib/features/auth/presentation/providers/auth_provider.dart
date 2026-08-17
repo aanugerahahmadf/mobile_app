@@ -3,9 +3,13 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../../../../core/api/api_endpoints.dart';
 import '../../../../core/api/dio_client.dart';
+import '../../../../core/errors/app_error_codes.dart';
 import '../../data/models/user_model.dart';
+import 'biometric_settings_provider.dart' show resetAppLock;
 
 class SavedAccount {
   final String email;
@@ -100,12 +104,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
     await _storage.write(key: 'auth_token', value: account.token);
     try {
       final response = await _dio.get(ApiEndpoints.user);
-      final userMap = (response.data as Map<String, dynamic>?)?['data'] as Map<String, dynamic>?;
+      final respData = response.data as Map<String, dynamic>?;
+      final userMap = respData?['data'] as Map<String, dynamic>?;
       if (userMap == null) throw Exception();
       final user = UserModel.fromJson(userMap);
+      final needsCompletion = userMap['needs_completion'] == true;
       _activeIndex = index;
       await _saveAccounts();
-      state = AuthAuthenticated(user);
+      state = AuthAuthenticated(user, needsCompletion: needsCompletion);
     } catch (_) {
       _savedAccounts.removeAt(index);
       await _saveAccounts();
@@ -159,16 +165,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final inner = respData['data'] as Map<String, dynamic>? ?? respData;
       final token = inner['token'] as String?;
       final userMap = inner['user'] as Map<String, dynamic>?;
-      if (token == null || userMap == null) throw Exception('Login gagal');
+      if (token == null || userMap == null) throw Exception(AppErrorCodes.loginFailed);
       final user = UserModel.fromJson(userMap);
       await _storage.write(key: 'auth_token', value: token);
       await _addOrUpdateAccount(SavedAccount(email: user.email, fullName: user.fullName, avatarUrl: user.avatarUrl, token: token));
       state = AuthAuthenticated(user);
     } on DioException catch (e) {
-      final msg = e.response?.data?['message'] as String? ?? 'Login gagal';
+      final msg = e.response?.data?['message'] as String? ?? AppErrorCodes.loginFailed;
       state = AuthError(msg);
     } catch (e) {
-      state = AuthError('Terjadi kesalahan');
+      state = AuthError(AppErrorCodes.anErrorOccurred);
     }
   }
 
@@ -183,14 +189,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final idToken = googleAuth.idToken;
-      if (idToken == null) throw Exception('Gagal mendapatkan token Google');
+      if (idToken == null) throw Exception(AppErrorCodes.failedGetGoogleToken);
 
       final response = await _dio.post(ApiEndpoints.googleLogin, data: {'id_token': idToken});
       final respData = response.data as Map<String, dynamic>? ?? {};
       final inner = respData['data'] as Map<String, dynamic>? ?? respData;
       final token = inner['token'] as String?;
       final userMap = inner['user'] as Map<String, dynamic>?;
-      if (token == null || userMap == null) throw Exception('Login Google gagal');
+      if (token == null || userMap == null) throw Exception(AppErrorCodes.googleLoginFailed);
       final user = UserModel.fromJson(userMap);
       final needsOtp = inner['needs_otp'] == true;
       final needsCompletion = inner['needs_completion'] == true;
@@ -204,10 +210,85 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
       state = AuthAuthenticated(user, needsOtp: needsOtp, needsCompletion: needsCompletion);
     } on DioException catch (e) {
-      final msg = e.response?.data?['message'] as String? ?? 'Login Google gagal';
+      final msg = _extractBackendError(e);
       state = AuthError(msg);
     } catch (e) {
-      state = AuthError('Terjadi kesalahan');
+      state = AuthError(AppErrorCodes.anErrorOccurred);
+    }
+  }
+
+  Future<void> facebookLogin() async {
+    state = const AuthLoading();
+    try {
+      final result = await FacebookAuth.instance.login(permissions: ['public_profile', 'email']);
+      if (result.status != LoginStatus.success) {
+        state = const AuthInitial();
+        return;
+      }
+      final accessToken = result.accessToken?.tokenString;
+      if (accessToken == null) throw Exception(AppErrorCodes.failedGetFacebookToken);
+
+      final response = await _dio.post(ApiEndpoints.facebookLogin, data: {'access_token': accessToken});
+      final respData = response.data as Map<String, dynamic>? ?? {};
+      final inner = respData['data'] as Map<String, dynamic>? ?? respData;
+      final token = inner['token'] as String?;
+      final userMap = inner['user'] as Map<String, dynamic>?;
+      if (token == null || userMap == null) throw Exception(AppErrorCodes.facebookLoginFailed);
+      final user = UserModel.fromJson(userMap);
+      final needsOtp = inner['needs_otp'] == true;
+      final needsCompletion = inner['needs_completion'] == true;
+
+      await _storage.write(key: 'auth_token', value: token);
+      await _addOrUpdateAccount(SavedAccount(email: user.email, fullName: user.fullName, avatarUrl: user.avatarUrl, token: token));
+
+      if (needsOtp) {
+        await _dio.post(ApiEndpoints.sendOtp, data: {'email': user.email, 'purpose': 'google_register'});
+      }
+
+      state = AuthAuthenticated(user, needsOtp: needsOtp, needsCompletion: needsCompletion);
+    } on DioException catch (e) {
+      final msg = _extractBackendError(e);
+      state = AuthError(msg);
+    } catch (e) {
+      state = AuthError(AppErrorCodes.anErrorOccurred);
+    }
+  }
+
+  Future<void> appleLogin() async {
+    state = const AuthLoading();
+    try {
+      final credential = await SignInWithApple.getAppleIDCredential(
+        scopes: [
+          AppleIDAuthorizationScopes.email,
+          AppleIDAuthorizationScopes.fullName,
+        ],
+      );
+      final identityToken = credential.identityToken;
+      if (identityToken == null) throw Exception(AppErrorCodes.failedGetAppleToken);
+
+      final response = await _dio.post(ApiEndpoints.appleLogin, data: {'identity_token': identityToken});
+      final respData = response.data as Map<String, dynamic>? ?? {};
+      final inner = respData['data'] as Map<String, dynamic>? ?? respData;
+      final token = inner['token'] as String?;
+      final userMap = inner['user'] as Map<String, dynamic>?;
+      if (token == null || userMap == null) throw Exception(AppErrorCodes.appleLoginFailed);
+      final user = UserModel.fromJson(userMap);
+      final needsOtp = inner['needs_otp'] == true;
+      final needsCompletion = inner['needs_completion'] == true;
+
+      await _storage.write(key: 'auth_token', value: token);
+      await _addOrUpdateAccount(SavedAccount(email: user.email, fullName: user.fullName, avatarUrl: user.avatarUrl, token: token));
+
+      if (needsOtp) {
+        await _dio.post(ApiEndpoints.sendOtp, data: {'email': user.email, 'purpose': 'google_register'});
+      }
+
+      state = AuthAuthenticated(user, needsOtp: needsOtp, needsCompletion: needsCompletion);
+    } on DioException catch (e) {
+      final msg = e.response?.data?['message'] as String? ?? AppErrorCodes.appleLoginFailed;
+      state = AuthError(msg);
+    } catch (e) {
+      state = AuthError(AppErrorCodes.anErrorOccurred);
     }
   }
 
@@ -219,7 +300,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String username,
     required String email,
     required String whatsapp,
-    required String nik,
+    required String ktpNumber,
     String? passportNumber,
     String? simNumber,
     String? npwpNumber,
@@ -261,7 +342,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         'username': username,
         'email': email,
         'whatsapp': whatsapp,
-        'nik': nik,
+        'ktp_number': ktpNumber,
         if (passportNumber != null && passportNumber.isNotEmpty) 'passport_number': passportNumber,
         if (simNumber != null && simNumber.isNotEmpty) 'sim_number': simNumber,
         if (npwpNumber != null && npwpNumber.isNotEmpty) 'npwp_number': npwpNumber,
@@ -291,22 +372,25 @@ class AuthNotifier extends StateNotifier<AuthState> {
       };
       if (ktpPhotoPath != null) formData['ktp_photo'] = await MultipartFile.fromFile(ktpPhotoPath);
       if (selfiePhotoPath != null) formData['selfie_photo'] = await MultipartFile.fromFile(selfiePhotoPath);
-      if (faceScanPath != null) formData['face_scan_photo'] = await MultipartFile.fromFile(faceScanPath);
+      if (faceScanPath != null) {
+        formData['face_scan_photo'] = await MultipartFile.fromFile(faceScanPath);
+        formData['liveness_completed'] = true;
+      }
       final response = await _dio.post(ApiEndpoints.register, data: FormData.fromMap(formData));
       final respData = response.data as Map<String, dynamic>? ?? {};
       final inner = respData['data'] as Map<String, dynamic>? ?? respData;
       final token = inner['token'] as String?;
       final userMap = inner['user'] as Map<String, dynamic>?;
-      if (token == null || userMap == null) throw Exception('Registrasi gagal');
+      if (token == null || userMap == null) throw Exception(AppErrorCodes.registrationFailed);
       final user = UserModel.fromJson(userMap);
       await _storage.write(key: 'auth_token', value: token);
       await _addOrUpdateAccount(SavedAccount(email: user.email, fullName: user.fullName, avatarUrl: user.avatarUrl, token: token));
       state = AuthAuthenticated(user);
     } on DioException catch (e) {
-      final msg = e.response?.data?['message'] as String? ?? 'Registrasi gagal';
+      final msg = _extractBackendError(e);
       state = AuthError(msg);
     } catch (e) {
-      state = AuthError('Terjadi kesalahan');
+      state = AuthError(AppErrorCodes.anErrorOccurred);
     }
   }
 
@@ -329,6 +413,31 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  Future<bool> deleteAccount() async {
+    final currentEmail = state is AuthAuthenticated ? (state as AuthAuthenticated).user.email : null;
+    state = const AuthLoading();
+    try {
+      await _dio.delete(ApiEndpoints.deleteAccount);
+      await _loadSavedAccounts();
+      if (currentEmail != null) {
+        _savedAccounts.removeWhere((a) => a.email == currentEmail);
+        await resetAppLock(email: currentEmail);
+      }
+      _savedAccounts = [];
+      await _storage.delete(key: 'auth_token');
+      await _storage.delete(key: 'saved_accounts');
+      state = const AuthInitial();
+      return true;
+    } on DioException catch (e) {
+      final msg = e.response?.data?['message'] as String? ?? AppErrorCodes.anErrorOccurred;
+      state = AuthError(msg);
+      return false;
+    } catch (_) {
+      state = AuthError(AppErrorCodes.anErrorOccurred);
+      return false;
+    }
+  }
+
   Future<void> checkAuth() async {
     await _loadSavedAccounts();
     if (_savedAccounts.isNotEmpty) {
@@ -343,11 +452,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
         return;
       }
       final response = await _dio.get(ApiEndpoints.user);
-      final userMap = (response.data as Map<String, dynamic>?)?['data'] as Map<String, dynamic>?;
-      if (userMap == null) throw Exception('Gagal memuat profil');
+      final respData = response.data as Map<String, dynamic>?;
+      final userMap = respData?['data'] as Map<String, dynamic>?;
+      if (userMap == null) throw Exception(AppErrorCodes.failedLoadProfile);
       final user = UserModel.fromJson(userMap);
+      final needsCompletion = userMap['needs_completion'] == true;
       await _addOrUpdateAccount(SavedAccount(email: user.email, fullName: user.fullName, avatarUrl: user.avatarUrl, token: token));
-      state = AuthAuthenticated(user);
+      state = AuthAuthenticated(user, needsCompletion: needsCompletion);
     } on DioException catch (e) {
       if (e.response?.statusCode == 401) {
         await _storage.delete(key: 'auth_token');
@@ -370,22 +481,26 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final token = await _storage.read(key: 'auth_token');
       if (token == null || token.isEmpty) return;
       final response = await _dio.get(ApiEndpoints.user);
-      final userMap = (response.data as Map<String, dynamic>?)?['data'] as Map<String, dynamic>?;
+      final respData = response.data as Map<String, dynamic>?;
+      final userMap = respData?['data'] as Map<String, dynamic>?;
       if (userMap == null) return;
       final user = UserModel.fromJson(userMap);
-      state = AuthAuthenticated(user);
+      final needsCompletion = userMap['needs_completion'] == true;
+      state = AuthAuthenticated(user, needsCompletion: needsCompletion);
     } catch (_) {}
   }
 
   Future<void> updateProfile(Map<String, dynamic> data) async {
     try {
       final response = await _dio.put(ApiEndpoints.profile, data: data);
-      final userMap = (response.data as Map<String, dynamic>?)?['data'] as Map<String, dynamic>?;
-      if (userMap == null) throw Exception('Gagal update profil');
+      final respData = response.data as Map<String, dynamic>?;
+      final userMap = respData?['data'] as Map<String, dynamic>?;
+      if (userMap == null) throw Exception(AppErrorCodes.failedUpdateProfile);
       final user = UserModel.fromJson(userMap);
-      state = AuthAuthenticated(user);
+      final needsCompletion = userMap['needs_completion'] == true;
+      state = AuthAuthenticated(user, needsCompletion: needsCompletion);
     } on DioException catch (e) {
-      final msg = e.response?.data?['message'] as String? ?? 'Gagal update profil';
+      final msg = e.response?.data?['message'] as String? ?? AppErrorCodes.failedUpdateProfile;
       state = AuthError(msg);
     }
   }
@@ -409,10 +524,32 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
       return '';
     } on DioException catch (e) {
-      final msg = e.response?.data?['message'] as String? ?? 'Gagal upload avatar';
+      final msg = e.response?.data?['message'] as String? ?? AppErrorCodes.failedUploadAvatar;
       state = AuthError(msg);
       rethrow;
     }
+  }
+
+  /// Extracts a user-friendly error message from a DioException.
+  /// Prefers the first field-level validation error from the `errors` map,
+  /// then falls back to the top-level `message`, then a generic error code.
+  static String _extractBackendError(DioException e) {
+    final data = e.response?.data;
+    if (data is Map<String, dynamic>) {
+      final errorCode = data['error_code'] as String?;
+      if (errorCode != null && errorCode.isNotEmpty) return errorCode;
+      final errors = data['errors'] as Map<String, dynamic>?;
+      if (errors != null && errors.isNotEmpty) {
+        final firstKey = errors.keys.first;
+        final fieldErrors = errors[firstKey];
+        if (fieldErrors is List && fieldErrors.isNotEmpty) {
+          return fieldErrors.first.toString();
+        }
+      }
+      final msg = data['message'] as String?;
+      if (msg != null && msg.isNotEmpty) return msg;
+    }
+    return AppErrorCodes.registrationFailed;
   }
 }
 

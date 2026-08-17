@@ -31,5 +31,6 @@ class SearchResult {
     'wedding_policy': SuggestionType.weddingPolicy,
     'users': SuggestionType.users,
     'transactions': SuggestionType.transactions,
+    'vendors': SuggestionType.vendors,
   };
 }

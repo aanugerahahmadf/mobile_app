@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -6,8 +7,10 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_empty_state.dart';
+import '../../../../core/errors/localized_error.dart';
 import '../../../../core/widgets/app_shimmer.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../../payment/presentation/widgets/upload_payment_proof.dart';
 import '../providers/order_provider.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 
@@ -28,12 +31,6 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryPage> with Single
   void initState() {
     super.initState();
     _tabController = TabController(length: _tabStatuses.length, vsync: this);
-    _tabController.addListener(() {
-      if (!_tabController.indexIsChanging) {
-        setState(() => _activeStatus = _tabStatuses[_tabController.index]);
-        ref.read(orderProvider.notifier).fetchOrders(status: _activeStatus, refresh: true);
-      }
-    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(orderProvider.notifier).fetchOrders(refresh: true);
     });
@@ -58,6 +55,13 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryPage> with Single
     }
   }
 
+  int _parsePrice(dynamic price) {
+    if (price == null) return 0;
+    if (price is num) return price.toInt();
+    if (price is String) return (double.tryParse(price) ?? 0).toInt();
+    return 0;
+  }
+
   Color _statusColor(String? status) {
     switch (status) {
       case 'pending': return AppColors.warningColor;
@@ -69,6 +73,12 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryPage> with Single
     }
   }
 
+  Future<void> _uploadPaymentProof(String orderId) async {
+    await uploadPaymentProof(context, ref, orderId, onUploaded: () {
+      ref.read(orderProvider.notifier).fetchOrders(status: _activeStatus, refresh: true);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(orderProvider);
@@ -77,16 +87,52 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryPage> with Single
     final l = AppLocalizations.of(context)!;
     final tabLabels = [l.all, l.pending, l.confirmed, l.processed, l.completed, l.cancelled];
     return Scaffold(
-      appBar: AppBar(title: Text(l.myOrders)),
+      appBar: AppBar(title: Text(l.myOrders), backgroundColor: Colors.transparent, elevation: 0),
       body: Column(
         children: [
-          TabBar(
-            controller: _tabController,
-            isScrollable: true,
-            labelColor: AppColors.primaryColor,
-            unselectedLabelColor: AppColors.textSecondary,
-            indicatorColor: AppColors.primaryColor,
-            tabs: tabLabels.map((label) => Tab(text: label)).toList(),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSizes.md, AppSizes.sm, AppSizes.md, 0),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+                child: Container(
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  alignment: Alignment.centerLeft,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: AppSizes.sm),
+                    itemCount: tabLabels.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: AppSizes.xs),
+                    itemBuilder: (_, i) {
+                      final isSelected = _tabController.index == i;
+                      return Center(
+                        child: FilterChip(
+                          label: Text(
+                            tabLabels[i],
+                            style: TextStyle(
+                              color: isSelected ? AppColors.primaryColor : AppColors.textSecondary,
+                            ),
+                          ),
+                          selected: isSelected,
+                          onSelected: (_) {
+                            setState(() => _activeStatus = _tabStatuses[i]);
+                            _tabController.animateTo(i);
+                            ref.read(orderProvider.notifier).fetchOrders(status: _activeStatus, refresh: true);
+                          },
+                          selectedColor: AppColors.secondaryColor,
+                          checkmarkColor: AppColors.primaryColor,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
           ),
           Expanded(
             child: state.loading
@@ -99,7 +145,7 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryPage> with Single
                     ),
                   )
                 : state.error != null
-                    ? Center(child: Text(state.error ?? '', style: AppTextStyles.bodyMedium))
+                    ? Center(child: Text(LocalizedError.of(l, state.error ?? ''), style: AppTextStyles.bodyMedium))
                     : state.orders.isEmpty
                         ? AppEmptyState(title: l.noOrders, subtitle: l.noOrdersDesc, icon: Icons.receipt_long_outlined)
                         : RefreshIndicator(
@@ -132,9 +178,11 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryPage> with Single
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
-                                              Text('${l.order} #${order['order_number'] ?? order['id']}', style: AppTextStyles.bodySmall),
+                                              Expanded(
+                                                child: Text('${l.order} #${order['order_number'] ?? order['id']}', style: AppTextStyles.bodySmall, overflow: TextOverflow.ellipsis),
+                                              ),
+                                              const SizedBox(width: 8),
                                               Container(
                                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                                 decoration: BoxDecoration(
@@ -173,7 +221,7 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryPage> with Single
                                               Column(
                                                 crossAxisAlignment: CrossAxisAlignment.end,
                                                 children: [
-                                                  Text(Formatters.currency((order['total'] as num?)?.toInt() ?? 0), style: AppTextStyles.titleMedium.copyWith(color: AppColors.primaryColor)),
+                                                  Text(Formatters.currency(_parsePrice(order['total_price'] ?? order['total'])), style: AppTextStyles.titleMedium.copyWith(color: AppColors.primaryColor)),
                                                   Text(Formatters.date(order['created_at'] as String? ?? ''), style: AppTextStyles.bodySmall),
                                                 ],
                                               ),
@@ -198,6 +246,27 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryPage> with Single
                                                   ),
                                                 ),
                                               ],
+                                            ),
+                                          ],
+                                          if (order['payment_status'] == 'pending') ...[
+                                            const SizedBox(height: 12),
+                                            AppButton(
+                                              label: l.uploadProof,
+                                              onPressed: () => _uploadPaymentProof('${order['id']}'),
+                                              type: ButtonType.outline,
+                                            ),
+                                          ],
+                                          if (status == 'completed') ...[
+                                            const SizedBox(height: 12),
+                                            AppButton(
+                                              label: l.writeReview,
+                                              icon: Icons.rate_review_outlined,
+                                              onPressed: () => context.push('/write-review', extra: {
+                                                'package_id': '${order['package_id'] ?? ''}',
+                                                'product_id': '${order['product_id'] ?? ''}',
+                                                'name': (order['item'] as Map<String, dynamic>?)?['name'] ?? '',
+                                              }),
+                                              type: ButtonType.outline,
                                             ),
                                           ],
                                         ],

@@ -91,13 +91,13 @@ class _ChatListPageState extends ConsumerState<ChatListPage> {
 
     if (chatState is ChatLoading && _customers.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: Text(l.navChat)),
+        appBar: AppBar(title: Text(l.navChat), backgroundColor: Colors.transparent, elevation: 0),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(l.navChat)),
+      appBar: AppBar(title: Text(l.navChat), backgroundColor: Colors.transparent, elevation: 0),
       body: isSuperAdmin ? _buildAdminView(l) : _buildUserView(l),
     );
   }

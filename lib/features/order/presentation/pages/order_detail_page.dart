@@ -10,9 +10,11 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_snackbar.dart';
+import '../../../../core/errors/localized_error.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../data/order_repository_impl.dart';
 import '../../../chat/presentation/providers/chat_provider.dart';
+import '../../../payment/presentation/widgets/upload_payment_proof.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 
 class OrderDetailPage extends ConsumerStatefulWidget {
@@ -101,37 +103,40 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
   }
 
   Future<void> _downloadPdf() async {
+    final l = AppLocalizations.of(context)!;
     setState(() => _pdfLoading = true);
     try {
       final repo = OrderRepositoryImpl();
       final path = await repo.downloadInvoice(widget.id);
       if (mounted) {
-        AppSnackBar.show(context, 'Invoice berhasil diunduh', type: SnackBarType.success);
+        AppSnackBar.show(context, l.invoiceDownloaded, type: SnackBarType.success);
         OpenFile.open(path);
       }
     } catch (e) {
-      if (mounted) AppSnackBar.show(context, 'Gagal mengunduh invoice', type: SnackBarType.error);
+      if (mounted) AppSnackBar.show(context, l.failedDownloadInvoice, type: SnackBarType.error);
     }
     if (mounted) setState(() => _pdfLoading = false);
   }
 
   Future<void> _sendEmail() async {
+    final l = AppLocalizations.of(context)!;
     setState(() => _emailLoading = true);
     try {
       final repo = OrderRepositoryImpl();
       await repo.sendInvoiceEmail(widget.id);
-      if (mounted) AppSnackBar.show(context, 'Invoice dikirim ke email Anda', type: SnackBarType.success);
+      if (mounted) AppSnackBar.show(context, l.invoiceSentToEmail, type: SnackBarType.success);
     } catch (e) {
-      if (mounted) AppSnackBar.show(context, 'Gagal mengirim email', type: SnackBarType.error);
+      if (mounted) AppSnackBar.show(context, l.failedSendEmail, type: SnackBarType.error);
     }
     if (mounted) setState(() => _emailLoading = false);
   }
 
   Future<void> _sendWhatsapp() async {
+    final l = AppLocalizations.of(context)!;
     final orderNumber = _order?['order_number'] ?? widget.id;
-    final total = Formatters.currency((_order?['total'] as num?)?.toInt() ?? 0);
-    final status = _order?['status'] as String? ?? '';
-    final message = 'Halo Admin, saya ingin menanyakan pesanan #$orderNumber. Status: ${_statusLabel(status)}. Total: $total.';
+    final total = Formatters.currency(Formatters.parsePrice(_order?['total_price'] ?? _order?['total']));
+    final statusLabel = _statusLabel(_order?['status'] as String? ?? '');
+    final message = l.whatsappOrderTemplate('$orderNumber', statusLabel, total);
 
     final phone = _order?['admin_phone'] as String?;
     final uri = phone != null
@@ -141,7 +146,7 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
     try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (_) {
-      if (mounted) AppSnackBar.show(context, 'Gagal membuka WhatsApp', type: SnackBarType.error);
+      if (mounted) AppSnackBar.show(context, l.failedOpenWhatsApp, type: SnackBarType.error);
     }
   }
 
@@ -178,11 +183,11 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text(l.orderDetail)),
+      appBar: AppBar(title: Text(l.orderDetail), backgroundColor: Colors.transparent, elevation: 0),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(child: Text(_error!))
+              ? Center(child: Text(LocalizedError.of(l, _error!)))
               : RefreshIndicator(
                   onRefresh: _loadOrder,
                   child: SingleChildScrollView(
@@ -198,9 +203,11 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text('${l.order} #${_order!['order_number'] ?? widget.id}', style: AppTextStyles.titleMedium),
+                                    Expanded(
+                                      child: Text('${l.order} #${_order!['order_number'] ?? widget.id}', style: AppTextStyles.titleMedium, overflow: TextOverflow.ellipsis),
+                                    ),
+                                    const SizedBox(width: 8),
                                     Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                       decoration: BoxDecoration(
@@ -243,7 +250,7 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                           if (item == null) return const SizedBox.shrink();
                           final imageUrl = item['image_url'] as String? ?? '';
                           final name = item['name'] as String? ?? l.orderItems;
-                          final price = (item['price'] as num?)?.toDouble() ?? 0;
+                          final price = Formatters.parsePrice(item['price']);
                           return Card(
                             child: ListTile(
                               leading: ClipRRect(
@@ -262,8 +269,8 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                                 ),
                               ),
                               title: Text(name, style: AppTextStyles.bodyMedium),
-                              subtitle: Text('1x ${Formatters.currency(price.toInt())}', style: AppTextStyles.bodySmall),
-                              trailing: Text(Formatters.currency(price.toInt()), style: AppTextStyles.titleMedium.copyWith(color: AppColors.primaryColor)),
+                              subtitle: Text('1x ${Formatters.currency(price)}', style: AppTextStyles.bodySmall),
+                              trailing: Text(Formatters.currency(price), style: AppTextStyles.titleMedium.copyWith(color: AppColors.primaryColor)),
                             ),
                           );
                         }(),
@@ -273,9 +280,9 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                             padding: const EdgeInsets.all(AppSizes.md),
                             child: Column(
                               children: [
-                                _buildPriceRow(l.subtotal, (_order!['total_price'] as num?)?.toInt() ?? 0),
+                                _buildPriceRow(l.subtotal, Formatters.parsePrice(_order!['total_price'])),
                                 const Divider(),
-                                _buildPriceRow(l.total, (_order!['total_price'] as num?)?.toInt() ?? 0, bold: true),
+                                _buildPriceRow(l.total, Formatters.parsePrice(_order!['total_price']), bold: true),
                               ],
                             ),
                           ),
@@ -287,12 +294,22 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                         _buildActionButton(Icons.email_outlined, l.sendViaGmail, _sendEmail, loading: _emailLoading),
                         _buildActionButton(Icons.chat_outlined, l.sendToWhatsapp, _sendWhatsapp),
 
-                        if (_order!['status'] == 'pending') ...[
+                        if (_order!['status'] == 'pending' || _order!['status'] == 'confirmed') ...[
                           const SizedBox(height: 8),
                           AppButton(
                             label: l.payNow,
                             onPressed: () => context.push('/payment/${widget.id}'),
                           ),
+                        ],
+                        if (_order!['payment_status'] == 'pending') ...[
+                          const SizedBox(height: 8),
+                          AppButton(
+                            label: l.uploadProof,
+                            onPressed: () => uploadPaymentProof(context, ref, widget.id, onUploaded: _loadOrder),
+                            type: ButtonType.outline,
+                          ),
+                        ],
+                        if (_order!['status'] == 'pending') ...[
                           const SizedBox(height: 8),
                           AppButton(
                             label: l.cancelOrder,

@@ -1,5 +1,6 @@
 class AdminVoucherModel {
   final int id;
+  final String? name;
   final String code;
   final String? description;
   final double discountAmount;
@@ -15,6 +16,7 @@ class AdminVoucherModel {
 
   const AdminVoucherModel({
     required this.id,
+    this.name,
     required this.code,
     this.description,
     required this.discountAmount,
@@ -45,6 +47,7 @@ class AdminVoucherModel {
     }
     return AdminVoucherModel(
       id: json['id'] is int ? json['id'] as int : int.tryParse('${json['id']}') ?? 0,
+      name: json['name'] as String?,
       code: '${json['code'] ?? ''}',
       description: json['description'] as String?,
       discountAmount: toDouble(json['discount_amount']),

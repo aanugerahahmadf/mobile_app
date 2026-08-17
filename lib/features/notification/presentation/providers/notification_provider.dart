@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/errors/app_error_codes.dart';
 import '../../data/models/notification_model.dart';
 import '../../data/notification_repository_impl.dart';
 import '../../domain/notification_repository.dart';
@@ -45,7 +46,7 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
     } on DioException catch (e) {
       state = state.copyWith(
         loading: false,
-        error: e.response?.data?['message'] as String? ?? 'Gagal memuat notifikasi',
+        error: e.response?.data?['message'] as String? ?? AppErrorCodes.failedLoadNotifications,
       );
     } catch (e) {
       state = state.copyWith(loading: false, error: e.toString());
@@ -61,6 +62,7 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
 
   Future<void> markAsRead(String id) async {
     final previous = state.notifications;
+    final previousUnread = state.unreadCount;
     try {
       state = state.copyWith(
         notifications: state.notifications.map((n) {
@@ -73,7 +75,7 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
       );
       await _repository.markAsRead(id);
     } catch (_) {
-      state = state.copyWith(notifications: previous);
+      state = state.copyWith(notifications: previous, unreadCount: previousUnread);
     }
   }
 
@@ -92,14 +94,17 @@ class NotificationNotifier extends StateNotifier<NotificationState> {
 
   Future<void> deleteNotification(String id) async {
     final previous = state.notifications;
+    final previousUnread = state.unreadCount;
     try {
+      final target = state.notifications.firstWhere((n) => n.id == id);
+      final wasUnread = target.isUnread;
       state = state.copyWith(
         notifications: state.notifications.where((n) => n.id != id).toList(),
-        unreadCount: state.unreadCount > 0 ? state.unreadCount - 1 : 0,
+        unreadCount: wasUnread && state.unreadCount > 0 ? state.unreadCount - 1 : state.unreadCount,
       );
       await _repository.deleteNotification(id);
     } catch (_) {
-      state = state.copyWith(notifications: previous);
+      state = state.copyWith(notifications: previous, unreadCount: previousUnread);
     }
   }
 }

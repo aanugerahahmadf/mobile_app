@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -7,8 +8,26 @@ import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
-import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/widgets/face_score_ring.dart';
 
+/// Verifikasi Wajah ala aplikasi bank/e-wallet (BRI, SeaBank, BCA, dll).
+///
+/// Kamera depan terbuka dengan **oval statis** di tengah layar (tidak ikut
+/// bergerak mengikuti wajah): **hijau** saat langkah liveness terpenuhi,
+/// **merah** saat wajah terdeteksi tapi belum pas di dalam oval, **putih** saat
+/// wajah belum terdeteksi. Pengguna mengikuti instruksi di dalam oval.
+///
+/// Urutan perintah liveness **diacak (random)** setiap kali scanner dibuka:
+/// hadap depan (selalu langkah pertama) → urutan acak dari lihat atas /
+/// lihat bawah / belok kiri / belok kanan. Tanpa indikator titik step-by-step
+/// di bagian atas. Setelah semua langkah selesai muncul notifikasi
+/// **Terverifikasi**.
+///
+/// Halaman ini KHUSUS untuk Verifikasi Wajah (KYC) profil: menangkap foto
+/// selfie terbaik lalu menutup dengan path berkas foto tersebut.
+///
+/// Berbeda dengan **App Lock Face ID** yang memakai biometrik PERANGKAT
+/// (local_auth) — lihat [AppLockPage].
 class FaceScannerPage extends StatefulWidget {
   const FaceScannerPage({super.key});
 
@@ -16,20 +35,46 @@ class FaceScannerPage extends StatefulWidget {
   State<FaceScannerPage> createState() => _FaceScannerPageState();
 }
 
-class _FaceScannerPageState extends State<FaceScannerPage> with WidgetsBindingObserver {
+enum _LivenessAction { center, lookUp, lookDown, turnLeft, turnRight }
+
+class _FaceScannerPageState extends State<FaceScannerPage>
+    with WidgetsBindingObserver {
+  static const _actionPool = <_LivenessAction>[
+    _LivenessAction.lookUp,
+    _LivenessAction.lookDown,
+    _LivenessAction.turnLeft,
+    _LivenessAction.turnRight,
+  ];
+
+  /// Urutan liveness yang diacak; `center` (hadap depan) selalu pertama.
+  late final List<_LivenessAction> _sequence;
+
   CameraController? _cameraController;
   FaceDetector? _faceDetector;
   bool _isDetecting = false;
-  bool _faceDetected = false;
-  bool _captured = false;
   bool _cameraReady = false;
-  File? _capturedImage;
-  int _stableCounter = 0;
+  bool _faceDetected = false;
+  bool _stepSatisfied = false;
   bool _faceTooSmall = false;
+  bool _eyesClosed = false;
+  bool _multipleFaces = false;
+  bool _isFrontCamera = true;
+  int _livenessIndex = 0;
+  int _stepStableCounter = 0;
+  bool _verified = false;
+  DateTime _lastProcessAt = DateTime.fromMillisecondsSinceEpoch(0);
+
+  /// Kamera depan portrait (sensor 270) membalik tanda sudut Euler X & Y
+  /// terhadap konvensi dokumentasi ML Kit. (Pola sama seperti vivd liveness.)
+  bool get _mirrorEulerAngles {
+    final sensor = _cameraController?.description.sensorOrientation ?? 0;
+    return sensor == 270;
+  }
 
   @override
   void initState() {
     super.initState();
+    _buildRandomSequence();
     WidgetsBinding.instance.addObserver(this);
     _initializeCamera();
     _faceDetector = FaceDetector(
@@ -39,6 +84,35 @@ class _FaceScannerPageState extends State<FaceScannerPage> with WidgetsBindingOb
         enableContours: false,
         performanceMode: FaceDetectorMode.fast,
       ),
+    );
+  }
+
+  /// Menyusun urutan liveness acak: hadap depan selalu pertama, sisanya
+  /// (lihat atas / bawah, belok kiri / kanan, putar) diacak setiap buka scanner.
+  void _buildRandomSequence() {
+    final rest = List<_LivenessAction>.of(_actionPool)..shuffle(Random());
+    _sequence = <_LivenessAction>[_LivenessAction.center, ...rest];
+  }
+
+  /// Ukuran area scanner (area body) — dipakai agar oval statis konsisten
+  /// antara perhitungan deteksi dan gambar overlay.
+  Size _bodySize() {
+    final size = MediaQuery.of(context).size;
+    return Size(
+      size.width,
+      size.height - kToolbarHeight - MediaQuery.of(context).padding.top,
+    );
+  }
+
+  /// Oval statis di tengah layar — tidak mengikuti gerakan wajah.
+  Rect _staticOvalRect(Size body) {
+    final w = body.width;
+    final ovalW = w * 0.58;
+    final ovalH = ovalW * 1.25;
+    return Rect.fromCenter(
+      center: Offset(w / 2, body.height * 0.48),
+      width: ovalW,
+      height: ovalH,
     );
   }
 
@@ -52,7 +126,9 @@ class _FaceScannerPageState extends State<FaceScannerPage> with WidgetsBindingOb
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && _cameraController != null && !_cameraController!.value.isInitialized) {
+    if (state == AppLifecycleState.resumed &&
+        _cameraController != null &&
+        !_cameraController!.value.isInitialized) {
       _initCamera();
     }
   }
@@ -64,7 +140,17 @@ class _FaceScannerPageState extends State<FaceScannerPage> with WidgetsBindingOb
       (c) => c.lensDirection == CameraLensDirection.front,
       orElse: () => cameras.first,
     );
-    _cameraController = CameraController(front, ResolutionPreset.medium, enableAudio: false);
+    _isFrontCamera = front.lensDirection == CameraLensDirection.front;
+    // Format NV21 (Android) / BGRA8888 (iOS) wajib agar `InputImage.fromBytes`
+    // dari ML Kit mengenali layout byte kamera — sama seperti paket face_verify.
+    _cameraController = CameraController(
+      front,
+      ResolutionPreset.high,
+      imageFormatGroup: Platform.isAndroid
+          ? ImageFormatGroup.nv21
+          : ImageFormatGroup.bgra8888,
+      enableAudio: false,
+    );
     await _initCamera();
   }
 
@@ -75,7 +161,7 @@ class _FaceScannerPageState extends State<FaceScannerPage> with WidgetsBindingOb
         setState(() => _cameraReady = true);
         _cameraController!.startImageStream(_processImage);
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) {
         setState(() => _cameraReady = false);
       }
@@ -83,27 +169,164 @@ class _FaceScannerPageState extends State<FaceScannerPage> with WidgetsBindingOb
   }
 
   void _processImage(CameraImage image) {
-    if (_isDetecting || _captured) return;
+    if (_isDetecting || _verified) return;
+    final now = DateTime.now();
+    if (now.difference(_lastProcessAt).inMilliseconds < 100) return;
+    _lastProcessAt = now;
     _isDetecting = true;
 
-    _detectFace(image).then((detected) {
-      if (!mounted) return;
-      if (!_captured) {
-        if (detected) {
-          _stableCounter++;
-          if (_stableCounter >= 8) {
-            setState(() => _faceDetected = true);
-            if (!_captured) {
-              _capturePhoto();
-            }
-          }
-        } else {
-          _stableCounter = 0;
-          if (_faceDetected) setState(() => _faceDetected = false);
-        }
-      }
+    _detectFace(image).then((result) {
+      if (!mounted || _verified) return;
+      _processLiveness(result);
       _isDetecting = false;
     });
+  }
+
+  void _processLiveness(_FaceDetection r) {
+    final m = _mirrorEulerAngles;
+    final x = m ? -r.eulerX : r.eulerX;
+    final y = m ? -r.eulerY : r.eulerY;
+
+    final faceOk = r.found && !r.multipleFaces && !r.tooSmall && r.eyesOpen;
+    setState(() {
+      _faceDetected = faceOk;
+      _multipleFaces = r.multipleFaces;
+      _faceTooSmall = r.tooSmall;
+      _eyesClosed = !r.eyesOpen;
+    });
+
+    if (!faceOk) {
+      _stepStableCounter = 0;
+      if (_stepSatisfied) setState(() => _stepSatisfied = false);
+      return;
+    }
+
+    // Oval statis: wajah harus berada di dalamnya agar langkah bisa terpenuhi.
+    // Oval tidak bergerak — user yang menyesuaikan posisi wajah di dalamnya.
+    final bodySize = _bodySize();
+    final faceScreen = faceBoxToScreen(
+      box: r.box!,
+      frameSize: r.frameSize,
+      target: bodySize,
+      mirrorX: _isFrontCamera,
+    );
+    final faceInOval = faceScreen != null &&
+        _staticOvalRect(bodySize).inflate(24).contains(faceScreen.center);
+
+    final action = _sequence[_livenessIndex];
+    var satisfied = false;
+    switch (action) {
+      case _LivenessAction.center:
+        satisfied = y.abs() < 20 && x.abs() < 15 && r.eulerZ.abs() < 20;
+      case _LivenessAction.lookUp:
+        satisfied = x < -15;
+      case _LivenessAction.lookDown:
+        satisfied = x > 15;
+      case _LivenessAction.turnLeft:
+        satisfied = y < -20;
+      case _LivenessAction.turnRight:
+        satisfied = y > 20;
+    }
+
+    satisfied = satisfied && faceInOval;
+
+    setState(() => _stepSatisfied = satisfied);
+
+    if (satisfied) {
+      _stepStableCounter++;
+      final required = action == _LivenessAction.center ? 8 : 5;
+      if (_stepStableCounter >= required) {
+        _stepStableCounter = 0;
+        _advanceStep();
+      }
+    } else {
+      _stepStableCounter = 0;
+    }
+  }
+
+  void _advanceStep() {
+    if (_livenessIndex >= _sequence.length - 1) {
+      _cameraController?.stopImageStream();
+      setState(() {
+        _verified = true;
+      });
+      // Seluruh langkah liveness selesai (100%). Beri jeda singkat agar overlay
+      // sukses terlihat, lalu munculkan MODAL notifikasi "Wajah Terverifikasi".
+      Timer(const Duration(milliseconds: 1200), _showVerifiedModal);
+      return;
+    }
+    setState(() {
+      _livenessIndex++;
+      _stepStableCounter = 0;
+      _stepSatisfied = false;
+    });
+  }
+
+  /// Setelah seluruh langkah liveness terpenuhi: ambil foto terbaik lalu
+  /// tampilkan modal notifikasi "Wajah Terverifikasi". Scanner baru ditutup
+  /// setelah pengguna menekan "Lanjut", membawa path foto hasil verifikasi.
+  Future<void> _showVerifiedModal() async {
+    if (!mounted) return;
+    String? photoPath;
+    try {
+      final photo = await _cameraController!.takePicture();
+      photoPath = photo.path;
+    } catch (_) {
+      photoPath = null;
+    }
+    if (!mounted) return;
+
+    final l = AppLocalizations.of(context)!;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => PopScope(
+        canPop: false,
+        child: Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          backgroundColor: AppColors.surfaceColor,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(22),
+                  decoration: const BoxDecoration(
+                    color: AppColors.successColor,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.check_rounded, color: Colors.white, size: 44),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  l.faceVerified,
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.titleLarge.copyWith(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  l.faceVerifiedMessage,
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () => Navigator.of(ctx).pop(),
+                    child: Text(l.proceed),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+
+    if (!mounted) return;
+    Navigator.pop(context, photoPath);
   }
 
   InputImage? _inputImageFromCamera(CameraImage image) {
@@ -144,81 +367,62 @@ class _FaceScannerPageState extends State<FaceScannerPage> with WidgetsBindingOb
     );
   }
 
-  Future<bool> _detectFace(CameraImage image) async {
+  Future<_FaceDetection> _detectFace(CameraImage image) async {
     final inputImage = _inputImageFromCamera(image);
-    if (inputImage == null) return false;
+    if (inputImage == null) return _FaceDetection.empty;
+
+    final camera = _cameraController?.description;
+    final sensorOrientation = camera?.sensorOrientation ?? 90;
+    final rotated =
+        Platform.isAndroid && (sensorOrientation == 90 || sensorOrientation == 270);
+    final uprightW = rotated ? image.height.toDouble() : image.width.toDouble();
+    final uprightH = rotated ? image.width.toDouble() : image.height.toDouble();
+
     try {
       final faces = await _faceDetector!.processImage(inputImage);
-      if (faces.isEmpty) {
-        if (mounted) setState(() => _faceTooSmall = false);
-        return false;
+      if (faces.isEmpty) return _FaceDetection.empty;
+      if (faces.length > 1) {
+        return _FaceDetection.empty.copyWith(multipleFaces: true);
       }
 
       final face = faces.first;
-      final frameW = image.width.toDouble();
       final box = face.boundingBox;
 
-      final faceWidth = box.width;
-      final faceHeight = box.height;
-      final minFaceSize = frameW * 0.25;
+      final minFaceSize = uprightW * 0.18;
+      final tooSmall = box.width < minFaceSize || box.height < minFaceSize;
 
-      final isLargeEnough = faceWidth >= minFaceSize && faceHeight >= minFaceSize;
-      if (!isLargeEnough) {
-        if (mounted) setState(() => _faceTooSmall = true);
-        return false;
-      }
-      if (mounted) setState(() => _faceTooSmall = false);
+      final leftEye = face.leftEyeOpenProbability;
+      final rightEye = face.rightEyeOpenProbability;
+      final eyesOpen = (leftEye == null || leftEye > 0.4) &&
+          (rightEye == null || rightEye > 0.4);
 
-      final eulerY = face.headEulerAngleY ?? 0;
-      final eulerZ = face.headEulerAngleZ ?? 0;
-      final isForward = eulerY.abs() < 25 && eulerZ.abs() < 20;
-
-      return isForward && isLargeEnough;
+      return _FaceDetection(
+        found: true,
+        multipleFaces: false,
+        tooSmall: tooSmall,
+        eyesClosed: !eyesOpen,
+        eyesOpen: eyesOpen,
+        eulerX: face.headEulerAngleX ?? 0,
+        eulerY: face.headEulerAngleY ?? 0,
+        eulerZ: face.headEulerAngleZ ?? 0,
+        box: box,
+        frameSize: Size(uprightW, uprightH),
+      );
     } catch (_) {
-      return false;
+      return _FaceDetection.empty;
     }
   }
 
-  Future<void> _capturePhoto() async {
-    try {
-      final photo = await _cameraController!.takePicture();
-      if (!mounted) return;
-
-      final file = File(photo.path);
-
-      final inputImage = InputImage.fromFilePath(photo.path);
-      final faces = await _faceDetector!.processImage(inputImage);
-
-      if (faces.isNotEmpty) {
-        setState(() {
-          _captured = true;
-          _capturedImage = file;
-          _cameraController!.stopImageStream();
-        });
-      } else {
-        _stableCounter = 0;
-        setState(() => _faceDetected = false);
-      }
-    } catch (_) {
-      _stableCounter = 0;
-      if (mounted) setState(() => _faceDetected = false);
-    }
-  }
-
-  void _retry() {
-    setState(() {
-      _captured = false;
-      _capturedImage = null;
-      _faceDetected = false;
-      _stableCounter = 0;
-    });
-    _cameraController!.startImageStream(_processImage);
-  }
-
-  void _accept() {
-    if (_capturedImage != null) {
-      Navigator.pop(context, _capturedImage!.path);
-    }
+  (String, IconData) _actionPresentation(
+      _LivenessAction action, AppLocalizations l) {
+    return switch (action) {
+      _LivenessAction.center => (l.faceLookStraight, Icons.face),
+      _LivenessAction.lookUp => (l.faceLookUp, Icons.arrow_upward),
+      _LivenessAction.lookDown => (l.faceLookDown, Icons.arrow_downward),
+      _LivenessAction.turnLeft => (l.faceTurnLeft, Icons.keyboard_arrow_left),
+      _LivenessAction.turnRight =>
+        (l.faceTurnRight, Icons.keyboard_arrow_right),
+    };
   }
 
   @override
@@ -227,170 +431,231 @@ class _FaceScannerPageState extends State<FaceScannerPage> with WidgetsBindingOb
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.transparent,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: Text(_captured ? l.confirmSelfie : l.scanFace),
+        title: Text(l.faceVerification),
         centerTitle: true,
       ),
       body: _cameraReady
-          ? _captured && _capturedImage != null
-              ? _buildConfirmation()
-              : _buildScanner()
+          ? Stack(
+              children: [
+                _buildScanner(),
+                if (_verified) _buildVerifiedOverlay(l),
+              ],
+            )
           : const Center(child: CircularProgressIndicator(color: Colors.white)),
     );
   }
 
   Widget _buildScanner() {
     final l = AppLocalizations.of(context)!;
-    return Stack(
-      children: [
-        CameraPreview(_cameraController!),
-        _buildOverlay(),
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: MediaQuery.of(context).padding.bottom + 40,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  _faceTooSmall ? l.faceTooClose
-                      : _faceDetected ? l.faceDetectedLabel
-                      : l.faceScanInstruction,
-                  style: AppTextStyles.bodySmall.copyWith(color: Colors.white),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              SizedBox(height: AppSizes.md),
-              if (!_faceDetected)
-                TextButton.icon(
-                  onPressed: _capturePhoto,
-                  icon: const Icon(Icons.camera_alt, color: Colors.white70),
-                  label: Text(l.manualCapture, style: const TextStyle(color: Colors.white70)),
-                ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildOverlay() {
+    final (instruction, icon) =
+        _actionPresentation(_sequence[_livenessIndex], l);
     return LayoutBuilder(
       builder: (context, constraints) {
-        final size = MediaQuery.of(context).size;
-        final ovalWidth = size.width * 0.7;
-        final ovalHeight = ovalWidth * 1.2;
-        final top = (size.height - ovalHeight) / 2 - kToolbarHeight - MediaQuery.of(context).padding.top;
-
-        return CustomPaint(
-          size: Size.infinite,
-          painter: _ScannerOverlayPainter(
-            ovalRect: Rect.fromLTWH(
-              (size.width - ovalWidth) / 2,
-              top,
-              ovalWidth,
-              ovalHeight,
+        final oval = _staticOvalRect(constraints.biggest);
+        final ovalColor = _stepSatisfied
+            ? AppColors.successColor
+            : _faceDetected
+                ? const Color(0xFFE53935)
+                : Colors.white;
+        return Stack(
+          children: [
+            CameraPreview(_cameraController!),
+            CustomPaint(
+              size: constraints.biggest,
+              painter: _FaceOvalPainter(
+                faceRect: oval,
+                color: ovalColor,
+              ),
             ),
-            faceDetected: _faceDetected,
-          ),
+            Positioned(
+              left: 20,
+              right: 20,
+              bottom: MediaQuery.of(context).padding.bottom + 40,
+              child: _buildInstructionCard(l, instruction, icon),
+            ),
+          ],
         );
       },
     );
   }
 
-  Widget _buildConfirmation() {
-    final l = AppLocalizations.of(context)!;
-    return Column(
-      children: [
-        Expanded(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Image.file(_capturedImage!, fit: BoxFit.contain),
-              ),
+  Widget _buildInstructionCard(
+      AppLocalizations l, String instruction, IconData icon) {
+    final hasProblem = _multipleFaces || _eyesClosed || _faceTooSmall;
+    final problemText = _multipleFaces
+        ? l.faceMultipleFacesLabel
+        : _eyesClosed
+            ? l.faceOpenEyesLabel
+            : l.faceTooClose;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.65),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: _stepSatisfied ? AppColors.successColor : Colors.white24,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: _stepSatisfied ? AppColors.successColor : Colors.white12,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: Colors.white, size: 28),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  instruction,
+                  style: AppTextStyles.bodyMedium
+                      .copyWith(color: Colors.white, fontWeight: FontWeight.w600),
+                  textAlign: TextAlign.center,
+                ),
+                if (hasProblem) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    problemText,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: const Color(0xFFFFC107),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ],
             ),
           ),
-        ),
-        Container(
-          padding: EdgeInsets.fromLTRB(24, 0, 24, MediaQuery.of(context).padding.bottom + 32),
-          child: Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: _retry,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    side: const BorderSide(color: Colors.white38),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  icon: const Icon(Icons.refresh),
-                  label: Text(l.retake),
-                ),
+          const SizedBox(width: 12),
+          if (_stepSatisfied)
+            const Icon(Icons.check_circle,
+                color: AppColors.successColor, size: 24)
+          else
+            const SizedBox(width: 24),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVerifiedOverlay(AppLocalizations l) {
+    return Container(
+      color: Colors.black.withValues(alpha: 0.78),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(26),
+              decoration: const BoxDecoration(
+                color: AppColors.successColor,
+                shape: BoxShape.circle,
               ),
-              SizedBox(width: AppSizes.md),
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: _accept,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryColor,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  icon: const Icon(Icons.check),
-                  label: Text(l.use),
-                ),
-              ),
-            ],
-          ),
+              child: const Icon(Icons.check_rounded,
+                  color: Colors.white, size: 56),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              l.faceVerified,
+              style: AppTextStyles.headlineMedium
+                  .copyWith(color: Colors.white, fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              l.faceVerifiedMessage,
+              style: AppTextStyles.bodySmall.copyWith(color: Colors.white70),
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
 
-class _ScannerOverlayPainter extends CustomPainter {
-  final Rect ovalRect;
-  final bool faceDetected;
+/// Oval pembatas wajah ala aplikasi bank: **hijau** saat langkah liveness
+/// terpenuhi, **merah** saat wajah terdeteksi tapi posisi belum benar,
+/// **putih** saat wajah belum terdeteksi penuh.
+class _FaceOvalPainter extends CustomPainter {
+  final Rect faceRect;
+  final Color color;
 
-  _ScannerOverlayPainter({required this.ovalRect, required this.faceDetected});
+  _FaceOvalPainter({required this.faceRect, required this.color});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final overlayPaint = Paint()..color = Colors.black54;
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), overlayPaint);
+    final fillPaint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = color.withValues(alpha: 0.12);
+    canvas.drawOval(faceRect, fillPaint);
 
-    final clearPaint = Paint()..blendMode = BlendMode.clear;
-    canvas.drawOval(ovalRect, clearPaint);
-
-    final borderPaint = Paint()
-      ..color = faceDetected ? Colors.green : Colors.white
+    final strokePaint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
-    canvas.drawOval(ovalRect, borderPaint);
-
-    if (!faceDetected) {
-      final dashPaint = Paint()
-        ..color = Colors.white38
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1;
-      canvas.drawOval(ovalRect, dashPaint);
-    }
+      ..strokeWidth = 4
+      ..color = color;
+    canvas.drawOval(faceRect, strokePaint);
   }
 
   @override
-  bool shouldRepaint(_ScannerOverlayPainter oldDelegate) {
-    return oldDelegate.faceDetected != faceDetected || oldDelegate.ovalRect != ovalRect;
+  bool shouldRepaint(_FaceOvalPainter oldDelegate) {
+    return oldDelegate.faceRect != faceRect || oldDelegate.color != color;
   }
+}
+
+class _FaceDetection {
+  const _FaceDetection({
+    required this.found,
+    required this.multipleFaces,
+    required this.tooSmall,
+    required this.eyesClosed,
+    required this.eyesOpen,
+    required this.eulerX,
+    required this.eulerY,
+    required this.eulerZ,
+    required this.box,
+    required this.frameSize,
+  });
+
+  final bool found;
+  final bool multipleFaces;
+  final bool tooSmall;
+  final bool eyesClosed;
+  final bool eyesOpen;
+  final double eulerX;
+  final double eulerY;
+  final double eulerZ;
+  final Rect? box;
+  final Size frameSize;
+
+  _FaceDetection copyWith({bool? multipleFaces}) => _FaceDetection(
+        found: found,
+        multipleFaces: multipleFaces ?? this.multipleFaces,
+        tooSmall: tooSmall,
+        eyesClosed: eyesClosed,
+        eyesOpen: eyesOpen,
+        eulerX: eulerX,
+        eulerY: eulerY,
+        eulerZ: eulerZ,
+        box: box,
+        frameSize: frameSize,
+      );
+
+  static const empty = _FaceDetection(
+    found: false,
+    multipleFaces: false,
+    tooSmall: false,
+    eyesClosed: false,
+    eyesOpen: false,
+    eulerX: 0,
+    eulerY: 0,
+    eulerZ: 0,
+    box: null,
+    frameSize: Size.zero,
+  );
 }

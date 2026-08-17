@@ -22,7 +22,7 @@ class _HelpCenterPageState extends ConsumerState<HelpCenterPage> {
     final async = ref.watch(helpCenterProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l.helpCenter)),
+      appBar: AppBar(title: Text(l.helpCenter), backgroundColor: Colors.transparent, elevation: 0),
       body: async.when(
         loading: () => const Center(child: AppShimmer(width: 200, height: 16)),
         error: (err, _) => Center(

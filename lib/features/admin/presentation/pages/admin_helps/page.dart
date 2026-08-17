@@ -21,7 +21,7 @@ class AdminHelpsPage extends StatelessWidget {
       formFields: [
         FormFieldConfig(key: 'title', label: l.title, required: true),
         FormFieldConfig(key: 'subtitle', label: l.subtitle),
-        FormFieldConfig(key: 'faqs', label: 'FAQs', type: FormFieldType.multiline),
+        FormFieldConfig(key: 'faqs', label: l.faqs, type: FormFieldType.multiline),
         FormFieldConfig(key: 'contact_options', label: l.contactOptions, type: FormFieldType.multiline),
       ],
     );

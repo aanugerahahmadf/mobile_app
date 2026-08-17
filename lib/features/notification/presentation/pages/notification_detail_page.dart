@@ -20,6 +20,8 @@ class NotificationDetailPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(notif.title ?? l.notifications),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSizes.md),
@@ -36,22 +38,22 @@ class NotificationDetailPage extends StatelessWidget {
               const SizedBox(height: AppSizes.lg),
             ],
             _buildMeta(context, notif),
-            if (notif.data != null && notif.data!.isNotEmpty) ...[
+            if (_visibleEntries(notif.data).isNotEmpty) ...[
               const Divider(height: AppSizes.lg * 2),
               Text(l.content, style: AppTextStyles.titleMedium),
               const SizedBox(height: AppSizes.sm),
-              ...notif.data!.entries.map((e) => Padding(
+              ..._visibleEntries(notif.data).map((e) => Padding(
                 padding: const EdgeInsets.only(bottom: AppSizes.xs),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${e.key}: ',
+                      '${_friendlyKey(e.key, l)}: ',
                       style: AppTextStyles.bodySmall.copyWith(fontWeight: FontWeight.w600),
                     ),
                     Expanded(
                       child: Text(
-                        '${e.value}',
+                        _formatValue(e.value),
                         style: AppTextStyles.bodySmall,
                       ),
                     ),
@@ -191,5 +193,33 @@ class NotificationDetailPage extends StatelessWidget {
       default:
         return Icons.notifications;
     }
+  }
+
+  static const _hiddenKeys = {
+    'route', 'type', 'id', 'order_id', 'package_id', 'product_id',
+    'user_id', 'voucher_id', 'review_id', 'transaction_id', 'category_id',
+    'help_id', 'chat_id', 'target_id', 'notification_id', 'model_type',
+  };
+
+  List<MapEntry<String, dynamic>> _visibleEntries(Map<String, dynamic>? data) {
+    if (data == null || data.isEmpty) return [];
+    return data.entries.where((e) => !_hiddenKeys.contains(e.key)).toList();
+  }
+
+  String _friendlyKey(String key, AppLocalizations l) {
+    return switch (key) {
+      'order_number' => l.orderNumber,
+      'status' => l.status,
+      'method' => l.method,
+      'event_date' => l.eventDate,
+      _ => key.replaceAll('_', ' ').split(' ').map((w) => w[0].toUpperCase() + w.substring(1)).join(' '),
+    };
+  }
+
+  String _formatValue(dynamic value) {
+    if (value == null) return '-';
+    if (value is List) return value.join(', ');
+    if (value is Map) return value.toString();
+    return value.toString();
   }
 }

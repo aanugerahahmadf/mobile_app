@@ -25,8 +25,15 @@ import '../../features/profile/presentation/pages/edit_profile_page.dart';
 import '../../features/profile/presentation/pages/complete_profile_page.dart';
 import '../../features/profile/presentation/pages/profile_field_page.dart';
 import '../../features/profile/presentation/pages/face_scanner_page.dart';
-import '../../features/payment/presentation/pages/midtrans_webview_page.dart';
+import '../../features/profile/presentation/pages/document_scanner_page.dart';
+import '../../features/payment/presentation/pages/payment_instruction_page.dart';
+import '../../features/payment/presentation/pages/payment_method_detail_page.dart';
+import '../../features/payment/presentation/pages/payment_webview_page.dart';
+import '../../features/payment/domain/payment_method_info.dart';
 import '../../features/review/presentation/pages/my_reviews_page.dart';
+import '../../features/review/presentation/pages/review_list_page.dart';
+import '../../features/review/presentation/pages/all_reviews_page.dart';
+import '../../features/review/presentation/pages/user_reviews_page.dart';
 import '../../features/history/presentation/pages/history_page.dart';
 import '../../features/wishlist/presentation/pages/wishlist_page.dart';
 import '../../features/voucher/presentation/pages/voucher_list_page.dart';
@@ -48,22 +55,37 @@ import '../../features/admin/presentation/pages/admin_categories/page.dart';
 import '../../features/admin/presentation/pages/admin_orders/page.dart';
 import '../../features/admin/presentation/pages/admin_reviews/page.dart';
 import '../../features/admin/presentation/pages/admin_vouchers/page.dart';
+import '../../features/admin/presentation/pages/admin_discounts/page.dart';
 import '../../features/admin/presentation/pages/admin_transactions/page.dart';
 import '../../features/admin/presentation/pages/admin_helps/page.dart';
 import '../../features/admin/presentation/pages/admin_legal_pages/page.dart';
 import '../../features/admin/presentation/pages/admin_terms/page.dart';
 import '../../features/admin/presentation/pages/admin_privacy_policies/page.dart';
 import '../../features/admin/presentation/pages/admin_wedding_policies/page.dart';
+import '../../features/admin/presentation/pages/admin_banks/page.dart';
+import '../../features/admin/presentation/pages/admin_payment_methods/page.dart';
+import '../../features/admin/presentation/pages/admin_notifications/page.dart';
+import '../../features/admin/presentation/pages/admin_inboxes/page.dart';
+import '../../features/admin/presentation/pages/admin_wishlists/page.dart';
+import '../../features/admin/presentation/pages/admin_cbir_evaluation/page.dart';
+import '../../features/admin/presentation/pages/admin_vendors/page.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 final appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
-  initialLocation: '/landing',
+  initialLocation: '/onboarding',
   redirect: (context, state) async {
-    if (state.matchedLocation == '/onboarding') return null;
     final prefs = await SharedPreferences.getInstance();
     final onboardingSeen = prefs.getBool('onboarding_seen') ?? false;
+
+    if (state.matchedLocation == '/onboarding') {
+      // Sudah pernah lihat onboarding → langsung lewati ke landing.
+      if (onboardingSeen) return '/landing';
+      return null;
+    }
+
+    // User baru (belum pernah lihat onboarding) → langsung ke onboarding.
     if (!onboardingSeen) return '/onboarding';
     return null;
   },
@@ -145,8 +167,53 @@ final appRouter = GoRouter(
         return ProfileFieldPage(fieldKey: key);
       },
     ),
-    GoRoute(path: '/face-scanner', builder: (_, _) => const FaceScannerPage()),
+    GoRoute(
+      path: '/face-scanner',
+      builder: (_, _) => const FaceScannerPage(),
+    ),
+    GoRoute(
+      path: '/document-scanner',
+      builder: (_, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+        return DocumentScannerPage(
+          docType: extra?['docType'] as String? ?? 'ktp',
+        );
+      },
+    ),
     GoRoute(path: '/my-reviews', builder: (_, _) => const MyReviewsPage()),
+    GoRoute(
+      path: '/write-review',
+      builder: (_, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+        return ReviewListPage(
+          packageId: extra?['package_id'] as String? ?? '',
+          productId: extra?['product_id'] as String? ?? '',
+          packageName: extra?['name'] as String? ?? '',
+        );
+      },
+    ),
+    GoRoute(
+      path: '/item-reviews',
+      builder: (_, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+        return AllReviewsPage(
+          packageId: extra?['package_id'] as String? ?? '',
+          productId: extra?['product_id'] as String? ?? '',
+          title: extra?['title'] as String? ?? '',
+          reviews: (extra?['reviews'] as List?)?.cast<Map<String, dynamic>>() ?? [],
+        );
+      },
+    ),
+    GoRoute(
+      path: '/user-reviews',
+      builder: (_, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+        return UserReviewsPage(
+          userId: (extra?['user_id'] as String?) ?? '',
+          userName: extra?['user_name'] as String? ?? '',
+        );
+      },
+    ),
     GoRoute(path: '/history', builder: (_, _) => const HistoryPage()),
     GoRoute(path: '/vouchers', builder: (_, _) => const VoucherListPage()),
     GoRoute(path: '/vouchers/:id', builder: (_, state) {
@@ -169,25 +236,44 @@ final appRouter = GoRouter(
     GoRoute(path: '/admin/orders', builder: (_, _) => const AdminOrdersPage()),
     GoRoute(path: '/admin/reviews', builder: (_, _) => const AdminReviewsPage()),
     GoRoute(path: '/admin/vouchers', builder: (_, _) => const AdminVouchersPage()),
+    GoRoute(path: '/admin/discounts', builder: (_, _) => const AdminDiscountsPage()),
     GoRoute(path: '/admin/transactions', builder: (_, _) => const AdminTransactionsPage()),
     GoRoute(path: '/admin/helps', builder: (_, _) => const AdminHelpsPage()),
     GoRoute(path: '/admin/legal-pages', builder: (_, _) => const AdminLegalPagesPage()),
     GoRoute(path: '/admin/terms', builder: (_, _) => const AdminTermsPage()),
     GoRoute(path: '/admin/privacy-policies', builder: (_, _) => const AdminPrivacyPoliciesPage()),
     GoRoute(path: '/admin/wedding-policies', builder: (_, _) => const AdminWeddingPoliciesPage()),
-    GoRoute(path: '/admin/notifications', builder: (_, _) => const NotificationPage()),
-    GoRoute(path: '/admin/inboxes', builder: (_, _) => const ChatListPage()),
+    GoRoute(path: '/admin/banks', builder: (_, _) => const AdminBanksPage()),
+    GoRoute(path: '/admin/payment-methods', builder: (_, _) => const AdminPaymentMethodsPage()),
+    GoRoute(path: '/admin/notifications', builder: (_, _) => const AdminNotificationsPage()),
+    GoRoute(path: '/admin/inboxes', builder: (_, _) => const AdminInboxesPage()),
+    GoRoute(path: '/admin/wishlists', builder: (_, _) => const AdminWishlistsPage()),
+    GoRoute(path: '/admin/cbir-evaluation', builder: (_, _) => const AdminCbirEvaluationPage()),
+    GoRoute(path: '/admin/vendors', builder: (_, _) => const AdminVendorsPage()),
     GoRoute(path: '/switch-account', builder: (_, _) => const SwitchAccountPage()),
     GoRoute(path: '/settings', builder: (_, _) => const SettingsPage()),
     GoRoute(path: '/language', builder: (_, _) => const LanguagePage()),
     GoRoute(path: '/app-lock', builder: (_, _) => const AppLockPage()),
     GoRoute(
       path: '/payment/:orderId',
+      builder: (_, state) => PaymentInstructionPage(
+        orderId: state.pathParameters['orderId']!,
+      ),
+    ),
+    GoRoute(
+      path: '/payment-method/:orderId',
+      builder: (_, state) => PaymentMethodDetailPage(
+        orderId: state.pathParameters['orderId']!,
+        method: state.extra as PaymentMethodInfo,
+      ),
+    ),
+    GoRoute(
+      path: '/payment-webview',
       builder: (_, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        return MidtransWebviewPage(
-          orderId: state.pathParameters['orderId']!,
-          initialSnapToken: extra?['snap_token'] as String?,
+        final extra = state.extra as Map<String, String>;
+        return PaymentWebViewPage(
+          url: extra['url'] ?? '',
+          title: extra['title'] ?? '',
         );
       },
     ),

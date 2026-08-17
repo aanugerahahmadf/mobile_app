@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/api/dio_client.dart';
+import '../../../../core/errors/app_error_codes.dart';
 import '../../../../core/utils/formatters.dart';
 import '../../data/profile_repository_impl.dart';
 import '../../domain/profile_repository.dart';
@@ -16,6 +17,12 @@ class ProfileState {
   final bool selfieUploading;
   final String? ktpUrl;
   final String? selfieUrl;
+  final bool? ktpAiVerified;
+  final double? ktpAiScore;
+  final String? ktpAiReason;
+  final bool? faceVerified;
+  final double? faceSimilarity;
+  final String? faceReason;
 
   const ProfileState({
     this.userData,
@@ -28,6 +35,12 @@ class ProfileState {
     this.selfieUploading = false,
     this.ktpUrl,
     this.selfieUrl,
+    this.ktpAiVerified,
+    this.ktpAiScore,
+    this.ktpAiReason,
+    this.faceVerified,
+    this.faceSimilarity,
+    this.faceReason,
   });
 
   ProfileState copyWith({
@@ -41,6 +54,13 @@ class ProfileState {
     bool? selfieUploading,
     String? ktpUrl,
     String? selfieUrl,
+    bool? ktpAiVerified,
+    double? ktpAiScore,
+    String? ktpAiReason,
+    bool? faceVerified,
+    double? faceSimilarity,
+    String? faceReason,
+    bool clearAiResults = false,
   }) {
     return ProfileState(
       userData: userData ?? this.userData,
@@ -53,6 +73,12 @@ class ProfileState {
       selfieUploading: selfieUploading ?? this.selfieUploading,
       ktpUrl: ktpUrl ?? this.ktpUrl,
       selfieUrl: selfieUrl ?? this.selfieUrl,
+      ktpAiVerified: clearAiResults ? null : (ktpAiVerified ?? this.ktpAiVerified),
+      ktpAiScore: clearAiResults ? null : (ktpAiScore ?? this.ktpAiScore),
+      ktpAiReason: clearAiResults ? null : (ktpAiReason ?? this.ktpAiReason),
+      faceVerified: clearAiResults ? null : (faceVerified ?? this.faceVerified),
+      faceSimilarity: clearAiResults ? null : (faceSimilarity ?? this.faceSimilarity),
+      faceReason: clearAiResults ? null : (faceReason ?? this.faceReason),
     );
   }
 }
@@ -70,7 +96,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     } on DioException catch (e) {
       state = state.copyWith(
         loading: false,
-        error: e.error?.toString() ?? 'Gagal memuat profil',
+        error: e.error?.toString() ?? AppErrorCodes.failedLoadProfile,
       );
     } catch (e) {
       state = state.copyWith(loading: false, error: e.toString());
@@ -89,13 +115,34 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     } on DioException catch (e) {
       state = state.copyWith(
         saving: false,
-        error: e.error?.toString() ?? 'Gagal memperbarui profil',
+        error: _extractBackendError(e),
       );
       rethrow;
     } catch (e) {
       state = state.copyWith(saving: false, error: e.toString());
       rethrow;
     }
+  }
+
+  /// Extracts a user-friendly error message from a DioException.
+  /// Prefers error_code, then field-level validation errors, then top-level message.
+  static String _extractBackendError(DioException e) {
+    final data = e.response?.data;
+    if (data is Map<String, dynamic>) {
+      final errorCode = data['error_code'] as String?;
+      if (errorCode != null && errorCode.isNotEmpty) return errorCode;
+      final errors = data['errors'] as Map<String, dynamic>?;
+      if (errors != null && errors.isNotEmpty) {
+        final firstKey = errors.keys.first;
+        final fieldErrors = errors[firstKey];
+        if (fieldErrors is List && fieldErrors.isNotEmpty) {
+          return fieldErrors.first.toString();
+        }
+      }
+      final msg = data['message'] as String?;
+      if (msg != null && msg.isNotEmpty) return msg;
+    }
+    return AppErrorCodes.failedUpdateProfile;
   }
 
   Future<String?> uploadAvatar(String filePath) async {
@@ -113,7 +160,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     } on DioException catch (e) {
       state = state.copyWith(
         saving: false,
-        error: e.error?.toString() ?? 'Gagal mengunggah avatar',
+        error: e.error?.toString() ?? AppErrorCodes.failedUploadAvatar,
       );
       rethrow;
     } catch (e) {
@@ -132,15 +179,15 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     } catch (_) {}
   }
 
-  Future<void> updateNik(String nik) async {
+  Future<void> updateKtpNumber(String ktpNumber) async {
     state = state.copyWith(saving: true, error: null);
     try {
-      await _repository.updateNik(nik);
-      final updated = Map<String, dynamic>.from(state.userData ?? {})..['nik'] = nik;
-      state = state.copyWith(userData: updated, saving: false);
+      await _repository.updateKtpNumber(ktpNumber);
+      final updated = Map<String, dynamic>.from(state.userData ?? {})..['ktp_number'] = ktpNumber;
+      state = state.copyWith(saving: false, userData: updated);
       await fetchCompletion();
     } on DioException catch (e) {
-      state = state.copyWith(saving: false, error: e.error?.toString() ?? 'Gagal memperbarui NIK');
+      state = state.copyWith(saving: false, error: e.error?.toString() ?? AppErrorCodes.failedUpdateKtpNumber);
       rethrow;
     } catch (e) {
       state = state.copyWith(saving: false, error: e.toString());
@@ -148,19 +195,30 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     }
   }
 
-  Future<String?> uploadKtp(String filePath) async {
+  void resetKycAiState() {
+    state = state.copyWith(clearAiResults: true);
+  }
+
+  Future<Map<String, dynamic>?> uploadKtp(String filePath) async {
     state = state.copyWith(ktpUploading: true, error: null);
     try {
-      final url = await _repository.uploadKtp(filePath);
-      state = state.copyWith(ktpUrl: url, ktpUploading: false);
+      final result = await _repository.uploadKtp(filePath);
+      final url = result['ktp_photo_url'] as String? ?? '';
+      state = state.copyWith(
+        ktpUrl: url,
+        ktpUploading: false,
+        ktpAiVerified: result['ktp_ai_verified'] as bool?,
+        ktpAiScore: (result['ktp_ai_score'] as num?)?.toDouble(),
+        ktpAiReason: result['ktp_ai_reason'] as String?,
+      );
       if (state.userData != null) {
         final updated = Map<String, dynamic>.from(state.userData!)..['ktp_photo_url'] = url;
         state = state.copyWith(userData: updated);
       }
       await fetchCompletion();
-      return url;
+      return result;
     } on DioException catch (e) {
-      state = state.copyWith(ktpUploading: false, error: e.error?.toString() ?? 'Gagal mengunggah KTP');
+      state = state.copyWith(ktpUploading: false, error: e.error?.toString() ?? AppErrorCodes.failedUploadKtp);
       return null;
     } catch (e) {
       state = state.copyWith(ktpUploading: false, error: e.toString());
@@ -168,13 +226,16 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     }
   }
 
-  Future<Map<String, dynamic>?> uploadSelfie(String filePath) async {
+  Future<Map<String, dynamic>?> uploadSelfie(String filePath, {bool livenessCompleted = false}) async {
     state = state.copyWith(selfieUploading: true, error: null);
     try {
-      final result = await _repository.uploadSelfie(filePath);
+      final result = await _repository.uploadSelfie(filePath, livenessCompleted: livenessCompleted);
       state = state.copyWith(
         selfieUrl: result['selfie_photo_url'] as String?,
         selfieUploading: false,
+        faceVerified: result['face_verified'] as bool?,
+        faceSimilarity: (result['similarity'] as num?)?.toDouble(),
+        faceReason: result['face_reason'] as String?,
       );
       if (state.userData != null) {
         final updated = Map<String, dynamic>.from(state.userData!)
@@ -185,7 +246,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       await fetchCompletion();
       return result;
     } on DioException catch (e) {
-      state = state.copyWith(selfieUploading: false, error: e.error?.toString() ?? 'Gagal mengunggah selfie');
+      state = state.copyWith(selfieUploading: false, error: e.error?.toString() ?? AppErrorCodes.failedUploadSelfie);
       return null;
     } catch (e) {
       state = state.copyWith(selfieUploading: false, error: e.toString());
@@ -193,10 +254,15 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     }
   }
 
-  Future<Map<String, dynamic>?> uploadFaceScan(String filePath) async {
+  Future<Map<String, dynamic>?> uploadFaceScan(String filePath, {bool livenessCompleted = false}) async {
     state = state.copyWith(error: null);
     try {
-      final result = await _repository.uploadFaceScan(filePath);
+      final result = await _repository.uploadFaceScan(filePath, livenessCompleted: livenessCompleted);
+      state = state.copyWith(
+        faceVerified: result['face_verified'] as bool?,
+        faceSimilarity: (result['similarity'] as num?)?.toDouble(),
+        faceReason: result['face_reason'] as String?,
+      );
       if (state.userData != null) {
         final updated = Map<String, dynamic>.from(state.userData!)
           ..['face_scan_photo_url'] = result['face_scan_photo_url']
@@ -206,7 +272,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
       await fetchCompletion();
       return result;
     } on DioException catch (e) {
-      state = state.copyWith(error: e.error?.toString() ?? 'Gagal mengunggah face scan');
+      state = state.copyWith(error: e.error?.toString() ?? AppErrorCodes.failedUploadFaceScan);
       return null;
     } catch (e) {
       state = state.copyWith(error: e.toString());
@@ -222,7 +288,7 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     } on DioException catch (e) {
       state = state.copyWith(
         saving: false,
-        error: e.error?.toString() ?? 'Gagal mengubah password',
+        error: e.error?.toString() ?? AppErrorCodes.failedChangePassword,
       );
       rethrow;
     } catch (e) {

@@ -27,8 +27,8 @@ class ItemModel {
   final bool isWishlisted;
   final CategoryModel? category;
   final List<ReviewModel>? reviews;
-  final String? weddingFlowersDecorasiId;
-  final Map<String, dynamic>? weddingFlowersDecorasi;
+  final String? vendorId;
+  final Map<String, dynamic>? vendor;
   final String? createdAt;
   final String? updatedAt;
 
@@ -56,15 +56,24 @@ class ItemModel {
     this.isWishlisted = false,
     this.category,
     this.reviews,
-    this.weddingFlowersDecorasiId,
-    this.weddingFlowersDecorasi,
+    this.vendorId,
+    this.vendor,
     this.createdAt,
     this.updatedAt,
   });
 
-  bool get hasDiscount => discountPrice != null && discountPrice! < price;
+  bool get hasDiscount => discountPrice != null && discountPrice! > 0 && discountPrice! < price;
 
   String? get categoryName => category?.name;
+
+  /// Normalisasi daftar media dari API menjadi list map dengan key `url`.
+  /// Menangani array object ({original_url/url}), array string URL, dan
+  /// field `images` sebagai alternatif.
+  static List<Map<String, dynamic>>? _normalizeMedia(Map<String, dynamic> json) {
+    final urls = Formatters.itemMediaUrls(json);
+    if (urls.isEmpty) return null;
+    return urls.map((u) => {'url': u}).toList();
+  }
 
   factory ItemModel.fromJson(Map<String, dynamic> json) {
     return ItemModel(
@@ -85,27 +94,14 @@ class ItemModel {
       maxCapacity: parseIntNullable(json['max_capacity']),
       imageUrl: (json['image'] ?? json['image_url']) != null ? Formatters.imageUrl((json['image'] ?? json['image_url']) as String) : null,
       videoUrl: json['video_url'] as String?,
-      media: json['media'] != null
-          ? (json['media'] as List).map((m) {
-              if (m is Map) {
-                final map = Map<String, dynamic>.from(m);
-                // API returns original_url, not url
-                final src = (map['original_url'] as String?)?.isNotEmpty == true
-                    ? map['original_url'] as String
-                    : (map['url'] as String? ?? '');
-                map['url'] = Formatters.imageUrl(src);
-                return map;
-              }
-              return m;
-            }).toList()
-          : null,
+      media: _normalizeMedia(json),
       finalPrice: parseDouble(json['final_price'] ?? json['price']),
       averageRating: parseDouble(json['average_rating']),
       isWishlisted: json['is_wishlisted'] as bool? ?? false,
       category: json['category'] != null ? CategoryModel.fromJson(json['category'] as Map<String, dynamic>) : null,
       reviews: json['reviews'] != null ? (json['reviews'] as List).map((e) => ReviewModel.fromJson(e as Map<String, dynamic>)).toList() : null,
-      weddingFlowersDecorasiId: json['wedding_flowers_decorasi_id'] as String?,
-      weddingFlowersDecorasi: json['wedding_flowers_decorasi'] as Map<String, dynamic>?,
+      vendorId: json['vendor_id']?.toString(),
+      vendor: json['vendor'] as Map<String, dynamic>?,
       createdAt: json['created_at'] as String?,
       updatedAt: json['updated_at'] as String?,
     );
@@ -120,8 +116,8 @@ class ItemModel {
     'image_url': imageUrl, 'video_url': videoUrl, 'final_price': finalPrice,
     'is_wishlisted': isWishlisted,
     'category': category?.toJson(),
-    'wedding_flowers_decorasi_id': weddingFlowersDecorasiId,
-    'wedding_flowers_decorasi': weddingFlowersDecorasi,
+    'vendor_id': vendorId,
+    'vendor': vendor,
     'created_at': createdAt, 'updated_at': updatedAt,
   };
 }

@@ -6,6 +6,7 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
+import '../../../../core/errors/localized_error.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/utils/validators.dart';
 import '../providers/auth_provider.dart';
@@ -72,7 +73,7 @@ class _SignInPageState extends ConsumerState<SignInPage> {
           context.go('/home');
         }
       } else if (state is AuthError) {
-        AppSnackBar.show(context, state.message, type: SnackBarType.error);
+        AppSnackBar.show(context, LocalizedError.of(l, state.message), type: SnackBarType.error);
       }
     });
 

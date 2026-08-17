@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import '../constants/app_colors.dart';
 import '../constants/app_text_styles.dart';
 
 class AppTextField extends StatelessWidget {
   final String? label;
+  final String? hintText;
   final String? errorText;
   final bool obscureText;
   final bool readOnly;
@@ -15,10 +18,13 @@ class AppTextField extends StatelessWidget {
   final int maxLines;
   final TextInputAction? textInputAction;
   final void Function(String)? onFieldSubmitted;
+  final List<TextInputFormatter>? inputFormatters;
+  final TextCapitalization textCapitalization;
 
   const AppTextField({
     super.key,
     this.label,
+    this.hintText,
     this.errorText,
     this.obscureText = false,
     this.readOnly = false,
@@ -31,6 +37,8 @@ class AppTextField extends StatelessWidget {
     this.maxLines = 1,
     this.textInputAction,
     this.onFieldSubmitted,
+    this.inputFormatters,
+    this.textCapitalization = TextCapitalization.none,
   });
 
   @override
@@ -57,11 +65,29 @@ class AppTextField extends StatelessWidget {
           maxLines: maxLines,
           textInputAction: textInputAction,
           onFieldSubmitted: onFieldSubmitted,
+          inputFormatters: inputFormatters,
+          textCapitalization: textCapitalization,
           style: AppTextStyles.bodyLarge,
           decoration: InputDecoration(
             errorText: errorText,
+            hintText: hintText,
             suffixIcon: suffixIcon,
             prefix: prefix,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: AppColors.dividerColor),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: AppColors.dividerColor),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: AppColors.primaryColor, width: 2),
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            filled: true,
+            fillColor: AppColors.surfaceColor,
           ),
         ),
       ],

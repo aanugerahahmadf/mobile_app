@@ -6,6 +6,7 @@ import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/errors/localized_error.dart';
 import '../providers/search_provider.dart';
 import '../../data/models/search_suggestion.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -53,7 +54,9 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Pencarian'),
+        title: Text(l.searchResults),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),
           child: Padding(
@@ -102,7 +105,7 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
                       children: [
                         Icon(Icons.cloud_off, size: 64, color: AppColors.textTertiary),
                         const SizedBox(height: AppSizes.md),
-                        Text(state.error!, style: AppTextStyles.bodyMedium, textAlign: TextAlign.center),
+                        Text(LocalizedError.of(l, state.error!), style: AppTextStyles.bodyMedium, textAlign: TextAlign.center),
                         const SizedBox(height: AppSizes.md),
                         ElevatedButton.icon(
                           onPressed: () => _searchNotifier.search(_query),
@@ -136,6 +139,7 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
   }
 
   Widget _buildGroupedResults(List<SearchSuggestion> items) {
+    final l = AppLocalizations.of(context)!;
     final grouped = <String, List<SearchSuggestion>>{};
     for (final item in items) {
       grouped.putIfAbsent(item.type.badgeLabel, () => []).add(item);
@@ -148,15 +152,15 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
       children: [
         Padding(
           padding: const EdgeInsets.only(bottom: AppSizes.sm),
-          child: Text('${items.length} hasil untuk "$_query"',
+          child: Text(l.resultsFor(items.length, _query),
             style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
         ),
-        ...sortedKeys.map((key) => _buildSection(key, grouped[key]!, items.firstWhere((i) => i.type.badgeLabel == key).type)),
+        ...sortedKeys.map((key) => _buildSection(l, key, grouped[key]!, items.firstWhere((i) => i.type.badgeLabel == key).type)),
       ],
     );
   }
 
-  Widget _buildSection(String label, List<SearchSuggestion> sectionItems, SuggestionType type) {
+  Widget _buildSection(AppLocalizations l, String label, List<SearchSuggestion> sectionItems, SuggestionType type) {
     final displayItems = sectionItems.take(5).toList();
     final hasMore = sectionItems.length > 5;
 
@@ -167,19 +171,19 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
           padding: const EdgeInsets.only(top: AppSizes.md, bottom: AppSizes.sm),
           child: Row(
             children: [
-              Text(label, style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w600)),
+              Text(type.localizedLabel(l), style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.w600)),
               const Spacer(),
               Text('${sectionItems.length}', style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary)),
             ],
           ),
         ),
-        ...displayItems.map((item) => _buildResultItem(item)),
+        ...displayItems.map((item) => _buildResultItem(l, item)),
         if (hasMore)
           Padding(
             padding: const EdgeInsets.only(top: 4),
             child: TextButton(
               onPressed: () => _navigateToType(type),
-              child: Text('Lihat semua ${sectionItems.length} $label'),
+              child: Text(l.seeAllCount(sectionItems.length, label)),
             ),
           ),
         const Divider(height: 24),
@@ -187,7 +191,7 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
     );
   }
 
-  Widget _buildResultItem(SearchSuggestion item) {
+  Widget _buildResultItem(AppLocalizations l, SearchSuggestion item) {
     final authState = ref.watch(authProvider);
     final isAdmin = authState is AuthAuthenticated && authState.user.isAdmin;
     final hasImage = item.imageUrl != null && item.imageUrl!.isNotEmpty;
@@ -224,7 +228,7 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
         trailing: Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(color: AppColors.secondaryColor, borderRadius: BorderRadius.circular(4)),
-          child: Text(item.type.badgeLabel, style: TextStyle(fontSize: 9, color: AppColors.textSecondary)),
+          child: Text(item.type.localizedLabel(l), style: TextStyle(fontSize: 9, color: AppColors.textSecondary)),
         ),
         onTap: () => _navigateToItem(item),
       ),
@@ -251,6 +255,7 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
       case SuggestionType.users: return Icons.people_rounded;
       case SuggestionType.transactions: return Icons.payments_rounded;
       case SuggestionType.packages: case SuggestionType.products: return Icons.image_outlined;
+      case SuggestionType.vendors: return Icons.store;
     }
   }
 
@@ -281,6 +286,8 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
         context.push('/admin/users');
       case SuggestionType.transactions:
         context.push('/admin/transactions');
+      case SuggestionType.vendors:
+        context.push('/vendors');
     }
   }
 

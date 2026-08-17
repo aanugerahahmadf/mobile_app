@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/constants/app_sizes.dart';
 
 class VoucherCard extends StatelessWidget {
@@ -9,8 +10,9 @@ class VoucherCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     final code = voucher['code'] as String? ?? 'PROMO';
-    final desc = voucher['description'] as String? ?? 'Diskon menarik untuk Anda';
+    final desc = voucher['description'] as String? ?? l.voucherSpecialOffer;
     final discountRaw = voucher['discount_amount'] ?? voucher['discount'] ?? 0;
     final discountType = voucher['discount_type'] as String? ?? 'percentage';
 
@@ -78,7 +80,7 @@ class VoucherCard extends StatelessWidget {
                 children: [
                   // Sisi Kiri: Nilai Diskon
                   Container(
-                    width: 100,
+                    width: 80,
                     alignment: Alignment.center,
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -87,7 +89,7 @@ class VoucherCard extends StatelessWidget {
                           Text(
                             'POTONGAN',
                             style: TextStyle(
-                              fontSize: 9,
+                              fontSize: 7,
                               fontWeight: FontWeight.w800,
                               color: Colors.white.withAlpha(204),
                               letterSpacing: 1.0,
@@ -96,17 +98,17 @@ class VoucherCard extends StatelessWidget {
                         Text(
                           discLabel,
                           style: const TextStyle(
-                            fontSize: 32,
+                            fontSize: 20,
                             fontWeight: FontWeight.w900,
                             color: Colors.white,
                             height: 1.1,
                           ),
                         ),
                         if (discountType == 'percentage')
-                          const Text(
+                          Text(
                             'DISKON',
                             style: TextStyle(
-                              fontSize: 9,
+                              fontSize: 7,
                               fontWeight: FontWeight.w800,
                               color: Colors.white70,
                               letterSpacing: 1.2,
@@ -139,8 +141,8 @@ class VoucherCard extends StatelessWidget {
                             child: Text(
                               code,
                               style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
                                 color: Color(0xFFFF4B2B),
                                 letterSpacing: 1.0,
                               ),
@@ -150,21 +152,12 @@ class VoucherCard extends StatelessWidget {
                           Text(
                             desc,
                             style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w500,
                               color: Colors.white,
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Ketuk untuk salin atau gunakan',
-                            style: TextStyle(
-                              fontSize: 9,
-                              color: Colors.white.withAlpha(179),
-                              fontStyle: FontStyle.italic,
-                            ),
                           ),
                         ],
                       ),

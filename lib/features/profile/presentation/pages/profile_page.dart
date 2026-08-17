@@ -126,8 +126,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     child: Column(
                       children: [
                         _menuTile(Icons.settings, l.settings, () => context.push('/settings')),
-                        if (!isAdmin)
-                          _menuTile(Icons.card_giftcard, l.myVouchers, () => context.push('/vouchers')),
+                        _menuTile(Icons.history, l.history, () => context.push('/history')),
+                        _menuTile(Icons.rate_review_outlined, l.myReviews, () => context.push('/my-reviews')),
                         _menuTile(Icons.privacy_tip, l.privacyAndTerms, () => context.push('/legal/privacy-term')),
                         _menuTile(Icons.help, l.helpCenter, () => context.push('/help-center')),
                         _menuTile(Icons.logout, l.signOut, _logout, isDestructive: true),
@@ -196,9 +196,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         action: l.verify, section: 'username',
       ));
     }
-    if (items['nik'] == false) {
+    if (items['ktp_number'] == false) {
       missingFields.add(_ProfileTask(
-        key: 'nik', icon: Icons.badge_outlined,
+        key: 'ktp_number', icon: Icons.badge_outlined,
         label: l.idNumber,
         action: l.fillLabel, section: 'identity',
       ));
@@ -378,7 +378,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                               SizedBox(width: 6),
                               Flexible(
                                 child: Text(
-                                  l.faceVerification,
+                                  l.aiComputerVision,
                                   style: AppTextStyles.bodySmall.copyWith(color: AppColors.successColor),
                                 ),
                               ),
@@ -508,8 +508,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       case 'whatsapp':
         context.push('/profile-field', extra: {'key': 'whatsapp'});
         break;
-      case 'nik':
-        context.push('/profile-field', extra: {'key': 'nik'});
+      case 'ktp_number':
+        context.push('/profile-field', extra: {'key': 'ktp_number'});
         break;
       case 'birth_place':
       case 'birth_date':

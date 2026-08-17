@@ -15,7 +15,7 @@ class AboutPage extends ConsumerWidget {
     final async = ref.watch(aboutProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l.aboutApp)),
+      appBar: AppBar(title: Text(l.aboutApp), backgroundColor: Colors.transparent, elevation: 0),
       body: async.when(
         loading: () => const Center(child: AppShimmer(width: 200, height: 16)),
         error: (err, _) => Center(
@@ -63,7 +63,7 @@ class AboutPage extends ConsumerWidget {
               ],
               if (about.mission != null) ...[
                 const SizedBox(height: AppSizes.xl),
-                Text('Mission', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
+                Text(l.mission, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.textPrimary)),
                 const SizedBox(height: 8),
                 Text(
                   about.mission!,

@@ -7,25 +7,30 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
 import '../../../../core/api/api_endpoints.dart';
+import '../../../../core/errors/localized_error.dart';
+import '../../../../core/reference/dropdown_option.dart';
+import '../../../../core/reference/dropdown_options_provider.dart';
 import 'package:dio/dio.dart';
 import '../../../../core/api/dio_client.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import '../../../../core/services/image_scan_analyzer.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/widgets/media_viewer.dart';
 import '../../../../core/utils/ktp_utils.dart';
-import '../../../../core/utils/passport_utils.dart';
-import '../../../../core/utils/sim_utils.dart';
-import '../../../../core/utils/npwp_utils.dart';
+import '../../../../core/utils/identity_document_utils.dart';
+import '../../../../core/utils/camera_scan_utils.dart';
+import '../../../../core/utils/profile_media_picker.dart';
 import '../../../../core/utils/country_codes.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/app_notification.dart';
 import '../../../../core/widgets/app_shimmer.dart';
 import '../../../../core/widgets/app_text_field.dart';
-import '../../../../core/widgets/app_date_picker_field.dart';
 import '../../../../core/widgets/app_country_picker_field.dart';
 import '../../../../core/widgets/app_region_picker_field.dart';
+import '../../../../core/widgets/whatsapp_otp_verifier.dart';
 import '../../../legal/data/models/legal_model.dart';
 import '../../../legal/presentation/providers/legal_provider.dart';
 import '../providers/auth_provider.dart';
@@ -109,25 +114,16 @@ class _AgreementModalState extends State<_AgreementModal> {
               padding: const EdgeInsets.symmetric(horizontal: AppSizes.md, vertical: AppSizes.md),
               child: Row(
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: _close,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                  const SizedBox(width: AppSizes.sm),
                   Expanded(
                     child: Text(
                       title,
-                      style: AppTextStyles.titleMedium,
+                      style: AppTextStyles.titleLarge.copyWith(fontSize: 22, fontWeight: FontWeight.bold),
                       textAlign: TextAlign.center,
                     ),
                   ),
-                  const SizedBox(width: 40),
                 ],
               ),
             ),
-            Divider(height: 1, color: AppColors.dividerColor),
             Expanded(
               child: isWedding
                   ? _LegalContentView(
@@ -135,21 +131,18 @@ class _AgreementModalState extends State<_AgreementModal> {
                       isWizard: false,
                       onNext: null,
                       onAgreed: null,
-                      onClose: _close,
                     )
                   : (_step == 1
                       ? _LegalContentView(
                           provider: termsOfServiceProvider,
                           isWizard: isWizard,
                           onNext: isWizard ? () => setState(() => _step = 2) : null,
-                          onClose: !isWizard ? _close : null,
                         )
                       : (_step == 2
                           ? _LegalContentView(
                               provider: privacyPolicyProvider,
                               isWizard: isWizard,
                               onNext: isWizard ? () => setState(() => _step = 3) : null,
-                              onClose: !isWizard ? _close : null,
                             )
                           : _LegalContentView(
                               provider: weddingDecorationPolicyProvider,
@@ -161,7 +154,6 @@ class _AgreementModalState extends State<_AgreementModal> {
                                       _close();
                                     }
                                   : null,
-                              onClose: !isWizard ? _close : null,
                             ))),
             ),
           ],
@@ -176,14 +168,12 @@ class _LegalContentView extends ConsumerWidget {
   final bool isWizard;
   final VoidCallback? onNext;
   final VoidCallback? onAgreed;
-  final VoidCallback? onClose;
 
   const _LegalContentView({
     required this.provider,
     this.isWizard = false,
     this.onNext,
     this.onAgreed,
-    this.onClose,
   });
 
   List<dynamic>? _parseContent(dynamic content) {
@@ -233,8 +223,6 @@ class _LegalContentView extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(content.title,
-                      style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w700)),
                   if (content.updatedAt != null) ...[
                     const SizedBox(height: 8),
                     Text('${l.lastUpdated}: ${content.updatedAt}',
@@ -245,7 +233,6 @@ class _LegalContentView extends ConsumerWidget {
                     ...sections.map<Widget>((section) {
                       final heading = section['heading'] as String?;
                       final body = section['body'] as String?;
-                      final isItalic = section['is_italic'] == true;
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 16),
                         child: Column(
@@ -256,7 +243,7 @@ class _LegalContentView extends ConsumerWidget {
                                 padding: const EdgeInsets.only(bottom: 4),
                                 child: Text(heading, style: GoogleFonts.inter(fontSize: 14, fontWeight: FontWeight.bold)),
                               ),
-                            Text(body ?? '', textAlign: TextAlign.justify, style: GoogleFonts.inter(fontSize: 14, height: 1.6, fontStyle: isItalic ? FontStyle.italic : FontStyle.normal)),
+                            Text(body ?? '', textAlign: TextAlign.justify, style: GoogleFonts.inter(fontSize: 14, height: 1.6)),
                           ],
                         ),
                       );
@@ -273,40 +260,32 @@ class _LegalContentView extends ConsumerWidget {
               ),
             ),
           ),
-          if (onNext != null || onAgreed != null || onClose != null)
+          if (onNext != null || onAgreed != null)
             Container(
-              padding: const EdgeInsets.all(AppSizes.md),
+              padding: EdgeInsets.fromLTRB(
+                AppSizes.md,
+                AppSizes.sm,
+                AppSizes.md,
+                AppSizes.md + MediaQuery.of(context).padding.bottom,
+              ),
               decoration: BoxDecoration(
                 color: AppColors.surfaceColor,
-                border: Border(top: BorderSide(color: AppColors.dividerColor)),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  if (onNext != null)
-                    AppButton(
+              child: onNext != null
+                  ? AppButton(
                       label: l.proceed,
                       onPressed: onNext,
                       type: ButtonType.primary,
-                      width: 140,
+                      height: 56,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    )
+                  : AppButton(
+                      label: l.iUnderstandAndAgree,
+                      onPressed: onAgreed,
+                      type: ButtonType.primary,
+                      height: 56,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     ),
-                  if (onAgreed != null)
-                    Expanded(
-                      child: AppButton(
-                        label: l.iUnderstandAndAgree,
-                        onPressed: onAgreed,
-                        type: ButtonType.primary,
-                      ),
-                    ),
-                  if (onClose != null)
-                    AppButton(
-                      label: l.close,
-                      onPressed: onClose,
-                      type: ButtonType.outline,
-                      width: 120,
-                    ),
-                ],
-              ),
             ),
         ],
       ),
@@ -320,7 +299,7 @@ Future<void> showSignInSheet(BuildContext context) {
     isScrollControlled: true,
     useSafeArea: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => const _AuthSheetWrapper(child: _SignInSheetContent()),
+    builder: (_) => const _AuthSheetWrapper(child: _AuthSheetSwitcher(initialType: _AuthSheetType.signIn)),
   );
 }
 
@@ -330,8 +309,42 @@ Future<void> showSignUpSheet(BuildContext context) {
     isScrollControlled: true,
     useSafeArea: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => const _AuthSheetWrapper(child: _SignUpSheetContent()),
+    builder: (_) => const _AuthSheetWrapper(child: _AuthSheetSwitcher(initialType: _AuthSheetType.signUp)),
   );
+}
+
+class _AuthSheetSwitcher extends StatefulWidget {
+  final _AuthSheetType initialType;
+  const _AuthSheetSwitcher({required this.initialType});
+
+  @override
+  State<_AuthSheetSwitcher> createState() => _AuthSheetSwitcherState();
+}
+
+class _AuthSheetSwitcherState extends State<_AuthSheetSwitcher> {
+  late _AuthSheetType _type;
+
+  @override
+  void initState() {
+    super.initState();
+    _type = widget.initialType;
+  }
+
+  void _switchToSignUp() => setState(() => _type = _AuthSheetType.signUp);
+  void _switchToSignIn() => setState(() => _type = _AuthSheetType.signIn);
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: _type == _AuthSheetType.signIn,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _switchToSignIn();
+      },
+      child: _type == _AuthSheetType.signIn
+          ? _SignInSheetContent(onSwitchToSignUp: _switchToSignUp)
+          : _SignUpSheetContent(onSwitchToSignIn: _switchToSignIn),
+    );
+  }
 }
 
 Future<void> showForgotPasswordSheet(BuildContext context) {
@@ -344,13 +357,20 @@ Future<void> showForgotPasswordSheet(BuildContext context) {
   );
 }
 
-Future<void> showOtpVerificationSheet(BuildContext context, {String? email, String purpose = 'forgot_password'}) {
+Future<void> showOtpVerificationSheet(
+  BuildContext context, {
+  String? email,
+  String purpose = 'forgot_password',
+  Future<void> Function()? onVerified,
+}) {
   return showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => _AuthSheetWrapper(child: _OtpVerificationSheetContent(email: email, purpose: purpose)),
+    builder: (_) => _AuthSheetWrapper(
+      child: _OtpVerificationSheetContent(email: email, purpose: purpose, onVerified: onVerified),
+    ),
   );
 }
 
@@ -370,35 +390,43 @@ class _AuthSheetWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: AppColors.surfaceColor,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
-        ),
-      ),
-      child: Column(
-        children: [
-          const SizedBox(height: 8),
-          Container(
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: AppColors.textTertiary.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(2),
+    return ScaffoldMessenger(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: AppColors.surfaceColor,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(24),
+              topRight: Radius.circular(24),
             ),
           ),
-          Expanded(child: child),
-        ],
+          child: Column(
+            children: [
+              const SizedBox(height: 8),
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.textTertiary.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Expanded(child: child),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
+enum _AuthSheetType { signIn, signUp }
+
 class _SignInSheetContent extends ConsumerStatefulWidget {
-  const _SignInSheetContent();
+  final VoidCallback? onSwitchToSignUp;
+  const _SignInSheetContent({this.onSwitchToSignUp});
 
   @override
   ConsumerState<_SignInSheetContent> createState() => _SignInSheetContentState();
@@ -411,7 +439,6 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
   bool _obscurePassword = true;
   bool _agreeTerms = false;
   bool _rememberMe = false;
-  String _loginType = 'email';
 
   @override
   void dispose() {
@@ -422,93 +449,16 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
 
   String get _loginLabel {
     final l = AppLocalizations.of(context)!;
-    switch (_loginType) {
-      case 'nik':
-        return l.nikLabel;
-      case 'passport':
-        return l.passportLabel;
-      case 'sim':
-        return l.simLabel;
-      case 'npwp':
-        return l.npwpLabel;
-      case 'username':
-        return l.username;
-      default:
-        return l.email;
-    }
+
+    return l.emailOrUsername;
   }
 
-  TextInputType get _loginKeyboardType {
-    switch (_loginType) {
-      case 'nik':
-      case 'npwp':
-        return TextInputType.number;
-      default:
-        return TextInputType.text;
-    }
-  }
+  TextInputType get _loginKeyboardType => TextInputType.text;
 
   String? _loginValidator(String? value) {
     final l = AppLocalizations.of(context)!;
     if (value == null || value.trim().isEmpty) return '$_loginLabel ${l.fieldRequired}';
-    final clean = value.trim();
-    switch (_loginType) {
-      case 'email':
-        return Validators.email(value);
-      case 'nik':
-        if (!RegExp(r'^\d{16}$').hasMatch(clean)) return l.nikMustBe16Digits;
-        return null;
-      case 'passport':
-        if (!RegExp(r'^[A-Z0-9]{6,9}$').hasMatch(clean.toUpperCase())) return l.invalidPassportFormat;
-        return null;
-      case 'sim':
-        if (!isValidSimNumber(clean)) return l.invalidSimNumber;
-        return null;
-      case 'npwp':
-        if (!isValidNpwpNumber(clean)) return l.invalidNpwpNumber;
-        return null;
-      default:
-        return null;
-    }
-  }
-
-  Widget _buildLoginTypeSelector() {
-    final l = AppLocalizations.of(context)!;
-    final types = ['email', 'username', 'nik', 'passport', 'sim', 'npwp'];
-    final labels = {'email': l.email, 'username': l.username, 'nik': l.nikShort, 'passport': l.passport, 'sim': l.simShort, 'npwp': l.npwpShort};
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: types.map((key) {
-        final isSelected = _loginType == key;
-        final label = labels[key]!;
-          return Padding(
-            padding: EdgeInsets.only(left: key == 'email' ? 0 : 4),
-            child: SizedBox(
-              height: 32,
-              child: OutlinedButton(
-            onPressed: () {
-              setState(() {
-                _loginType = key;
-                _emailController.clear();
-              });
-            },
-            style: OutlinedButton.styleFrom(
-              backgroundColor: isSelected ? AppColors.primaryColor : Colors.transparent,
-              side: BorderSide(color: isSelected ? AppColors.primaryColor : AppColors.textTertiary),
-              foregroundColor: isSelected ? Colors.white : AppColors.textSecondary,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-              visualDensity: VisualDensity.compact,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            ),
-            child: Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-          ),
-        ),
-        );
-        }).toList(),
-      ),
-    );
+    return null;
   }
 
   void _onLogin() {
@@ -524,7 +474,6 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
     ref.read(authProvider.notifier).login(
       login: _emailController.text.trim(),
       password: _passwordController.text,
-      loginType: _loginType,
     );
   }
 
@@ -542,9 +491,7 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
   }
 
   void _showWarning(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: AppColors.warningColor),
-    );
+    AppNotification.show(context, msg, type: NotificationType.warning);
   }
 
   @override
@@ -558,24 +505,20 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
           Navigator.of(context).pop();
           showOtpVerificationSheet(context, email: state.user.email, purpose: 'google_register');
         } else if (state.needsCompletion) {
-          Navigator.of(context).pop();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l.completeYourProfile), backgroundColor: AppColors.infoColor),
-          );
-          GoRouter.of(context).push('/profile-field');
-        } else {
-          final messenger = ScaffoldMessenger.of(context);
+          final navigator = Navigator.of(context);
           final router = GoRouter.of(context);
-          Navigator.of(context).pop();
-          messenger.showSnackBar(
-            SnackBar(content: Text(l.loginSuccess), backgroundColor: AppColors.successColor),
-          );
+          navigator.pop();
+          AppNotification.show(navigator.context, l.completeYourProfile, type: NotificationType.info);
+          router.push('/complete-profile');
+        } else {
+          final navigator = Navigator.of(context);
+          final router = GoRouter.of(context);
+          navigator.pop();
+          AppNotification.show(navigator.context, l.loginSuccess, type: NotificationType.success);
           router.go('/home');
         }
       } else if (state is AuthError) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(state.message), backgroundColor: AppColors.errorColor),
-        );
+        AppNotification.show(context, LocalizedError.of(l, state.message), type: NotificationType.error);
       }
     });
 
@@ -590,8 +533,6 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
           children: [
             AuthHeader(title: '${l.welcome},', subtitle: l.signInSubtitle),
             const SizedBox(height: AppSizes.lg),
-            _buildLoginTypeSelector(),
-            const SizedBox(height: AppSizes.md),
             AppTextField(
               label: _loginLabel,
               controller: _emailController,
@@ -658,11 +599,9 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(l.dontHaveAccount, style: AppTextStyles.bodyMedium),
+                const SizedBox(width: 6),
                 GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    showSignUpSheet(context);
-                  },
+                  onTap: widget.onSwitchToSignUp,
                   child: Text(l.signUp, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w600)),
                 ),
               ],
@@ -784,13 +723,17 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
 }
 
 class _SignUpSheetContent extends ConsumerStatefulWidget {
-  const _SignUpSheetContent();
+  final VoidCallback? onSwitchToSignIn;
+  const _SignUpSheetContent({this.onSwitchToSignIn});
 
   @override
   ConsumerState<_SignUpSheetContent> createState() => _SignUpSheetContentState();
 }
 
 class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
+  Map<String, List<DropdownOption>> _dropdownOptions = {};
+  bool _optionsLoaded = false;
+
   final _formKey = GlobalKey<FormState>();
   final _firstNameController = TextEditingController();
   final _middleNameController = TextEditingController();
@@ -798,9 +741,8 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _whatsappController = TextEditingController();
-  final _nikController = TextEditingController();
+  final _ktpNumberController = TextEditingController();
   final _birthPlaceController = TextEditingController();
-  final _birthDateController = TextEditingController();
   final _countryController = TextEditingController();
   final _addressController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -814,6 +756,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
   File? _selfieKtpFile;
   String? _faceScanPath;
   bool _namesLocked = false;
+  bool _whatsappVerified = false;
   String _ocrExtractedName = '';
   int? _provinceId;
   int? _cityId;
@@ -833,11 +776,12 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
   String _occupation = '';
   String _incomeRange = '';
   String _sourceOfFunds = '';
+  OverlayEntry? _dropdownOverlay;
 
   String get _idLabel {
     final l = AppLocalizations.of(context)!;
     switch (_identityType) {
-      case 'ktp': return l.nikLabel;
+      case 'ktp': return l.ktpNumberLabel;
       case 'passport': return l.passportLabel;
       case 'sim': return l.simLabel;
       case 'npwp': return l.npwpLabel;
@@ -845,10 +789,24 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
     }
   }
   String get _idPhotoLabel {
-    return AppLocalizations.of(context)!.identityPhoto;
+    final l = AppLocalizations.of(context)!;
+    switch (_identityType) {
+      case 'ktp': return l.ktpPhoto;
+      case 'passport': return l.passportPhoto;
+      case 'sim': return l.simPhoto;
+      case 'npwp': return l.npwpPhoto;
+      default: return l.identityPhoto;
+    }
   }
   String get _idSelfieLabel {
-    return AppLocalizations.of(context)!.selfiePhoto;
+    final l = AppLocalizations.of(context)!;
+    switch (_identityType) {
+      case 'ktp': return l.selfieKtp;
+      case 'passport': return l.selfiePassport;
+      case 'sim': return l.selfieSim;
+      case 'npwp': return l.selfieNpwp;
+      default: return l.selfiePhoto;
+    }
   }
 
   String get _fullName => [
@@ -865,191 +823,172 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
     _usernameController.dispose();
     _emailController.dispose();
     _whatsappController.dispose();
-    _nikController.dispose();
+    _ktpNumberController.dispose();
     _birthPlaceController.dispose();
-    _birthDateController.dispose();
+
     _countryController.dispose();
     _addressController.dispose();
     _motherNameController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _removeDropdown();
     super.dispose();
   }
 
-  void _showPickerSheet(String title, List<String> options, Function(String) onSelected) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) => Container(
-        decoration: BoxDecoration(
-          color: AppColors.surfaceColor,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(16),
-            topRight: Radius.circular(16),
-          ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Column(
-              children: [
-                Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2))),
-                const SizedBox(height: 8),
-                Text(title, style: AppTextStyles.titleMedium),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: ListView(
-                    children: options.map((option) => ListTile(
-                      title: Text(option, style: AppTextStyles.bodyMedium),
-                      onTap: () {
-                        onSelected(option);
-                        Navigator.pop(ctx);
-                      },
-                    )).toList(),
+  void _showDropdown(BuildContext fieldContext, String title, List<String> options, String currentValue, Function(String) onSelected) {
+    _removeDropdown();
+    final overlay = Overlay.of(fieldContext);
+    final renderBox = fieldContext.findRenderObject() as RenderBox;
+    final position = renderBox.localToGlobal(Offset.zero);
+    final size = renderBox.size;
+
+    final searchController = TextEditingController();
+
+    _dropdownOverlay = OverlayEntry(
+      builder: (ctx) {
+        List<String> filtered = List.of(options);
+        return StatefulBuilder(
+          builder: (_, setDropdownState) {
+            return GestureDetector(
+              onTap: () {},
+              child: Stack(
+                children: [
+                  GestureDetector(
+                    onTap: _removeDropdown,
+                    child: Container(color: Colors.transparent),
                   ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+                  Positioned(
+                    top: position.dy + size.height + 4,
+                    left: position.dx,
+                    width: size.width,
+                    child: Material(
+                      elevation: 8,
+                      borderRadius: BorderRadius.circular(10),
+                      color: AppColors.surfaceColor,
+                      surfaceTintColor: AppColors.surfaceColor,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 280),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+                              child: TextField(
+                                controller: searchController,
+                                decoration: InputDecoration(
+                                  hintText: title,
+                                  prefixIcon: const Icon(Icons.search, size: 20),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                                  isDense: true,
+                                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                                ),
+                                onChanged: (v) {
+                                  setDropdownState(() {
+                                    filtered = options.where((o) =>
+                                      o.toLowerCase().contains(v.toLowerCase())).toList();
+                                  });
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Flexible(
+                              child: ListView(
+                                shrinkWrap: true,
+                                padding: EdgeInsets.zero,
+                                children: filtered.map((option) => ListTile(
+                                  dense: true,
+                                  title: Text(option, style: AppTextStyles.bodyMedium),
+                                  trailing: option == currentValue
+                                      ? Icon(Icons.check, color: AppColors.primaryColor, size: 20)
+                                      : null,
+                                  onTap: () {
+                                    onSelected(option);
+                                    _removeDropdown();
+                                  },
+                                )).toList(),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
+    overlay.insert(_dropdownOverlay!);
   }
 
-  void _showIdentityTypeSheet() {
-    final l = AppLocalizations.of(context)!;
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) => Container(
-        decoration: BoxDecoration(
-          color: AppColors.surfaceColor,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(16),
-            topRight: Radius.circular(16),
-          ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Column(
-              children: [
-                Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2))),
-                const SizedBox(height: 8),
-                Text(l.selectIdentityType, style: AppTextStyles.titleMedium),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: ListView(
-                    children: [
-                      ListTile(
-                        leading: const Icon(Icons.credit_card),
-                        title: Text(l.idCardKtp, style: AppTextStyles.bodyMedium),
-                        trailing: _identityType == 'ktp' ? Icon(Icons.check, color: AppColors.primaryColor) : null,
-                        onTap: () {
-                          setState(() {
-                            _identityType = 'ktp';
-                            _ktpFile = null;
-                            _nikController.clear();
-                            _namesLocked = false;
-                            _ocrExtractedName = '';
-                          });
-                          Navigator.pop(ctx);
-                        },
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.card_travel),
-                        title: Text(l.passport, style: AppTextStyles.bodyMedium),
-                        trailing: _identityType == 'passport' ? Icon(Icons.check, color: AppColors.primaryColor) : null,
-                        onTap: () {
-                          setState(() {
-                            _identityType = 'passport';
-                            _ktpFile = null;
-                            _nikController.clear();
-                            _namesLocked = false;
-                            _ocrExtractedName = '';
-                          });
-                          Navigator.pop(ctx);
-                        },
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.drive_eta),
-                        title: Text(l.idCardSim, style: AppTextStyles.bodyMedium),
-                        trailing: _identityType == 'sim' ? Icon(Icons.check, color: AppColors.primaryColor) : null,
-                        onTap: () {
-                          setState(() {
-                            _identityType = 'sim';
-                            _ktpFile = null;
-                            _nikController.clear();
-                            _namesLocked = false;
-                            _ocrExtractedName = '';
-                          });
-                          Navigator.pop(ctx);
-                        },
-                      ),
-                      ListTile(
-                        leading: const Icon(Icons.receipt_long),
-                        title: Text(l.idCardNpwp, style: AppTextStyles.bodyMedium),
-                        trailing: _identityType == 'npwp' ? Icon(Icons.check, color: AppColors.primaryColor) : null,
-                        onTap: () {
-                          setState(() {
-                            _identityType = 'npwp';
-                            _ktpFile = null;
-                            _nikController.clear();
-                            _namesLocked = false;
-                            _ocrExtractedName = '';
-                          });
-                          Navigator.pop(ctx);
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+  void _removeDropdown() {
+    _dropdownOverlay?.remove();
+    _dropdownOverlay = null;
+  }
+
+  List<String> _optLabels(String type, List<String> fallback) {
+    return _dropdownOptions[type]?.map((o) => o.label).toList() ?? fallback;
   }
 
   Widget _buildIdentityTypePicker() {
     final l = AppLocalizations.of(context)!;
-    final (icon, label) = switch (_identityType) {
-      'ktp' => (Icons.credit_card, l.idCardKtp),
-      'passport' => (Icons.card_travel, l.passport),
-      'sim' => (Icons.drive_eta, l.idCardSim),
-      'npwp' => (Icons.receipt_long, l.idCardNpwp),
-      _ => (Icons.credit_card, l.selectIdentityType),
+    final options = [l.idCardKtp, l.passport, l.idCardSim, l.idCardNpwp];
+    final currentLabel = switch (_identityType) {
+      'ktp' => l.idCardKtp,
+      'passport' => l.passport,
+      'sim' => l.idCardSim,
+      'npwp' => l.idCardNpwp,
+      _ => l.selectIdentityType,
     };
-    return GestureDetector(
-      onTap: _showIdentityTypeSheet,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-        decoration: BoxDecoration(
-          color: AppColors.secondaryColor.withAlpha(30),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: AppColors.dividerColor),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: AppColors.primaryColor, size: 22),
-            SizedBox(width: AppSizes.md),
-            Expanded(
-              child: Text(
-                label,
-                style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+    final icon = switch (_identityType) {
+      'ktp' => Icons.credit_card,
+      'passport' => Icons.card_travel,
+      'sim' => Icons.drive_eta,
+      'npwp' => Icons.receipt_long,
+      _ => Icons.credit_card,
+    };
+    return Builder(
+      builder: (fieldCtx) => GestureDetector(
+        onTap: () => _showDropdown(fieldCtx, l.selectIdentityType, options, currentLabel, (v) {
+          setState(() {
+            if (v == l.passport) {
+              _identityType = 'passport';
+            } else if (v == l.idCardSim) {
+              _identityType = 'sim';
+            } else if (v == l.idCardNpwp) {
+              _identityType = 'npwp';
+            } else {
+              _identityType = 'ktp';
+            }
+            _ktpFile = null;
+            _ktpNumberController.clear();
+            _namesLocked = false;
+            _ocrExtractedName = '';
+          });
+        }),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+          decoration: BoxDecoration(
+            color: AppColors.secondaryColor.withAlpha(30),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppColors.dividerColor),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: AppColors.primaryColor, size: 22),
+              SizedBox(width: AppSizes.md),
+              Expanded(
+                child: Text(
+                  currentLabel,
+                  style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                ),
               ),
-            ),
-            Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
-          ],
+              Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+            ],
+          ),
         ),
       ),
     );
@@ -1057,45 +996,98 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
 
   Future<void> _pickImage({required bool isKtp}) async {
     if (isKtp) {
-      final file = await pickKtpPhoto(context);
-      if (file != null) {
-        setState(() => _ktpFile = file);
-        String nik = '';
-        String name = '';
-        if (_identityType == 'ktp') {
-          nik = await extractNikFromKtp(file);
-          name = await extractNameFromKtp(file);
-        } else if (_identityType == 'passport') {
-          nik = await extractPassportNumber(file);
-          name = await extractNameFromPassport(file);
-        } else if (_identityType == 'sim') {
-          nik = await extractSimNumber(file);
-          name = await extractNameFromSim(file);
-        } else if (_identityType == 'npwp') {
-          nik = await extractNpwpNumber(file);
-          name = await extractNameFromNpwp(file);
-        }
+      // Langsung buka kamera dengan panduan bingkai kartu (persegi panjang)
+      // untuk dokumen identitas KTP/SIM/NPWP/Paspor.
+      final l = AppLocalizations.of(context)!;
+      final file = await scanWithCamera(
+        context,
+        type: scanContentTypeForIdentity(_identityType),
+      );
+      if (file == null) return;
+      setState(() => _ktpFile = file);
+      if (isVideoPath(file.path)) return;
+      final ktpData = await extractIdentityData(file, _identityType);
+      setState(() {
+        _ocrExtractedName = ktpData.name;
+        if (ktpData.number.isNotEmpty) _ktpNumberController.text = ktpData.number;
+      });
+      if (ktpData.name.isNotEmpty) {
+        final parts = splitKtpName(ktpData.name);
         setState(() {
-          _ocrExtractedName = name;
-          if (nik.isNotEmpty) _nikController.text = nik;
+          _firstNameController.text = parts[0];
+          _middleNameController.text = parts[1];
+          _lastNameController.text = parts[2];
+          _namesLocked = true;
         });
-        if (name.isNotEmpty) {
-          final parts = splitKtpName(name);
-          setState(() {
-            _firstNameController.text = parts[0];
-            _middleNameController.text = parts[1];
-            _lastNameController.text = parts[2];
-            _namesLocked = true;
-          });
-        }
       }
+      setState(() {
+        if (ktpData.birthPlaceCombo.isNotEmpty && _birthPlaceController.text.trim().isEmpty) {
+          _birthPlaceController.text = ktpData.birthPlaceCombo;
+        }
+        if (_gender.isEmpty) {
+          _gender = matchOcrToDropdownLabel('gender', ktpData.gender, _optLabels('gender', [l.male, l.female]));
+        }
+        if (_religion.isEmpty) {
+          _religion = matchOcrToDropdownLabel('religion', ktpData.religion, _optLabels('religion', [l.islam, l.christian, l.catholic, l.hindu, l.buddha, l.confucian]));
+        }
+        if (_maritalStatus.isEmpty) {
+          _maritalStatus = matchOcrToDropdownLabel('marital_status', ktpData.maritalStatus, _optLabels('marital_status', [l.single, l.married, l.divorced]));
+        }
+        if (_occupation.isEmpty) {
+          _occupation = matchOcrToDropdownLabel('occupation', ktpData.occupation, _optLabels('occupation', [l.employee, l.entrepreneur, l.student, l.housewife, l.professional, l.other]));
+        }
+        if (ktpData.address.isNotEmpty && _addressController.text.trim().isEmpty) {
+          _addressController.text = ktpData.address;
+        }
+      });
       return;
     }
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.gallery, maxWidth: 512, maxHeight: 512);
-    if (picked != null) {
-      setState(() => _avatarFile = File(picked.path));
+    final file = await pickProfileMedia(context);
+    if (file != null) {
+      setState(() => _avatarFile = file);
     }
+  }
+
+  Future<void> _pickSelfie() async {
+    // Langsung buka kamera depan dengan panduan oval wajah + bingkai kartu
+    // identitas (KTP/SIM/NPWP/Paspor) yang dipegang bersama wajah.
+    final l = AppLocalizations.of(context)!;
+    final file = await scanSelfieWithDocument(context, docType: _identityType);
+    if (file == null) return;
+    setState(() => _selfieKtpFile = file);
+    if (isVideoPath(file.path)) return;
+    final ktpData = await extractIdentityData(file, _identityType);
+    setState(() {
+      if (ktpData.number.isNotEmpty && _ktpNumberController.text.trim().isEmpty) {
+        _ktpNumberController.text = ktpData.number;
+      }
+      if (ktpData.name.isNotEmpty) {
+        _ocrExtractedName = ktpData.name;
+        final parts = splitKtpName(ktpData.name);
+        _firstNameController.text = parts[0];
+        _middleNameController.text = parts[1];
+        _lastNameController.text = parts[2];
+        _namesLocked = true;
+      }
+      if (ktpData.birthPlaceCombo.isNotEmpty && _birthPlaceController.text.trim().isEmpty) {
+        _birthPlaceController.text = ktpData.birthPlaceCombo;
+      }
+      if (_gender.isEmpty) {
+        _gender = matchOcrToDropdownLabel('gender', ktpData.gender, _optLabels('gender', [l.male, l.female]));
+      }
+      if (_religion.isEmpty) {
+        _religion = matchOcrToDropdownLabel('religion', ktpData.religion, _optLabels('religion', [l.islam, l.christian, l.catholic, l.hindu, l.buddha, l.confucian]));
+      }
+      if (_maritalStatus.isEmpty) {
+        _maritalStatus = matchOcrToDropdownLabel('marital_status', ktpData.maritalStatus, _optLabels('marital_status', [l.single, l.married, l.divorced]));
+      }
+      if (_occupation.isEmpty) {
+        _occupation = matchOcrToDropdownLabel('occupation', ktpData.occupation, _optLabels('occupation', [l.employee, l.entrepreneur, l.student, l.housewife, l.professional, l.other]));
+      }
+      if (ktpData.address.isNotEmpty && _addressController.text.trim().isEmpty) {
+        _addressController.text = ktpData.address;
+      }
+    });
   }
 
   Future<void> _onRegister() async {
@@ -1109,7 +1101,11 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
       _showWarning(l.warningCheckRemember);
       return;
     }
-    if (_ktpFile != null) {
+    if (_whatsappController.text.trim().isNotEmpty && !_whatsappVerified) {
+      _showWarning(l.whatsappVerifyRequired);
+      return;
+    }
+    if (_ktpFile != null && !isVideoPath(_ktpFile!.path)) {
       if (!_namesLocked && _ocrExtractedName.isEmpty) {
         _showWarning('${l.nameVerificationFailed} $_idPhotoLabel');
         return;
@@ -1131,13 +1127,13 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
       username: _usernameController.text.trim(),
       email: _emailController.text.trim(),
       whatsapp: '$_countryCode ${_whatsappController.text.trim()}',
-      nik: _identityType == 'ktp' ? _nikController.text.trim() : '',
-      passportNumber: _identityType == 'passport' ? _nikController.text.trim() : null,
-      simNumber: _identityType == 'sim' ? _nikController.text.trim() : null,
-      npwpNumber: _identityType == 'npwp' ? _nikController.text.trim() : null,
+      ktpNumber: _identityType == 'ktp' ? _ktpNumberController.text.trim() : '',
+      passportNumber: _identityType == 'passport' ? _ktpNumberController.text.trim() : null,
+      simNumber: _identityType == 'sim' ? _ktpNumberController.text.trim() : null,
+      npwpNumber: _identityType == 'npwp' ? _ktpNumberController.text.trim() : null,
       identityType: _identityType,
       birthPlace: _birthPlaceController.text.trim(),
-      birthDate: _birthDateController.text.trim(),
+      birthDate: '',
       country: _countryController.text.trim(),
       provinceId: _provinceId,
       cityId: _cityId,
@@ -1165,36 +1161,45 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
   }
 
   void _showWarning(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: AppColors.warningColor),
-    );
+    AppNotification.show(context, msg, type: NotificationType.warning);
   }
 
   Widget _buildPhoneField() {
     final l = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: TextFormField(
-        controller: _whatsappController,
-        keyboardType: TextInputType.number,
-        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        validator: Validators.phone,
-        style: AppTextStyles.bodyLarge,
-        decoration: InputDecoration(
-          labelText: l.whatsappNumber,
-          labelStyle: AppTextStyles.titleSmall,
-          prefix: GestureDetector(
-            onTap: _showCountryCodePicker,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(flagFromDialCode(_countryCode) ?? '', style: const TextStyle(fontSize: 20)),
-                  const SizedBox(width: 4),
-                  Text(_countryCode, style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600)),
-                  Icon(Icons.arrow_drop_down, size: 20, color: AppColors.textSecondary),
-                ],
+      child: Builder(
+        builder: (fieldCtx) => TextFormField(
+          controller: _whatsappController,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          validator: Validators.phone,
+          style: AppTextStyles.bodyLarge,
+          decoration: InputDecoration(
+            labelText: l.whatsappNumber,
+            labelStyle: AppTextStyles.titleSmall,
+            prefix: GestureDetector(
+              onTap: () => _showDropdown(
+                fieldCtx,
+                l.selectCountryCode,
+                _countryCodeOptions(),
+                _countryCodeLabel(),
+                (v) {
+                  final code = _dialCodeFromOption(v);
+                  if (code != null) setState(() => _countryCode = code);
+                },
+              ),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(flagFromDialCode(_countryCode) ?? '', style: const TextStyle(fontSize: 20)),
+                    const SizedBox(width: 4),
+                    Text(_countryCode, style: AppTextStyles.bodyLarge.copyWith(fontWeight: FontWeight.w600)),
+                    Icon(Icons.arrow_drop_down, size: 20, color: AppColors.textSecondary),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1203,77 +1208,23 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
     );
   }
 
-  void _showCountryCodePicker() {
-    final l = AppLocalizations.of(context)!;
-    final searchController = TextEditingController();
-    List<CountryCode> codes = List.of(countryCodes);
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (context, setSheetState) {
-            return Container(
-              decoration: BoxDecoration(
-                color: AppColors.surfaceColor,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  topRight: Radius.circular(16),
-                ),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.max,
-                children: [
-                  const SizedBox(height: 8),
-                  Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2))),
-                  const SizedBox(height: 12),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: TextField(
-                      controller: searchController,
-                      decoration: InputDecoration(
-                        hintText: l.searchCountry,
-                        prefixIcon: const Icon(Icons.search, size: 20),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                        contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      onChanged: (v) {
-                        setSheetState(() {
-                          codes = countryCodes.where((c) =>
-                            c.name.toLowerCase().contains(v.toLowerCase()) ||
-                            c.dialCode.contains(v)).toList();
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Expanded(
-                    child: ListView.separated(
-                      itemCount: codes.length,
-                      separatorBuilder: (_, _) => const Divider(height: 1),
-                      itemBuilder: (_, i) => ListTile(
-                        dense: true,
-                        leading: Text(codes[i].flag, style: const TextStyle(fontSize: 22)),
-                        title: Text(codes[i].name, style: AppTextStyles.bodyMedium),
-                        trailing: Text(codes[i].dialCode, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
-                        onTap: () {
-                          setState(() => _countryCode = codes[i].dialCode);
-                          Navigator.pop(ctx);
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
+  List<String> _countryCodeOptions() =>
+      countryCodes.map((c) => '${c.flag} ${c.name} (${c.dialCode})').toList();
+
+  String _countryCodeLabel() {
+    for (final c in countryCodes) {
+      if (c.dialCode == _countryCode) {
+        return '${c.flag} ${c.name} (${c.dialCode})';
+      }
+    }
+    return _countryCode;
+  }
+
+  String? _dialCodeFromOption(String option) {
+    for (final c in countryCodes) {
+      if ('${c.flag} ${c.name} (${c.dialCode})' == option) return c.dialCode;
+    }
+    return null;
   }
 
   Widget _buildPasswordStrength(String password) {
@@ -1314,19 +1265,21 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
     final l = AppLocalizations.of(context)!;
     final authState = ref.watch(authProvider);
 
+    if (!_optionsLoaded) {
+      ref.read(dropdownOptionsProvider.future).then((opts) {
+        if (mounted) setState(() { _dropdownOptions = opts; _optionsLoaded = true; });
+      });
+    }
+
     ref.listen<AuthState>(authProvider, (_, state) {
       if (state is AuthAuthenticated) {
-        final messenger = ScaffoldMessenger.of(context);
+        final navigator = Navigator.of(context);
         final router = GoRouter.of(context);
-        Navigator.of(context).pop();
-        messenger.showSnackBar(
-          SnackBar(content: Text(l.registerSuccess), backgroundColor: AppColors.successColor),
-        );
+        navigator.pop();
+        AppNotification.show(navigator.context, l.registerSuccess, type: NotificationType.success);
         router.go('/home');
       } else if (state is AuthError) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(state.message), backgroundColor: AppColors.errorColor),
-        );
+        AppNotification.show(context, LocalizedError.of(l, state.message), type: NotificationType.error);
       }
     });
 
@@ -1340,7 +1293,24 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: AppSizes.sm),
-            Center(child: Text(l.createAccount, style: AppTextStyles.headlineMedium)),
+            Row(
+              children: [
+                SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: IconButton(
+                    icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
+                    onPressed: widget.onSwitchToSignIn,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ),
+                Expanded(
+                  child: Text(l.createAccount, style: AppTextStyles.headlineMedium, textAlign: TextAlign.center),
+                ),
+                const SizedBox(width: 40),
+              ],
+            ),
             const SizedBox(height: AppSizes.xs),
             Center(child: Text(l.fillDataCorrectly, style: AppTextStyles.bodyLarge.copyWith(color: AppColors.textSecondary))),
 
@@ -1353,10 +1323,14 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
                     CircleAvatar(
                       radius: 48,
                       backgroundColor: AppColors.secondaryColor,
-                      backgroundImage: _avatarFile != null ? FileImage(_avatarFile!) : null,
-                      child: _avatarFile == null
-                          ? Icon(Icons.camera_alt, size: 28, color: AppColors.primaryColor)
+                      backgroundImage: (!(_avatarFile != null && isVideoPath(_avatarFile!.path)) && _avatarFile != null)
+                          ? FileImage(_avatarFile!) as ImageProvider?
                           : null,
+                      child: (_avatarFile != null && isVideoPath(_avatarFile!.path))
+                          ? Icon(Icons.videocam, size: 28, color: AppColors.primaryColor)
+                          : _avatarFile == null
+                              ? Icon(Icons.camera_alt, size: 28, color: AppColors.primaryColor)
+                              : null,
                     ),
                     Positioned(
                       bottom: 0,
@@ -1375,6 +1349,46 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
               ),
             ),
             const SizedBox(height: AppSizes.lg),
+            AppTextField(
+              label: l.username,
+              controller: _usernameController,
+              validator: Validators.required,
+            ),
+            const SizedBox(height: AppSizes.md),
+            AppTextField(
+              label: l.email,
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
+              validator: Validators.email,
+            ),
+            const SizedBox(height: AppSizes.md),
+            AppTextField(
+              label: l.password,
+              controller: _passwordController,
+              obscureText: _obscurePassword,
+              validator: Validators.password,
+              onChanged: (_) => setState(() {}),
+              suffixIcon: IconButton(
+                icon: Icon(_obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+              ),
+            ),
+            if (_passwordController.text.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              _buildPasswordStrength(_passwordController.text),
+            ],
+            const SizedBox(height: AppSizes.md),
+            AppTextField(
+              label: l.confirmPasswordLabel,
+              controller: _confirmPasswordController,
+              obscureText: _obscureConfirmPassword,
+              validator: (v) => Validators.confirmPassword(v, _passwordController.text),
+              suffixIcon: IconButton(
+                icon: Icon(_obscureConfirmPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+              ),
+            ),
+            const SizedBox(height: AppSizes.md),
             AppTextField(
               label: l.firstName,
               controller: _firstNameController,
@@ -1418,19 +1432,6 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: AppSizes.md),
-            AppTextField(
-              label: l.username,
-              controller: _usernameController,
-              validator: Validators.required,
-            ),
-            const SizedBox(height: AppSizes.md),
-            AppTextField(
-              label: l.email,
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              validator: Validators.email,
             ),
             const SizedBox(height: AppSizes.md),
             SizedBox(height: AppSizes.lg),
@@ -1487,10 +1488,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
             ),
             SizedBox(height: AppSizes.sm),
             GestureDetector(
-              onTap: () async {
-                final file = await pickKtpPhoto(context);
-                if (file != null) setState(() => _selfieKtpFile = file);
-              },
+              onTap: () => _pickSelfie(),
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
@@ -1536,11 +1534,264 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
                 ),
               ),
             ),
+            const SizedBox(height: AppSizes.md),
+            AppTextField(
+              label: _idLabel,
+              controller: _ktpNumberController,
+              keyboardType: _identityType == 'ktp' ? TextInputType.number : TextInputType.text,
+              validator: (v) {
+                if (v == null || v.trim().isEmpty) return l.idNumberRequired;
+                if (_identityType == 'ktp' && v.trim().length != 16) return l.ktpNumberMustBe16Digits;
+                if (_identityType == 'sim' && v.trim().length < 6) return l.simMin6Chars;
+                if (_identityType == 'npwp' && v.trim().length < 15) return l.npwpMin15Chars;
+                if (!['ktp', 'sim', 'npwp'].contains(_identityType) && v.trim().length < 6) return l.passportMin6Chars;
+                return null;
+              },
+            ),
+            const SizedBox(height: AppSizes.md),
             SizedBox(height: AppSizes.sm),
+            AppTextField(
+              label: l.placeAndDateOfBirth,
+              controller: _birthPlaceController,
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.calendar_today, size: 20),
+                onPressed: () async {
+                  final picked = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime(1900),
+                    lastDate: DateTime.now(),
+                    locale: const Locale('id'),
+                  );
+                  if (picked != null) {
+                    final formatted = '${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}';
+                    _birthPlaceController.text = '${_birthPlaceController.text.trim()}, $formatted';
+                    _birthPlaceController.selection = TextSelection.fromPosition(TextPosition(offset: _birthPlaceController.text.length));
+                  }
+                },
+              ),
+            ),
+            SizedBox(height: AppSizes.md),
+            AppCountryPickerField(
+              label: l.country,
+              controller: _countryController,
+              onChanged: (_) => setState(() {}),
+            ),
+            SizedBox(height: AppSizes.md),
+            AppRegionPickerField(
+              country: _countryController.text.isEmpty ? null : _countryController.text,
+              onProvinceIdChanged: (id) => _provinceId = id,
+              onCityIdChanged: (id) => _cityId = id,
+              onDistrictIdChanged: (id) => _districtId = id,
+              onVillageIdChanged: (id) => _villageId = id,
+              onProvinceNameChanged: (v) => _provinceName = v,
+              onCityNameChanged: (v) => _cityName = v,
+              onDistrictNameChanged: (v) => _districtName = v,
+              onVillageNameChanged: (v) => _villageName = v,
+              onPostalCodeChanged: (v) => _postalCode = v,
+            ),
+            AppTextField(
+              label: l.fullAddress,
+              controller: _addressController,
+              maxLines: 2,
+            ),
+            const SizedBox(height: AppSizes.md),
+            _buildPhoneField(),
+            WhatsappOtpVerifier(
+              numberController: _whatsappController,
+              countryCode: _countryCode,
+              initialFullNumber: '',
+              minDigits: 10,
+              onVerifiedChanged: (v) {
+                if (_whatsappVerified != v) {
+                  setState(() => _whatsappVerified = v);
+                }
+              },
+            ),
+            const SizedBox(height: AppSizes.md),
+            Text(l.gender, style: AppTextStyles.titleSmall),
+            SizedBox(height: AppSizes.sm),
+            Builder(
+              builder: (fieldCtx) => GestureDetector(
+                onTap: () => _showDropdown(fieldCtx, l.selectGender, _optLabels('gender', [l.male, l.female]), _gender, (v) => setState(() => _gender = v)),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: AppColors.secondaryColor.withAlpha(30),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.dividerColor),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.people_outlined, color: AppColors.primaryColor, size: 22),
+                      SizedBox(width: AppSizes.md),
+                      Expanded(
+                        child: Text(
+                          _gender.isEmpty ? l.selectGender : _gender,
+                          style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: AppSizes.md),
+            Text(l.religionLabel, style: AppTextStyles.titleSmall),
+            SizedBox(height: AppSizes.sm),
+            Builder(
+              builder: (fieldCtx) => GestureDetector(
+                onTap: () => _showDropdown(fieldCtx, l.selectReligion, _optLabels('religion', [l.islam, l.christian, l.catholic, l.hindu, l.buddha, l.confucian]), _religion, (v) => setState(() => _religion = v)),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: AppColors.secondaryColor.withAlpha(30),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.dividerColor),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.church_outlined, color: AppColors.primaryColor, size: 22),
+                      SizedBox(width: AppSizes.md),
+                      Expanded(
+                        child: Text(
+                          _religion.isEmpty ? l.selectReligion : _religion,
+                          style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: AppSizes.md),
+            Text(l.maritalStatusLabel, style: AppTextStyles.titleSmall),
+            SizedBox(height: AppSizes.sm),
+            Builder(
+              builder: (fieldCtx) => GestureDetector(
+                onTap: () => _showDropdown(fieldCtx, l.selectMaritalStatus, _optLabels('marital_status', [l.single, l.married, l.divorced]), _maritalStatus, (v) => setState(() => _maritalStatus = v)),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: AppColors.secondaryColor.withAlpha(30),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.dividerColor),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.favorite_border, color: AppColors.primaryColor, size: 22),
+                      SizedBox(width: AppSizes.md),
+                      Expanded(
+                        child: Text(
+                          _maritalStatus.isEmpty ? l.selectMaritalStatus : _maritalStatus,
+                          style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: AppSizes.md),
+            AppTextField(
+              label: l.motherNameLabel,
+              controller: _motherNameController,
+            ),
+            SizedBox(height: AppSizes.md),
+            Text(l.occupationLabel, style: AppTextStyles.titleSmall),
+            SizedBox(height: AppSizes.sm),
+            Builder(
+              builder: (fieldCtx) => GestureDetector(
+                onTap: () => _showDropdown(fieldCtx, l.selectOccupation, _optLabels('occupation', [l.employee, l.entrepreneur, l.student, l.housewife, l.professional, l.other]), _occupation, (v) => setState(() => _occupation = v)),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: AppColors.secondaryColor.withAlpha(30),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.dividerColor),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.work_outline, color: AppColors.primaryColor, size: 22),
+                      SizedBox(width: AppSizes.md),
+                      Expanded(
+                        child: Text(
+                          _occupation.isEmpty ? l.selectOccupation : _occupation,
+                          style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: AppSizes.md),
+            Text(l.incomeRangeLabel, style: AppTextStyles.titleSmall),
+            SizedBox(height: AppSizes.sm),
+            Builder(
+              builder: (fieldCtx) => GestureDetector(
+                onTap: () => _showDropdown(fieldCtx, l.selectIncomeRange, _optLabels('income_range', [l.lessThan1M, l.range1to5M, l.range5to10M, l.range10to50M, l.moreThan50M]), _incomeRange, (v) => setState(() => _incomeRange = v)),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: AppColors.secondaryColor.withAlpha(30),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.dividerColor),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.trending_up_outlined, color: AppColors.primaryColor, size: 22),
+                      SizedBox(width: AppSizes.md),
+                      Expanded(
+                        child: Text(
+                          _incomeRange.isEmpty ? l.selectIncomeRange : _incomeRange,
+                          style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: AppSizes.md),
+            Text(l.sourceOfFundsLabel, style: AppTextStyles.titleSmall),
+            SizedBox(height: AppSizes.sm),
+            Builder(
+              builder: (fieldCtx) => GestureDetector(
+                onTap: () => _showDropdown(fieldCtx, l.selectSourceOfFunds, _optLabels('source_of_funds', [l.salary, l.business, l.investment, l.gift, l.other]), _sourceOfFunds, (v) => setState(() => _sourceOfFunds = v)),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: AppColors.secondaryColor.withAlpha(30),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppColors.dividerColor),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.account_balance_wallet_outlined, color: AppColors.primaryColor, size: 22),
+                      SizedBox(width: AppSizes.md),
+                      Expanded(
+                        child: Text(
+                          _sourceOfFunds.isEmpty ? l.selectSourceOfFunds : _sourceOfFunds,
+                          style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: AppSizes.md),
             GestureDetector(
               onTap: () async {
-                final path = await GoRouter.of(context).push<String>('/face-scanner');
-                if (path != null) setState(() => _faceScanPath = path);
+                final file = await scanWithCamera(context, type: ScanContentType.face);
+                if (file != null) setState(() => _faceScanPath = file.path);
               },
               child: Container(
                 width: double.infinity,
@@ -1587,250 +1838,6 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
                 ),
               ),
             ),
-            SizedBox(height: AppSizes.md),
-            AppTextField(
-              label: _idLabel,
-              controller: _nikController,
-              keyboardType: _identityType == 'ktp' ? TextInputType.number : TextInputType.text,
-              validator: (v) {
-                if (v == null || v.trim().isEmpty) return l.idNumberRequired;
-                if (_identityType == 'ktp' && v.trim().length != 16) return l.nikMustBe16Digits;
-                if (_identityType == 'sim' && v.trim().length < 6) return l.simMin6Chars;
-                if (_identityType == 'npwp' && v.trim().length < 15) return l.npwpMin15Chars;
-                if (!['ktp', 'sim', 'npwp'].contains(_identityType) && v.trim().length < 6) return l.passportMin6Chars;
-                return null;
-              },
-            ),
-            const SizedBox(height: AppSizes.md),
-            SizedBox(height: AppSizes.sm),
-            AppTextField(
-              label: l.placeOfBirthLabel,
-              controller: _birthPlaceController,
-            ),
-            SizedBox(height: AppSizes.md),
-            AppDatePickerField(
-              label: l.dateOfBirthLabel,
-              controller: _birthDateController,
-            ),
-            SizedBox(height: AppSizes.md),
-            AppCountryPickerField(
-              label: l.country,
-              controller: _countryController,
-              onChanged: (_) => setState(() {}),
-            ),
-            SizedBox(height: AppSizes.md),
-            AppRegionPickerField(
-              country: _countryController.text.isEmpty ? null : _countryController.text,
-              onProvinceIdChanged: (id) => _provinceId = id,
-              onCityIdChanged: (id) => _cityId = id,
-              onDistrictIdChanged: (id) => _districtId = id,
-              onVillageIdChanged: (id) => _villageId = id,
-              onProvinceNameChanged: (v) => _provinceName = v,
-              onCityNameChanged: (v) => _cityName = v,
-              onDistrictNameChanged: (v) => _districtName = v,
-              onVillageNameChanged: (v) => _villageName = v,
-              onPostalCodeChanged: (v) => _postalCode = v,
-            ),
-            AppTextField(
-              label: l.fullAddress,
-              controller: _addressController,
-              maxLines: 2,
-            ),
-            _buildPhoneField(),
-            const SizedBox(height: AppSizes.md),
-            Text(l.gender, style: AppTextStyles.titleSmall),
-            SizedBox(height: AppSizes.sm),
-            GestureDetector(
-              onTap: () => _showPickerSheet(l.selectGender, [l.male, l.female], (v) => setState(() => _gender = v)),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                decoration: BoxDecoration(
-                  color: AppColors.secondaryColor.withAlpha(30),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.dividerColor),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.people_outlined, color: AppColors.primaryColor, size: 22),
-                    SizedBox(width: AppSizes.md),
-                    Expanded(
-                      child: Text(
-                        _gender.isEmpty ? l.selectGender : _gender,
-                        style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: AppSizes.md),
-            Text(l.religionLabel, style: AppTextStyles.titleSmall),
-            SizedBox(height: AppSizes.sm),
-            GestureDetector(
-              onTap: () => _showPickerSheet(l.selectReligion, [l.islam, l.christian, l.catholic, l.hindu, l.buddha, l.confucian], (v) => setState(() => _religion = v)),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                decoration: BoxDecoration(
-                  color: AppColors.secondaryColor.withAlpha(30),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.dividerColor),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.church_outlined, color: AppColors.primaryColor, size: 22),
-                    SizedBox(width: AppSizes.md),
-                    Expanded(
-                      child: Text(
-                        _religion.isEmpty ? l.selectReligion : _religion,
-                        style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: AppSizes.md),
-            Text(l.maritalStatusLabel, style: AppTextStyles.titleSmall),
-            SizedBox(height: AppSizes.sm),
-            GestureDetector(
-              onTap: () => _showPickerSheet(l.selectMaritalStatus, [l.single, l.married, l.divorced], (v) => setState(() => _maritalStatus = v)),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                decoration: BoxDecoration(
-                  color: AppColors.secondaryColor.withAlpha(30),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.dividerColor),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.favorite_border, color: AppColors.primaryColor, size: 22),
-                    SizedBox(width: AppSizes.md),
-                    Expanded(
-                      child: Text(
-                        _maritalStatus.isEmpty ? l.selectMaritalStatus : _maritalStatus,
-                        style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: AppSizes.md),
-            AppTextField(
-              label: l.motherNameLabel,
-              controller: _motherNameController,
-            ),
-            SizedBox(height: AppSizes.md),
-            Text(l.occupationLabel, style: AppTextStyles.titleSmall),
-            SizedBox(height: AppSizes.sm),
-            GestureDetector(
-              onTap: () => _showPickerSheet(l.selectOccupation, [l.employee, l.entrepreneur, l.student, l.housewife, l.professional, l.other], (v) => setState(() => _occupation = v)),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                decoration: BoxDecoration(
-                  color: AppColors.secondaryColor.withAlpha(30),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.dividerColor),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.work_outline, color: AppColors.primaryColor, size: 22),
-                    SizedBox(width: AppSizes.md),
-                    Expanded(
-                      child: Text(
-                        _occupation.isEmpty ? l.selectOccupation : _occupation,
-                        style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: AppSizes.md),
-            Text(l.incomeRangeLabel, style: AppTextStyles.titleSmall),
-            SizedBox(height: AppSizes.sm),
-            GestureDetector(
-              onTap: () => _showPickerSheet(l.selectIncomeRange, [l.lessThan1M, l.range1to5M, l.range5to10M, l.range10to50M, l.moreThan50M], (v) => setState(() => _incomeRange = v)),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                decoration: BoxDecoration(
-                  color: AppColors.secondaryColor.withAlpha(30),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.dividerColor),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.trending_up_outlined, color: AppColors.primaryColor, size: 22),
-                    SizedBox(width: AppSizes.md),
-                    Expanded(
-                      child: Text(
-                        _incomeRange.isEmpty ? l.selectIncomeRange : _incomeRange,
-                        style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: AppSizes.md),
-            Text(l.sourceOfFundsLabel, style: AppTextStyles.titleSmall),
-            SizedBox(height: AppSizes.sm),
-            GestureDetector(
-              onTap: () => _showPickerSheet(l.selectSourceOfFunds, [l.salary, l.business, l.investment, l.gift, l.other], (v) => setState(() => _sourceOfFunds = v)),
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                decoration: BoxDecoration(
-                  color: AppColors.secondaryColor.withAlpha(30),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppColors.dividerColor),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.account_balance_wallet_outlined, color: AppColors.primaryColor, size: 22),
-                    SizedBox(width: AppSizes.md),
-                    Expanded(
-                      child: Text(
-                        _sourceOfFunds.isEmpty ? l.selectSourceOfFunds : _sourceOfFunds,
-                        style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(height: AppSizes.md),
-            AppTextField(
-              label: l.password,
-              controller: _passwordController,
-              obscureText: _obscurePassword,
-              validator: Validators.password,
-              onChanged: (_) => setState(() {}),
-              suffixIcon: IconButton(
-                icon: Icon(_obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-              ),
-            ),
-            if (_passwordController.text.isNotEmpty) ...[
-              const SizedBox(height: 6),
-              _buildPasswordStrength(_passwordController.text),
-            ],
-            const SizedBox(height: AppSizes.md),
-            AppTextField(
-              label: l.confirmPasswordLabel,
-              controller: _confirmPasswordController,
-              obscureText: _obscureConfirmPassword,
-              validator: (v) => Validators.confirmPassword(v, _passwordController.text),
-              suffixIcon: IconButton(
-                icon: Icon(_obscureConfirmPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
-              ),
-            ),
             const SizedBox(height: AppSizes.md),
             _rememberCheckbox(),
             const SizedBox(height: AppSizes.sm),
@@ -1844,14 +1851,35 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
             ),
             const SizedBox(height: AppSizes.lg),
             Row(
+              children: [
+                const Expanded(child: Divider()),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
+                  child: Text(l.or, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary)),
+                ),
+                const Expanded(child: Divider()),
+              ],
+            ),
+            const SizedBox(height: AppSizes.md),
+            SocialLoginButton(provider: SocialProvider.google, enabled: _agreeTerms && _rememberMe, onPressed: () async {
+              if (!_agreeTerms) {
+                _showWarning(l.warningMustAgree);
+                return;
+              }
+              if (!_rememberMe) {
+                _showWarning(l.warningCheckRemember);
+                return;
+              }
+              await ref.read(authProvider.notifier).googleLogin();
+            }),
+            const SizedBox(height: AppSizes.lg),
+            Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(l.alreadyHaveAccount, style: AppTextStyles.bodyMedium),
+                const SizedBox(width: 6),
                 GestureDetector(
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    showSignInSheet(context);
-                  },
+                  onTap: widget.onSwitchToSignIn,
                   child: Text(l.signIn, style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w600)),
                 ),
               ],
@@ -1976,26 +2004,25 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
 class _OtpVerificationSheetContent extends StatefulWidget {
   final String? email;
   final String purpose;
-  const _OtpVerificationSheetContent({this.email, this.purpose = 'forgot_password'});
+  final Future<void> Function()? onVerified;
+  const _OtpVerificationSheetContent({this.email, this.purpose = 'forgot_password', this.onVerified});
 
   @override
   State<_OtpVerificationSheetContent> createState() => _OtpVerificationSheetContentState();
 }
 
 class _OtpVerificationSheetContentState extends State<_OtpVerificationSheetContent> {
-  final _otpControllers = List.generate(6, (_) => TextEditingController());
-  final _otpFocusNodes = List.generate(6, (_) => FocusNode());
+  final _otpController = TextEditingController();
+  final _otpFocusNode = FocusNode();
   int _resendSeconds = 0;
   Timer? _resendTimer;
   bool _verifying = false;
   bool _sending = false;
-  bool _showPaste = false;
 
   @override
   void initState() {
     super.initState();
     _autoSendOtp();
-    _checkClipboard();
   }
 
   Future<void> _autoSendOtp() async {
@@ -2008,42 +2035,16 @@ class _OtpVerificationSheetContentState extends State<_OtpVerificationSheetConte
       );
       if (mounted) _startResendTimer();
     } on DioException {
-      // caller may have sent OTP already; auto-resend handles retry
+      // OTP may have been sent already
     } finally {
       if (mounted) setState(() => _sending = false);
     }
   }
 
-  Future<void> _checkClipboard() async {
-    final data = await Clipboard.getData(Clipboard.kTextPlain);
-    if (data?.text == null) return;
-    final digits = data!.text!.replaceAll(RegExp(r'\D'), '');
-    if (digits.length >= 6 && mounted) {
-      setState(() => _showPaste = true);
-    }
-  }
-
-  Future<void> _pasteOtp() async {
-    final data = await Clipboard.getData(Clipboard.kTextPlain);
-    if (data?.text == null) return;
-    final digits = data!.text!.replaceAll(RegExp(r'\D'), '');
-    for (int i = 0; i < 6 && i < digits.length; i++) {
-      _otpControllers[i].text = digits[i];
-    }
-    _otpFocusNodes[5].requestFocus();
-    if (mounted) setState(() => _showPaste = false);
-  }
-
-  void _clearAll() {
-    for (final c in _otpControllers) { c.clear(); }
-    _otpFocusNodes[0].requestFocus();
-    if (mounted) setState(() {});
-  }
-
   @override
   void dispose() {
-    for (final c in _otpControllers) { c.dispose(); }
-    for (final f in _otpFocusNodes) { f.dispose(); }
+    _otpController.dispose();
+    _otpFocusNode.dispose();
     _resendTimer?.cancel();
     super.dispose();
   }
@@ -2061,33 +2062,11 @@ class _OtpVerificationSheetContentState extends State<_OtpVerificationSheetConte
     });
   }
 
-  void _onOtpChanged(int index, String value) {
-    if (value.length > 1) {
-      final digits = value.replaceAll(RegExp(r'\D'), '');
-      for (int i = 0; i < 6 && i < digits.length; i++) {
-        _otpControllers[i].text = digits[i];
-      }
-      final nextIndex = digits.length < 6 ? digits.length : 5;
-      _otpFocusNodes[nextIndex].requestFocus();
-      return;
-    }
-    if (value.isNotEmpty && index < 5) {
-      _otpFocusNodes[index + 1].requestFocus();
-    } else if (value.isEmpty && index == 0) {
-      _clearAll();
-    } else if (value.isEmpty && index > 0) {
-      _otpFocusNodes[index - 1].requestFocus();
-    }
-    if (mounted) setState(() {});
-  }
-
   Future<void> _onVerify() async {
     final l = AppLocalizations.of(context)!;
-    final otp = _otpControllers.map((c) => c.text).join();
+    final otp = _otpController.text.replaceAll(RegExp(r'\D'), '');
     if (otp.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.enter6DigitOtp), backgroundColor: AppColors.errorColor),
-      );
+      AppNotification.show(context, l.enter6DigitOtp, type: NotificationType.error);
       return;
     }
     setState(() => _verifying = true);
@@ -2097,11 +2076,12 @@ class _OtpVerificationSheetContentState extends State<_OtpVerificationSheetConte
         data: {'email': widget.email, 'otp': otp, 'purpose': widget.purpose},
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.verificationCodeSent), backgroundColor: AppColors.successColor),
-      );
+      AppNotification.show(context, l.verificationCodeSent, type: NotificationType.success);
       Navigator.of(context).pop();
-      if (widget.purpose == 'forgot_password') {
+      final onVerified = widget.onVerified;
+      if (onVerified != null) {
+        await onVerified();
+      } else if (widget.purpose == 'forgot_password') {
         showResetPasswordSheet(context);
       } else if (widget.purpose == 'google_register') {
         context.go('/complete-profile');
@@ -2111,9 +2091,7 @@ class _OtpVerificationSheetContentState extends State<_OtpVerificationSheetConte
     } on DioException catch (e) {
       final msg = e.response?.data?['message'] as String? ?? l.failedVerifyOtp;
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg), backgroundColor: AppColors.errorColor),
-        );
+        AppNotification.show(context, msg, type: NotificationType.error);
       }
     } finally {
       if (mounted) setState(() => _verifying = false);
@@ -2130,17 +2108,13 @@ class _OtpVerificationSheetContentState extends State<_OtpVerificationSheetConte
         data: {'email': widget.email, 'purpose': widget.purpose},
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l.verificationCodeSent), backgroundColor: AppColors.successColor),
-        );
+        AppNotification.show(context, l.verificationCodeSent, type: NotificationType.success);
         _startResendTimer();
       }
     } on DioException catch (e) {
       final msg = e.response?.data?['message'] as String? ?? l.failedSendVerificationCode;
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg), backgroundColor: AppColors.errorColor),
-        );
+        AppNotification.show(context, msg, type: NotificationType.error);
       }
     } finally {
       if (mounted) setState(() => _sending = false);
@@ -2150,12 +2124,6 @@ class _OtpVerificationSheetContentState extends State<_OtpVerificationSheetConte
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final boxFg = isDark ? Colors.white : const Color(0xFF1A1A2E);
-    final boxBg = isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF5F5F5);
-    final boxBorder = isDark ? const Color(0xFF333333) : const Color(0xFFE0E0E0);
-    final boxFocusedBorder = AppColors.primaryColor;
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(AppSizes.lg, AppSizes.sm, AppSizes.lg, AppSizes.lg + MediaQuery.of(context).viewInsets.bottom),
       child: Column(
@@ -2163,16 +2131,20 @@ class _OtpVerificationSheetContentState extends State<_OtpVerificationSheetConte
           const SizedBox(height: AppSizes.sm),
           Row(
             children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => Navigator.of(context).pop(),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
+              SizedBox(
+                width: 40,
+                height: 40,
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => Navigator.of(context).pop(),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
               ),
-              const SizedBox(width: AppSizes.sm),
               Expanded(
-                child: Text(l.verify, style: AppTextStyles.headlineMedium),
+                child: Text(l.verify, style: AppTextStyles.headlineMedium, textAlign: TextAlign.center),
               ),
+              const SizedBox(width: 40),
             ],
           ),
           const SizedBox(height: AppSizes.xs),
@@ -2183,107 +2155,57 @@ class _OtpVerificationSheetContentState extends State<_OtpVerificationSheetConte
             style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 28),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: List.generate(6, (i) {
-              return Padding(
-                padding: EdgeInsets.only(left: i > 0 ? 8 : 0),
-                child: SizedBox(
-                    width: 44,
-                    height: 54,
-                    child: TextFormField(
-                      controller: _otpControllers[i],
-                      focusNode: _otpFocusNodes[i],
-                      textAlign: TextAlign.center,
-                      keyboardType: TextInputType.number,
-                      maxLength: 1,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
-                      style: GoogleFonts.inter(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: boxFg,
-                      ),
-                      decoration: InputDecoration(
-                        counterText: '',
-                        isDense: true,
-                        contentPadding: EdgeInsets.zero,
-                        filled: true,
-                        fillColor: boxBg,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(color: boxBorder),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(color: boxBorder),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
-                          borderSide: BorderSide(color: boxFocusedBorder, width: 1.8),
-                        ),
-                      ),
-                      onChanged: (v) => _onOtpChanged(i, v),
-                    ),
-                  ),
-                );
-              }),
+          const SizedBox(height: 24),
+          TextField(
+            controller: _otpController,
+            focusNode: _otpFocusNode,
+            textAlign: TextAlign.center,
+            keyboardType: TextInputType.number,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(6),
+            ],
+            style: GoogleFonts.inter(fontSize: 20, fontWeight: FontWeight.w600, letterSpacing: 8),
+            decoration: InputDecoration(
+
+              counterText: '',
+              filled: true,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              contentPadding: const EdgeInsets.symmetric(vertical: 12),
             ),
+            onChanged: (v) {
+              if (v.length == 6) _onVerify();
+            },
+          ),
           const SizedBox(height: 16),
-          if (_showPaste)
+          if (_verifying)
             Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: GestureDetector(
-                onTap: _pasteOtp,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryColor.withAlpha(15),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.content_paste_rounded, size: 16, color: AppColors.primaryColor),
-                      const SizedBox(width: 6),
-                      Text(
-                        l.pasteOtp,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.primaryColor,
-                        ),
-                      ),
-                    ],
-                  ),
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 1.5, color: AppColors.primaryColor)),
+                  const SizedBox(width: 8),
+                  Text(l.verifying, style: GoogleFonts.inter(fontSize: 13, color: AppColors.textSecondary)),
+                ],
+              ),
+            )
+          else
+            GestureDetector(
+              onTap: _resendSeconds <= 0 && !_sending ? _onResend : null,
+              child: Text(
+                _sending
+                    ? l.sending
+                    : _resendSeconds > 0
+                        ? '${l.resendOtp} · ${_resendSeconds}s'
+                        : l.resendOtp,
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: _resendSeconds <= 0 && !_sending ? AppColors.primaryColor : AppColors.textSecondary,
+                  fontWeight: _resendSeconds <= 0 && !_sending ? FontWeight.w600 : FontWeight.normal,
                 ),
               ),
             ),
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: AppButton(
-              label: l.verify,
-              loading: _verifying,
-              onPressed: _onVerify,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Center(
-            child: Text(
-              _sending
-                  ? l.sending
-                  : _resendSeconds > 0
-                      ? '${l.resendOtp} · ${_resendSeconds}s'
-                      : l.sending,
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
           const SizedBox(height: AppSizes.sm),
         ],
       ),
@@ -2326,16 +2248,12 @@ class _ResetPasswordSheetContentState extends State<_ResetPasswordSheetContent> 
         },
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.passwordResetSuccess), backgroundColor: AppColors.successColor),
-      );
+      AppNotification.show(context, l.passwordResetSuccess, type: NotificationType.success);
       Navigator.of(context).pop();
       showSignInSheet(context);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.passwordResetFailed), backgroundColor: AppColors.errorColor),
-      );
+      AppNotification.show(context, l.passwordResetFailed, type: NotificationType.error);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -2436,16 +2354,12 @@ class _ForgotPasswordSheetContentState extends State<_ForgotPasswordSheetContent
         data: {'email': _emailController.text.trim()},
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.resetCodeSentToEmail), backgroundColor: AppColors.successColor),
-      );
+      AppNotification.show(context, l.resetCodeSentToEmail, type: NotificationType.success);
       Navigator.of(context).pop();
       showOtpVerificationSheet(context, email: _emailController.text.trim());
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.failedSendResetCode), backgroundColor: AppColors.errorColor),
-      );
+      AppNotification.show(context, l.failedSendResetCode, type: NotificationType.error);
     } finally {
       if (mounted) setState(() => _loading = false);
     }

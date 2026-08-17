@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/errors/localized_error.dart';
+import '../../../../core/reference/dropdown_option.dart';
+import '../../../../core/reference/dropdown_options_provider.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/app_date_picker_field.dart';
@@ -15,6 +17,11 @@ import '../../../../core/widgets/app_region_picker_field.dart';
 import '../../../../core/widgets/app_snackbar.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/utils/ktp_utils.dart';
+import '../../../../core/utils/identity_document_utils.dart';
+import '../../../../core/utils/camera_scan_utils.dart';
+import '../../../../core/utils/profile_media_picker.dart';
+import '../../../../core/widgets/media_viewer.dart';
+import '../../../../core/services/image_scan_analyzer.dart';
 import '../../../../core/utils/passport_utils.dart';
 import '../../../../core/utils/sim_utils.dart';
 import '../../../../core/utils/npwp_utils.dart';
@@ -38,7 +45,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _whatsappController = TextEditingController();
-  final _nikController = TextEditingController();
+  final _ktpNumberController = TextEditingController();
   final _birthPlaceController = TextEditingController();
   final _birthDateController = TextEditingController();
   final _countryController = TextEditingController();
@@ -73,10 +80,13 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
   String _occupation = '';
   String _incomeRange = '';
   String _sourceOfFunds = '';
+  OverlayEntry? _dropdownOverlay;
+  Map<String, List<DropdownOption>> _dropdownOptions = {};
+  bool _optionsLoaded = false;
 
   String _idLabel(AppLocalizations l) {
     switch (_identityType) {
-      case 'ktp': return l.nikLabel;
+      case 'ktp': return l.ktpNumberLabel;
       case 'passport': return l.passportLabel;
       case 'sim': return l.simLabel;
       case 'npwp': return l.npwpLabel;
@@ -116,7 +126,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
     _usernameController.dispose();
     _emailController.dispose();
     _whatsappController.dispose();
-    _nikController.dispose();
+    _ktpNumberController.dispose();
     _birthPlaceController.dispose();
     _birthDateController.dispose();
     _countryController.dispose();
@@ -124,154 +134,164 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
     _motherNameController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _removeDropdown();
     super.dispose();
   }
 
-  void _showPickerSheet(String title, List<String> options, Function(String) onSelected) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2))),
-              const SizedBox(height: 8),
-              Text(title, style: AppTextStyles.titleMedium),
-              const SizedBox(height: 8),
-              ...options.map((option) => ListTile(
-                title: Text(option, style: AppTextStyles.bodyMedium),
-                onTap: () {
-                  onSelected(option);
-                  Navigator.pop(ctx);
-                },
-              )),
-            ],
-          ),
-        ),
-      ),
+  void _showDropdown(BuildContext fieldContext, String title, List<String> options, String currentValue, Function(String) onSelected) {
+    _removeDropdown();
+    final overlay = Overlay.of(fieldContext);
+    final renderBox = fieldContext.findRenderObject() as RenderBox;
+    final position = renderBox.localToGlobal(Offset.zero);
+    final size = renderBox.size;
+
+    final searchController = TextEditingController();
+
+    _dropdownOverlay = OverlayEntry(
+      builder: (ctx) {
+        List<String> filtered = List.of(options);
+        return StatefulBuilder(
+          builder: (_, setDropdownState) {
+            return GestureDetector(
+              onTap: () {},
+              child: Stack(
+                children: [
+                  GestureDetector(
+                    onTap: _removeDropdown,
+                    child: Container(color: Colors.transparent),
+                  ),
+                  Positioned(
+                    top: position.dy + size.height + 4,
+                    left: position.dx,
+                    width: size.width,
+                    child: Material(
+                      elevation: 8,
+                      borderRadius: BorderRadius.circular(10),
+                      color: AppColors.surfaceColor,
+                      surfaceTintColor: AppColors.surfaceColor,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 280),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+                              child: TextField(
+                                controller: searchController,
+                                decoration: InputDecoration(
+                                  hintText: title,
+                                  prefixIcon: const Icon(Icons.search, size: 20),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                                  isDense: true,
+                                  contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                                ),
+                                onChanged: (v) {
+                                  setDropdownState(() {
+                                    filtered = options.where((o) =>
+                                      o.toLowerCase().contains(v.toLowerCase())).toList();
+                                  });
+                                },
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Flexible(
+                              child: ListView(
+                                shrinkWrap: true,
+                                padding: EdgeInsets.zero,
+                                children: filtered.map((option) => ListTile(
+                                  dense: true,
+                                  title: Text(option, style: AppTextStyles.bodyMedium),
+                                  trailing: option == currentValue
+                                      ? Icon(Icons.check, color: AppColors.primaryColor, size: 20)
+                                      : null,
+                                  onTap: () {
+                                    onSelected(option);
+                                    _removeDropdown();
+                                  },
+                                )).toList(),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
+    overlay.insert(_dropdownOverlay!);
   }
 
-  void _showIdentityTypeSheet() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2))),
-              const SizedBox(height: 8),
-              Text(AppLocalizations.of(context)!.idType, style: AppTextStyles.titleMedium),
-              const SizedBox(height: 8),
-              ListTile(
-                leading: Icon(Icons.credit_card, color: _identityType == 'ktp' ? AppColors.primaryColor : null),
-                title: Text(AppLocalizations.of(context)!.ktp, style: AppTextStyles.bodyMedium),
-                trailing: _identityType == 'ktp' ? Icon(Icons.check, color: AppColors.primaryColor) : null,
-                onTap: () {
-                  setState(() {
-                    _identityType = 'ktp';
-                    _ktpFile = null;
-                    _nikController.clear();
-                    _namesLocked = false;
-                    _ocrExtractedName = '';
-                  });
-                  Navigator.pop(ctx);
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.card_travel, color: _identityType == 'passport' ? AppColors.primaryColor : null),
-                title: Text(AppLocalizations.of(context)!.passport, style: AppTextStyles.bodyMedium),
-                trailing: _identityType == 'passport' ? Icon(Icons.check, color: AppColors.primaryColor) : null,
-                onTap: () {
-                  setState(() {
-                    _identityType = 'passport';
-                    _ktpFile = null;
-                    _nikController.clear();
-                    _namesLocked = false;
-                    _ocrExtractedName = '';
-                  });
-                  Navigator.pop(ctx);
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.drive_eta, color: _identityType == 'sim' ? AppColors.primaryColor : null),
-                title: Text(AppLocalizations.of(context)!.sim, style: AppTextStyles.bodyMedium),
-                trailing: _identityType == 'sim' ? Icon(Icons.check, color: AppColors.primaryColor) : null,
-                onTap: () {
-                  setState(() {
-                    _identityType = 'sim';
-                    _ktpFile = null;
-                    _nikController.clear();
-                    _namesLocked = false;
-                    _ocrExtractedName = '';
-                  });
-                  Navigator.pop(ctx);
-                },
-              ),
-              ListTile(
-                leading: Icon(Icons.receipt_long, color: _identityType == 'npwp' ? AppColors.primaryColor : null),
-                title: Text(AppLocalizations.of(context)!.npwp, style: AppTextStyles.bodyMedium),
-                trailing: _identityType == 'npwp' ? Icon(Icons.check, color: AppColors.primaryColor) : null,
-                onTap: () {
-                  setState(() {
-                    _identityType = 'npwp';
-                    _ktpFile = null;
-                    _nikController.clear();
-                    _namesLocked = false;
-                    _ocrExtractedName = '';
-                  });
-                  Navigator.pop(ctx);
-                },
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+  void _removeDropdown() {
+    _dropdownOverlay?.remove();
+    _dropdownOverlay = null;
+  }
+
+  List<String> _optLabels(String type, List<String> fallback) {
+    return _dropdownOptions[type]?.map((o) => o.label).toList() ?? fallback;
   }
 
   Widget _buildIdentityTypePicker() {
     final l10n = AppLocalizations.of(context)!;
-    final (icon, label) = switch (_identityType) {
-      'ktp' => (Icons.credit_card, l10n.ktp),
-      'passport' => (Icons.card_travel, l10n.passport),
-      'sim' => (Icons.drive_eta, l10n.sim),
-      'npwp' => (Icons.receipt_long, l10n.npwp),
-      _ => (Icons.credit_card, l10n.idType),
+    final options = [l10n.ktp, l10n.passport, l10n.sim, l10n.npwp];
+    final currentLabel = switch (_identityType) {
+      'ktp' => l10n.ktp,
+      'passport' => l10n.passport,
+      'sim' => l10n.sim,
+      'npwp' => l10n.npwp,
+      _ => l10n.idType,
     };
-    return GestureDetector(
-      onTap: _showIdentityTypeSheet,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-        decoration: BoxDecoration(
-          color: AppColors.secondaryColor.withAlpha(30),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: AppColors.dividerColor),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: AppColors.primaryColor, size: 22),
-            SizedBox(width: AppSizes.md),
-            Expanded(
-              child: Text(
-                label,
-                style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+    final icon = switch (_identityType) {
+      'ktp' => Icons.credit_card,
+      'passport' => Icons.card_travel,
+      'sim' => Icons.drive_eta,
+      'npwp' => Icons.receipt_long,
+      _ => Icons.credit_card,
+    };
+    return Builder(
+      builder: (fieldCtx) => GestureDetector(
+        onTap: () => _showDropdown(fieldCtx, l10n.idType, options, currentLabel, (v) {
+          setState(() {
+            if (v == l10n.passport) {
+              _identityType = 'passport';
+            } else if (v == l10n.sim) {
+              _identityType = 'sim';
+            } else if (v == l10n.npwp) {
+              _identityType = 'npwp';
+            } else {
+              _identityType = 'ktp';
+            }
+            _ktpFile = null;
+            _ktpNumberController.clear();
+            _namesLocked = false;
+            _ocrExtractedName = '';
+          });
+        }),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+          decoration: BoxDecoration(
+            color: AppColors.secondaryColor.withAlpha(30),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: AppColors.dividerColor),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: AppColors.primaryColor, size: 22),
+              SizedBox(width: AppSizes.md),
+              Expanded(
+                child: Text(
+                  currentLabel,
+                  style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                ),
               ),
-            ),
-            Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
-          ],
+              Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+            ],
+          ),
         ),
       ),
     );
@@ -398,27 +418,33 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
 
   Future<void> _pickImage({required bool isKtp}) async {
     if (isKtp) {
-      final file = await pickKtpPhoto(context);
+      // Langsung buka kamera dengan panduan bingkai kartu (persegi panjang)
+      // untuk dokumen identitas KTP/SIM/NPWP/Paspor.
+      final file = await scanWithCamera(
+        context,
+        type: scanContentTypeForIdentity(_identityType),
+      );
       if (file != null) {
         setState(() => _ktpFile = file);
-        String nik = '';
+        if (isVideoPath(file.path)) return;
+        String ktpNumber = '';
         String name = '';
         if (_identityType == 'ktp') {
-          nik = await extractNikFromKtp(file);
+          ktpNumber = await extractKtpNumberFromKtp(file);
           name = await extractNameFromKtp(file);
         } else if (_identityType == 'passport') {
-          nik = await extractPassportNumber(file);
+          ktpNumber = await extractPassportNumber(file);
           name = await extractNameFromPassport(file);
         } else if (_identityType == 'sim') {
-          nik = await extractSimNumber(file);
+          ktpNumber = await extractSimNumber(file);
           name = await extractNameFromSim(file);
         } else if (_identityType == 'npwp') {
-          nik = await extractNpwpNumber(file);
+          ktpNumber = await extractNpwpNumber(file);
           name = await extractNameFromNpwp(file);
         }
         setState(() {
           _ocrExtractedName = name;
-          if (nik.isNotEmpty) _nikController.text = nik;
+          if (ktpNumber.isNotEmpty) _ktpNumberController.text = ktpNumber;
         });
         if (name.isNotEmpty) {
           final parts = splitKtpName(name);
@@ -432,10 +458,9 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
       }
       return;
     }
-    final picker = ImagePicker();
-    final picked = await picker.pickImage(source: ImageSource.gallery, maxWidth: 512, maxHeight: 512);
-    if (picked != null) {
-      setState(() => _avatarFile = File(picked.path));
+    final file = await pickProfileMedia(context);
+    if (file != null) {
+      setState(() => _avatarFile = file);
     }
   }
 
@@ -482,7 +507,7 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
       AppSnackBar.show(context, AppLocalizations.of(context)!.rememberMe, type: SnackBarType.warning);
       return;
     }
-    if (_ktpFile != null) {
+    if (_ktpFile != null && !isVideoPath(_ktpFile!.path)) {
       if (!_namesLocked && _ocrExtractedName.isEmpty) {
         final l = AppLocalizations.of(context)!;
         AppSnackBar.show(context, '${l.nameVerificationFailed} ${_idPhotoLabel(l)}. ${l.uploadPhoto} ${l.selfieTips}', type: SnackBarType.error);
@@ -506,10 +531,10 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
       username: _usernameController.text.trim(),
       email: _emailController.text.trim(),
       whatsapp: '$_countryCode ${_whatsappController.text.trim()}',
-      nik: _identityType == 'ktp' ? _nikController.text.trim() : '',
-      passportNumber: _identityType == 'passport' ? _nikController.text.trim() : null,
-      simNumber: _identityType == 'sim' ? _nikController.text.trim() : null,
-      npwpNumber: _identityType == 'npwp' ? _nikController.text.trim() : null,
+      ktpNumber: _identityType == 'ktp' ? _ktpNumberController.text.trim() : '',
+      passportNumber: _identityType == 'passport' ? _ktpNumberController.text.trim() : null,
+      simNumber: _identityType == 'sim' ? _ktpNumberController.text.trim() : null,
+      npwpNumber: _identityType == 'npwp' ? _ktpNumberController.text.trim() : null,
       identityType: _identityType,
       birthPlace: _birthPlaceController.text.trim(),
       birthDate: _birthDateController.text.trim(),
@@ -544,12 +569,18 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
     final l = AppLocalizations.of(context)!;
     final authState = ref.watch(authProvider);
 
+    if (!_optionsLoaded) {
+      ref.read(dropdownOptionsProvider.future).then((opts) {
+        if (mounted) setState(() { _dropdownOptions = opts; _optionsLoaded = true; });
+      });
+    }
+
     ref.listen<AuthState>(authProvider, (_, state) {
       if (state is AuthAuthenticated) {
-        AppSnackBar.show(context, 'Registrasi berhasil', type: SnackBarType.success);
+        AppSnackBar.show(context, l.registrationSuccess, type: SnackBarType.success);
         context.go('/home');
       } else if (state is AuthError) {
-        AppSnackBar.show(context, state.message, type: SnackBarType.error);
+        AppSnackBar.show(context, LocalizedError.of(l, state.message), type: SnackBarType.error);
       }
     });
 
@@ -585,10 +616,14 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                       CircleAvatar(
                         radius: 48,
                         backgroundColor: AppColors.secondaryColor,
-                        backgroundImage: _avatarFile != null ? FileImage(_avatarFile!) : null,
-                        child: _avatarFile == null
-                            ? Icon(Icons.camera_alt, size: 28, color: AppColors.primaryColor)
+                        backgroundImage: (!(_avatarFile != null && isVideoPath(_avatarFile!.path)) && _avatarFile != null)
+                            ? FileImage(_avatarFile!) as ImageProvider?
                             : null,
+                        child: (_avatarFile != null && isVideoPath(_avatarFile!.path))
+                            ? Icon(Icons.videocam, size: 28, color: AppColors.primaryColor)
+                            : _avatarFile == null
+                                ? Icon(Icons.camera_alt, size: 28, color: AppColors.primaryColor)
+                                : null,
                       ),
                       Positioned(
                         bottom: 0,
@@ -721,8 +756,19 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
               SizedBox(height: AppSizes.sm),
               GestureDetector(
                 onTap: () async {
-                  final file = await pickKtpPhoto(context);
-                  if (file != null) setState(() => _selfieKtpFile = file);
+                  // Langsung buka kamera depan dengan panduan oval wajah +
+                  // bingkai kartu identitas (KTP/SIM/NPWP/Paspor).
+                  final file = await scanSelfieWithDocument(
+                    context,
+                    docType: _identityType,
+                  );
+                  if (file != null) {
+                    setState(() => _selfieKtpFile = file);
+                    final number = await extractIdentityNumber(file, _identityType);
+                    if (number.isNotEmpty && _ktpNumberController.text.trim().isEmpty) {
+                      setState(() => _ktpNumberController.text = number);
+                    }
+                  }
                 },
                 child: Container(
                   width: double.infinity,
@@ -769,11 +815,265 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                   ),
                 ),
               ),
+              SizedBox(height: AppSizes.md),
+              AppTextField(
+                label: _idLabel(l),
+                controller: _ktpNumberController,
+                keyboardType: _identityType == 'ktp' ? TextInputType.number : TextInputType.text,
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return l.identityNumberRequired(_idLabel(l));
+                  if (_identityType == 'ktp' && v.trim().length != 16) return l.ktpNumberMustBe16Digits;
+                  if (_identityType == 'sim' && v.trim().length < 6) return l.simMin6Chars;
+                  if (_identityType == 'npwp' && v.trim().length < 15) return l.npwpMin15Chars;
+                  if (!['ktp', 'sim', 'npwp'].contains(_identityType) && v.trim().length < 6) return l.idNumberMin6Chars;
+                  return null;
+                },
+              ),
+              SizedBox(height: AppSizes.md),
+              AppTextField(
+                label: l.placeOfBirth,
+                controller: _birthPlaceController,
+              ),
+              SizedBox(height: AppSizes.md),
+              AppDatePickerField(
+                label: l.dateOfBirth,
+                controller: _birthDateController,
+              ),
+              SizedBox(height: AppSizes.md),
+              AppCountryPickerField(
+                label: l.country,
+                controller: _countryController,
+                onChanged: (_) => setState(() {}),
+              ),
+              SizedBox(height: AppSizes.md),
+              AppRegionPickerField(
+                country: _countryController.text.isEmpty ? null : _countryController.text,
+                onProvinceIdChanged: (id) => _provinceId = id,
+                onCityIdChanged: (id) => _cityId = id,
+                onDistrictIdChanged: (id) => _districtId = id,
+                onVillageIdChanged: (id) => _villageId = id,
+                onProvinceNameChanged: (v) => _provinceName = v,
+                onCityNameChanged: (v) => _cityName = v,
+                onDistrictNameChanged: (v) => _districtName = v,
+                onVillageNameChanged: (v) => _villageName = v,
+                onPostalCodeChanged: (v) => _postalCode = v,
+              ),
+              AppTextField(
+                label: l.fullAddress,
+                controller: _addressController,
+                maxLines: 2,
+              ),
+              SizedBox(height: AppSizes.md),
+              Text(l.gender, style: AppTextStyles.titleSmall),
               SizedBox(height: AppSizes.sm),
+              Builder(
+                builder: (fieldCtx) => GestureDetector(
+                  onTap: () => _showDropdown(fieldCtx, l.selectGender, _optLabels('gender', [l.male, l.female]), _gender, (v) => setState(() => _gender = v)),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondaryColor.withAlpha(30),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.dividerColor),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.people_outlined, color: AppColors.primaryColor, size: 22),
+                        SizedBox(width: AppSizes.md),
+                        Expanded(
+                          child: Text(
+                            _gender.isEmpty ? l.selectGender : _gender,
+                            style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: AppSizes.md),
+              Text(l.religion, style: AppTextStyles.titleSmall),
+              SizedBox(height: AppSizes.sm),
+              Builder(
+                builder: (fieldCtx) => GestureDetector(
+                  onTap: () => _showDropdown(fieldCtx, l.selectReligion, _optLabels('religion', [l.islam, l.christian, l.catholic, l.hindu, l.buddha, l.confucian]), _religion, (v) => setState(() => _religion = v)),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondaryColor.withAlpha(30),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.dividerColor),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.church_outlined, color: AppColors.primaryColor, size: 22),
+                        SizedBox(width: AppSizes.md),
+                        Expanded(
+                          child: Text(
+                            _religion.isEmpty ? l.selectReligion : _religion,
+                            style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: AppSizes.md),
+              Text(l.maritalStatus, style: AppTextStyles.titleSmall),
+              SizedBox(height: AppSizes.sm),
+              Builder(
+                builder: (fieldCtx) => GestureDetector(
+                  onTap: () => _showDropdown(fieldCtx, l.selectMaritalStatus, _optLabels('marital_status', [l.single, l.married, l.divorced]), _maritalStatus, (v) => setState(() => _maritalStatus = v)),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondaryColor.withAlpha(30),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.dividerColor),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.favorite_border, color: AppColors.primaryColor, size: 22),
+                        SizedBox(width: AppSizes.md),
+                        Expanded(
+                          child: Text(
+                            _maritalStatus.isEmpty ? l.selectMaritalStatus : _maritalStatus,
+                            style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: AppSizes.md),
+              AppTextField(
+                label: l.motherName,
+                controller: _motherNameController,
+              ),
+              SizedBox(height: AppSizes.md),
+              Text(l.occupation, style: AppTextStyles.titleSmall),
+              SizedBox(height: AppSizes.sm),
+              Builder(
+                builder: (fieldCtx) => GestureDetector(
+                  onTap: () => _showDropdown(fieldCtx, l.selectOccupation, _optLabels('occupation', [l.employee, l.entrepreneur, l.student, l.housewife, l.professional, l.other]), _occupation, (v) => setState(() => _occupation = v)),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondaryColor.withAlpha(30),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.dividerColor),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.work_outline, color: AppColors.primaryColor, size: 22),
+                        SizedBox(width: AppSizes.md),
+                        Expanded(
+                          child: Text(
+                            _occupation.isEmpty ? l.selectOccupation : _occupation,
+                            style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: AppSizes.md),
+              Text(l.incomeRange, style: AppTextStyles.titleSmall),
+              SizedBox(height: AppSizes.sm),
+              Builder(
+                builder: (fieldCtx) => GestureDetector(
+                  onTap: () => _showDropdown(fieldCtx, l.selectIncomeRange, _optLabels('income_range', [l.lessThan1M, l.range1to5M, l.range5to10M, l.range10to50M, l.moreThan50M]), _incomeRange, (v) => setState(() => _incomeRange = v)),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondaryColor.withAlpha(30),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.dividerColor),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.trending_up_outlined, color: AppColors.primaryColor, size: 22),
+                        SizedBox(width: AppSizes.md),
+                        Expanded(
+                          child: Text(
+                            _incomeRange.isEmpty ? l.selectIncomeRange : _incomeRange,
+                            style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: AppSizes.md),
+              Text(l.sourceOfFunds, style: AppTextStyles.titleSmall),
+              SizedBox(height: AppSizes.sm),
+              Builder(
+                builder: (fieldCtx) => GestureDetector(
+                  onTap: () => _showDropdown(fieldCtx, l.selectSourceOfFunds, _optLabels('source_of_funds', [l.salary, l.business, l.investment, l.gift, l.other]), _sourceOfFunds, (v) => setState(() => _sourceOfFunds = v)),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondaryColor.withAlpha(30),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AppColors.dividerColor),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.account_balance_wallet_outlined, color: AppColors.primaryColor, size: 22),
+                        SizedBox(width: AppSizes.md),
+                        Expanded(
+                          child: Text(
+                            _sourceOfFunds.isEmpty ? l.selectSourceOfFunds : _sourceOfFunds,
+                            style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: AppSizes.md),
+              AppTextField(
+                label: l.password,
+                controller: _passwordController,
+                obscureText: _obscurePassword,
+                validator: Validators.password,
+                onChanged: (_) => setState(() {}),
+                suffixIcon: IconButton(
+                  icon: Icon(_obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                  onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                ),
+              ),
+              if (_passwordController.text.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                _buildPasswordStrength(_passwordController.text),
+              ],
+              SizedBox(height: AppSizes.md),
+              AppTextField(
+                label: l.confirmPassword,
+                controller: _confirmPasswordController,
+                obscureText: _obscureConfirmPassword,
+                validator: (v) => Validators.confirmPassword(v, _passwordController.text),
+                suffixIcon: IconButton(
+                  icon: Icon(_obscureConfirmPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+                  onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                ),
+              ),
+              SizedBox(height: AppSizes.md),
               GestureDetector(
                 onTap: () async {
-                  final path = await context.push<String>('/face-scanner');
-                  if (path != null) setState(() => _faceScanPath = path);
+                  final file = await scanWithCamera(context, type: ScanContentType.face);
+                  if (file != null) setState(() => _faceScanPath = file.path);
                 },
                 child: Container(
                   width: double.infinity,
@@ -818,248 +1118,6 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
                         ),
                     ],
                   ),
-                ),
-              ),
-              SizedBox(height: AppSizes.md),
-              AppTextField(
-                label: _idLabel(l),
-                controller: _nikController,
-                keyboardType: _identityType == 'ktp' ? TextInputType.number : TextInputType.text,
-                validator: (v) {
-                  if (v == null || v.trim().isEmpty) return l.identityNumberRequired(_idLabel(l));
-                  if (_identityType == 'ktp' && v.trim().length != 16) return l.nikMustBe16Digits;
-                  if (_identityType == 'sim' && v.trim().length < 6) return l.simMin6Chars;
-                  if (_identityType == 'npwp' && v.trim().length < 15) return l.npwpMin15Chars;
-                  if (!['ktp', 'sim', 'npwp'].contains(_identityType) && v.trim().length < 6) return l.nikMin6Chars;
-                  return null;
-                },
-              ),
-              SizedBox(height: AppSizes.md),
-              AppTextField(
-                label: l.placeOfBirth,
-                controller: _birthPlaceController,
-              ),
-              SizedBox(height: AppSizes.md),
-              AppDatePickerField(
-                label: l.dateOfBirth,
-                controller: _birthDateController,
-              ),
-              SizedBox(height: AppSizes.md),
-              AppCountryPickerField(
-                label: l.country,
-                controller: _countryController,
-                onChanged: (_) => setState(() {}),
-              ),
-              SizedBox(height: AppSizes.md),
-              AppRegionPickerField(
-                country: _countryController.text.isEmpty ? null : _countryController.text,
-                onProvinceIdChanged: (id) => _provinceId = id,
-                onCityIdChanged: (id) => _cityId = id,
-                onDistrictIdChanged: (id) => _districtId = id,
-                onVillageIdChanged: (id) => _villageId = id,
-                onProvinceNameChanged: (v) => _provinceName = v,
-                onCityNameChanged: (v) => _cityName = v,
-                onDistrictNameChanged: (v) => _districtName = v,
-                onVillageNameChanged: (v) => _villageName = v,
-                onPostalCodeChanged: (v) => _postalCode = v,
-              ),
-              AppTextField(
-                label: l.fullAddress,
-                controller: _addressController,
-                maxLines: 2,
-              ),
-              SizedBox(height: AppSizes.md),
-              Text(l.gender, style: AppTextStyles.titleSmall),
-              SizedBox(height: AppSizes.sm),
-              GestureDetector(
-                onTap: () => _showPickerSheet(l.selectGender, [l.male, l.female], (v) => setState(() => _gender = v)),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: AppColors.secondaryColor.withAlpha(30),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.dividerColor),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.people_outlined, color: AppColors.primaryColor, size: 22),
-                      SizedBox(width: AppSizes.md),
-                      Expanded(
-                        child: Text(
-                          _gender.isEmpty ? l.selectGender : _gender,
-                          style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                      Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(height: AppSizes.md),
-              Text(l.religion, style: AppTextStyles.titleSmall),
-              SizedBox(height: AppSizes.sm),
-              GestureDetector(
-                onTap: () => _showPickerSheet(l.selectReligion, ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu'], (v) => setState(() => _religion = v)),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: AppColors.secondaryColor.withAlpha(30),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.dividerColor),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.church_outlined, color: AppColors.primaryColor, size: 22),
-                      SizedBox(width: AppSizes.md),
-                      Expanded(
-                        child: Text(
-                          _religion.isEmpty ? l.selectReligion : _religion,
-                          style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                      Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(height: AppSizes.md),
-              Text(l.maritalStatus, style: AppTextStyles.titleSmall),
-              SizedBox(height: AppSizes.sm),
-              GestureDetector(
-                onTap: () => _showPickerSheet(l.selectMaritalStatus, [l.single, l.married, l.divorced], (v) => setState(() => _maritalStatus = v)),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: AppColors.secondaryColor.withAlpha(30),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.dividerColor),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.favorite_border, color: AppColors.primaryColor, size: 22),
-                      SizedBox(width: AppSizes.md),
-                      Expanded(
-                        child: Text(
-                          _maritalStatus.isEmpty ? l.selectMaritalStatus : _maritalStatus,
-                          style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                      Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(height: AppSizes.md),
-              AppTextField(
-                label: l.motherName,
-                controller: _motherNameController,
-              ),
-              SizedBox(height: AppSizes.md),
-              Text(l.occupation, style: AppTextStyles.titleSmall),
-              SizedBox(height: AppSizes.sm),
-              GestureDetector(
-                onTap: () => _showPickerSheet(l.selectOccupation, ['Karyawan', 'Wiraswasta', 'Pelajar/Mahasiswa', 'Ibu Rumah Tangga', 'Profesional', 'Lainnya'], (v) => setState(() => _occupation = v)),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: AppColors.secondaryColor.withAlpha(30),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.dividerColor),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.work_outline, color: AppColors.primaryColor, size: 22),
-                      SizedBox(width: AppSizes.md),
-                      Expanded(
-                        child: Text(
-                          _occupation.isEmpty ? l.selectOccupation : _occupation,
-                          style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                      Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(height: AppSizes.md),
-              Text(l.incomeRange, style: AppTextStyles.titleSmall),
-              SizedBox(height: AppSizes.sm),
-              GestureDetector(
-                onTap: () => _showPickerSheet(l.selectIncomeRange, ['< Rp 1 Juta', 'Rp 1-5 Juta', 'Rp 5-10 Juta', 'Rp 10-50 Juta', '> Rp 50 Juta'], (v) => setState(() => _incomeRange = v)),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: AppColors.secondaryColor.withAlpha(30),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.dividerColor),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.trending_up_outlined, color: AppColors.primaryColor, size: 22),
-                      SizedBox(width: AppSizes.md),
-                      Expanded(
-                        child: Text(
-                          _incomeRange.isEmpty ? l.selectIncomeRange : _incomeRange,
-                          style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                      Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(height: AppSizes.md),
-              Text(l.sourceOfFunds, style: AppTextStyles.titleSmall),
-              SizedBox(height: AppSizes.sm),
-              GestureDetector(
-                onTap: () => _showPickerSheet(l.selectSourceOfFunds, ['Gaji', 'Bisnis/Usaha', 'Investasi', 'Hadiah/Warisan', 'Lainnya'], (v) => setState(() => _sourceOfFunds = v)),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: AppColors.secondaryColor.withAlpha(30),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.dividerColor),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.account_balance_wallet_outlined, color: AppColors.primaryColor, size: 22),
-                      SizedBox(width: AppSizes.md),
-                      Expanded(
-                        child: Text(
-                          _sourceOfFunds.isEmpty ? l.selectSourceOfFunds : _sourceOfFunds,
-                          style: AppTextStyles.bodyMedium.copyWith(fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                      Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
-                    ],
-                  ),
-                ),
-              ),
-              SizedBox(height: AppSizes.md),
-              AppTextField(
-                label: l.password,
-                controller: _passwordController,
-                obscureText: _obscurePassword,
-                validator: Validators.password,
-                onChanged: (_) => setState(() {}),
-                suffixIcon: IconButton(
-                  icon: Icon(_obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                  onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                ),
-              ),
-              if (_passwordController.text.isNotEmpty) ...[
-                const SizedBox(height: 6),
-                _buildPasswordStrength(_passwordController.text),
-              ],
-              SizedBox(height: AppSizes.md),
-              AppTextField(
-                label: l.confirmPassword,
-                controller: _confirmPasswordController,
-                obscureText: _obscureConfirmPassword,
-                validator: (v) => Validators.confirmPassword(v, _passwordController.text),
-                suffixIcon: IconButton(
-                  icon: Icon(_obscureConfirmPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined),
-                  onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
                 ),
               ),
               SizedBox(height: AppSizes.md),

@@ -4,6 +4,7 @@ import 'package:mobile_app/core/api/dio_client.dart';
 import 'package:mobile_app/core/api/api_endpoints.dart';
 import '../../../../../core/constants/app_colors.dart';
 import '../../../../../core/constants/app_text_styles.dart';
+import '../../../../../core/utils/formatters.dart';
 
 class AdminVoucherFormDialog extends StatefulWidget {
   final String title;
@@ -23,15 +24,16 @@ class AdminVoucherFormDialog extends StatefulWidget {
 
 class _AdminVoucherFormDialogState extends State<AdminVoucherFormDialog> {
   final _formKey = GlobalKey<FormState>();
+  late TextEditingController _nameController;
   late TextEditingController _codeController;
-  late TextEditingController _discountAmountController;
   late TextEditingController _descriptionController;
-  late TextEditingController _minPurchaseController;
   late TextEditingController _maxUsesController;
   late TextEditingController _expiresAtController;
   late TextEditingController _searchUserController;
 
-  String _discountType = 'fixed';
+  int? _selectedDiscountId;
+  List<Map<String, dynamic>> _discounts = [];
+  bool _loadingDiscounts = false;
   bool _isActive = true;
   bool _isGlobal = false;
   List<Map<String, dynamic>> _allUsers = [];
@@ -43,30 +45,49 @@ class _AdminVoucherFormDialogState extends State<AdminVoucherFormDialog> {
   void initState() {
     super.initState();
     final d = widget.initialData;
+    _nameController = TextEditingController(text: d?['name']?.toString() ?? '');
     _codeController = TextEditingController(text: d?['code']?.toString() ?? '');
-    _discountAmountController = TextEditingController(text: d?['discount_amount']?.toString() ?? '');
     _descriptionController = TextEditingController(text: d?['description']?.toString() ?? '');
-    _minPurchaseController = TextEditingController(text: d?['min_purchase']?.toString() ?? '');
     _maxUsesController = TextEditingController(text: d?['max_uses']?.toString() ?? '');
     _expiresAtController = TextEditingController(text: d?['expires_at']?.toString() ?? '');
     _searchUserController = TextEditingController();
-    _discountType = d?['discount_type']?.toString() ?? 'fixed';
     _isActive = d?['is_active'] == true || d?['is_active'] == 1 || d?['is_active'] == '1';
     _isGlobal = d?['is_global'] == true || d?['is_global'] == 1 || d?['is_global'] == '1';
     _searchUserController.addListener(_filterUsers);
+    _fetchDiscounts();
     _fetchUsers();
   }
 
   @override
   void dispose() {
+    _nameController.dispose();
     _codeController.dispose();
-    _discountAmountController.dispose();
     _descriptionController.dispose();
-    _minPurchaseController.dispose();
     _maxUsesController.dispose();
     _expiresAtController.dispose();
     _searchUserController.dispose();
     super.dispose();
+  }
+
+  Future<void> _fetchDiscounts() async {
+    setState(() => _loadingDiscounts = true);
+    try {
+      final res = await DioClient.instance.get(ApiEndpoints.adminDiscounts);
+      final data = res.data['data'];
+      if (data is List) {
+        final d = widget.initialData;
+        final initialId = d?['discount_id'] is int ? d!['discount_id'] as int : (d?['discount'] is Map ? (d!['discount'] as Map)['id'] as int? : null);
+        if (mounted) {
+          setState(() {
+            _discounts = data.cast<Map<String, dynamic>>();
+            _selectedDiscountId = initialId;
+            _loadingDiscounts = false;
+          });
+        }
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loadingDiscounts = false);
+    }
   }
 
   Future<void> _fetchUsers() async {
@@ -120,19 +141,24 @@ class _AdminVoucherFormDialogState extends State<AdminVoucherFormDialog> {
     });
   }
 
+  String _discountLabel(Map<String, dynamic> d) {
+    final name = d['name'] as String? ?? '-';
+    final type = d['type'] as String? ?? 'percentage';
+    final value = d['value'] as num? ?? 0;
+    final label = type == 'percentage' ? '${value.toInt()}%' : Formatters.currency(value.toInt());
+    return '$name ($label)';
+  }
+
   Map<String, dynamic> _collectData() {
     final data = <String, dynamic>{
+      'name': _nameController.text.isNotEmpty ? _nameController.text : null,
       'code': _codeController.text,
-      'discount_amount': double.tryParse(_discountAmountController.text) ?? 0,
-      'discount_type': _discountType,
+      'discount_id': _selectedDiscountId,
       'is_active': _isActive,
       'is_global': _isGlobal,
     };
     if (_descriptionController.text.isNotEmpty) {
       data['description'] = _descriptionController.text;
-    }
-    if (_minPurchaseController.text.isNotEmpty) {
-      data['min_purchase'] = double.tryParse(_minPurchaseController.text) ?? 0;
     }
     if (_maxUsesController.text.isNotEmpty) {
       data['max_uses'] = int.tryParse(_maxUsesController.text);
@@ -180,19 +206,17 @@ class _AdminVoucherFormDialogState extends State<AdminVoucherFormDialog> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildTextField(l.voucherCode, _codeController, required: true),
+                      _buildTextField(l, l.voucherName, _nameController),
                       const SizedBox(height: 12),
-                      _buildTextField(l.discount, _discountAmountController, keyboardType: TextInputType.number, required: true),
+                      _buildTextField(l, l.voucherCode, _codeController, required: true),
                       const SizedBox(height: 12),
-                      _buildDropdown(l.discountType, _discountType, ['fixed', 'percentage'], (v) => setState(() => _discountType = v!)),
+                      _buildDiscountSelector(l),
                       const SizedBox(height: 12),
-                      _buildTextField(l.minPurchase, _minPurchaseController, keyboardType: TextInputType.number),
+                      _buildTextField(l, l.description, _descriptionController),
                       const SizedBox(height: 12),
-                      _buildTextField(l.description, _descriptionController),
+                      _buildTextField(l, l.expiresAt, _expiresAtController),
                       const SizedBox(height: 12),
-                      _buildTextField(l.expiresAt, _expiresAtController),
-                      const SizedBox(height: 12),
-                      _buildTextField(l.maxUses, _maxUsesController, keyboardType: TextInputType.number),
+                      _buildTextField(l, l.maxUses, _maxUsesController, keyboardType: TextInputType.number),
                       const SizedBox(height: 12),
                       _buildToggle(l.isActive, _isActive, (v) => setState(() => _isActive = v)),
                       const SizedBox(height: 12),
@@ -231,7 +255,29 @@ class _AdminVoucherFormDialogState extends State<AdminVoucherFormDialog> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, {bool required = false, TextInputType? keyboardType}) {
+  Widget _buildDiscountSelector(AppLocalizations l) {
+    if (_loadingDiscounts) {
+      return const SizedBox(
+        height: 56,
+        child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      );
+    }
+    return DropdownButtonFormField<int>(
+      initialValue: _selectedDiscountId,
+      decoration: InputDecoration(
+        labelText: '${l.discount} *',
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      items: _discounts.map((d) {
+        final id = d['id'] as int? ?? 0;
+        return DropdownMenuItem(value: id, child: Text(_discountLabel(d), style: const TextStyle(fontSize: 12)));
+      }).toList(),
+      onChanged: (v) => setState(() => _selectedDiscountId = v),
+      validator: (v) => v == null ? '${l.discount} ${l.fieldRequired}' : null,
+    );
+  }
+
+  Widget _buildTextField(AppLocalizations l, String label, TextEditingController controller, {bool required = false, TextInputType? keyboardType}) {
     return TextFormField(
       controller: controller,
       decoration: InputDecoration(
@@ -239,19 +285,7 @@ class _AdminVoucherFormDialogState extends State<AdminVoucherFormDialog> {
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
       keyboardType: keyboardType,
-      validator: required ? (v) => (v == null || v.trim().isEmpty) ? '$label tidak boleh kosong' : null : null,
-    );
-  }
-
-  Widget _buildDropdown(String label, String initialValue, List<String> options, ValueChanged<String?> onChanged) {
-    return DropdownButtonFormField<String>(
-      initialValue: initialValue,
-      decoration: InputDecoration(
-        labelText: label,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-      items: options.map((o) => DropdownMenuItem(value: o, child: Text(o))).toList(),
-      onChanged: onChanged,
+      validator: required ? (v) => (v == null || v.trim().isEmpty) ? '$label ${l.fieldRequired}' : null : null,
     );
   }
 
@@ -280,7 +314,7 @@ class _AdminVoucherFormDialogState extends State<AdminVoucherFormDialog> {
         TextField(
           controller: _searchUserController,
           decoration: InputDecoration(
-            hintText: 'Cari pengguna...',
+            hintText: l.searchUsersHint,
             prefixIcon: const Icon(Icons.search),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             isDense: true,
@@ -343,7 +377,7 @@ class _AdminVoucherFormDialogState extends State<AdminVoucherFormDialog> {
           ),
         if (_selectedUserIds.isNotEmpty) ...[
           const SizedBox(height: 8),
-          Text('${_selectedUserIds.length} pengguna dipilih', style: AppTextStyles.bodySmall),
+          Text(l.usersSelectedCount(_selectedUserIds.length), style: AppTextStyles.bodySmall),
         ],
       ],
     );

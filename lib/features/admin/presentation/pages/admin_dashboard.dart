@@ -15,6 +15,7 @@ class AdminDashboard extends StatelessWidget {
     _AdminMenuItem(l.adminCategories, Icons.category, const Color(0xFF9C27B0), 'categories'),
     _AdminMenuItem(l.adminOrders, Icons.receipt_long, const Color(0xFF3F51B5), 'orders'),
     _AdminMenuItem(l.adminReviews, Icons.star, const Color(0xFFFF9800), 'reviews'),
+    _AdminMenuItem(l.adminDiscounts, Icons.currency_exchange, const Color(0xFF00BCD4), 'discounts'),
     _AdminMenuItem(l.adminVouchers, Icons.discount, const Color(0xFFE91E63), 'vouchers'),
     _AdminMenuItem(l.adminTransactions, Icons.account_balance, const Color(0xFF607D8B), 'transactions'),
     _AdminMenuItem(l.adminHelps, Icons.help, const Color(0xFF00BCD4), 'helps'),
@@ -23,6 +24,12 @@ class AdminDashboard extends StatelessWidget {
     _AdminMenuItem(l.adminPrivacyPolicies, Icons.privacy_tip, const Color(0xFF009688), 'privacy-policies'),
     _AdminMenuItem(l.adminWeddingPolicies, Icons.card_travel, const Color(0xFF673AB7), 'wedding-policies'),
     _AdminMenuItem(l.adminInboxes, Icons.inbox, const Color(0xFF2196F3), 'inboxes'),
+    _AdminMenuItem(l.adminBanks, Icons.account_balance, const Color(0xFF4CAF50), 'banks'),
+    _AdminMenuItem(l.adminPaymentMethods, Icons.payment, const Color(0xFFFF5722), 'payment-methods'),
+    _AdminMenuItem(l.adminNotifications, Icons.notifications, const Color(0xFFE91E63), 'notifications'),
+    _AdminMenuItem(l.adminWishlists, Icons.favorite, const Color(0xFFFF9800), 'wishlists'),
+    _AdminMenuItem('Vendor', Icons.store, const Color(0xFF795548), 'vendors'),
+    _AdminMenuItem(l.adminCbirEvaluation, Icons.analytics, const Color(0xFF9C27B0), 'cbir-evaluation'),
   ];
 
   @override

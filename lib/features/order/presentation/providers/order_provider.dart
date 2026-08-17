@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/errors/app_error_codes.dart';
 import '../../data/order_repository_impl.dart';
 import '../../domain/order_repository.dart';
 
@@ -72,7 +73,7 @@ class OrderNotifier extends StateNotifier<OrderState> {
       state = state.copyWith(
         loading: false,
         loadingMore: false,
-        error: e.error?.toString() ?? 'Gagal memuat pesanan',
+        error: e.error?.toString() ?? AppErrorCodes.failedLoadOrders,
       );
     } catch (e) {
       state = state.copyWith(loading: false, loadingMore: false, error: e.toString());
@@ -92,7 +93,7 @@ class OrderNotifier extends StateNotifier<OrderState> {
       state = state.copyWith(creating: false, createdOrder: order);
       return true;
     } on DioException catch (e) {
-      final msg = (e.response?.data as Map<String, dynamic>?)?['message'] as String? ?? 'Gagal membuat pesanan';
+      final msg = (e.response?.data as Map<String, dynamic>?)?['message'] as String? ?? AppErrorCodes.failedCreateOrder;
       state = state.copyWith(creating: false, error: msg);
       return false;
     } catch (e) {
@@ -106,7 +107,7 @@ class OrderNotifier extends StateNotifier<OrderState> {
       await _repository.payOrder(id);
       return true;
     } catch (e) {
-      state = state.copyWith(error: 'Gagal memproses pembayaran');
+      state = state.copyWith(error: AppErrorCodes.failedProcessPayment);
       return false;
     }
   }
@@ -117,7 +118,7 @@ class OrderNotifier extends StateNotifier<OrderState> {
       state = state.copyWith(orders: state.orders.where((o) => o['id'].toString() != id).toList());
       return true;
     } catch (e) {
-      state = state.copyWith(error: 'Gagal membatalkan pesanan');
+      state = state.copyWith(error: AppErrorCodes.failedCancelOrder);
       return false;
     }
   }

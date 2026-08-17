@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/errors/localized_error.dart';
 import '../../../../core/widgets/app_shimmer.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -15,6 +17,7 @@ import '../../../../core/api/dio_client.dart';
 import '../../../../core/api/api_endpoints.dart';
 import '../../../chat/presentation/providers/chat_provider.dart';
 import '../../../cart/presentation/providers/cart_provider.dart';
+import '../../../../features/review/presentation/widgets/review_photos_grid.dart';
 import '../providers/catalog_provider.dart';
 
 class CatalogDetailPage extends ConsumerStatefulWidget {
@@ -39,11 +42,20 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
   bool _favLoading = false;
   String? _error;
   Map<String, dynamic>? _data;
+  bool _initialized = false;
 
   @override
   void initState() {
     super.initState();
-    _fetchDetail();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _initialized = true;
+      _fetchDetail();
+    }
   }
 
   @override
@@ -53,6 +65,7 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
   }
 
   Future<void> _fetchDetail() async {
+    final dataNotFoundMsg = AppLocalizations.of(context)!.dataNotFound;
     setState(() { _loading = true; _error = null; });
     try {
       final repo = ref.read(catalogRepositoryProvider);
@@ -60,7 +73,7 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
           ? await repo.getPackageDetail(widget.id)
           : await repo.getProductDetail(widget.id);
       _data = res['data'] as Map<String, dynamic>?;
-      if (_data == null) throw Exception('Data tidak ditemukan');
+      if (_data == null) throw Exception(dataNotFoundMsg);
     } catch (e) {
       _error = e.toString();
     }
@@ -105,8 +118,7 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
     final l = AppLocalizations.of(context)!;
     if (_data == null) return;
     try {
-      final media = (_data!['media'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-      final imageUrl = media.isNotEmpty ? (media[0]['url'] as String? ?? '') : (_data!['image'] as String? ?? '');
+      final imageUrl = Formatters.itemMediaUrls(_data).firstOrNull ?? '';
       final inboxId = await ref.read(chatProvider.notifier).startConversation(itemContext: {
         'type': widget.type == 'packages' ? 'package' : 'product',
         'item_id': widget.id,
@@ -128,19 +140,35 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
     context.push('/checkout', extra: {'type': widget.type, 'id': widget.id});
   }
 
+  void _shareItem() {
+    final name = _data?['name'] as String? ?? '';
+    final price = _data?['final_price'] ?? _data?['price'] ?? '';
+    final link = 'https://wedding-organizer.app/detail/${widget.type}/${widget.id}';
+    Share.share('$name\n${Formatters.currency(price is num ? price.toInt() : 0)}\n$link');
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share),
+            onPressed: _shareItem,
+          ),
+        ],
       ),
       body: _loading
           ? _buildShimmer()
           : _error != null
-              ? AppErrorState(message: _error!, onRetry: _fetchDetail)
+              ? AppErrorState(message: LocalizedError.of(l, _error!), onRetry: _fetchDetail)
               : _buildContent(),
       bottomNavigationBar: _loading || _error != null ? null : _buildBottomBar(),
     );
@@ -177,7 +205,7 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
   Widget _buildContent() {
     final l = AppLocalizations.of(context)!;
     final item = _data!;
-    final media = (item['media'] as List?)?.cast<Map<String, dynamic>>() ?? [];
+    final imageUrls = Formatters.itemMediaUrls(item);
     final name = item['name'] as String? ?? '';
     final description = item['description'] as String? ?? '';
     final priceRaw = item['final_price'] ?? item['price'];
@@ -192,14 +220,14 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (media.isNotEmpty) _buildImageSlider(media),
+          if (imageUrls.isNotEmpty) _buildImageSlider(imageUrls),
           Padding(
             padding: const EdgeInsets.all(AppSizes.md),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(name, style: AppTextStyles.headlineMedium),
-                SizedBox(height: AppSizes.sm),
+                SizedBox(height: AppSizes.xs),
                 _buildRatingBadge(rating, discountPrice),
                 SizedBox(height: AppSizes.sm),
                 _buildPriceRow(price, discountPrice),
@@ -217,8 +245,8 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
                   GestureDetector(
                     onTap: () => setState(() => _descExpanded = !_descExpanded),
                     child: Text(
-                      _descExpanded ? 'Lebih sedikit' : 'Selengkapnya',
-                      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primaryColor),
+                      _descExpanded ? l.showLess : l.showMore,
+                      style: AppTextStyles.bodyMedium.copyWith(color: AppColors.primaryTextColor),
                     ),
                   ),
                 if (features.isNotEmpty) ...[
@@ -240,9 +268,25 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
                 if (reviews.isNotEmpty) ...[
                   SizedBox(height: AppSizes.md),
                   const Divider(),
-                  Text(l.reviews, style: AppTextStyles.titleMedium),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(l.reviews, style: AppTextStyles.titleMedium),
+                      InkWell(
+                        onTap: _openAllReviews,
+                        borderRadius: BorderRadius.circular(8),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                          child: Text(
+                            '${reviews.length}',
+                            style: AppTextStyles.bodySmall.copyWith(color: AppColors.primaryColor, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                   SizedBox(height: AppSizes.sm),
-                  ...reviews.map((r) => _buildReviewCard(r)),
+                  ...reviews.map((r) => _buildReviewCard(r, onTap: () => _openUserReviews(r))),
                 ],
               ],
             ),
@@ -252,52 +296,114 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
     );
   }
 
-  Widget _buildImageSlider(List<Map<String, dynamic>> media) {
-    return SizedBox(
-      height: 300,
-      child: Stack(
-        children: [
-          PageView.builder(
-            controller: _pageController,
-            onPageChanged: (i) => setState(() => _currentPage = i),
-            itemCount: media.length,
-            itemBuilder: (_, i) {
-              final rawSrc = media[i]['url'] as String? ?? media[i]['original_url'] as String? ?? '';
-              final imageSrc = Formatters.imageUrl(rawSrc);
-              return Image.network(
-                imageSrc,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return const AppShimmer(height: 300);
-                },
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: AppColors.dividerColor,
-                    child: Icon(Icons.broken_image, color: AppColors.textTertiary),
+  Widget _buildImageSlider(List<String> imageUrls) {
+    return Column(
+      children: [
+        SizedBox(
+          height: 300,
+          child: Stack(
+            children: [
+              PageView.builder(
+                controller: _pageController,
+                onPageChanged: (i) => setState(() => _currentPage = i),
+                itemCount: imageUrls.length,
+                itemBuilder: (_, i) {
+                  return Image.network(
+                    imageUrls[i],
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return const AppShimmer(height: 300);
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: AppColors.dividerColor,
+                        child: Icon(Icons.broken_image, color: AppColors.textTertiary),
+                      );
+                    },
                   );
                 },
-              );
-            },
-          ),
-          Positioned(
-            bottom: AppSizes.md, left: 0, right: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(media.length, (i) => Container(
-                margin: const EdgeInsets.symmetric(horizontal: 3),
-                width: _currentPage == i ? 24 : 8,
-                height: 8,
-                decoration: BoxDecoration(
-                  color: _currentPage == i ? AppColors.primaryColor : Colors.white.withValues(alpha: 0.7),
-                  borderRadius: BorderRadius.circular(4),
+              ),
+              Positioned(
+                top: 8, right: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    '${_currentPage + 1}/${imageUrls.length}',
+                    style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
                 ),
-              )),
+              ),
+              if (imageUrls.length > 1)
+                Positioned(
+                  bottom: AppSizes.md, left: 0, right: 0,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(imageUrls.length, (i) => Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 3),
+                      width: _currentPage == i ? 24 : 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: _currentPage == i ? AppColors.primaryColor : Colors.white.withValues(alpha: 0.7),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    )),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        if (imageUrls.length > 1) ...[
+          const SizedBox(height: AppSizes.sm),
+          SizedBox(
+            height: 64,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
+              itemCount: imageUrls.length,
+              separatorBuilder: (_, _) => const SizedBox(width: AppSizes.sm),
+              itemBuilder: (_, i) => GestureDetector(
+                onTap: () {
+                  setState(() => _currentPage = i);
+                  _pageController.jumpToPage(i);
+                },
+                child: Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        imageUrls[i],
+                        width: 64,
+                        height: 64,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => Container(
+                          width: 64, height: 64,
+                          color: AppColors.dividerColor,
+                          child: Icon(Icons.broken_image, size: 18, color: AppColors.textTertiary),
+                        ),
+                      ),
+                    ),
+                    if (_currentPage == i)
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: AppColors.primaryColor, width: 2),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
-      ),
+      ],
     );
   }
 
@@ -311,7 +417,7 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
           Text(rating.toStringAsFixed(1), style: AppTextStyles.bodyMedium),
           SizedBox(width: AppSizes.md),
         ],
-        if (discountPrice != null)
+        if (discountPrice != null && discountPrice > 0)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(color: AppColors.errorColor, borderRadius: BorderRadius.circular(8)),
@@ -324,8 +430,8 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
   Widget _buildPriceRow(int price, int? discountPrice) {
     return Row(
       children: [
-        Text(Formatters.currency(price), style: AppTextStyles.titleLarge.copyWith(color: AppColors.primaryColor)),
-        if (discountPrice != null) ...[
+        Text(Formatters.currency(price), style: AppTextStyles.titleLarge.copyWith(color: AppColors.primaryTextColor)),
+        if (discountPrice != null && discountPrice > 0) ...[
           SizedBox(width: AppSizes.sm),
           Text(Formatters.currency(discountPrice), style: AppTextStyles.bodySmall.copyWith(decoration: TextDecoration.lineThrough)),
         ],
@@ -333,32 +439,85 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
     );
   }
 
-  Widget _buildReviewCard(Map<String, dynamic> r) {
+  void _openAllReviews() {
+    final item = _data;
+    if (item == null) return;
+    final isPackage = widget.type == 'packages' || item['type'] == 'package';
+    context.push('/item-reviews', extra: {
+      'title': item['name'] as String? ?? '',
+      'package_id': isPackage ? widget.id : '',
+      'product_id': isPackage ? '' : widget.id,
+      'reviews': (item['reviews'] as List?)?.cast<Map<String, dynamic>>() ?? [],
+    });
+  }
+
+  void _openUserReviews(Map<String, dynamic> r) {
+    final userId = r['user_id']?.toString();
+    if (userId == null || userId.isEmpty) {
+      _openAllReviews();
+      return;
+    }
+    context.push('/user-reviews', extra: {
+      'user_id': userId,
+      'user_name': _reviewUserName(r),
+    });
+  }
+
+  String _reviewUserName(Map<String, dynamic> r) {
+    final flat = r['user_name'] as String?;
+    if (flat != null && flat.isNotEmpty) return flat;
+    final user = r['user'] as Map<String, dynamic>?;
+    return (user?['full_name'] as String?) ?? '';
+  }
+
+  String? _reviewAvatar(Map<String, dynamic> r) {
+    final flat = r['avatar'] as String?;
+    if (flat != null && flat.isNotEmpty) return flat;
+    final user = r['user'] as Map<String, dynamic>?;
+    return (user?['avatar_url'] as String?) ?? '';
+  }
+
+  Widget _buildReviewCard(Map<String, dynamic> r, {VoidCallback? onTap}) {
     final rating = (r['rating'] as num?)?.toInt() ?? 0;
+    final userName = _reviewUserName(r);
+    final avatar = _reviewAvatar(r);
+    final reviewPhotos = reviewPhotoUrls(r);
     return Card(
       margin: const EdgeInsets.only(bottom: AppSizes.sm),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSizes.sm),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundImage: r['avatar'] != null ? CachedNetworkImageProvider(r['avatar'] as String) : null,
-                  child: r['avatar'] == null ? Text((r['user_name'] as String? ?? 'U')[0]) : null,
-                ),
-                SizedBox(width: AppSizes.sm),
-                Expanded(child: Text(r['user_name'] as String? ?? '', style: AppTextStyles.bodyMedium)),
-                Row(children: List.generate(5, (i) => Icon(Icons.star, size: 14, color: i < rating ? AppColors.warningColor : AppColors.dividerColor))),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSizes.sm),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundImage: avatar != null && avatar.isNotEmpty
+                        ? CachedNetworkImageProvider(avatar)
+                        : null,
+                    child: avatar == null || avatar.isEmpty
+                        ? Text((userName.isEmpty ? 'U' : userName)[0])
+                        : null,
+                  ),
+                  SizedBox(width: AppSizes.sm),
+                  Expanded(child: Text(userName, style: AppTextStyles.bodyMedium)),
+                  Row(children: List.generate(5, (i) => Icon(Icons.star, size: 14, color: i < rating ? AppColors.warningColor : AppColors.dividerColor))),
+                ],
+              ),
+              if (r['comment'] != null) ...[
+                const SizedBox(height: 4),
+                Text(r['comment'] as String, style: AppTextStyles.bodySmall),
               ],
-            ),
-            if (r['comment'] != null) ...[
-              const SizedBox(height: 4),
-              Text(r['comment'] as String, style: AppTextStyles.bodySmall),
+              if (reviewPhotos.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                ReviewPhotosGrid(urls: reviewPhotos, itemHeight: 140),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
@@ -17,8 +18,12 @@ class VoucherDetailPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context)!;
+    final title = (voucher.name != null && voucher.name!.isNotEmpty) ? voucher.name! : 'Voucher';
+    final isExpired = voucher.isExpired;
+    final isClaimed = voucher.isClaimed;
+
     return Scaffold(
-      appBar: AppBar(title: Text(voucher.code)),
+      appBar: AppBar(title: Text(title), backgroundColor: Colors.transparent, elevation: 0),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSizes.md),
         child: Column(
@@ -35,9 +40,40 @@ class VoucherDetailPage extends ConsumerWidget {
                 children: [
                   const Icon(Icons.discount_rounded, color: Colors.white, size: 48),
                   const SizedBox(height: 12),
-                  Text(voucher.code,
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white),
-                  ),
+                  if (isClaimed && voucher.code != null) ...[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Flexible(
+                          child: Text(voucher.code!,
+                            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 2),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          onTap: () {
+                            Clipboard.setData(ClipboardData(text: voucher.code!));
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.copied)));
+                          },
+                          child: const Icon(Icons.copy, color: Colors.white70, size: 22),
+                        ),
+                      ],
+                    ),
+                  ] else ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withAlpha(30),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '**** **** **** ****',
+                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white70, letterSpacing: 3),
+                      ),
+                    ),
+                  ],
                   if (voucher.description != null) ...[
                     const SizedBox(height: 6),
                     Text(voucher.description!,
@@ -74,8 +110,8 @@ class VoucherDetailPage extends ConsumerWidget {
             ),
             const SizedBox(height: AppSizes.lg),
             AppButton(
-              label: voucher.isExpired ? l.tryAgain : l.use,
-              onPressed: voucher.isExpired ? null : () => _claimVoucher(context, ref),
+              label: isExpired ? l.expired : (isClaimed ? l.use : l.claim),
+              onPressed: (isExpired || isClaimed) ? null : () => _claimVoucher(context, ref),
               type: ButtonType.primary,
             ),
           ],
@@ -89,7 +125,7 @@ class VoucherDetailPage extends ConsumerWidget {
     final success = await ref.read(voucherProvider.notifier).claimVoucher(voucher.id.toString());
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(success ? sl.voucherUsed : sl.failedUseVoucher),
+        content: Text(success ? sl.voucherClaimed : sl.failedUseVoucher),
         backgroundColor: success ? AppColors.successColor : AppColors.errorColor,
       ));
       if (success) context.pop();

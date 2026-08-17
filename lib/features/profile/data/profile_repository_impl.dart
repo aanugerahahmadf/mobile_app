@@ -45,24 +45,25 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
-  Future<void> updateNik(String nik) async {
-    await _dio.put(ApiEndpoints.profileNik, data: {'nik': nik});
+  Future<void> updateKtpNumber(String ktpNumber) async {
+    await _dio.put(ApiEndpoints.profileKtpNumber, data: {'ktp_number': ktpNumber});
   }
 
   @override
-  Future<String> uploadKtp(String filePath) async {
+  Future<Map<String, dynamic>> uploadKtp(String filePath) async {
     final formData = FormData.fromMap({
       'ktp_photo': await MultipartFile.fromFile(filePath),
     });
     final response = await _dio.post(ApiEndpoints.profileKtp, data: formData);
     final d = response.data as Map<String, dynamic>?;
-    return ((d?['data'] as Map<String, dynamic>?)?['ktp_photo_url'] as String?) ?? '';
+    return (d?['data'] as Map<String, dynamic>?) ?? {};
   }
 
   @override
-  Future<Map<String, dynamic>> uploadSelfie(String filePath) async {
+  Future<Map<String, dynamic>> uploadSelfie(String filePath, {bool livenessCompleted = false}) async {
     final formData = FormData.fromMap({
       'selfie_photo': await MultipartFile.fromFile(filePath),
+      'liveness_completed': livenessCompleted,
     });
     final response = await _dio.post(ApiEndpoints.profileSelfie, data: formData);
     final d = response.data as Map<String, dynamic>?;
@@ -70,9 +71,10 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> uploadFaceScan(String filePath) async {
+  Future<Map<String, dynamic>> uploadFaceScan(String filePath, {bool livenessCompleted = false}) async {
     final formData = FormData.fromMap({
       'face_scan_photo': await MultipartFile.fromFile(filePath),
+      'liveness_completed': livenessCompleted,
     });
     final response = await _dio.post(ApiEndpoints.profileFaceScan, data: formData);
     final d = response.data as Map<String, dynamic>?;

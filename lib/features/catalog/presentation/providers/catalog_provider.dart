@@ -9,20 +9,18 @@ final catalogRepositoryProvider = Provider<CatalogRepository>((ref) {
 final catalogPackageListProvider = FutureProvider.family<Map<String, dynamic>, Map<String, dynamic>>((ref, params) async {
   final repo = ref.watch(catalogRepositoryProvider);
   return repo.getPackages(
-    categoryId: params['category_id'] as String?,
-    search: params['search'] as String?,
-    sort: params['sort'] as String?,
-    page: (params['page'] as int?) ?? 1,
+    categoryId: params['category_id']?.toString(),
+    search: params['search']?.toString(),
+    sort: params['sort']?.toString(),
   );
 });
 
 final catalogProductListProvider = FutureProvider.family<Map<String, dynamic>, Map<String, dynamic>>((ref, params) async {
   final repo = ref.watch(catalogRepositoryProvider);
   return repo.getProducts(
-    categoryId: params['category_id'] as String?,
-    search: params['search'] as String?,
-    sort: params['sort'] as String?,
-    page: (params['page'] as int?) ?? 1,
+    categoryId: params['category_id']?.toString(),
+    search: params['search']?.toString(),
+    sort: params['sort']?.toString(),
   );
 });
 

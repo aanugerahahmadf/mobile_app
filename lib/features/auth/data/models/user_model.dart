@@ -20,7 +20,7 @@ class UserModel {
   final String? socialId;
   final String? socialType;
   final String? emailVerifiedAt;
-  final String? nik;
+  final String? ktpNumber;
   final String? passportNumber;
   final String? simNumber;
   final String? npwpNumber;
@@ -69,7 +69,7 @@ class UserModel {
     this.socialId,
     this.socialType,
     this.emailVerifiedAt,
-    this.nik,
+    this.ktpNumber,
     this.passportNumber,
     this.simNumber,
     this.npwpNumber,
@@ -139,7 +139,7 @@ class UserModel {
       socialId: json['social_id'] as String?,
       socialType: json['social_type'] as String?,
       emailVerifiedAt: json['email_verified_at'] as String?,
-      nik: json['nik'] as String?,
+      ktpNumber: json['ktp_number'] as String?,
       passportNumber: json['passport_number'] as String?,
       simNumber: json['sim_number'] as String?,
       npwpNumber: json['npwp_number'] as String?,
@@ -193,7 +193,7 @@ class UserModel {
       'social_id': socialId,
       'social_type': socialType,
       'email_verified_at': emailVerifiedAt,
-      'nik': nik,
+      'ktp_number': ktpNumber,
       'passport_number': passportNumber,
       'sim_number': simNumber,
       'npwp_number': npwpNumber,
@@ -244,7 +244,7 @@ class UserModel {
     String? socialId,
     String? socialType,
     String? emailVerifiedAt,
-    String? nik,
+    String? ktpNumber,
     String? passportNumber,
     String? simNumber,
     String? npwpNumber,
@@ -293,7 +293,7 @@ class UserModel {
       socialId: socialId ?? this.socialId,
       socialType: socialType ?? this.socialType,
       emailVerifiedAt: emailVerifiedAt ?? this.emailVerifiedAt,
-      nik: nik ?? this.nik,
+      ktpNumber: ktpNumber ?? this.ktpNumber,
       passportNumber: passportNumber ?? this.passportNumber,
       simNumber: simNumber ?? this.simNumber,
       npwpNumber: npwpNumber ?? this.npwpNumber,

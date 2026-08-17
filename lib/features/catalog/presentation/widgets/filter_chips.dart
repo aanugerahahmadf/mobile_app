@@ -25,7 +25,7 @@ class FilterChips extends StatelessWidget {
             label: Text(
               label,
               style: TextStyle(
-                color: isSelected ? AppColors.primaryColor : AppColors.textSecondary,
+                color: isSelected ? AppColors.primaryTextColor : AppColors.textSecondary,
               ),
             ),
             selected: isSelected,

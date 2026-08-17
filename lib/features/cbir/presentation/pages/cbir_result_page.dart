@@ -1,10 +1,13 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/widgets/app_filter_widgets.dart';
+import '../../../../core/errors/localized_error.dart';
 import '../../../../core/widgets/app_shimmer.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_error_state.dart';
@@ -104,7 +107,7 @@ class _CbirResultPageState extends ConsumerState<CbirResultPage> {
 
     if (state.error != null && state.results.isEmpty) {
       return AppErrorState(
-        message: state.error ?? l.errorOccurred,
+        message: LocalizedError.of(l, state.error ?? ''),
       );
     }
 
@@ -134,81 +137,52 @@ class _CbirResultPageState extends ConsumerState<CbirResultPage> {
     final notifier = ref.read(cbirProvider.notifier);
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppSizes.md, AppSizes.sm, AppSizes.md, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            height: 36,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: _sortOptions(l).length,
-              separatorBuilder: (_, _) => const SizedBox(width: 8),
-              itemBuilder: (_, i) {
-                final entry = _sortOptions(l)[i];
-                final label = entry.$1;
-                final value = entry.$2;
-                final selected = state.sortBy == value;
-                return ChoiceChip(
-                  label: Text(label, style: TextStyle(
-                    fontSize: 12,
-                    color: selected ? Colors.white : AppColors.textPrimary,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-                  )),
-                  selected: selected,
-                  onSelected: (_) => notifier.setSortBy(value),
-                  selectedColor: AppColors.primaryColor,
-                  backgroundColor: AppColors.secondaryColor,
-                  visualDensity: VisualDensity.compact,
-                  side: BorderSide.none,
-                );
-              },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: AppSizes.sm, vertical: 6),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                StyledSortChips(
+                  options: _sortOptions(l),
+                  selectedValue: state.sortBy,
+                  onChanged: (v) => notifier.setSortBy(v),
+                ),
+                SizedBox(height: 6),
+                Row(
+                  children: [
+                    if (_categories.isNotEmpty)
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: StyledCategoryDropdown(
+                            value: state.categoryId,
+                            hint: l.allCategories,
+                            categories: _categories,
+                            onChanged: (v) => notifier.setCategoryId(v),
+                          ),
+                        ),
+                      ),
+                    StyledChoiceChip(
+                      label: l.discount,
+                      selected: state.hasDiscount == true,
+                      onSelected: () => notifier.setHasDiscount(state.hasDiscount != true),
+                      icon: Icons.discount_outlined,
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-          SizedBox(height: AppSizes.sm),
-          Row(
-            children: [
-              if (_categories.isNotEmpty)
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      color: AppColors.secondaryColor.withAlpha(30),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: state.categoryId,
-                        isExpanded: true,
-                        hint: const Text('Semua Kategori', style: TextStyle(fontSize: 12)),
-                        items: [
-                          const DropdownMenuItem(value: null, child: Text('Semua Kategori', style: TextStyle(fontSize: 12))),
-                          ..._categories.map((c) => DropdownMenuItem(
-                            value: '${c['id']}',
-                            child: Text(c['name'] as String? ?? '', style: const TextStyle(fontSize: 12)),
-                          )),
-                        ],
-                        onChanged: (v) => notifier.setCategoryId(v),
-                      ),
-                    ),
-                  ),
-                ),
-              const SizedBox(width: AppSizes.sm),
-              ChoiceChip(
-                label: Text(l.discount, style: TextStyle(
-                  fontSize: 12,
-                  color: state.hasDiscount == true ? Colors.white : AppColors.textPrimary,
-                  fontWeight: state.hasDiscount == true ? FontWeight.w600 : FontWeight.normal,
-                )),
-                selected: state.hasDiscount == true,
-                onSelected: (v) => notifier.setHasDiscount(v),
-                selectedColor: AppColors.primaryColor,
-                backgroundColor: AppColors.secondaryColor,
-                visualDensity: VisualDensity.compact,
-                side: BorderSide.none,
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -219,9 +193,9 @@ class _CbirResultPageState extends ConsumerState<CbirResultPage> {
       padding: const EdgeInsets.all(AppSizes.md),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 0.63,
-        crossAxisSpacing: AppSizes.md,
-        mainAxisSpacing: AppSizes.md,
+        childAspectRatio: 0.61,
+        crossAxisSpacing: AppSizes.xs,
+        mainAxisSpacing: AppSizes.xs,
       ),
       itemCount: items.length,
       itemBuilder: (_, i) => _buildGridItem(items[i]),

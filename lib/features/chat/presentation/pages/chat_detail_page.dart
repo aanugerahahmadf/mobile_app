@@ -1,11 +1,6 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:dio/dio.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../core/api/dio_client.dart';
 import '../../../../core/api/api_endpoints.dart';
@@ -14,7 +9,10 @@ import 'package:image_picker/image_picker.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/errors/localized_error.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../../../core/widgets/media_viewer.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/chat_provider.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
@@ -121,7 +119,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
                 ),
                 const SizedBox(height: 24),
                 Text(l.attachment,
-                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
                 ),
                 const SizedBox(height: 24),
                 _attachmentOption(
@@ -131,22 +129,22 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
                   onTap: () { context.pop(); _pickImage(ImageSource.camera); },
                 ),
                 _attachmentOption(
+                  icon: Icons.videocam_rounded,
+                  title: l.takeVideo,
+                  subtitle: l.takeVideoDirect,
+                  onTap: () { context.pop(); _pickVideo(ImageSource.camera); },
+                ),
+                _attachmentOption(
                   icon: Icons.photo_library,
                   title: l.gallery,
                   subtitle: l.chooseFromGallery,
-                  onTap: () { context.pop(); _pickImage(ImageSource.gallery); },
+                  onTap: () { context.pop(); _pickMedia(); },
                 ),
                 _attachmentOption(
                   icon: Icons.folder_open_rounded,
                   title: l.file,
                   subtitle: l.chooseFromStorage,
                   onTap: () { context.pop(); _pickFile(); },
-                ),
-                _attachmentOption(
-                  icon: Icons.cloud,
-                  title: l.googleDrive,
-                  subtitle: l.chooseFromDrive,
-                  onTap: () { context.pop(); _pickFromDrive(); },
                 ),
                 _attachmentOption(
                   icon: Icons.category_rounded,
@@ -169,124 +167,44 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
   }
 
   Future<void> _pickImage(ImageSource source) async {
-    final picked = await ImagePicker().pickImage(source: source, maxWidth: 1024);
-    if (picked != null && mounted) {
-      await _sendMessage(filePath: picked.path);
+    final file = await ImagePicker().pickImage(source: source, maxWidth: 1024);
+    if (file != null && mounted) {
+      await _sendMessage(filePath: file.path);
       _scrollToBottom();
     }
+  }
+
+  Future<void> _pickVideo(ImageSource source) async {
+    final file = await ImagePicker().pickVideo(source: source, maxDuration: const Duration(minutes: 5));
+    if (file != null && mounted) {
+      await _sendMessage(filePath: file.path);
+      _scrollToBottom();
+    }
+  }
+
+  Future<void> _pickMedia() async {
+    final picked = await ImagePicker().pickMultipleMedia();
+    if (picked.isEmpty || !mounted) return;
+    for (final media in picked) {
+      await _sendMessage(filePath: media.path);
+    }
+    _scrollToBottom();
   }
 
   Future<void> _pickFile() async {
-    final result = await FilePicker.platform.pickFiles();
-    if (result != null && result.files.isNotEmpty && mounted) {
-      final path = result.files.first.path;
-      if (path != null) {
-        await _sendMessage(filePath: path);
-        _scrollToBottom();
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: const ['jpg', 'jpeg', 'png', 'webp', 'gif', 'heic', 'mp4', 'mov', 'm4v', 'webm', '3gp'],
+      allowMultiple: true,
+    );
+    final files = result?.files ?? const [];
+    if (files.isEmpty || !mounted) return;
+    for (final f in files) {
+      if (f.path != null) {
+        await _sendMessage(filePath: f.path);
       }
     }
-  }
-
-  Future<void> _pickFromDrive() async {
-    try {
-      final googleUser = await GoogleSignIn(
-        serverClientId: dotenv.get('GOOGLE_CLIENT_ID'),
-        scopes: ['https://www.googleapis.com/auth/drive.readonly'],
-      ).signIn();
-      if (googleUser == null || !mounted) return;
-
-      final auth = await googleUser.authentication;
-      if (auth.accessToken == null) return;
-
-      final response = await Dio().get(
-        'https://www.googleapis.com/drive/v3/files',
-        queryParameters: {
-          'q': "mimeType contains 'image/' and trashed = false",
-          'fields': 'files(id, name, mimeType, thumbnailLink)',
-          'pageSize': '50',
-          'orderBy': 'modifiedTime desc',
-        },
-        options: Options(headers: {'Authorization': 'Bearer ${auth.accessToken}'}),
-      );
-
-      final files = (response.data['files'] as List?)?.cast<Map<String, dynamic>>() ?? [];
-      if (files.isEmpty || !mounted) return;
-
-      final l = AppLocalizations.of(context)!;
-      final selected = await showModalBottomSheet<String>(
-        context: context,
-        isScrollControlled: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        builder: (ctx) => SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 36, height: 4, margin: const EdgeInsets.only(top: 12),
-                decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2)),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                child: Text(l.pickFromGoogleDrive,
-                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-                ),
-              ),
-              SizedBox(
-                height: MediaQuery.of(ctx).size.height * 0.45,
-                child: ListView.separated(
-                  itemCount: files.length,
-                  separatorBuilder: (_, _) => const Divider(height: 1, indent: 16, endIndent: 16),
-                  itemBuilder: (_, i) {
-                    final f = files[i];
-                    final thumb = f['thumbnailLink'] as String?;
-                    return ListTile(
-                      leading: ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: thumb != null
-                            ? CachedNetworkImage(imageUrl: thumb, width: 48, height: 48, fit: BoxFit.cover)
-                            : Container(
-                                width: 48, height: 48,
-                                decoration: BoxDecoration(color: AppColors.successColor.withAlpha(25), borderRadius: BorderRadius.circular(8)),
-                                child: const Icon(Icons.cloud, color: AppColors.successColor, size: 24),
-                              ),
-                      ),
-                      title: Text(f['name'] as String? ?? '', maxLines: 1, overflow: TextOverflow.ellipsis),
-                      onTap: () => Navigator.pop(ctx, f['id'] as String?),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-
-      if (selected == null || !mounted) return;
-
-      final imageResponse = await Dio().get(
-        'https://www.googleapis.com/drive/v3/files/$selected?alt=media',
-        options: Options(
-          headers: {'Authorization': 'Bearer ${auth.accessToken}'},
-          responseType: ResponseType.bytes,
-        ),
-      );
-
-      final tempDir = await Directory.systemTemp.createTemp('drive_');
-      final file = File('${tempDir.path}/drive_image.jpg');
-      await file.writeAsBytes(imageResponse.data as List<int>);
-
-      await _sendMessage(filePath: file.path);
-      _scrollToBottom();
-    } catch (e) {
-      if (mounted) {
-        final l = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l.failedFetchFromDrive.replaceFirst('%s', e.toString()))),
-        );
-      }
-    }
+    _scrollToBottom();
   }
 
   Future<void> _pickFromCatalog() async {
@@ -320,7 +238,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 child: Text(l.chooseProduct,
-                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
                 ),
               ),
               SizedBox(
@@ -351,7 +269,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
                               ),
                       ),
                       title: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
-                      subtitle: Text('$type · Rp ${price != null ? (price is int ? price.toString() : price.toString()) : '0'}'),
+                      subtitle: Text('$type · ${Formatters.currency((price is num ? price.toInt() : 0))}'),
                       onTap: () => Navigator.pop(ctx, item),
                     );
                   },
@@ -418,7 +336,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 child: Text(l.chooseOrder,
-                  style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
                 ),
               ),
               SizedBox(
@@ -471,15 +389,16 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
     required String subtitle,
     VoidCallback? onTap,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 2),
       leading: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: AppColors.primaryLight,
+          color: isDark ? AppColors.primaryColor.withAlpha(60) : AppColors.primaryLight,
           borderRadius: BorderRadius.circular(14),
         ),
-        child: Icon(icon, color: AppColors.primaryColor, size: 22),
+        child: Icon(icon, color: isDark ? Colors.white : AppColors.primaryColor, size: 22),
       ),
       title: Text(title, style: AppTextStyles.titleMedium),
       subtitle: Text(subtitle, style: AppTextStyles.bodySmall),
@@ -490,6 +409,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
   String _fixImageUrl(String url) => url.replaceAll('/storage/', '/media/');
 
   Widget _buildContextCard(Map<String, dynamic> meta) {
+    final l = AppLocalizations.of(context)!;
     final isOrder = meta['is_order'] == true;
 
     if (isOrder) {
@@ -536,7 +456,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(type == 'package' ? 'Paket' : 'Produk',
+                  Text(type == 'package' ? l.packageLabel : l.productLabel,
                     style: TextStyle(fontSize: 10, color: AppColors.primaryColor, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 2),
@@ -643,7 +563,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
   }
 
   String _formatCurrency(int amount) {
-    return 'Rp ${amount.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
+    return Formatters.currency(amount);
   }
 
   void _showImagePreview(String url) {
@@ -683,9 +603,11 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/chat-list'),
+          onPressed: () => context.go('/home'),
         ),
         title: Row(
           mainAxisSize: MainAxisSize.min,
@@ -769,16 +691,15 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
                                         children: [
                                           if (attachments.isNotEmpty)
                                             ...attachments.map((att) {
-                                              final url = att is Map
+                                              final isMap = att is Map;
+                                              final url = isMap
                                                   ? (att['url'] as String? ?? att['original_url'] as String? ?? '')
                                                   : att.toString();
+                                              final isVideo = isMap && isVideoMime(att['mime_type'] as String?);
                                               if (url.isNotEmpty) {
                                                 return Padding(
                                                   padding: const EdgeInsets.only(bottom: 4),
-                                                  child: ClipRRect(
-                                                    borderRadius: BorderRadius.circular(8),
-                                                    child: Image.network(url, fit: BoxFit.cover, height: 160, width: double.infinity),
-                                                  ),
+                                                  child: MediaTile(url: url, isVideo: isVideo, height: 160, width: double.infinity, fit: BoxFit.cover),
                                                 );
                                               }
                                               return const SizedBox.shrink();
@@ -804,7 +725,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
                         },
                       )
                     : chatState is ChatError
-                        ? Center(child: Text(chatState.message))
+                        ? Center(child: Text(LocalizedError.of(l, chatState.message)))
                         : const SizedBox.shrink(),
           ),
           Container(
@@ -816,17 +737,11 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
             child: SafeArea(
               child: Row(
                 children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppColors.secondaryColor.withAlpha(60),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: IconButton(
-                      icon: const Icon(Icons.add_rounded, color: AppColors.primaryColor, size: 24),
-                      onPressed: _showAttachmentOptions,
-                      constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
-                      splashRadius: 22,
-                    ),
+                  IconButton(
+                    icon: const Icon(Icons.add_rounded, color: AppColors.primaryColor, size: 24),
+                    onPressed: _showAttachmentOptions,
+                    constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+                    splashRadius: 22,
                   ),
                   const SizedBox(width: 8),
                   Expanded(

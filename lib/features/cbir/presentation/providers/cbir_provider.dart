@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/errors/app_error_codes.dart';
 import '../../data/cbir_repository_impl.dart';
 import '../../data/models/cbir_result_model.dart';
 import '../../domain/cbir_repository.dart';
@@ -134,7 +135,7 @@ class CbirNotifier extends StateNotifier<CbirState> {
       final results = await _repository.searchByImage(image, isAdmin: _isAdmin);
       state = state.copyWith(results: results, loading: false);
     } on DioException catch (e) {
-      final message = e.response?.data?['message'] as String? ?? 'Pencarian gagal. Silakan coba lagi.';
+      final message = e.response?.data?['message'] as String? ?? AppErrorCodes.searchFailedTryAgain;
       state = state.copyWith(loading: false, error: message);
     } catch (e) {
       state = state.copyWith(loading: false, error: e.toString());
@@ -143,7 +144,7 @@ class CbirNotifier extends StateNotifier<CbirState> {
 
   Future<void> arithmeticSearch() async {
     if (state.arithmeticImage1 == null || state.arithmeticImage2 == null || state.operation == null) {
-      state = state.copyWith(error: 'Pilih 2 gambar dan operasi aritmetika');
+      state = state.copyWith(error: AppErrorCodes.selectTwoImagesArithmetic);
       return;
     }
 
@@ -158,7 +159,7 @@ class CbirNotifier extends StateNotifier<CbirState> {
       );
       state = state.copyWith(results: results, loading: false);
     } on DioException catch (e) {
-      final message = e.response?.data?['message'] as String? ?? 'Pencarian aritmetika gagal';
+      final message = e.response?.data?['message'] as String? ?? AppErrorCodes.arithmeticSearchFailed;
       state = state.copyWith(loading: false, error: message);
     } catch (e) {
       state = state.copyWith(loading: false, error: e.toString());

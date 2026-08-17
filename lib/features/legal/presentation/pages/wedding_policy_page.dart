@@ -16,7 +16,7 @@ class WeddingPolicyPage extends ConsumerWidget {
     final async = ref.watch(weddingDecorationPolicyProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l.appPolicy)),
+      appBar: AppBar(title: Text(l.appPolicy), backgroundColor: Colors.transparent, elevation: 0),
       body: async.when(
         loading: () => const Center(child: AppShimmer(width: 200, height: 16)),
         error: (err, _) => Center(

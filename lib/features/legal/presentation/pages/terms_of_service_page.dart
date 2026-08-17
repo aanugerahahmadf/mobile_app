@@ -16,7 +16,7 @@ class TermsOfServicePage extends ConsumerWidget {
     final async = ref.watch(termsOfServiceProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l.termsOfService)),
+      appBar: AppBar(title: Text(l.termsOfService), backgroundColor: Colors.transparent, elevation: 0),
       body: async.when(
         loading: () => const Center(child: AppShimmer(width: 200, height: 16)),
         error: (err, _) => Center(

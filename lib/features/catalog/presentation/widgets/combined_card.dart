@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
+
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_shadows.dart';
 import '../../../../core/widgets/app_shimmer.dart';
@@ -57,7 +57,7 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
     final price = widget.item.finalPrice.toInt();           // harga final yang ditampilkan
     
     // ── Discount calculation ─────────────────────────────────────────────
-    final hasDiscount = discountPrice != null && originalPrice > 0 && discountPrice < originalPrice;
+    final hasDiscount = discountPrice != null && discountPrice > 0 && originalPrice > 0 && discountPrice < originalPrice;
     final discountPct = hasDiscount
         ? ((originalPrice - discountPrice) / originalPrice * 100).round()
         : 0;
@@ -89,7 +89,7 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
         child: Container(
           decoration: BoxDecoration(
             color: AppColors.surfaceColor,
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(2),
             boxShadow: AppShadows.card,
           ),
           clipBehavior: Clip.antiAlias,
@@ -136,10 +136,10 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
                       Positioned(
                         top: 8, left: 8,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                           decoration: BoxDecoration(
                             color: AppColors.errorColor,
-                            borderRadius: BorderRadius.circular(6),
+                            borderRadius: BorderRadius.circular(4),
                             boxShadow: [
                               BoxShadow(
                                 color: AppColors.errorColor.withAlpha(70),
@@ -152,7 +152,7 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
                             '-$discountPct%',
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 11,
+                              fontSize: 9,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
@@ -161,7 +161,7 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
                     // Similarity badge
                     if (widget.similarity != null)
                       Positioned(
-                        top: 8, left: 8,
+                        top: 8, right: 8,
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
@@ -191,8 +191,8 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
                         },
                         child: Container(
                           padding: const EdgeInsets.all(5),
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceColor,
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
@@ -210,19 +210,6 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
                         ),
                       ),
                     ),
-                    Positioned(
-                      bottom: 8, left: 8,
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _actionIcon(Icons.shopping_cart_outlined, () => context.push('/cart')),
-                          const SizedBox(width: 4),
-                          _actionIcon(Icons.chat_bubble_outline, () => context.push('/chat-list')),
-                          const SizedBox(width: 4),
-                          _actionIcon(Icons.payment_outlined, () => context.push('/checkout', extra: {'type': widget.type, 'id': '${widget.item.id}'})),
-                        ],
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -230,15 +217,16 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
               // ── Text info section ────────────────────────────────────────
               Expanded(
                 flex: 2,
-                  child: Padding(
+                    child: Padding(
                     padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           name,
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 10,
                             fontWeight: FontWeight.w600,
                             color: AppColors.textPrimary,
                             height: 1.2,
@@ -246,21 +234,20 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 2),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
                               Formatters.currency(price),
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.primaryColor,
-                              ),
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primaryTextColor,
+                            ),
                               overflow: TextOverflow.ellipsis,
                             ),
-                            if (hasDiscount) ...[
+                            if (hasDiscount)
                               Text(
                                 Formatters.currency(originalPrice),
                                 style: TextStyle(
@@ -271,26 +258,25 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
-                            ],
-                            if (rating > 0) ...[
-                              const SizedBox(height: 1),
-                              Row(
-                                children: [
-                                  Icon(Icons.star_rounded, size: 11, color: AppColors.warningColor.withAlpha(200)),
-                                  const SizedBox(width: 2),
-                                  Text(
-                                    rating.toStringAsFixed(1),
-                                    style: TextStyle(
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.w500,
-                                      color: AppColors.textSecondary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
                           ],
                         ),
+                        // Vendor name
+                        if (rating > 0)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              Icon(Icons.star_rounded, size: 11, color: AppColors.warningColor.withAlpha(200)),
+                              const SizedBox(width: 2),
+                              Text(
+                                rating.toStringAsFixed(1),
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
                       ],
                     ),
                 ),
@@ -298,27 +284,6 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _actionIcon(IconData icon, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          color: AppColors.surfaceColor,
-          borderRadius: BorderRadius.circular(4),
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 2,
-              offset: Offset(0, 1),
-            ),
-          ],
-        ),
-        child: Icon(icon, size: 14, color: AppColors.textSecondary),
       ),
     );
   }

@@ -22,7 +22,24 @@ class CartPage extends ConsumerWidget {
     final notifier = ref.read(cartProvider.notifier);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l.cart)),
+      appBar: AppBar(
+        title: Text(l.cart),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: cartState.items.isNotEmpty
+            ? [
+                TextButton(
+                  onPressed: () => notifier.toggleSelectAll(),
+                  child: Text(
+                    cartState.selectedIds.length == cartState.items.length
+                        ? l.deselectAll
+                        : l.selectAll,
+                    style: AppTextStyles.bodySmall.copyWith(color: AppColors.primaryColor),
+                  ),
+                ),
+              ]
+            : null,
+      ),
       body: cartState.loading
           ? const _CartShimmer()
           : cartState.error != null
@@ -51,9 +68,13 @@ class CartPage extends ConsumerWidget {
                                 final item = cartState.items[index];
                                 final itemData = (item['package'] ?? item['product']) as Map<String, dynamic>? ?? {};
                                 final qty = item['quantity'] as int? ?? 1;
-                                final price = (itemData['price'] as num?)?.toInt() ?? 0;
+                                final stock = Formatters.parsePrice(itemData['stock']);
+                                final price = Formatters.parsePrice(itemData['final_price'] ?? itemData['price']);
                                 final imageUrl = (itemData['image_url'] as String?) ?? '';
                                 final name = itemData['name'] as String? ?? 'Item';
+                                final cartId = '${item['id']}';
+                                final isSelected = cartState.selectedIds[cartId] == true;
+                                final isOutOfStock = stock < 1 || qty > stock;
 
                                 return Card(
                                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -61,6 +82,21 @@ class CartPage extends ConsumerWidget {
                                     padding: const EdgeInsets.all(12),
                                     child: Row(
                                       children: [
+                                        GestureDetector(
+                                          onTap: () => notifier.toggleSelect(cartId),
+                                          child: Container(
+                                            width: 22, height: 22,
+                                            margin: const EdgeInsets.only(right: 8),
+                                            decoration: BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: isSelected ? AppColors.primaryColor : Colors.transparent,
+                                              border: Border.all(color: isSelected ? AppColors.primaryColor : AppColors.textTertiary),
+                                            ),
+                                            child: isSelected
+                                                ? const Icon(Icons.check, size: 16, color: Colors.white)
+                                                : null,
+                                          ),
+                                        ),
                                         ClipRRect(
                                           borderRadius: BorderRadius.circular(8),
                                           child: CachedNetworkImage(
@@ -86,25 +122,66 @@ class CartPage extends ConsumerWidget {
                                               Text(name, style: AppTextStyles.bodyLarge, maxLines: 2, overflow: TextOverflow.ellipsis),
                                               const SizedBox(height: 4),
                                               Text(Formatters.currency(price), style: AppTextStyles.titleMedium.copyWith(color: AppColors.primaryColor)),
+                                              const SizedBox(height: 4),
+                                              if (isOutOfStock)
+                                                Text(l.outOfStock, style: AppTextStyles.labelSmall.copyWith(color: AppColors.errorColor))
+                                              else if (stock <= 3 && stock > 0)
+                                                Text(l.remainingStock(stock.toString()), style: AppTextStyles.labelSmall.copyWith(color: AppColors.warningColor)),
                                             ],
                                           ),
                                         ),
-                                        Row(
+                                        Column(
                                           children: [
-                                            IconButton(
-                                              icon: const Icon(Icons.remove_circle_outline, color: AppColors.primaryColor),
-                                              onPressed: qty > 1 ? () => notifier.updateQty('${item['id']}', qty - 1) : null,
+                                            Row(
+                                              children: [
+                                                IconButton(
+                                                  icon: const Icon(Icons.remove_circle_outline, color: AppColors.primaryColor),
+                                                  iconSize: 20,
+                                                  constraints: const BoxConstraints(),
+                                                  padding: const EdgeInsets.all(4),
+                                                  onPressed: qty > 1 ? () => notifier.updateQty(cartId, qty - 1) : null,
+                                                ),
+                                                Text('$qty', style: AppTextStyles.titleMedium),
+                                                IconButton(
+                                                  icon: const Icon(Icons.add_circle, color: AppColors.primaryColor),
+                                                  iconSize: 20,
+                                                  constraints: const BoxConstraints(),
+                                                  padding: const EdgeInsets.all(4),
+                                                  onPressed: qty < stock ? () => notifier.updateQty(cartId, qty + 1) : null,
+                                                ),
+                                              ],
                                             ),
-                                            Text('$qty', style: AppTextStyles.titleMedium),
-                                            IconButton(
-                                              icon: const Icon(Icons.add_circle, color: AppColors.primaryColor),
-                                              onPressed: () => notifier.updateQty('${item['id']}', qty + 1),
+                                            const SizedBox(height: 4),
+                                            PopupMenuButton<String>(
+                                              padding: EdgeInsets.zero,
+                                              constraints: const BoxConstraints(),
+                                              icon: Icon(Icons.more_vert, size: 18, color: AppColors.textSecondary),
+                                              onSelected: (v) async {
+                                                if (v == 'save') {
+                                                  await notifier.saveForLater(cartId);
+                                                  if (context.mounted) {
+                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                      SnackBar(content: Text(l.itemMovedToWishlist), backgroundColor: AppColors.successColor),
+                                                    );
+                                                  }
+                                                } else if (v == 'delete') {
+                                                  final removed = await notifier.removeItem(cartId);
+                                                  if (removed != null && context.mounted) {
+                                                    ScaffoldMessenger.of(context).showSnackBar(
+                                                      SnackBar(
+                                                        content: Text(l.itemDeleted),
+                                                        action: SnackBarAction(label: l.undo, onPressed: () => notifier.restoreItem(removed)),
+                                                      ),
+                                                    );
+                                                  }
+                                                }
+                                              },
+                                              itemBuilder: (_) => [
+                                                PopupMenuItem(value: 'save', child: Row(children: [Icon(Icons.bookmark_border, size: 18), SizedBox(width: 8), Text(l.saveForLater)])),
+                                                PopupMenuItem(value: 'delete', child: Row(children: [Icon(Icons.delete_outline, size: 18), SizedBox(width: 8), Text(l.delete)])),
+                                              ],
                                             ),
                                           ],
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(Icons.delete_outline, color: AppColors.errorColor),
-                                          onPressed: () => notifier.removeItem('${item['id']}'),
                                         ),
                                       ],
                                     ),
@@ -123,6 +200,19 @@ class CartPage extends ConsumerWidget {
                           child: SafeArea(
                             child: Column(
                               children: [
+                                if (cartState.selectedItems.isNotEmpty) ...[
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(l.itemsSelected(cartState.selectedItems.length.toString()), style: AppTextStyles.bodySmall),
+                                      GestureDetector(
+                                        onTap: () => notifier.deleteSelected(),
+                                        child: Text(l.deleteAll, style: AppTextStyles.bodySmall.copyWith(color: AppColors.errorColor)),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                ],
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [

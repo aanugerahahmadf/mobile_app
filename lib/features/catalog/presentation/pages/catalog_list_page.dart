@@ -5,10 +5,12 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/widgets/app_filter_widgets.dart';
 import '../../../../core/api/dio_client.dart';
 import '../../../../core/api/api_endpoints.dart';
 import '../widgets/combined_card.dart';
 import '../../data/models/item_model.dart';
+import '../../../../core/errors/localized_error.dart';
 import '../../../../core/widgets/app_shimmer.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_error_state.dart';
@@ -23,23 +25,16 @@ class CatalogListPage extends ConsumerStatefulWidget {
 }
 
 class _CatalogListPageState extends ConsumerState<CatalogListPage> {
-  final ScrollController _scrollController = ScrollController();
   final List<Map<String, dynamic>> _items = [];
-  int _page = 1;
-  bool _hasMore = true;
-  bool _loadingMore = false;
   bool _loading = true;
   String? _error;
   String? _selectedSort;
   String? _selectedCategoryId;
   List<Map<String, dynamic>> _categories = [];
 
-
-
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(_onScroll);
     _fetchData();
     _fetchCategories();
   }
@@ -55,57 +50,22 @@ class _CatalogListPageState extends ConsumerState<CatalogListPage> {
     } catch (_) {}
   }
 
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _onScroll() {
-    if (_scrollController.position.pixels >=
-            _scrollController.position.maxScrollExtent - 200 &&
-        _hasMore &&
-        !_loadingMore) {
-      _fetchMore();
-    }
-  }
-
   Future<void> _fetchData() async {
     setState(() {
       _loading = true;
       _error = null;
-      _page = 1;
       _items.clear();
     });
     try {
       final repo = ref.read(catalogRepositoryProvider);
       final res = widget.type == 'packages'
-          ? await repo.getPackages(sort: _selectedSort, page: 1, categoryId: _selectedCategoryId)
-          : await repo.getProducts(sort: _selectedSort, page: 1, categoryId: _selectedCategoryId);
-      final data = res['data'];
-      final list = _extractList(data);
-      _items.addAll(list);
-      _hasMore = list.length >= 10;
+          ? await repo.getPackages(sort: _selectedSort, categoryId: _selectedCategoryId)
+          : await repo.getProducts(sort: _selectedSort, categoryId: _selectedCategoryId);
+      _items.addAll(_extractList(res));
     } catch (e) {
       _error = e.toString();
     }
     if (mounted) setState(() => _loading = false);
-  }
-
-  Future<void> _fetchMore() async {
-    setState(() => _loadingMore = true);
-    _page++;
-    try {
-      final repo = ref.read(catalogRepositoryProvider);
-      final res = widget.type == 'packages'
-          ? await repo.getPackages(sort: _selectedSort, page: _page, categoryId: _selectedCategoryId)
-          : await repo.getProducts(sort: _selectedSort, page: _page, categoryId: _selectedCategoryId);
-      final data = res['data'];
-      final list = _extractList(data);
-      _items.addAll(list);
-      _hasMore = list.length >= 10;
-    } catch (_) {}
-    if (mounted) setState(() => _loadingMore = false);
   }
 
   List<Map<String, dynamic>> _extractList(dynamic data) {
@@ -130,6 +90,8 @@ class _CatalogListPageState extends ConsumerState<CatalogListPage> {
           fontSize: 17,
           fontWeight: FontWeight.w600,
         ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
       body: Column(
         children: [
@@ -147,8 +109,8 @@ class _CatalogListPageState extends ConsumerState<CatalogListPage> {
       (l.cheapest, 'price_asc'),
       (l.mostExpensive, 'price_desc'),
       (l.newest, 'newest'),
-      ('Rating Tertinggi', 'rating_desc'),
-      ('Rating Terendah', 'rating_asc'),
+      (l.highestRating, 'rating_desc'),
+      (l.lowestRating, 'rating_asc'),
     ];
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppSizes.md, AppSizes.sm, AppSizes.md, 0),
@@ -157,76 +119,42 @@ class _CatalogListPageState extends ConsumerState<CatalogListPage> {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
           child: Container(
-            height: 48,
+            padding: const EdgeInsets.symmetric(horizontal: AppSizes.sm, vertical: 6),
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(14),
             ),
-            alignment: Alignment.centerLeft,
-            child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: AppSizes.sm),
-        itemCount: sortOptions.length + (_categories.isNotEmpty ? 1 : 0),
-        separatorBuilder: (_, _) => SizedBox(width: AppSizes.xs),
-        itemBuilder: (_, i) {
-          if (_categories.isNotEmpty && i == 0) {
-            return Center(
-              child: Container(
-                height: 34,
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                decoration: BoxDecoration(
-                  color: AppColors.secondaryColor.withAlpha(50),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<String>(
-                    value: _selectedCategoryId,
-                    hint: Text('${l.all} ${l.category}', style: const TextStyle(fontSize: 12)),
-                    isDense: true,
-                    items: [
-                      DropdownMenuItem(value: null, child: Text('${l.all} ${l.category}', style: const TextStyle(fontSize: 12))),
-                      ..._categories.map((c) {
-                        return DropdownMenuItem(
-                          value: '${c['id']}',
-                          child: Text('${c['name']}', style: const TextStyle(fontSize: 12)),
-                        );
-                      }),
-                    ],
-                    onChanged: (v) {
-                      setState(() => _selectedCategoryId = v);
-                      _fetchData();
-                    },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_categories.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: StyledCategoryDropdown(
+                      value: _selectedCategoryId,
+                      hint: '${l.all} ${l.category}',
+                      categories: _categories,
+                      onChanged: (v) {
+                        setState(() => _selectedCategoryId = v);
+                        _fetchData();
+                      },
+                    ),
                   ),
+                StyledSortChips(
+                  options: sortOptions,
+                  selectedValue: _selectedSort,
+                  onChanged: (v) {
+                    setState(() => _selectedSort = v);
+                    _fetchData();
+                  },
                 ),
-              ),
-            );
-          }
-          final chipIdx = _categories.isNotEmpty ? i - 1 : i;
-          final (label, value) = sortOptions[chipIdx];
-          final isSelected = _selectedSort == value;
-          return Center(
-            child: FilterChip(
-              label: Text(
-                label,
-                style: TextStyle(
-                  color: isSelected ? AppColors.primaryColor : AppColors.textSecondary,
-                ),
-              ),
-              selected: isSelected,
-              onSelected: (_) {
-                setState(() => _selectedSort = value);
-                _fetchData();
-              },
-              selectedColor: AppColors.secondaryColor,
-              checkmarkColor: AppColors.primaryColor,
+              ],
             ),
-          );
-        },
+          ),
+        ),
       ),
-      ),
-    ),
-  ),
-);
+    );
   }
 
   Widget _buildBody(AppLocalizations l) {
@@ -242,7 +170,7 @@ class _CatalogListPageState extends ConsumerState<CatalogListPage> {
     }
 
     if (_error != null) {
-      return AppErrorState(message: _error!, onRetry: _fetchData);
+      return AppErrorState(message: LocalizedError.of(l, _error!), onRetry: _fetchData);
     }
 
     if (_items.isEmpty) {
@@ -254,39 +182,22 @@ class _CatalogListPageState extends ConsumerState<CatalogListPage> {
 
     return RefreshIndicator(
       onRefresh: _fetchData,
-      child: CustomScrollView(
-        controller: _scrollController,
-        slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.all(AppSizes.md),
-            sliver: SliverGrid(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.61,
-                crossAxisSpacing: AppSizes.xs,
-                mainAxisSpacing: AppSizes.xs,
-              ),
-              delegate: SliverChildBuilderDelegate(
-                (_, i) {
-                  return CombinedCard(
-                    item: ItemModel.fromJson(_items[i]),
-                    type: widget.type,
-                    onTap: () =>
-                        context.push('/catalog/${widget.type}/${_items[i]['id']}'),
-                  );
-                },
-                childCount: _items.length,
-              ),
-            ),
-          ),
-          if (_loadingMore)
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.all(AppSizes.md),
-                child: Center(child: CircularProgressIndicator()),
-              ),
-            ),
-        ],
+      child: GridView.builder(
+        padding: const EdgeInsets.all(AppSizes.md),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 0.61,
+          crossAxisSpacing: AppSizes.xs,
+          mainAxisSpacing: AppSizes.xs,
+        ),
+        itemCount: _items.length,
+        itemBuilder: (_, i) {
+          return CombinedCard(
+            item: ItemModel.fromJson(_items[i]),
+            type: widget.type,
+            onTap: () => context.push('/catalog/${widget.type}/${_items[i]['id']}'),
+          );
+        },
       ),
     );
   }

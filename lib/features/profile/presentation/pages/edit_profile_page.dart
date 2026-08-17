@@ -2,18 +2,17 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:file_picker/file_picker.dart';
-import 'package:google_sign_in/google_sign_in.dart';
-import 'package:dio/dio.dart';
 import '../../../../core/api/dio_client.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
 import '../../../../core/utils/formatters.dart';
+import '../../../../core/utils/profile_media_picker.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/widgets/app_snackbar.dart';
+import '../../../../core/widgets/media_viewer.dart';
+import '../../../../core/widgets/whatsapp_otp_verifier.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/utils/country_codes.dart';
 import '../../../auth/presentation/widgets/auth_modals.dart';
@@ -47,6 +46,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   bool   _saving               = false;
   bool   _obscurePassword      = true;
   bool   _obscureConfirmPass   = true;
+  bool   _whatsappVerified     = false;
+  String _initialWhatsapp      = '';
   File?  _avatarFile;
 
   @override
@@ -57,16 +58,27 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
 
   void _loadFromProfile() {
     final userData = ref.read(profileProvider).userData;
-    if (userData == null) return;
+    if (userData != null) {
+      _firstNameController.text = userData['first_name'] as String? ?? '';
+      _midNameController.text   = userData['mid_name']   as String? ?? '';
+      _lastNameController.text  = userData['last_name']  as String? ?? '';
+      _usernameController.text  = userData['username'] as String? ?? '';
+      _emailController.text     = userData['email']    as String? ?? '';
+    }
 
-    _firstNameController.text = userData['first_name'] as String? ?? '';
-    _midNameController.text   = userData['mid_name']   as String? ?? '';
-    _lastNameController.text  = userData['last_name']  as String? ?? '';
-    _usernameController.text  = userData['username'] as String? ?? '';
-    _emailController.text     = userData['email']    as String? ?? '';
+    // Fallback: jika profil belum dimuat, isi email dari akun terautentikasi
+    // agar tidak terkirim kosong ke backend.
+    if (_emailController.text.trim().isEmpty) {
+      final auth = ref.read(authProvider);
+      if (auth is AuthAuthenticated && auth.user.email.isNotEmpty) {
+        _emailController.text = auth.user.email;
+      }
+    }
 
     // Parse WhatsApp
-    String rawWa = (userData['whatsapp'] as String? ?? '').trim();
+    String rawWa = (userData?['whatsapp'] as String? ?? '').trim();
+    _initialWhatsapp = rawWa;
+    _whatsappVerified = rawWa.isNotEmpty;
     rawWa = rawWa.replaceAll(RegExp(r'[\s\-()]'), ''); // Hapus spasi dan tanda hubung
 
     if (rawWa.startsWith('+')) {
@@ -111,176 +123,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   }
 
   Future<void> _pickAvatar() async {
-    final l = AppLocalizations.of(context)!;
     if (!_editing) return;
-    final action = await showModalBottomSheet<String>(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40, height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.dividerColor,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: Text(l.camera),
-                onTap: () => Navigator.pop(ctx, 'camera'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: Text(l.gallery),
-                onTap: () => Navigator.pop(ctx, 'gallery'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.folder_open),
-                title: Text(l.fileManager),
-                onTap: () => Navigator.pop(ctx, 'file'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.cloud),
-                title: Text(l.googleDrive),
-                onTap: () => Navigator.pop(ctx, 'drive'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-    if (action == null) return;
-
-    switch (action) {
-      case 'camera':
-      case 'gallery':
-        final picked = await ImagePicker().pickImage(
-          source: action == 'camera' ? ImageSource.camera : ImageSource.gallery,
-          maxWidth: 1200, maxHeight: 800,
-        );
-        if (picked != null) setState(() => _avatarFile = File(picked.path));
-        break;
-      case 'file':
-        final result = await FilePicker.platform.pickFiles(type: FileType.image);
-        if (result != null && result.files.single.path != null) {
-          setState(() => _avatarFile = File(result.files.single.path!));
-        }
-        break;
-      case 'drive':
-        await _pickFromDrive();
-    }
-  }
-
-  Future<void> _pickFromDrive() async {
-    final l = AppLocalizations.of(context)!;
-    try {
-      const scopes = ['email', 'https://www.googleapis.com/auth/drive.readonly'];
-      final googleSignIn = GoogleSignIn(scopes: scopes);
-      final account = await googleSignIn.signIn();
-      if (account == null) return;
-
-      final auth = await account.authentication;
-      final token = auth.accessToken;
-      if (token == null) return;
-
-      final dio = Dio(BaseOptions(
-        headers: {'Authorization': 'Bearer $token'},
-      ));
-
-      final response = await dio.get(
-        'https://www.googleapis.com/drive/v3/files',
-        queryParameters: {
-          'q': "mimeType contains 'image/' and trashed = false",
-          'fields': 'files(id, name, mimeType, webContentLink, size)',
-          'orderBy': 'modifiedTime desc',
-          'pageSize': 20,
-        },
-      );
-
-      final files = (response.data['files'] as List?) ?? [];
-      if (files.isEmpty || !mounted) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l.noImagesInGoogleDrive)),
-          );
-        }
-        return;
-      }
-
-      final selected = await showModalBottomSheet<Map<String, dynamic>>(
-        context: context,
-        isScrollControlled: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        builder: (ctx) => SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 36, height: 4, margin: const EdgeInsets.only(top: 12),
-                decoration: BoxDecoration(color: AppColors.dividerColor, borderRadius: BorderRadius.circular(2)),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                child: Text(l.pickFromGoogleDrive,
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-                ),
-              ),
-              SizedBox(
-                height: MediaQuery.of(ctx).size.height * 0.45,
-                child: ListView.separated(
-                  itemCount: files.length,
-                  separatorBuilder: (_, _) => const Divider(height: 1, indent: 70),
-                  itemBuilder: (_, i) {
-                    final file = files[i];
-                    return ListTile(
-                      leading: Icon(Icons.image_rounded, size: 40, color: AppColors.textTertiary),
-                      title: Text(file['name'] as String? ?? '', maxLines: 1, overflow: TextOverflow.ellipsis),
-                      onTap: () => Navigator.pop(ctx, file as Map<String, dynamic>),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-
-      if (selected == null || !mounted) return;
-
-      final fileId = selected['id'] as String?;
-      final fileName = selected['name'] as String? ?? 'drive_image';
-      if (fileId == null) return;
-
-      final tempDir = Directory.systemTemp;
-      final tempFile = File('${tempDir.path}/$fileName');
-      await dio.download(
-        'https://www.googleapis.com/drive/v3/files/$fileId?alt=media',
-        tempFile.path,
-      );
-
-      if (mounted) {
-        setState(() => _avatarFile = tempFile);
-      }
-
-      await googleSignIn.signOut();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l.failedFetchFromDrive.replaceFirst('%s', '$e'))),
-        );
-      }
-    }
+    final file = await pickProfileMedia(context, showDrive: true);
+    if (file != null) setState(() => _avatarFile = file);
   }
 
   Future<void> _save() async {
@@ -297,6 +142,12 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
         AppSnackBar.show(context, l.passwordAndConfirmMismatch, type: SnackBarType.error);
         return;
       }
+    }
+
+    // WhatsApp harus diverifikasi bila nomor berubah sebelum disimpan
+    if (_whatsappController.text.trim().isNotEmpty && !_whatsappVerified) {
+      AppSnackBar.show(context, l.whatsappVerifyRequired, type: SnackBarType.warning);
+      return;
     }
 
     setState(() => _saving = true);
@@ -319,9 +170,10 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
         'mid_name':   _midNameController.text.trim(),
         'last_name':  _lastNameController.text.trim(),
         'username':   _usernameController.text.trim(),
-        'email':      _emailController.text.trim(),
         'whatsapp':   '$_countryCode ${_whatsappController.text.trim()}',
       };
+      final emailValue = _emailController.text.trim();
+      if (emailValue.isNotEmpty) data['email'] = emailValue;
       if (_passwordController.text.isNotEmpty) {
         data['password']              = _passwordController.text;
         data['password_confirmation'] = _confirmPasswordController.text;
@@ -387,6 +239,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       appBar: AppBar(
         title: Text(l.editProfile),
         centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
         actions: [
           if (!_editing)
             TextButton(
@@ -429,7 +283,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                             color: AppColors.primaryColor,
                             width: 3,
                           ),
-                          image: (_avatarFile != null || avatarUrl != null)
+                          image: (!(_avatarFile != null && isVideoPath(_avatarFile!.path)) &&
+                                  (_avatarFile != null || avatarUrl != null))
                               ? DecorationImage(
                                   image: _avatarFile != null
                                       ? FileImage(_avatarFile!) as ImageProvider
@@ -439,9 +294,11 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                               : null,
                           color: AppColors.secondaryColor.withAlpha(60),
                         ),
-                        child: (_avatarFile == null && avatarUrl == null)
-                            ? Icon(Icons.person, size: 48, color: AppColors.textTertiary)
-                            : null,
+                        child: (_avatarFile != null && isVideoPath(_avatarFile!.path))
+                            ? Icon(Icons.videocam, size: 48, color: AppColors.textTertiary)
+                            : (_avatarFile == null && avatarUrl == null)
+                                ? Icon(Icons.person, size: 48, color: AppColors.textTertiary)
+                                : null,
                       ),
                       if (_editing)
                         Positioned(
@@ -463,8 +320,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               ),
 
               const SizedBox(height: AppSizes.lg),
-              const Divider(),
-              const SizedBox(height: AppSizes.sm),
 
               // ── Nama ────────────────────────────────────────────────────
               AppTextField(
@@ -486,8 +341,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               ),
 
               const SizedBox(height: AppSizes.md),
-              const Divider(),
-              const SizedBox(height: AppSizes.sm),
 
               // ── Username ─────────────────────────────────────────────────
               AppTextField(
@@ -559,6 +412,21 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                           ? '-'
                           : '$_countryCode ${_whatsappController.text}',
                     ),
+
+              if (_editing) ...[
+                const SizedBox(height: AppSizes.xs),
+                WhatsappOtpVerifier(
+                  numberController: _whatsappController,
+                  countryCode: _countryCode,
+                  initialFullNumber: _initialWhatsapp,
+                  minDigits: 10,
+                  onVerifiedChanged: (v) {
+                    if (_whatsappVerified != v) {
+                      setState(() => _whatsappVerified = v);
+                    }
+                  },
+                ),
+              ],
 
               // ── Password (hanya tampil di view mode sebagai ●●●●●●) ────
               if (!_editing) ...[

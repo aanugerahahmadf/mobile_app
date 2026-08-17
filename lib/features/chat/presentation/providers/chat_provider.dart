@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../../core/errors/app_error_codes.dart';
 import '../../data/chat_repository_impl.dart';
 import '../../domain/chat_repository.dart';
 
@@ -43,7 +44,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
       final isAdmin = result['is_super_admin'] as bool? ?? false;
       state = ChatConversationsLoaded(conversations, unreadCount: 0, isSuperAdmin: isAdmin);
     } on DioException catch (e) {
-      state = ChatError(e.error?.toString() ?? 'Gagal memuat percakapan');
+      state = ChatError(e.error?.toString() ?? AppErrorCodes.failedLoadConversations);
     } catch (e) {
       state = ChatError(e.toString());
     }
@@ -58,7 +59,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
       final conversation = <String, dynamic>{'id': conversationId};
       state = ChatMessagesLoaded(conversation, messages, otherUser: otherUser);
     } on DioException catch (e) {
-      state = ChatError(e.error?.toString() ?? 'Gagal memuat pesan');
+      state = ChatError(e.error?.toString() ?? AppErrorCodes.failedLoadMessages);
     } catch (e) {
       state = ChatError(e.toString());
     }
@@ -92,7 +93,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
         'sender_name': senderName,
         'is_me': true,
         'read_by': <String>[],
-        'attachments': <String>[],
+        'attachments': sent['attachments'] as List<dynamic>? ?? <String>[],
         'meta': sent['meta'],
         'created_at': sent['created_at'] ?? DateTime.now().toIso8601String(),
       };
@@ -102,7 +103,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
         state = ChatMessagesLoaded(current.conversation, updatedMessages, otherUser: current.otherUser);
       }
     } on DioException catch (e) {
-      throw Exception(e.error?.toString() ?? 'Gagal mengirim pesan');
+      throw Exception(e.error?.toString() ?? AppErrorCodes.failedSendMessage);
     }
   }
 

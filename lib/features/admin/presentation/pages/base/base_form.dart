@@ -7,8 +7,11 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:dio/dio.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
+import '../../../../../core/utils/camera_scan_utils.dart';
+import '../../../../../core/services/image_scan_analyzer.dart';
 import '../../../../../core/constants/app_text_styles.dart';
 import '../../../../../core/constants/app_colors.dart';
+import '../../../../../features/profile/presentation/pages/scanned_image_review_page.dart';
 
 enum FormFieldType { text, multiline, number, image, dropdown, toggle, email, password }
 
@@ -91,6 +94,7 @@ class _AdminFormDialogState extends State<AdminFormDialog> {
   }
 
   Future<void> _pickImage(String key) async {
+    final navigator = Navigator.of(context);
     final source = await showModalBottomSheet<int>(
       context: context,
       isScrollControlled: true,
@@ -132,20 +136,79 @@ class _AdminFormDialogState extends State<AdminFormDialog> {
     );
     if (source != null) {
       String? path;
-      if (source == 0 || source == 1) {
-        final imgSource = source == 0 ? ImageSource.camera : ImageSource.gallery;
-        final picked = await ImagePicker().pickImage(source: imgSource, maxWidth: 1024);
-        path = picked?.path;
+      if (source == 0) {
+        final file = await scanWithNavigator(navigator);
+        path = file?.path;
+      } else if (source == 1) {
+        final file = await _reviewPicked(
+          navigator,
+          () async {
+            final picked = await ImagePicker().pickImage(source: ImageSource.gallery, maxWidth: 1024);
+            return picked?.path;
+          },
+        );
+        path = file;
       } else if (source == 2) {
-        final result = await FilePicker.platform.pickFiles(type: FileType.image);
-        path = result?.files.single.path;
+        final file = await _reviewPicked(
+          navigator,
+          () async {
+            final result = await FilePicker.platform.pickFiles(type: FileType.image);
+            return result?.files.single.path;
+          },
+        );
+        path = file;
       } else if (source == 3) {
-        path = await _pickFromDrive();
+        final picked = await _pickFromDrive();
+        if (picked != null) {
+          final reviewed = await _reviewOnce(navigator, picked);
+          path = reviewed;
+        }
       }
       if (path != null) {
         setState(() => _imagePaths[key] = path);
       }
     }
+  }
+
+  /// Memilih gambar (galeri/file) lalu mewajibkannya lolos scan AI.
+  Future<String?> _reviewPicked(
+    NavigatorState navigator,
+    Future<String?> Function() pick,
+  ) async {
+    final l = AppLocalizations.of(context)!;
+    while (true) {
+      final picked = await pick();
+      if (picked == null) return null;
+      final reviewed = await navigator.push<String>(
+        MaterialPageRoute(
+          builder: (_) => ScannedImageReviewPage(
+            image: File(picked),
+            type: ScanContentType.generic,
+            title: l.selectPhoto,
+          ),
+        ),
+      );
+      if (reviewed == null) return null;
+      if (reviewed == kScanRetake) continue;
+      return reviewed;
+    }
+  }
+
+  /// Review sekali pakai (untuk sumber yang tidak bisa dipilih ulang dengan
+  /// mudah, seperti Google Drive). Retake tidak mengulang pick, cukup kembali.
+  Future<String?> _reviewOnce(NavigatorState navigator, String picked) async {
+    final l = AppLocalizations.of(context)!;
+    final reviewed = await navigator.push<String>(
+      MaterialPageRoute(
+        builder: (_) => ScannedImageReviewPage(
+          image: File(picked),
+          type: ScanContentType.generic,
+          title: l.selectPhoto,
+        ),
+      ),
+    );
+    if (reviewed == null || reviewed == kScanRetake) return null;
+    return reviewed;
   }
 
   Future<String?> _pickFromDrive() async {

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/constants/app_sizes.dart';
+import '../../../../core/errors/localized_error.dart';
 import '../../../../core/widgets/app_empty_state.dart';
 import '../../../../core/widgets/app_error_state.dart';
 import '../../../catalog/presentation/widgets/combined_card.dart';
@@ -29,11 +30,11 @@ class _WishlistPageState extends ConsumerState<WishlistPage> {
     final state = ref.watch(wishlistProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text(l.favorites)),
+      appBar: AppBar(title: Text(l.favorites), backgroundColor: Colors.transparent, elevation: 0),
       body: state.loading
           ? const Center(child: CircularProgressIndicator())
           : state.error != null
-              ? AppErrorState(message: state.error!, onRetry: () => ref.read(wishlistProvider.notifier).fetchWishlist())
+              ? AppErrorState(message: LocalizedError.of(l, state.error!), onRetry: () => ref.read(wishlistProvider.notifier).fetchWishlist())
               : state.items.isEmpty
                   ? AppEmptyState(
                       icon: Icons.favorite_border,
