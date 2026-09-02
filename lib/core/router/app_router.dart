@@ -20,6 +20,14 @@ import '../../features/notification/presentation/pages/notification_page.dart';
 import '../../features/notification/presentation/pages/notification_detail_page.dart';
 import '../../features/notification/data/models/notification_model.dart';
 import '../../features/profile/presentation/pages/notification_settings_page.dart';
+import '../../features/profile/presentation/pages/security_settings_page.dart';
+import '../../features/profile/presentation/pages/change_password_page.dart';
+import '../../features/profile/presentation/pages/two_factor_settings_page.dart';
+import '../../features/profile/presentation/pages/saved_login_info_page.dart';
+import '../../features/profile/presentation/pages/trusted_devices_page.dart';
+import '../../features/profile/presentation/pages/login_activity_page.dart';
+import '../../features/profile/presentation/pages/recent_emails_page.dart';
+import '../../features/profile/presentation/pages/security_checkup_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/profile/presentation/pages/edit_profile_page.dart';
 import '../../features/profile/presentation/pages/complete_profile_page.dart';
@@ -70,23 +78,55 @@ import '../../features/admin/presentation/pages/admin_wishlists/page.dart';
 import '../../features/admin/presentation/pages/admin_cbir_evaluation/page.dart';
 import '../../features/admin/presentation/pages/admin_vendors/page.dart';
 
-final _rootNavigatorKey = GlobalKey<NavigatorState>();
+final rootNavigatorKey = GlobalKey<NavigatorState>();
+
+class _RouteObserver extends NavigatorObserver {
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    final path = route.settings.name;
+    if (path != null && path.isNotEmpty && path != '/') {
+      SharedPreferences.getInstance().then((prefs) {
+        prefs.setString('last_route', path);
+      });
+    }
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    final path = newRoute?.settings.name;
+    if (path != null && path.isNotEmpty && path != '/') {
+      SharedPreferences.getInstance().then((prefs) {
+        prefs.setString('last_route', path);
+      });
+    }
+  }
+}
 
 final appRouter = GoRouter(
-  navigatorKey: _rootNavigatorKey,
+  navigatorKey: rootNavigatorKey,
   initialLocation: '/onboarding',
+  observers: [_RouteObserver()],
   redirect: (context, state) async {
     final prefs = await SharedPreferences.getInstance();
     final onboardingSeen = prefs.getBool('onboarding_seen') ?? false;
 
     if (state.matchedLocation == '/onboarding') {
-      // Sudah pernah lihat onboarding → langsung lewati ke landing.
-      if (onboardingSeen) return '/landing';
+      if (onboardingSeen) {
+        final lastRoute = prefs.getString('last_route');
+        if (lastRoute == '/landing') return null;
+        return '/landing';
+      }
       return null;
     }
 
-    // User baru (belum pernah lihat onboarding) → langsung ke onboarding.
     if (!onboardingSeen) return '/onboarding';
+
+    if (state.matchedLocation == '/landing') {
+      final lastRoute = prefs.getString('last_route');
+      if (lastRoute != null && lastRoute != '/landing' && lastRoute != '/onboarding') {
+        return lastRoute;
+      }
+    }
     return null;
   },
   routes: [
@@ -132,13 +172,24 @@ final appRouter = GoRouter(
       },
     ),
     GoRoute(path: '/order/:id', builder: (_, state) => OrderDetailPage(id: state.pathParameters['id']!)),
-    GoRoute(path: '/chat/:id', builder: (_, state) => ChatDetailPage(id: state.pathParameters['id']!)),
+    GoRoute(path: '/chat/:id', builder: (_, state) {
+      final extra = state.extra as Map<String, dynamic>?;
+      return ChatDetailPage(id: state.pathParameters['id']!, csCategory: extra?['cs_category'] as String?);
+    }),
     GoRoute(path: '/notifications', builder: (_, _) => const NotificationPage()),
     GoRoute(
       path: '/notification/:id',
       builder: (_, state) => NotificationDetailPage(notification: state.extra as NotificationModel),
     ),
     GoRoute(path: '/notification-settings', builder: (_, _) => const NotificationSettingsPage()),
+    GoRoute(path: '/security-settings', builder: (_, _) => const SecuritySettingsPage()),
+    GoRoute(path: '/change-password', builder: (_, _) => const ChangePasswordPage()),
+    GoRoute(path: '/two-factor-settings', builder: (_, _) => const TwoFactorSettingsPage()),
+    GoRoute(path: '/saved-login-info', builder: (_, _) => const SavedLoginInfoPage()),
+    GoRoute(path: '/trusted-devices', builder: (_, _) => const TrustedDevicesPage()),
+    GoRoute(path: '/login-activity', builder: (_, _) => const LoginActivityPage()),
+    GoRoute(path: '/recent-emails', builder: (_, _) => const RecentEmailsPage()),
+    GoRoute(path: '/security-checkup', builder: (_, _) => const SecurityCheckupPage()),
     GoRoute(
       path: '/search',
       builder: (_, state) {

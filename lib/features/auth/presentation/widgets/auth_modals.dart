@@ -45,6 +45,8 @@ void showAgreementModal(BuildContext context, {AgreementMode mode = AgreementMod
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    isDismissible: false,
+    enableDrag: false,
     backgroundColor: Colors.transparent,
     builder: (_) => _AgreementModal(mode: mode, onAgreed: onAgreed),
   );
@@ -88,16 +90,9 @@ class _AgreementModalState extends State<_AgreementModal> {
     }
 
     return Container(
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: AppColors.surfaceColor,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-      ),
+      color: AppColors.surfaceColor,
       child: SizedBox(
-        height: MediaQuery.of(context).size.height * 0.75,
+        height: MediaQuery.of(context).size.height,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -298,6 +293,8 @@ Future<void> showSignInSheet(BuildContext context) {
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    isDismissible: false,
+    enableDrag: false,
     backgroundColor: Colors.transparent,
     builder: (_) => const _AuthSheetWrapper(child: _AuthSheetSwitcher(initialType: _AuthSheetType.signIn)),
   );
@@ -308,6 +305,8 @@ Future<void> showSignUpSheet(BuildContext context) {
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    isDismissible: false,
+    enableDrag: false,
     backgroundColor: Colors.transparent,
     builder: (_) => const _AuthSheetWrapper(child: _AuthSheetSwitcher(initialType: _AuthSheetType.signUp)),
   );
@@ -323,6 +322,7 @@ class _AuthSheetSwitcher extends StatefulWidget {
 
 class _AuthSheetSwitcherState extends State<_AuthSheetSwitcher> {
   late _AuthSheetType _type;
+  bool _hasSwitched = false;
 
   @override
   void initState() {
@@ -330,19 +330,26 @@ class _AuthSheetSwitcherState extends State<_AuthSheetSwitcher> {
     _type = widget.initialType;
   }
 
-  void _switchToSignUp() => setState(() => _type = _AuthSheetType.signUp);
-  void _switchToSignIn() => setState(() => _type = _AuthSheetType.signIn);
+  void _switchToSignUp() => setState(() { _type = _AuthSheetType.signUp; _hasSwitched = true; });
+  void _switchToSignIn() => setState(() { _type = _AuthSheetType.signIn; _hasSwitched = true; });
 
   @override
   Widget build(BuildContext context) {
+    final openedDirectlyAsSignUp = widget.initialType == _AuthSheetType.signUp && !_hasSwitched;
+
     return PopScope(
-      canPop: _type == _AuthSheetType.signIn,
+      canPop: openedDirectlyAsSignUp || _type == _AuthSheetType.signIn,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) _switchToSignIn();
       },
       child: _type == _AuthSheetType.signIn
           ? _SignInSheetContent(onSwitchToSignUp: _switchToSignUp)
-          : _SignUpSheetContent(onSwitchToSignIn: _switchToSignIn),
+          : _SignUpSheetContent(
+              onSwitchToSignIn: _switchToSignIn,
+              onBack: openedDirectlyAsSignUp
+                  ? () => Navigator.of(context).pop()
+                  : _switchToSignIn,
+            ),
     );
   }
 }
@@ -352,6 +359,8 @@ Future<void> showForgotPasswordSheet(BuildContext context) {
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    isDismissible: false,
+    enableDrag: false,
     backgroundColor: Colors.transparent,
     builder: (_) => const _AuthSheetWrapper(child: _ForgotPasswordSheetContent()),
   );
@@ -367,6 +376,8 @@ Future<void> showOtpVerificationSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    isDismissible: false,
+    enableDrag: false,
     backgroundColor: Colors.transparent,
     builder: (_) => _AuthSheetWrapper(
       child: _OtpVerificationSheetContent(email: email, purpose: purpose, onVerified: onVerified),
@@ -379,6 +390,8 @@ Future<void> showResetPasswordSheet(BuildContext context) {
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    isDismissible: false,
+    enableDrag: false,
     backgroundColor: Colors.transparent,
     builder: (_) => const _AuthSheetWrapper(child: _ResetPasswordSheetContent()),
   );
@@ -394,14 +407,7 @@ class _AuthSheetWrapper extends StatelessWidget {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: Container(
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            color: AppColors.surfaceColor,
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(24),
-              topRight: Radius.circular(24),
-            ),
-          ),
+          color: AppColors.surfaceColor,
           child: Column(
             children: [
               const SizedBox(height: 8),
@@ -531,7 +537,7 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            AuthHeader(title: '${l.welcome},', subtitle: l.signInSubtitle),
+            AuthHeader(title: l.signIn, subtitle: l.signInSubtitle),
             const SizedBox(height: AppSizes.lg),
             AppTextField(
               label: _loginLabel,
@@ -724,7 +730,8 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
 
 class _SignUpSheetContent extends ConsumerStatefulWidget {
   final VoidCallback? onSwitchToSignIn;
-  const _SignUpSheetContent({this.onSwitchToSignIn});
+  final VoidCallback? onBack;
+  const _SignUpSheetContent({this.onSwitchToSignIn, this.onBack});
 
   @override
   ConsumerState<_SignUpSheetContent> createState() => _SignUpSheetContentState();
@@ -1300,7 +1307,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
                   height: 40,
                   child: IconButton(
                     icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
-                    onPressed: widget.onSwitchToSignIn,
+                    onPressed: widget.onBack ?? widget.onSwitchToSignIn,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                   ),

@@ -23,7 +23,8 @@ class ChatMessagesLoaded extends ChatState {
   final Map<String, dynamic> conversation;
   final List<Map<String, dynamic>> messages;
   final Map<String, dynamic>? otherUser;
-  const ChatMessagesLoaded(this.conversation, this.messages, {this.otherUser});
+  final bool isTyping;
+  const ChatMessagesLoaded(this.conversation, this.messages, {this.otherUser, this.isTyping = false});
 }
 
 class ChatError extends ChatState {
@@ -72,9 +73,28 @@ class ChatNotifier extends StateNotifier<ChatState> {
       final otherUser = result['other_user'] as Map<String, dynamic>?;
       if (state is ChatMessagesLoaded) {
         final current = state as ChatMessagesLoaded;
-        state = ChatMessagesLoaded(current.conversation, messages, otherUser: otherUser ?? current.otherUser);
+        state = ChatMessagesLoaded(
+          current.conversation,
+          messages,
+          otherUser: otherUser ?? current.otherUser,
+          isTyping: current.isTyping,
+        );
       }
     } catch (_) {}
+  }
+
+  void setTyping(bool typing) {
+    if (state is ChatMessagesLoaded) {
+      final current = state as ChatMessagesLoaded;
+      if (current.isTyping != typing) {
+        state = ChatMessagesLoaded(
+          current.conversation,
+          current.messages,
+          otherUser: current.otherUser,
+          isTyping: typing,
+        );
+      }
+    }
   }
 
   Future<void> sendMessage({
@@ -83,9 +103,25 @@ class ChatNotifier extends StateNotifier<ChatState> {
     required String senderName,
     String? filePath,
     Map<String, dynamic>? itemContext,
+    String? csCategory,
+    int? replyToId,
+    String? replyToName,
   }) async {
     try {
-      final sent = await _repository.sendMessage(inboxId: inboxId, message: message, filePath: filePath, itemContext: itemContext);
+      final data = <String, dynamic>{};
+      if (csCategory != null && csCategory.isNotEmpty) {
+        data['cs_category'] = csCategory;
+      }
+      if (replyToId != null) {
+        data['reply_to_id'] = replyToId;
+      }
+      final sent = await _repository.sendMessage(
+        inboxId: inboxId,
+        message: message,
+        filePath: filePath,
+        itemContext: itemContext,
+        extraData: data.isNotEmpty ? data : null,
+      );
       final constructed = <String, dynamic>{
         'id': sent['id'],
         'message': message,
@@ -102,9 +138,92 @@ class ChatNotifier extends StateNotifier<ChatState> {
         final updatedMessages = [...current.messages, constructed];
         state = ChatMessagesLoaded(current.conversation, updatedMessages, otherUser: current.otherUser);
       }
+      setTyping(true);
+    } on DioException catch (e) {
+      setTyping(false);
+      throw Exception(e.error?.toString() ?? AppErrorCodes.failedSendMessage);
+    }
+  }
+
+  Future<void> deleteMessage(String messageId, {required String deleteType}) async {
+    try {
+      await _repository.deleteMessage(messageId, deleteType: deleteType);
+      if (state is ChatMessagesLoaded) {
+        final current = state as ChatMessagesLoaded;
+        final updatedMessages = <Map<String, dynamic>>[];
+        for (final msg in current.messages) {
+          if (msg['id'].toString() == messageId) {
+            if (deleteType == 'everyone') {
+              continue;
+            } else {
+              updatedMessages.add({
+                ...msg,
+                'message': '',
+                'is_deleted': true,
+                'attachments': <dynamic>[],
+              });
+            }
+          } else {
+            updatedMessages.add(msg);
+          }
+        }
+        state = ChatMessagesLoaded(current.conversation, updatedMessages, otherUser: current.otherUser);
+      }
     } on DioException catch (e) {
       throw Exception(e.error?.toString() ?? AppErrorCodes.failedSendMessage);
     }
+  }
+
+  Future<void> toggleStarMessage(String messageId) async {
+    try {
+      await _repository.toggleStarMessage(messageId);
+      if (state is ChatMessagesLoaded) {
+        final current = state as ChatMessagesLoaded;
+        final updatedMessages = current.messages.map((msg) {
+          if (msg['id'].toString() == messageId) {
+            final meta = Map<String, dynamic>.from(msg['meta'] as Map<String, dynamic>? ?? {});
+            final starredBy = List<String>.from(meta['starred_by'] as List<dynamic>? ?? []);
+            final currentUserId = ''; // Will be updated from UI
+            if (starredBy.contains(currentUserId)) {
+              starredBy.remove(currentUserId);
+            } else {
+              starredBy.add(currentUserId);
+            }
+            meta['starred_by'] = starredBy;
+            return {...msg, 'meta': meta};
+          }
+          return msg;
+        }).toList();
+        state = ChatMessagesLoaded(current.conversation, updatedMessages, otherUser: current.otherUser);
+      }
+    } on DioException catch (_) {}
+  }
+
+  void updateMessageMeta(String messageId, Map<String, dynamic> newMeta) {
+    if (state is ChatMessagesLoaded) {
+      final current = state as ChatMessagesLoaded;
+      final updatedMessages = current.messages.map((msg) {
+        if (msg['id'].toString() == messageId) {
+          final meta = Map<String, dynamic>.from(msg['meta'] as Map<String, dynamic>? ?? {});
+          meta.addAll(newMeta);
+          return {...msg, 'meta': meta};
+        }
+        return msg;
+      }).toList();
+      state = ChatMessagesLoaded(current.conversation, updatedMessages, otherUser: current.otherUser);
+    }
+  }
+
+  Future<void> addReaction(String messageId, String emoji) async {
+    try {
+      await _repository.addReaction(messageId, emoji: emoji);
+    } on DioException catch (_) {}
+  }
+
+  Future<void> markAsRead(String inboxId) async {
+    try {
+      await _repository.markAsRead(inboxId);
+    } on DioException catch (_) {}
   }
 
   Future<int> startConversation({Map<String, dynamic>? itemContext}) async {

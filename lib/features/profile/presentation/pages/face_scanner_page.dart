@@ -4,6 +4,7 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../core/constants/app_colors.dart';
@@ -51,6 +52,7 @@ class _FaceScannerPageState extends State<FaceScannerPage>
 
   CameraController? _cameraController;
   FaceDetector? _faceDetector;
+  final FlutterTts _tts = FlutterTts();
   bool _isDetecting = false;
   bool _cameraReady = false;
   bool _faceDetected = false;
@@ -59,6 +61,7 @@ class _FaceScannerPageState extends State<FaceScannerPage>
   bool _eyesClosed = false;
   bool _multipleFaces = false;
   bool _isFrontCamera = true;
+  bool _isMuted = false;
   int _livenessIndex = 0;
   int _stepStableCounter = 0;
   bool _verified = false;
@@ -85,6 +88,7 @@ class _FaceScannerPageState extends State<FaceScannerPage>
         performanceMode: FaceDetectorMode.fast,
       ),
     );
+    _initTts();
   }
 
   /// Menyusun urutan liveness acak: hadap depan selalu pertama, sisanya
@@ -121,6 +125,7 @@ class _FaceScannerPageState extends State<FaceScannerPage>
     WidgetsBinding.instance.removeObserver(this);
     _cameraController?.dispose();
     _faceDetector?.close();
+    _tts.stop();
     super.dispose();
   }
 
@@ -131,6 +136,25 @@ class _FaceScannerPageState extends State<FaceScannerPage>
         !_cameraController!.value.isInitialized) {
       _initCamera();
     }
+  }
+
+  Future<void> _initTts() async {
+    final locale = Platform.localeName;
+    final langCode = locale.split('_').first;
+    if (langCode == 'id') {
+      await _tts.setLanguage('id-ID');
+    } else {
+      await _tts.setLanguage('en-US');
+    }
+    await _tts.setSpeechRate(0.5);
+    await _tts.setVolume(1.0);
+    await _tts.setPitch(1.0);
+  }
+
+  Future<void> _speak(String text) async {
+    if (_isMuted) return;
+    await _tts.stop();
+    await _tts.speak(text);
   }
 
   Future<void> _initializeCamera() async {
@@ -160,6 +184,8 @@ class _FaceScannerPageState extends State<FaceScannerPage>
       if (mounted) {
         setState(() => _cameraReady = true);
         _cameraController!.startImageStream(_processImage);
+        final l = AppLocalizations.of(context);
+        if (l != null) _speak(l.voiceGreeting);
       }
     } catch (_) {
       if (mounted) {
@@ -198,6 +224,17 @@ class _FaceScannerPageState extends State<FaceScannerPage>
     if (!faceOk) {
       _stepStableCounter = 0;
       if (_stepSatisfied) setState(() => _stepSatisfied = false);
+
+      if (r.multipleFaces) {
+        final l = AppLocalizations.of(context);
+        if (l != null) _speak(l.voiceMultipleFaces);
+      } else if (!r.eyesOpen) {
+        final l = AppLocalizations.of(context);
+        if (l != null) _speak(l.voiceEyesClosed);
+      } else if (r.tooSmall) {
+        final l = AppLocalizations.of(context);
+        if (l != null) _speak(l.voiceTooClose);
+      }
       return;
     }
 
@@ -250,8 +287,8 @@ class _FaceScannerPageState extends State<FaceScannerPage>
       setState(() {
         _verified = true;
       });
-      // Seluruh langkah liveness selesai (100%). Beri jeda singkat agar overlay
-      // sukses terlihat, lalu munculkan MODAL notifikasi "Wajah Terverifikasi".
+      final l = AppLocalizations.of(context);
+      if (l != null) _speak(l.voiceVerificationComplete);
       Timer(const Duration(milliseconds: 1200), _showVerifiedModal);
       return;
     }
@@ -260,6 +297,11 @@ class _FaceScannerPageState extends State<FaceScannerPage>
       _stepStableCounter = 0;
       _stepSatisfied = false;
     });
+    final l = AppLocalizations.of(context);
+    if (l != null) {
+      final (instruction, _) = _actionPresentation(_sequence[_livenessIndex], l);
+      _speak(instruction);
+    }
   }
 
   /// Setelah seluruh langkah liveness terpenuhi: ambil foto terbaik lalu
@@ -471,6 +513,11 @@ class _FaceScannerPageState extends State<FaceScannerPage>
               ),
             ),
             Positioned(
+              top: MediaQuery.of(context).padding.top + 8,
+              right: 16,
+              child: _buildMuteButton(),
+            ),
+            Positioned(
               left: 20,
               right: 20,
               bottom: MediaQuery.of(context).padding.bottom + 40,
@@ -479,6 +526,37 @@ class _FaceScannerPageState extends State<FaceScannerPage>
           ],
         );
       },
+    );
+  }
+
+  Widget _buildMuteButton() {
+    return GestureDetector(
+      onTap: () {
+        setState(() => _isMuted = !_isMuted);
+        if (_isMuted) {
+          _tts.stop();
+        } else {
+          final l = AppLocalizations.of(context);
+          if (l != null) {
+            final (instruction, _) =
+                _actionPresentation(_sequence[_livenessIndex], l);
+            _speak(instruction);
+          }
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.5),
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white24),
+        ),
+        child: Icon(
+          _isMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
+          color: Colors.white,
+          size: 22,
+        ),
+      ),
     );
   }
 

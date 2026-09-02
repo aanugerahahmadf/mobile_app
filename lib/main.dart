@@ -40,6 +40,7 @@ class _WeddingAppState extends ConsumerState<WeddingApp> with WidgetsBindingObse
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      NotificationService.instance.setNavigatorKey(rootNavigatorKey);
       NotificationService.instance.onNavigate = (route) => appRouter.go(route);
       NotificationService.instance.handleInitialMessage();
     });
@@ -92,7 +93,7 @@ class _WeddingAppState extends ConsumerState<WeddingApp> with WidgetsBindingObse
     ));
 
     return MaterialApp.router(
-      title: 'Wedding Flower Decoration',
+      title: 'Wedding Flower Decorations',
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,

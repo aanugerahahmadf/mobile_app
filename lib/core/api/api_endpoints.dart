@@ -97,6 +97,7 @@ class ApiEndpoints {
   static const String unreadCount = '/messages/unread-count';
   static const String customersForChat = '/messages/customers';
 
+
   // Legal
   static const String legalTerms = '/legal/terms';
   static const String legalPrivacy = '/legal/privacy';
@@ -167,16 +168,40 @@ class ApiEndpoints {
   static String bookingCancel(String id) => '/bookings/$id/cancel';
   static String wishlistItem(String packageId) => '/wishlist/$packageId';
   static String conversationMessages(String id) => '/messages/conversations/$id';
+  static String messageDelete(String id) => '/messages/$id/delete';
+  static String messageStar(String id) => '/messages/$id/star';
+  static String messageForward(String id) => '/messages/$id/forward';
+  static String messageReact(String id) => '/messages/$id/react';
+  static String messageRead(String inboxId) => '/messages/$inboxId/read';
+  static String messageRate(String inboxId) => '/messages/$inboxId/rate';
   static String voucherClaim(String id) => '/vouchers/$id/claim';
   static String notificationRead(String id) => '/notifications/$id/read';
   static String packageReviews(String id) => '/reviews/package/$id';
   static String productReviews(String id) => '/reviews/product/$id';
+  static String packageReviewSummary(String id) => '/reviews/package/$id/summary';
+  static String productReviewSummary(String id) => '/reviews/product/$id/summary';
+  static String reviewVote(int id) => '/reviews/$id/vote';
+  static String reviewReply(int id) => '/reviews/$id/reply';
+  static String reviewDeleteReply(int reviewId, int replyId) => '/reviews/$reviewId/reply/$replyId';
   static String orderConfirmPayment(String id) => '/bookings/$id/confirm-payment';
   static String orderVirtualAccount(String id) => '/bookings/$id/virtual-account';
   static String orderQris(String id) => '/bookings/$id/qris';
   static String bookingUploadProof(String id) => '/bookings/$id/upload-proof';
   static String invoiceDownload(String id) => '/bookings/$id/invoice';
   static String invoiceEmail(String id) => '/bookings/$id/invoice/email';
+
+  // Security
+  static const String securityCheckup = '/security/checkup';
+  static const String securityRecentEmails = '/security/recent-emails';
+  static const String securityTwoFactorStatus = '/security/two-factor/status';
+  static const String securityTwoFactorToggle = '/security/two-factor/toggle';
+  static const String securityBackupCodes = '/security/two-factor/backup-codes';
+  static const String securityTrustedDevices = '/security/trusted-devices';
+  static String securityRemoveTrustedDevice(int id) => '/security/trusted-devices/$id';
+  static const String securitySavedLogin = '/security/saved-login';
+  static const String securitySavedLoginToggle = '/security/saved-login/toggle';
+  static const String securityLoginActivity = '/security/login-activity';
+  static String securityRemoveSession(int id) => '/security/login-activity/$id';
 
   // Dropdown Options (KYC fields)
   static const String dropdownOptions = '/dropdown-options';

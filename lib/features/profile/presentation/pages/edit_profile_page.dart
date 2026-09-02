@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import '../../../../core/api/dio_client.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/constants/app_sizes.dart';
@@ -15,7 +14,6 @@ import '../../../../core/widgets/media_viewer.dart';
 import '../../../../core/widgets/whatsapp_otp_verifier.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../core/utils/country_codes.dart';
-import '../../../auth/presentation/widgets/auth_modals.dart';
 import '../providers/profile_provider.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -36,16 +34,11 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   final _midNameController         = TextEditingController();
   final _lastNameController        = TextEditingController();
   final _usernameController        = TextEditingController();
-  final _emailController           = TextEditingController();
   final _whatsappController        = TextEditingController();
-  final _passwordController        = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
 
   String _countryCode          = '+62';
   bool   _editing              = false;
   bool   _saving               = false;
-  bool   _obscurePassword      = true;
-  bool   _obscureConfirmPass   = true;
   bool   _whatsappVerified     = false;
   String _initialWhatsapp      = '';
   File?  _avatarFile;
@@ -63,16 +56,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       _midNameController.text   = userData['mid_name']   as String? ?? '';
       _lastNameController.text  = userData['last_name']  as String? ?? '';
       _usernameController.text  = userData['username'] as String? ?? '';
-      _emailController.text     = userData['email']    as String? ?? '';
-    }
-
-    // Fallback: jika profil belum dimuat, isi email dari akun terautentikasi
-    // agar tidak terkirim kosong ke backend.
-    if (_emailController.text.trim().isEmpty) {
-      final auth = ref.read(authProvider);
-      if (auth is AuthAuthenticated && auth.user.email.isNotEmpty) {
-        _emailController.text = auth.user.email;
-      }
     }
 
     // Parse WhatsApp
@@ -114,10 +97,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     _midNameController.dispose();
     _lastNameController.dispose();
     _usernameController.dispose();
-    _emailController.dispose();
     _whatsappController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -132,18 +112,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     final l = AppLocalizations.of(context)!;
     if (!_formKey.currentState!.validate()) return;
 
-    // Validasi konfirmasi password jika diisi
-    if (_passwordController.text.isNotEmpty) {
-      if (_confirmPasswordController.text.isEmpty) {
-        AppSnackBar.show(context, l.confirmPasswordRequired, type: SnackBarType.error);
-        return;
-      }
-      if (_passwordController.text != _confirmPasswordController.text) {
-        AppSnackBar.show(context, l.passwordAndConfirmMismatch, type: SnackBarType.error);
-        return;
-      }
-    }
-
     // WhatsApp harus diverifikasi bila nomor berubah sebelum disimpan
     if (_whatsappController.text.trim().isNotEmpty && !_whatsappVerified) {
       AppSnackBar.show(context, l.whatsappVerifyRequired, type: SnackBarType.warning);
@@ -151,20 +119,15 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     }
 
     setState(() => _saving = true);
-    final userData   = ref.read(profileProvider).userData;
-    final notifier   = ref.read(profileProvider.notifier);
-    final oldEmail   = (userData?['email'] as String? ?? '').toLowerCase();
-    final newEmail   = _emailController.text.trim().toLowerCase();
-    final emailChanged = newEmail != oldEmail && newEmail.isNotEmpty;
 
     try {
       // 1. Upload avatar jika dipilih
       String? newAvatarUrl;
       if (_avatarFile != null) {
-        newAvatarUrl = await notifier.uploadAvatar(_avatarFile!.path);
+        newAvatarUrl = await ref.read(profileProvider.notifier).uploadAvatar(_avatarFile!.path);
       }
 
-      // 2. Update profil (first_name, mid_name, last_name, username, whatsapp, email, password)
+      // 2. Update profil (first_name, mid_name, last_name, username, whatsapp)
       final data = <String, dynamic>{
         'first_name': _firstNameController.text.trim(),
         'mid_name':   _midNameController.text.trim(),
@@ -172,50 +135,15 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
         'username':   _usernameController.text.trim(),
         'whatsapp':   '$_countryCode ${_whatsappController.text.trim()}',
       };
-      final emailValue = _emailController.text.trim();
-      if (emailValue.isNotEmpty) data['email'] = emailValue;
-      if (_passwordController.text.isNotEmpty) {
-        data['password']              = _passwordController.text;
-        data['password_confirmation'] = _confirmPasswordController.text;
-      }
-      await notifier.updateProfile(data);
+      await ref.read(profileProvider.notifier).updateProfile(data);
       ref.read(authProvider.notifier).refreshUser();
       if (newAvatarUrl != null) {
         ref.read(authProvider.notifier).updateAvatarDirect(newAvatarUrl);
       }
 
-      // 3. Jika email berubah → kirim OTP dan arahkan ke verifikasi
-      if (emailChanged) {
-        try {
-          await DioClient.instance.post(
-            '/auth/send-otp',
-            data: {'email': newEmail, 'purpose': 'verify_email'},
-          );
-          if (mounted) {
-            AppSnackBar.show(
-              context,
-              l.profileSavedVerifyEmail,
-              type: SnackBarType.success,
-            );
-            showOtpVerificationSheet(context, email: newEmail, purpose: 'verify_email');
-          }
-        } catch (_) {
-          if (mounted) {
-            AppSnackBar.show(
-              context,
-              l.profileSavedFailedSendOtp,
-              type: SnackBarType.warning,
-            );
-            setState(() { _editing = false; _saving = false; });
-          }
-        }
-      } else {
-        if (mounted) {
-          AppSnackBar.show(context, l.profileUpdated, type: SnackBarType.success);
-          setState(() { _editing = false; _saving = false; });
-          _passwordController.clear();
-          _confirmPasswordController.clear();
-        }
+      if (mounted) {
+        AppSnackBar.show(context, l.profileUpdated, type: SnackBarType.success);
+        setState(() { _editing = false; _saving = false; });
       }
     } catch (e) {
       if (mounted) {
@@ -251,8 +179,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               TextButton(
                 onPressed: () => setState(() {
                 _editing = false;
-                _passwordController.clear();
-                _confirmPasswordController.clear();
                 _loadFromProfile();
               }),
               child: Text(l.cancel),
@@ -351,29 +277,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               ),
               const SizedBox(height: AppSizes.sm),
 
-              // ── Email ────────────────────────────────────────────────────
-              AppTextField(
-                label: l.email,
-                controller: _emailController,
-                readOnly: !_editing,
-                keyboardType: TextInputType.emailAddress,
-                validator: _editing ? Validators.email : null,
-              ),
-              if (_editing) ...[
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Icon(Icons.info_outline, size: 13, color: Colors.orange),
-                    const SizedBox(width: 5),
-                    Expanded(
-                      child: Text(
-                        l.emailChangeRequiresOtp,
-                        style: AppTextStyles.bodySmall.copyWith(color: Colors.orange.shade700),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
               const SizedBox(height: AppSizes.sm),
 
               // ── WhatsApp ─────────────────────────────────────────────────
@@ -424,60 +327,6 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                     if (_whatsappVerified != v) {
                       setState(() => _whatsappVerified = v);
                     }
-                  },
-                ),
-              ],
-
-              // ── Password (hanya tampil di view mode sebagai ●●●●●●) ────
-              if (!_editing) ...[
-                const SizedBox(height: AppSizes.sm),
-                _buildReadOnlySection(
-                  label: l.password,
-                  value: '●●●●●●●●',
-                ),
-              ],
-
-              // ── Password + Confirm (hanya saat edit) ─────────────────────
-              if (_editing) ...[
-                const SizedBox(height: AppSizes.sm),
-                AppTextField(
-                  label: l.newPasswordLeaveBlank,
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                      size: 20,
-                      color: AppColors.textSecondary,
-                    ),
-                    onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                  ),
-                  validator: (v) {
-                    if (v != null && v.isNotEmpty && v.length < 8) {
-                      return l.passwordMin8Chars;
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: AppSizes.sm),
-                AppTextField(
-                  label: l.confirmNewPassword,
-                  controller: _confirmPasswordController,
-                  obscureText: _obscureConfirmPass,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscureConfirmPass ? Icons.visibility_off : Icons.visibility,
-                      size: 20,
-                      color: AppColors.textSecondary,
-                    ),
-                    onPressed: () => setState(() => _obscureConfirmPass = !_obscureConfirmPass),
-                  ),
-                  validator: (v) {
-                    if (_passwordController.text.isNotEmpty) {
-                      if (v == null || v.isEmpty) return l.confirmPasswordRequired;
-                      if (v != _passwordController.text) return l.passwordMismatch;
-                    }
-                    return null;
                   },
                 ),
               ],

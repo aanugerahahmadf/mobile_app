@@ -1,16 +1,28 @@
+import 'dart:io' show Platform;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../api/api_endpoints.dart';
 import '../api/dio_client.dart';
+import '../utils/notification_prefs.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  final type = message.data['type'] as String?;
+  if (type != null) {
+    final allowed = await NotificationPrefs.shouldShowNotification(type);
+    if (!allowed) return;
+  }
   final service = NotificationService.instance;
   await service._initLocalNotifications();
+  await service._loadSoundPref();
   service._showLocalNotification(message);
 }
+
+bool get _isMobile =>
+    !kIsWeb && (Platform.isAndroid || Platform.isIOS);
 
 class NotificationService {
   NotificationService._();
@@ -27,16 +39,35 @@ class NotificationService {
     playSound: true,
     enableVibration: true,
   );
-  String? _fcmToken;
 
-  // Navigation callback set from app-level where GoRouter is accessible
+  static const AndroidNotificationChannel _securityChannel = AndroidNotificationChannel(
+    'security_notifications',
+    'Notifikasi Keamanan',
+    description: 'Notifikasi verifikasi login dan keamanan akun',
+    importance: Importance.high,
+    playSound: true,
+    enableVibration: true,
+  );
+
+  String? _fcmToken;
+  bool _soundEnabled = true;
+
+
   void Function(String route)? onNavigate;
 
   String? get fcmToken => _fcmToken;
 
+  void setNavigatorKey(GlobalKey<NavigatorState> key) {}
+
   Future<void> initialize() async {
+    await _loadSoundPref();
     await _initLocalNotifications();
     await _setupFCM();
+  }
+
+  Future<void> _loadSoundPref() async {
+    final prefs = await SharedPreferences.getInstance();
+    _soundEnabled = prefs.getBool('notif_sound') ?? true;
   }
 
   Future<void> _initLocalNotifications() async {
@@ -46,9 +77,15 @@ class NotificationService {
       requestBadgePermission: true,
       requestSoundPermission: true,
     );
+    const windowsSettings = WindowsInitializationSettings(
+      appName: 'Wedding Flower Decorations',
+      appUserModelId: 'com.wedding.flowerdecorations',
+      guid: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+    );
     const initSettings = InitializationSettings(
       android: androidSettings,
       iOS: iosSettings,
+      windows: windowsSettings,
     );
     await _localNotifications.initialize(
       settings: initSettings,
@@ -58,9 +95,14 @@ class NotificationService {
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
         ?.createNotificationChannel(_channel);
+    await _localNotifications
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(_securityChannel);
   }
 
   Future<void> _setupFCM() async {
+    if (!_isMobile) return;
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
     final messaging = FirebaseMessaging.instance;
@@ -90,6 +132,7 @@ class NotificationService {
   }
 
   Future<void> handleInitialMessage() async {
+    if (!_isMobile) return;
     final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
     if (initialMessage != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -100,14 +143,26 @@ class NotificationService {
 
   Future<void> _registerToken(String token) async {
     try {
+      final deviceName = defaultTargetPlatform.name;
+
       await DioClient.instance.post(ApiEndpoints.registerFcmToken, data: {
         'token': token,
         'platform': defaultTargetPlatform == TargetPlatform.iOS ? 'ios' : 'android',
+        'device_name': deviceName,
       });
     } catch (_) {}
   }
 
-  void _handleForegroundMessage(RemoteMessage message) {
+  void _handleForegroundMessage(RemoteMessage message) async {
+    final data = message.data;
+    final type = data['type'] as String?;
+
+    if (type != null) {
+      final allowed = await NotificationPrefs.shouldShowNotification(type);
+      if (!allowed) return;
+    }
+
+    await _loadSoundPref();
     _showLocalNotification(message);
   }
 
@@ -140,16 +195,32 @@ class NotificationService {
       payload = '/notifications';
     }
 
+    final isSecurity = type == 'security';
+    final channelId = isSecurity ? _securityChannel.id : _channel.id;
+    final channelName = isSecurity ? _securityChannel.name : _channel.name;
+
     final androidDetails = AndroidNotificationDetails(
-      _channel.id,
-      _channel.name,
-      channelDescription: _channel.description,
+      channelId,
+      channelName,
+      channelDescription: isSecurity ? _securityChannel.description : _channel.description,
       importance: Importance.high,
       priority: Priority.high,
       icon: '@mipmap/ic_launcher',
+      playSound: _soundEnabled,
+      enableVibration: _soundEnabled,
+      fullScreenIntent: isSecurity,
     );
-    final iosDetails = const DarwinNotificationDetails();
-    final details = NotificationDetails(android: androidDetails, iOS: iosDetails);
+    final iosDetails = DarwinNotificationDetails(
+      presentSound: _soundEnabled,
+    );
+    final windowsDetails = WindowsNotificationDetails(
+      subtitle: notification?.body ?? '',
+    );
+    final details = NotificationDetails(
+      android: androidDetails,
+      iOS: iosDetails,
+      windows: windowsDetails,
+    );
 
     _localNotifications.show(
       id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
@@ -187,28 +258,19 @@ class NotificationService {
 
   String _mapTypeToRoute(String type, String id) {
     switch (type) {
-      // ── User order / payment ──
       case 'order':
       case 'payment':
         return '/order/$id';
-
-      // ── All chat variants ──
       case 'chat':
       case 'message':
       case 'new_message':
         return '/chat/$id';
-
-      // ── Catalog ──
       case 'package':
         return '/catalog/packages/$id';
       case 'product':
         return '/catalog/products/$id';
-
-      // ── Promo / voucher ──
       case 'promo':
         return '/vouchers';
-
-      // ── Admin-specific types ──
       case 'new_user':
       case 'admin_user':
         return '/admin/users';
@@ -237,8 +299,6 @@ class NotificationService {
       case 'new_product':
       case 'admin_product':
         return '/admin/products';
-
-      // ── Other / fallback ──
       default:
         return '/notifications';
     }

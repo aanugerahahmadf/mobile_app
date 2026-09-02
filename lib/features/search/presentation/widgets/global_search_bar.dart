@@ -370,7 +370,7 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
                   shape: BoxShape.circle,
                 ),
                 child: IconButton(
-                  icon: Transform.rotate(angle: -0.4, child: Icon(Icons.send_outlined, color: _iconColor, size: 20)),
+                  icon: Icon(Icons.support_agent_rounded, color: _iconColor, size: 22),
                   onPressed: _openChat,
                   constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
                   splashRadius: 22,

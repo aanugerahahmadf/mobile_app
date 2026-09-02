@@ -44,10 +44,10 @@ class MyReviewsNotifier extends StateNotifier<MyReviewsState> {
     }
   }
 
-  Future<void> updateReview(int id, Map<String, dynamic> data, {List<String>? photoPaths}) async {
+  Future<void> updateReview(int id, Map<String, dynamic> data, {List<String>? photoPaths, List<String>? removedPhotoUrls}) async {
     state = state.copyWith(submitting: true, error: null);
     try {
-      final updated = await _repository.updateReview(id, data, photoPaths: photoPaths);
+      final updated = await _repository.updateReview(id, data, photoPaths: photoPaths, removedPhotoUrls: removedPhotoUrls);
       state = state.copyWith(
         reviews: [
           for (final r in state.reviews)

@@ -31,12 +31,25 @@ class ReviewListPage extends ConsumerStatefulWidget {
 
 class _ReviewListPageState extends ConsumerState<ReviewListPage> {
   final _commentController = TextEditingController();
+  final _titleController = TextEditingController();
+  final _maxChars = 1000;
   int _rating = 5;
   List<String> _photoPaths = [];
+
+  String _ratingLabel(AppLocalizations l) {
+    switch (_rating) {
+      case 1: return l.reviewStar1;
+      case 2: return l.reviewStar2;
+      case 3: return l.reviewStar3;
+      case 4: return l.reviewStar4;
+      default: return l.reviewStar5;
+    }
+  }
 
   @override
   void dispose() {
     _commentController.dispose();
+    _titleController.dispose();
     super.dispose();
   }
 
@@ -57,6 +70,7 @@ class _ReviewListPageState extends ConsumerState<ReviewListPage> {
         if (widget.packageId.isNotEmpty) 'package_id': widget.packageId,
         if (widget.productId.isNotEmpty) 'product_id': widget.productId,
         'rating': _rating,
+        'title': _titleController.text.trim(),
         'comment': comment,
       }, photoPaths: _photoPaths);
       if (mounted) {
@@ -113,14 +127,51 @@ class _ReviewListPageState extends ConsumerState<ReviewListPage> {
                 ),
               ),
             ),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: Text(
+                _ratingLabel(l),
+                key: ValueKey(_rating),
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.warningColor,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
             const SizedBox(height: AppSizes.md),
+            TextField(
+              controller: _titleController,
+              decoration: InputDecoration(
+                hintText: l.reviewTitleHint,
+                border: const OutlineInputBorder(),
+              ),
+              maxLength: 255,
+              buildCounter: (context, {required currentLength, required isFocused, required maxLength}) {
+                return null;
+              },
+            ),
+            const SizedBox(height: AppSizes.sm),
             TextField(
               controller: _commentController,
               decoration: InputDecoration(
                 hintText: l.writeYourReview,
                 border: const OutlineInputBorder(),
+                counterText: '',
               ),
+              maxLength: _maxChars,
               maxLines: 4,
+              buildCounter: (context, {required currentLength, required isFocused, required maxLength}) {
+                final maxLen = maxLength ?? 1000;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 4, right: 4),
+                  child: Text(
+                    '$currentLength / $maxLen',
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: currentLength >= maxLen ? AppColors.errorColor : AppColors.textTertiary,
+                    ),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: AppSizes.md),
             _buildPhotoPicker(l),

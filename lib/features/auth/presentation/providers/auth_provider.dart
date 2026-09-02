@@ -1,5 +1,7 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -57,7 +59,9 @@ class AuthError extends AuthState {
   const AuthError(this.message);
 }
 
-final _googleSignIn = GoogleSignIn();
+final _googleSignIn = GoogleSignIn(
+  serverClientId: dotenv.get('GOOGLE_CLIENT_ID'),
+);
 
 class AuthNotifier extends StateNotifier<AuthState> {
   final _storage = const FlutterSecureStorage();
@@ -163,6 +167,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final response = await _dio.post(ApiEndpoints.login, data: data);
       final respData = response.data as Map<String, dynamic>? ?? {};
       final inner = respData['data'] as Map<String, dynamic>? ?? respData;
+
       final token = inner['token'] as String?;
       final userMap = inner['user'] as Map<String, dynamic>?;
       if (token == null || userMap == null) throw Exception(AppErrorCodes.loginFailed);
@@ -194,6 +199,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final response = await _dio.post(ApiEndpoints.googleLogin, data: {'id_token': idToken});
       final respData = response.data as Map<String, dynamic>? ?? {};
       final inner = respData['data'] as Map<String, dynamic>? ?? respData;
+
       final token = inner['token'] as String?;
       final userMap = inner['user'] as Map<String, dynamic>?;
       if (token == null || userMap == null) throw Exception(AppErrorCodes.googleLoginFailed);
@@ -212,7 +218,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     } on DioException catch (e) {
       final msg = _extractBackendError(e);
       state = AuthError(msg);
-    } catch (e) {
+    } catch (e, st) {
+      debugPrint('[GoogleLogin] error: $e\n$st');
       state = AuthError(AppErrorCodes.anErrorOccurred);
     }
   }
@@ -231,6 +238,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final response = await _dio.post(ApiEndpoints.facebookLogin, data: {'access_token': accessToken});
       final respData = response.data as Map<String, dynamic>? ?? {};
       final inner = respData['data'] as Map<String, dynamic>? ?? respData;
+
       final token = inner['token'] as String?;
       final userMap = inner['user'] as Map<String, dynamic>?;
       if (token == null || userMap == null) throw Exception(AppErrorCodes.facebookLoginFailed);
@@ -269,6 +277,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final response = await _dio.post(ApiEndpoints.appleLogin, data: {'identity_token': identityToken});
       final respData = response.data as Map<String, dynamic>? ?? {};
       final inner = respData['data'] as Map<String, dynamic>? ?? respData;
+
       final token = inner['token'] as String?;
       final userMap = inner['user'] as Map<String, dynamic>?;
       if (token == null || userMap == null) throw Exception(AppErrorCodes.appleLoginFailed);

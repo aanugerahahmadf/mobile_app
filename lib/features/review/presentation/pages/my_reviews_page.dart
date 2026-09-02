@@ -68,7 +68,7 @@ class _MyReviewsPageState extends ConsumerState<MyReviewsPage> {
       isScrollControlled: true,
       builder: (_) => _EditReviewSheet(
         review: r,
-        onSave: (data, photoPaths) => ref.read(myReviewsProvider.notifier).updateReview(id, data, photoPaths: photoPaths),
+        onSave: (data, photoPaths, {removedPhotoUrls}) => ref.read(myReviewsProvider.notifier).updateReview(id, data, photoPaths: photoPaths, removedPhotoUrls: removedPhotoUrls),
       ),
     );
   }
@@ -231,7 +231,7 @@ class _MyReviewsPageState extends ConsumerState<MyReviewsPage> {
 
 class _EditReviewSheet extends StatefulWidget {
   final Map<String, dynamic> review;
-  final Future<void> Function(Map<String, dynamic> data, List<String>? photoPaths) onSave;
+  final Future<void> Function(Map<String, dynamic> data, List<String>? photoPaths, {List<String>? removedPhotoUrls}) onSave;
 
   const _EditReviewSheet({required this.review, required this.onSave});
 
@@ -241,8 +241,10 @@ class _EditReviewSheet extends StatefulWidget {
 
 class _EditReviewSheetState extends State<_EditReviewSheet> {
   late final TextEditingController _commentController;
+  late final TextEditingController _titleController;
   late int _rating;
   List<String> _newPhotos = [];
+  final Set<String> _removedExistingUrls = {};
   bool _saving = false;
 
   @override
@@ -250,11 +252,13 @@ class _EditReviewSheetState extends State<_EditReviewSheet> {
     super.initState();
     _rating = (widget.review['rating'] as num?)?.toInt() ?? 5;
     _commentController = TextEditingController(text: widget.review['comment'] as String? ?? '');
+    _titleController = TextEditingController(text: widget.review['title'] as String? ?? '');
   }
 
   @override
   void dispose() {
     _commentController.dispose();
+    _titleController.dispose();
     super.dispose();
   }
 
@@ -291,7 +295,7 @@ class _EditReviewSheetState extends State<_EditReviewSheet> {
       ),
     );
     if (choice == null) return;
-    final remaining = 6 - _newPhotos.length;
+    final remaining = 6 - _newPhotos.length - _existingVisibleCount;
     if (remaining <= 0) return;
 
     final picker = ImagePicker();
@@ -327,26 +331,52 @@ class _EditReviewSheetState extends State<_EditReviewSheet> {
     }
   }
 
+  int get _existingVisibleCount {
+    final all = reviewPhotoUrls(widget.review);
+    return all.where((u) => !_removedExistingUrls.contains(u)).length;
+  }
+
   void _removeNewPhoto(int index) {
     setState(() => _newPhotos = List.of(_newPhotos)..removeAt(index));
   }
 
+  void _removeExistingPhoto(String url) {
+    setState(() => _removedExistingUrls.add(url));
+  }
+
   Widget _buildPhotoPicker(AppLocalizations l, List<String> existingPhotos) {
     final size = (MediaQuery.of(context).size.width - 48) / 3;
+    final visibleExisting = existingPhotos.where((u) => !_removedExistingUrls.contains(u)).toList();
     return Wrap(
       spacing: 6,
       runSpacing: 6,
       children: [
-        ...existingPhotos.map((u) => ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: CachedNetworkImage(
-                imageUrl: u,
-                width: size,
-                height: size,
-                fit: BoxFit.cover,
-                placeholder: (_, _) => Container(width: size, height: size, color: AppColors.secondaryColor),
-                errorWidget: (_, _, _) => Container(width: size, height: size, color: AppColors.secondaryColor, child: const Icon(Icons.broken_image)),
-              ),
+        ...visibleExisting.map((u) => Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: CachedNetworkImage(
+                    imageUrl: u,
+                    width: size,
+                    height: size,
+                    fit: BoxFit.cover,
+                    placeholder: (_, _) => Container(width: size, height: size, color: AppColors.secondaryColor),
+                    errorWidget: (_, _, _) => Container(width: size, height: size, color: AppColors.secondaryColor, child: const Icon(Icons.broken_image)),
+                  ),
+                ),
+                Positioned(
+                  top: 2,
+                  right: 2,
+                  child: InkWell(
+                    onTap: () => _removeExistingPhoto(u),
+                    child: Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: const BoxDecoration(color: Colors.black54, shape: BoxShape.circle),
+                      child: const Icon(Icons.close, size: 12, color: Colors.white),
+                    ),
+                  ),
+                ),
+              ],
             )),
         ..._newPhotos.asMap().entries.map((e) => Stack(
               children: [
@@ -365,7 +395,7 @@ class _EditReviewSheetState extends State<_EditReviewSheet> {
                 ),
               ],
             )),
-        if (_newPhotos.length + existingPhotos.length < 6)
+        if (_newPhotos.length + visibleExisting.length < 6)
           InkWell(
             onTap: _pickPhotos,
             borderRadius: BorderRadius.circular(8),
@@ -396,8 +426,9 @@ class _EditReviewSheetState extends State<_EditReviewSheet> {
     try {
       await widget.onSave({
         'rating': _rating,
+        'title': _titleController.text.trim(),
         'comment': _commentController.text.trim(),
-      }, _newPhotos);
+      }, _newPhotos, removedPhotoUrls: _removedExistingUrls.toList());
       if (mounted) {
         AppSnackBar.show(context, l.reviewUpdated, type: SnackBarType.success);
         Navigator.pop(context);
@@ -434,6 +465,16 @@ class _EditReviewSheetState extends State<_EditReviewSheet> {
                 ),
                 onPressed: () => setState(() => _rating = i + 1),
               )),
+            ),
+            const SizedBox(height: AppSizes.sm),
+            TextField(
+              controller: _titleController,
+              decoration: InputDecoration(
+                hintText: l.reviewTitleHint,
+                border: const OutlineInputBorder(),
+              ),
+              maxLength: 255,
+              buildCounter: (context, {required currentLength, required isFocused, required maxLength}) => null,
             ),
             const SizedBox(height: AppSizes.sm),
             TextField(

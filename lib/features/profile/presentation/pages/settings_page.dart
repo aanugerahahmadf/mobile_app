@@ -185,6 +185,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           children: [
             _menuTile(Icons.language, l.language, () => context.push('/language')),
             _menuTile(Icons.notifications_outlined, l.notifications, () => context.push('/notification-settings')),
+            const SizedBox(height: AppSizes.md),
+
+            // ── TAMPILAN ──────────────────────────────────────────────
+            Text(l.appearance.toUpperCase(), style: AppTextStyles.bodySmall),
             const SizedBox(height: AppSizes.sm),
             Card(
               margin: EdgeInsets.zero,
@@ -199,6 +203,14 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               ),
             ),
             const SizedBox(height: AppSizes.lg),
+
+            // ── KATA SANDI DAN KEAMANAN ───────────────────────────────
+            Text(l.passwordAndSecurity.toUpperCase(), style: AppTextStyles.bodySmall),
+            const SizedBox(height: AppSizes.sm),
+            _menuTile(Icons.security_outlined, l.passwordAndSecurity, () => context.push('/security-settings')),
+            const SizedBox(height: AppSizes.lg),
+
+            // ── KUNCI APLIKASI ────────────────────────────────────────
             Text(l.appLock.toUpperCase(), style: AppTextStyles.bodySmall),
             const SizedBox(height: AppSizes.sm),
             Text(
@@ -233,6 +245,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               onDelete: () => _deletePin(l),
             ),
             const SizedBox(height: AppSizes.lg),
+
+            // ── HAPUS AKUN ────────────────────────────────────────────
             Card(
               margin: EdgeInsets.zero,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

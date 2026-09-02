@@ -123,6 +123,7 @@ class _LandingPageState extends ConsumerState<LandingPage> {
                 splashRadius: 20,
               ),
             ),
+
             SafeArea(
               child: Align(
                 alignment: Alignment.bottomCenter,

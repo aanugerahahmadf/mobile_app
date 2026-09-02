@@ -45,6 +45,7 @@ class ChatRepositoryImpl implements ChatRepository {
     required String message,
     String? filePath,
     Map<String, dynamic>? itemContext,
+    Map<String, dynamic>? extraData,
   }) async {
     final data = <String, dynamic>{
       'inbox_id': inboxId,
@@ -52,6 +53,9 @@ class ChatRepositoryImpl implements ChatRepository {
     };
     if (itemContext != null) {
       data.addAll(itemContext);
+    }
+    if (extraData != null) {
+      data.addAll(extraData);
     }
     if (filePath != null) {
       final formData = FormData.fromMap({
@@ -74,5 +78,50 @@ class ChatRepositoryImpl implements ChatRepository {
       data: itemContext,
     );
     return response.data['data'] as Map<String, dynamic>;
+  }
+
+  @override
+  Future<void> deleteMessage(String messageId, {required String deleteType}) async {
+    await _dio.delete(
+      ApiEndpoints.messageDelete(messageId),
+      data: {'delete_type': deleteType},
+    );
+  }
+
+  @override
+  Future<void> toggleStarMessage(String messageId) async {
+    await _dio.post(ApiEndpoints.messageStar(messageId));
+  }
+
+  @override
+  Future<void> forwardMessage(String messageId, {required int targetInboxId}) async {
+    await _dio.post(
+      ApiEndpoints.messageForward(messageId),
+      data: {'target_inbox_id': targetInboxId},
+    );
+  }
+
+  @override
+  Future<void> addReaction(String messageId, {required String emoji}) async {
+    await _dio.post(
+      ApiEndpoints.messageReact(messageId),
+      data: {'emoji': emoji},
+    );
+  }
+
+  @override
+  Future<void> markAsRead(String inboxId) async {
+    await _dio.post(ApiEndpoints.messageRead(inboxId));
+  }
+
+  @override
+  Future<void> rateExperience(String inboxId, {required int rating, String? comment}) async {
+    await _dio.post(
+      ApiEndpoints.messageRate(inboxId),
+      data: {
+        'rating': rating,
+        'comment':? comment,
+      },
+    );
   }
 }

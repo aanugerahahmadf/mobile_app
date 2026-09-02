@@ -59,7 +59,6 @@ class DefaultFirebaseOptions {
     databaseURL: 'https://wedding-flower-decorasi-default-rtdb.firebaseio.com',
     storageBucket: 'wedding-flower-decorasi.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyAF1K7K-c1iveCJCqCr-secBxSQntWzaTE',
     appId: '1:125956093579:ios:d7874cdfc91a4986c3868e',
@@ -67,9 +66,10 @@ class DefaultFirebaseOptions {
     projectId: 'wedding-flower-decorasi',
     databaseURL: 'https://wedding-flower-decorasi-default-rtdb.firebaseio.com',
     storageBucket: 'wedding-flower-decorasi.firebasestorage.app',
+    androidClientId: '125956093579-r24191c35q1q3nio2vm74bguss5fvbt2.apps.googleusercontent.com',
+    iosClientId: '125956093579-v2hohvhcq2b69nca5oaqrq4ihkent742.apps.googleusercontent.com',
     iosBundleId: 'com.example.mobileApp',
   );
-
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyAF1K7K-c1iveCJCqCr-secBxSQntWzaTE',
     appId: '1:125956093579:ios:d7874cdfc91a4986c3868e',

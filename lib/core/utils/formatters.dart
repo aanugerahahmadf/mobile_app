@@ -53,6 +53,15 @@ class Formatters {
     return '${(score * 100).toStringAsFixed(0)}%';
   }
 
+  static String chatTime(String dateStr) {
+    try {
+      final date = DateTime.parse(dateStr);
+      return DateFormat('HH:mm', 'id').format(date);
+    } catch (_) {
+      return '';
+    }
+  }
+
   /// Extract avatar URL from raw user data map with fallback to [avatar] field.
   static String? avatarUrl(Map<String, dynamic>? data) {
     if (data == null) return null;
