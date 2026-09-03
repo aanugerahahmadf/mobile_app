@@ -185,6 +185,10 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
           children: [
             _menuTile(Icons.language, l.language, () => context.push('/language')),
             _menuTile(Icons.notifications_outlined, l.notifications, () => context.push('/notification-settings')),
+            _menuTile(Icons.flag_outlined, l.report, () => context.push('/report', extra: {
+              'category': 'general',
+              'item_name': '',
+            })),
             const SizedBox(height: AppSizes.md),
 
             // ── TAMPILAN ──────────────────────────────────────────────

@@ -99,6 +99,18 @@ class _VendorDetailPageState extends State<VendorDetailPage> {
         title: Text(_vendor?['store_name'] as String? ?? l.vendor),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.flag_outlined),
+            tooltip: l.report,
+            onPressed: () => context.push('/report', extra: {
+              'reportable_type': 'App\\Models\\Vendor',
+              'reportable_id': widget.id,
+              'category': 'vendor',
+              'item_name': _vendor?['store_name'] as String? ?? '',
+            }),
+          ),
+        ],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())

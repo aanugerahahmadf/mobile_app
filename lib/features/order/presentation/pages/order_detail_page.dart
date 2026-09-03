@@ -183,7 +183,23 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text(l.orderDetail), backgroundColor: Colors.transparent, elevation: 0),
+      appBar: AppBar(
+        title: Text(l.orderDetail),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.flag_outlined),
+            tooltip: l.report,
+            onPressed: () => context.push('/report', extra: {
+              'reportable_type': 'App\\Models\\Order',
+              'reportable_id': widget.id,
+              'category': 'order',
+              'item_name': '${l.order} #${_order?['order_number'] ?? widget.id}',
+            }),
+          ),
+        ],
+      ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null

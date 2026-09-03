@@ -147,6 +147,27 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
     Share.share('$name\n${Formatters.currency(price is num ? price.toInt() : 0)}\n$link');
   }
 
+  void _reportItem() {
+    final name = _data?['name'] as String? ?? '';
+    final isPackage = widget.type == 'packages' || (_data?['type'] as String?) == 'package';
+    context.push('/report', extra: {
+      'reportable_type': isPackage ? 'App\\Models\\Package' : 'App\\Models\\Product',
+      'reportable_id': widget.id,
+      'category': isPackage ? 'package' : 'product',
+      'item_name': name,
+    });
+  }
+
+  void _reportReview(Map<String, dynamic> r) {
+    final reviewId = (r['id'] as num?)?.toString() ?? '';
+    context.push('/report', extra: {
+      'reportable_type': 'App\\Models\\Review',
+      'reportable_id': reviewId,
+      'category': 'review',
+      'item_name': _reviewUserName(r),
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
@@ -162,6 +183,11 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
           IconButton(
             icon: const Icon(Icons.share),
             onPressed: _shareItem,
+          ),
+          IconButton(
+            icon: const Icon(Icons.flag_outlined),
+            tooltip: l.report,
+            onPressed: _reportItem,
           ),
         ],
       ),
@@ -506,6 +532,14 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
                   SizedBox(width: AppSizes.sm),
                   Expanded(child: Text(userName, style: AppTextStyles.bodyMedium)),
                   Row(children: List.generate(5, (i) => Icon(Icons.star, size: 14, color: i < rating ? AppColors.warningColor : AppColors.dividerColor))),
+                  IconButton(
+                    icon: Icon(Icons.flag_outlined, size: 18, color: AppColors.textTertiary),
+                    tooltip: AppLocalizations.of(context)!.report,
+                    onPressed: () => _reportReview(r),
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
                 ],
               ),
               if (r['comment'] != null) ...[

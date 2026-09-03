@@ -1378,5 +1378,37 @@
   "reviewStar4": "Bagus",
   "reviewStar5": "Sangat Bagus",
   "reviewTitleHint": "Judul ulasan (opsional)",
-  "userLabel": "Pengguna"
+  "userLabel": "Pengguna",
+
+  "report": "Lapor",
+  "reportItem": "Lapor",
+  "reportDesc": "Laporkan item ini ke tim kami",
+  "reportTitle": "Lapor {name}",
+  "@reportTitle": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "reportCategory": "Kategori",
+  "reportReason": "Alasan",
+  "reportReasonHint": "Pilih alasan",
+  "reportDescription": "Deskripsi",
+  "reportDescriptionHint": "Ceritakan detail lebih lanjut (opsional)",
+  "reportSubmit": "Kirim Laporan",
+  "reportSuccess": "Laporan berhasil dikirim. Tim kami akan meninjaunya.",
+  "reportFailed": "Gagal mengirim laporan",
+  "reportGeneral": "Umum",
+  "reportProduct": "Produk",
+  "reportPackage": "Paket",
+  "reportVendor": "Vendor",
+  "reportOrder": "Pesanan",
+  "reportReview": "Ulasan",
+  "reportReasonSpam": "Spam",
+  "reportReasonFraud": "Penipuan",
+  "reportReasonInappropriate": "Konten tidak pantas",
+  "reportReasonMisleading": "Informasi menyesatkan",
+  "reportReasonCopyright": "Pelanggaran hak cipta",
+  "reportReasonOther": "Lainnya",
+  "reportRequiresReason": "Pilih alasan terlebih dahulu",
+  "reportContentTitle": "Konten yang Dilaporkan"
 }

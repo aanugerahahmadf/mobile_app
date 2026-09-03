@@ -1342,5 +1342,37 @@
     "reviewStar4": "Good",
     "reviewStar5": "Excellent",
     "reviewTitleHint": "Review title (optional)",
-    "userLabel": "User"
+    "userLabel": "User",
+
+    "report": "Report",
+    "reportItem": "Report",
+    "reportDesc": "Report this item to our team",
+    "reportTitle": "Report {name}",
+    "@reportTitle": {
+        "placeholders": {
+            "name": {"type": "String"}
+        }
+    },
+    "reportCategory": "Category",
+    "reportReason": "Reason",
+    "reportReasonHint": "Select a reason",
+    "reportDescription": "Description",
+    "reportDescriptionHint": "Tell us more details (optional)",
+    "reportSubmit": "Submit Report",
+    "reportSuccess": "Report submitted successfully. Our team will review it.",
+    "reportFailed": "Failed to submit report",
+    "reportGeneral": "General",
+    "reportProduct": "Product",
+    "reportPackage": "Package",
+    "reportVendor": "Vendor",
+    "reportOrder": "Order",
+    "reportReview": "Review",
+    "reportReasonSpam": "Spam",
+    "reportReasonFraud": "Fraud or scam",
+    "reportReasonInappropriate": "Inappropriate content",
+    "reportReasonMisleading": "Misleading information",
+    "reportReasonCopyright": "Copyright violation",
+    "reportReasonOther": "Other",
+    "reportRequiresReason": "Please select a reason",
+    "reportContentTitle": "Reported Content"
 }

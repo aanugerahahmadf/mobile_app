@@ -90,6 +90,10 @@ class ApiEndpoints {
   static String userReviews(String userId) => '/reviews/user/$userId';
   static String review(int id) => '/reviews/$id';
 
+  // Reports
+  static const String reports = '/reports';
+  static const String myReports = '/reports';
+
   // Chat / Messages
   static const String conversations = '/messages/conversations';
   static const String messagesSend = '/messages/send';

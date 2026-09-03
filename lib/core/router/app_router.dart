@@ -40,6 +40,7 @@ import '../../features/payment/presentation/pages/payment_webview_page.dart';
 import '../../features/payment/domain/payment_method_info.dart';
 import '../../features/review/presentation/pages/my_reviews_page.dart';
 import '../../features/review/presentation/pages/review_list_page.dart';
+import '../../features/report/presentation/pages/report_submit_page.dart';
 import '../../features/review/presentation/pages/all_reviews_page.dart';
 import '../../features/review/presentation/pages/user_reviews_page.dart';
 import '../../features/history/presentation/pages/history_page.dart';
@@ -169,6 +170,18 @@ final appRouter = GoRouter(
       builder: (_, state) {
         final extra = state.extra as Map<String, dynamic>?;
         return CheckoutPage(type: extra?['type'] as String?, id: extra?['id'] as String?);
+      },
+    ),
+    GoRoute(
+      path: '/report',
+      builder: (_, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+        return ReportSubmitPage(
+          reportableType: extra?['reportable_type'] as String?,
+          reportableId: extra?['reportable_id'] as String?,
+          category: extra?['category'] as String? ?? 'general',
+          itemName: extra?['item_name'] as String? ?? '',
+        );
       },
     ),
     GoRoute(path: '/order/:id', builder: (_, state) => OrderDetailPage(id: state.pathParameters['id']!)),
