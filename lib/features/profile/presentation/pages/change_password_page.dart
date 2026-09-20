@@ -44,7 +44,7 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
     if (raw == null || raw.isEmpty) return null;
     try {
       final dt = DateTime.parse(raw).toLocal();
-      final idLocale = Locale('id', 'ID');
+      const idLocale = 'id_ID';
       final dayName = DateFormat.EEEE(idLocale).format(dt);
       final monthName = DateFormat.MMMM(idLocale).format(dt);
       final year = DateFormat.y(idLocale).format(dt);
