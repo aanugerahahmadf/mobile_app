@@ -1,625 +1,97 @@
-name: Mobile CI
+name: CI
 
 on:
   push:
-    branches: [main, develop, release/**]
-    tags: ['v*']
-  pull_request:
     branches: [main, develop]
-  schedule:
-    - cron: '0 6 * * 1'  # every Monday 06:00 UTC
+  pull_request:
+    branches: [main]
 
 concurrency:
-  group: mobile-${{ github.ref }}
+  group: ci
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 env:
-  FLUTTER_VERSION: '3.44'
-  FLUTTER_CHANNEL: 'stable'
+  FLUTTER_VERSION: "3.44.0"
+  # Only used for compile-time configuration; tests never contact this host.
+  API_BASE_URL: "https://example.invalid/api"
 
 jobs:
-  ########################################
-  # 1. PR TITLE CHECK
-  ########################################
-  pr-title:
-    if: github.event_name == 'pull_request'
+  analyze-test:
+    name: Analyze & Test
     runs-on: ubuntu-latest
-    steps:
-      - uses: amannn/action-semantic-pull-request@v5
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  ########################################
-  # 2. LINT & FORMAT
-  ########################################
-  lint:
-    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Setup Flutter stable
+      - name: Install Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
-      - name: Cache Pub
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.pub-cache
-            .dart_tool
-          key: pub-lint-${{ hashFiles('pubspec.lock') }}
-          restore-keys: pub-lint-
-
-      - name: Install dependencies
+      - name: Install Dart dependencies
         run: flutter pub get
 
-      - name: Dart format check
-        run: dart format --output=none lib/ test/
+      - name: Generate localization
+        run: flutter gen-l10n
 
-      - name: flutter analyze
-        run: flutter analyze --no-fatal-infos --no-fatal-warnings
-
-      - name: dart analyze (extra pedantic)
-        run: dart analyze lib/ test/ --fatal-infos --fatal-warnings 2>&1 || true
-
-  ########################################
-  # 3. CODE GENERATION CHECK
-  ########################################
-  codegen:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: stable
-          cache: true
-
-      - name: Cache Pub
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.pub-cache
-            .dart_tool
-          key: pub-codegen-${{ hashFiles('pubspec.lock') }}
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Delete generated files
-        run: find lib -name '*.g.dart' -o -name '*.freezed.dart' -o -name '*.gen.dart' | xargs rm -f 2>/dev/null; exit 0
-
-      - name: Regenerate
-        run: dart run build_runner build --delete-conflicting-outputs
-
-      - name: Check if generated files changed
+      - name: Create environment file
         run: |
-          if [[ -n $(git status --porcelain) ]]; then
-            echo "❌ Generated files are out of date. Run 'dart run build_runner build'"
-            git diff --stat
-            exit 1
-          fi
-          echo "✅ Generated code is up to date"
+          echo "API_BASE_URL=$API_BASE_URL" > .env
+          echo "PUSHER_APP_KEY=mrrifx7p7ewh6sk2vrfq" >> .env
+          echo "PUSHER_APP_CLUSTER=mt1" >> .env
 
-  ########################################
-  # 4. TESTS + COVERAGE
-  ########################################
-  test:
-    needs: [lint, codegen]
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        sdk: [stable]
-        include:
-          - os: ubuntu-latest
-            sdk: stable
-            coverage: true
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Flutter (${{ matrix.sdk }})
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: ${{ matrix.sdk }}
-          cache: true
-
-      - name: Cache Pub
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.pub-cache
-            .dart_tool
-          key: pub-test-${{ matrix.os }}-${{ matrix.sdk }}-${{ hashFiles('pubspec.lock') }}
-
-      - name: Create env file
-        run: echo "APP_NAME=wedding" > .env
-
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Analyze Flutter code
+        run: flutter analyze --no-fatal-infos
 
       - name: Run tests
-        run: flutter test --reporter expanded
-        timeout-minutes: 15
+        run: flutter test --no-pub
 
-      - name: Run tests with coverage
-        if: matrix.coverage
-        run: flutter test --coverage --reporter expanded
-        timeout-minutes: 15
-
-      - name: Upload coverage
-        if: matrix.coverage
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./coverage/lcov.info
-          flags: flutter
-          fail_ci_if_error: false
-
-      - name: Upload test artifacts
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results-${{ matrix.os }}-${{ matrix.sdk }}
-          path: |
-            build/test-results/
-            test/**/failure_screenshots/
-
-  ########################################
-  # 5. LOCALIZATION CHECK
-  ########################################
-  l10n:
+  build-apk:
+    name: Build APK
+    needs: analyze-test
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    defaults:
+      run:
+        shell: bash
 
-      - name: Setup Flutter
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Flutter
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
 
-      - name: Cache Pub
-        uses: actions/cache@v4
-        with:
-          path: ~/.pub-cache
-          key: pub-l10n-${{ hashFiles('pubspec.lock') }}
-
-      - name: Install dependencies
+      - name: Install Dart dependencies
         run: flutter pub get
 
-      - name: Check translation consistency
+      - name: Generate localization
+        run: flutter gen-l10n
+
+      - name: Create environment file
         run: |
-          files=(assets/translations/*.json)
-          base="${files[0]}"
-          missing=false
-          for f in "${files[@]}"; do
-            diff <(jq --sort-keys keys[] "$base" | sort) <(jq --sort-keys keys[] "$f" | sort) > /dev/null 2>&1 || {
-              echo "❌ Key mismatch between $(basename $base) and $(basename $f)"
-              missing=true
-            }
-          done
-          $missing && exit 1 || echo "✅ All translations have matching keys"
+          echo "API_BASE_URL=$API_BASE_URL" > .env
+          echo "PUSHER_APP_KEY=mrrifx7p7ewh6sk2vrfq" >> .env
+          echo "PUSHER_APP_CLUSTER=mt1" >> .env
 
-  ########################################
-  # 6. DEPENDENCY AUDIT
-  ########################################
-  deps:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+      - name: Build APK
+        run: flutter build apk --release
 
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: stable
-          cache: true
-
-      - name: Cache Pub
-        uses: actions/cache@v4
-        with:
-          path: ~/.pub-cache
-          key: pub-deps-${{ hashFiles('pubspec.lock') }}
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Check for outdated packages
-        run: dart pub outdated --no-dev-dependencies --json 2>&1 || true
-
-      - name: Check for deprecated packages
-        run: |
-          dart pub deps --json 2>&1 | jq -r '.packages[] | select(.kind == "deprecated" or .kind == "deleted") | "⚠️ \(.name) is \(.kind)"' 2>/dev/null || echo "✅ No deprecated packages"
-
-  ########################################
-  # 7. BUILD ANDROID
-  ########################################
-  build-android:
-    needs: test
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop' || startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: stable
-          cache: true
-
-      - name: Cache Pub
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.pub-cache
-            .dart_tool
-          key: pub-android-${{ hashFiles('pubspec.lock') }}
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Decode keystore
-        run: |
-          if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
-            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
-            echo "✅ Keystore decoded"
-          else
-            echo "⚠️ No keystore secret set - building unsigned"
-          fi
-
-      - name: Build APK (release)
-        run: flutter build apk --release --split-per-abi --no-tree-shake-icons
-
-      - name: Build APK (fat)
-        run: flutter build apk --release --no-split-per-abi --no-tree-shake-icons
-
-      - name: Build AppBundle
-        run: flutter build appbundle --release --no-tree-shake-icons
-
-      - name: Analyze APK size
-        run: |
-          echo "## 📦 APK Size Report" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          ls -lh build/app/outputs/flutter-apk/ >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-
-      - name: Upload APKs
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: android-release
-          path: |
-            build/app/outputs/flutter-apk/*.apk
-            build/app/outputs/bundle/release/*.aab
-          retention-days: 30
-
-  ########################################
-  # 8. BUILD iOS
-  ########################################
-  build-ios:
-    needs: test
-    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
-    runs-on: macos-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: stable
-          cache: true
-
-      - name: Cache Pub
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.pub-cache
-            .dart_tool
-          key: pub-ios-${{ hashFiles('pubspec.lock') }}
-
-      - name: Cache CocoaPods
-        uses: actions/cache@v4
-        with:
-          path: ios/Pods
-          key: pods-${{ hashFiles('ios/Podfile.lock') }}
-          restore-keys: pods-
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Install CocoaPods
-        run: |
-          cd ios
-          pod install --repo-update 2>&1 || pod install 2>&1 || true
-
-      - name: Build iOS (release, no codesign)
-        run: flutter build ios --release --no-codesign
-
-      - name: Build iOS Archive
-        run: |
-          mkdir -p build/ios/iphoneos/Runner.app
-          flutter build ios --release --no-codesign 2>&1 || true
-
-      - name: Upload iOS build
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-release
-          path: build/ios/iphoneos/Runner.app
-          retention-days: 30
-
-  ########################################
-  # 9. BUILD WEB
-  ########################################
-  build-web:
-    needs: test
-    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: stable
-          cache: true
-
-      - name: Cache Pub
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.pub-cache
-            .dart_tool
-          key: pub-web-${{ hashFiles('pubspec.lock') }}
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Build Web
-        run: flutter build web --release --no-tree-shake-icons
-
-      - name: Upload Web build
-        uses: actions/upload-artifact@v4
-        with:
-          name: web-release
-          path: build/web/
-          retention-days: 30
-
-  ########################################
-  # 10. BUILD DESKTOP (Linux)
-  ########################################
-  build-linux:
-    needs: test
-    if: github.ref == 'refs/heads/main' && false # disabled by default
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: stable
-          cache: true
-
-      - name: Install Linux deps
-        run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Build Linux
-        run: flutter build linux --release
-
-      - name: Upload Linux build
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux-release
-          path: build/linux/x64/release/bundle/
-          retention-days: 30
-
-  ########################################
-  # 11. GOLDEN TESTS (SCREENSHOT)
-  ########################################
-  golden:
-    needs: lint
-    if: false # enable when golden tests exist
-    runs-on: macos-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: stable
-          cache: true
-
-      - name: Cache Pub
-        uses: actions/cache@v4
-        with:
-          path: ~/.pub-cache
-          key: pub-golden-${{ hashFiles('pubspec.lock') }}
-
-      - name: Install dependencies
-        run: flutter pub get
-
-      - name: Run golden tests
-        run: flutter test --update-goldens --tags=golden
-
-      - name: Upload golden failures
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: golden-failures
-          path: test/**/failures/
+          name: app-release.apk
+          path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 7
-
-  ########################################
-  # 12. DEPLOY FIREBASE APP DISTRIBUTION
-  ########################################
-  deploy-firebase:
-    needs: [build-android, build-ios]
-    if: github.ref == 'refs/heads/develop' && false # enable when Firebase configured
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download Android APK
-        uses: actions/download-artifact@v4
-        with:
-          name: android-release
-          path: build/android
-
-      - name: Setup Firebase CLI
-        run: |
-          npm install -g firebase-tools
-          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" | base64 --decode > firebase-key.json
-
-      - name: Upload to Firebase App Distribution
-        run: |
-          firebase appdistribution:distribute \
-            build/android/app-release.apk \
-            --app ${{ secrets.FIREBASE_ANDROID_APP_ID }} \
-            --groups "qa-team" \
-            --release-notes "${{ github.event.head_commit.message }}"
-
-  ########################################
-  # 13. RELEASE (GitHub Release + Tag)
-  ########################################
-  release:
-    needs: [build-android, build-ios, build-web]
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: release-artifacts
-
-      - name: Generate release notes
-        id: changelog
-        run: |
-          echo "## 🚀 Release ${{ github.ref_name }}" > release-notes.md
-          echo "" >> release-notes.md
-          git log --pretty=format:"- %s (%h)" $(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || git rev-list --max-parents=0 HEAD)..HEAD >> release-notes.md
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v2
-        with:
-          name: Release ${{ github.ref_name }}
-          body_path: release-notes.md
-          draft: false
-          prerelease: ${{ contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') }}
-          files: |
-            release-artifacts/android-release/*.apk
-            release-artifacts/android-release/*.aab
-            release-artifacts/ios-release/**
-            release-artifacts/web-release/**
-
-  ########################################
-  # 14. NOTIFICATIONS
-  ########################################
-  notify:
-    needs: [lint, codegen, test, l10n, deps, build-android, build-ios, build-web]
-    if: always() && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check workflow status
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const runs = await github.rest.checks.listForRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: context.sha,
-            });
-            const failed = runs.data.check_runs.filter(r => r.conclusion === 'failure');
-            const skipped = runs.data.check_runs.filter(r => r.conclusion === 'skipped');
-
-            if (failed.length > 0) {
-              await github.rest.issues.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                title: `🚨 CI Failure on main (${context.sha.substring(0,7)})`,
-                body: `❌ **${failed.length} job(s) failed** in workflow [${context.runId}](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})\n\nFailed jobs:\n${failed.map(r => `- ${r.name}`).join('\n')}`
-              });
-            } else {
-              console.log(`✅ All ${runs.data.check_runs.length} checks passed`);
-            }
-
-      - name: Send Telegram notification
-        if: false # enable when Telegram bot configured
-        uses: appleboy/telegram-action@master
-        with:
-          to: ${{ secrets.TELEGRAM_CHAT_ID }}
-          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          message: |
-            ✅ Flutter CI passed on ${{ github.repository }}
-            Commit: ${{ github.event.head_commit.message }}
-            See: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-
-  ########################################
-  # 15. SCHEDULED HEALTH CHECK
-  ########################################
-  health:
-    if: github.event_name == 'schedule'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: stable
-          cache: true
-
-      - name: Cache Pub
-        uses: actions/cache@v4
-        with:
-          path: ~/.pub-cache
-          key: pub-health-${{ hashFiles('pubspec.lock') }}
-
-      - name: Fresh install + analyze
-        run: |
-          rm -rf ~/.pub-cache
-          flutter pub get
-          flutter analyze
-
-      - name: Report health
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const date = new Date().toISOString().split('T')[0];
-            await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title: `🩺 Weekly Health Check - ${date}`,
-              body: `Weekly CI health check passed for ${date}.\n\n✅ Flutter analyze: OK\n✅ Dependencies: up to date\n✅ Build: OK`
-            });

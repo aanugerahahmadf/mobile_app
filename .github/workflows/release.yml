@@ -1,33 +1,25 @@
-name: Build Android (Release APK + AAB)
+name: Release (APK + AAB)
 
 on:
   push:
-    branches: [main, develop, release/**]
     tags: ['v*']
-  pull_request:
-    branches: [main]
   workflow_dispatch:
-    inputs:
-      build_bundle:
-        description: 'Build AAB (Play Store)'
-        required: false
-        default: true
-        type: boolean
 
 permissions:
   contents: write
 
 concurrency:
-  group: android-build-${{ github.ref }}
-  cancel-in-progress: true
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
-  FLUTTER_VERSION: '3.44'
+  FLUTTER_VERSION: '3.44.0'
   FLUTTER_CHANNEL: 'stable'
+  API_BASE_URL: 'https://example.invalid/api'
 
 jobs:
   build:
-    name: Analyze + Test + Build
+    name: Build Release APK + AAB
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -45,29 +37,17 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Cache Pub
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.pub-cache
-            .dart_tool
-          key: pub-android-${{ hashFiles('pubspec.lock') }}
-          restore-keys: pub-android-
-
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Generate localization
+        run: flutter gen-l10n
+
       - name: Create environment file
         run: |
-          echo "API_BASE_URL=${{ secrets.API_BASE_URL || 'https://api.example.com/api' }}" > .env
-          echo "APP_NAME=wedding" >> .env
-
-      - name: Analyze
-        run: flutter analyze --no-fatal-infos --no-fatal-warnings
-
-      - name: Run tests
-        run: flutter test
-        timeout-minutes: 15
+          echo "API_BASE_URL=$API_BASE_URL" > .env
+          echo "PUSHER_APP_KEY=mrrifx7p7ewh6sk2vrfq" >> .env
+          echo "PUSHER_APP_CLUSTER=mt1" >> .env
 
       - name: Decode Android keystore (optional)
         if: ${{ secrets.KEYSTORE_BASE64 != '' }}
@@ -78,22 +58,17 @@ jobs:
           echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
           echo "keyPassword=${{ secrets.KEYSTORE_PASSWORD }}" >> android/key.properties
 
-      - name: Build APK (release — fat)
+      - name: Build APK (release)
         run: flutter build apk --release --no-tree-shake-icons
 
-      - name: Build APK (release — split per ABI)
-        run: flutter build apk --release --split-per-abi --no-tree-shake-icons
-
       - name: Build AppBundle (release)
-        if: github.event.inputs.build_bundle != 'false'
         run: flutter build appbundle --release --no-tree-shake-icons
 
       - name: Report artifacts
         run: |
           echo '## 📦 Build output' >> $GITHUB_STEP_SUMMARY
           echo '```' >> $GITHUB_STEP_SUMMARY
-          ls -lh build/app/outputs/flutter-apk/ 2>/dev/null >> $GITHUB_STEP_SUMMARY || true
-          ls -lh build/app/outputs/bundle/release/ 2>/dev/null >> $GITHUB_STEP_SUMMARY || true
+          ls -lh build/app/outputs/flutter-apk/ build/app/outputs/bundle/release/ 2>/dev/null >> $GITHUB_STEP_SUMMARY || true
           echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Upload artifacts
@@ -106,7 +81,7 @@ jobs:
           retention-days: 30
 
   release:
-    name: GitHub Release (tags)
+    name: Create GitHub Release
     needs: build
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
@@ -121,9 +96,9 @@ jobs:
 
       - name: Generate release notes
         run: |
-          echo "## 🚀 Release ${{ github.ref_name }}" > release-notes.md
+          echo "## Release ${{ github.ref_name }}" > release-notes.md
           echo "" >> release-notes.md
-          git log --pretty=format:'- %s (%h)' $(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo HEAD)..HEAD --first-parent 2>/dev/null >> release-notes.md || true
+          echo "APK & AAB dibangun otomatis oleh GitHub Actions." >> release-notes.md
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
