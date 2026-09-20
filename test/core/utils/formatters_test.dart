@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile_app/core/utils/formatters.dart';
+import 'package:mobile_app/core/utils/formatters/formatters.dart';
 
 void main() {
   group('Formatters.currency', () {

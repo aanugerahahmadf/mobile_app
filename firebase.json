@@ -1,1 +1,73 @@
-{"flutter":{"platforms":{"android":{"default":{"projectId":"wedding-flower-decorasi","appId":"1:125956093579:android:241e27bb44b40b54c3868e","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"wedding-flower-decorasi","configurations":{"android":"1:125956093579:android:241e27bb44b40b54c3868e","ios":"1:125956093579:ios:d7874cdfc91a4986c3868e","web":"1:125956093579:web:730e2b015e7091b4c3868e"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "wedding-flower-decorasi",
+          "appId": "1:125956093579:android:241e27bb44b40b54c3868e",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "wedding-flower-decorasi",
+          "configurations": {
+            "android": "1:125956093579:android:241e27bb44b40b54c3868e",
+            "ios": "1:125956093579:ios:d7874cdfc91a4986c3868e",
+            "web": "1:125956093579:web:730e2b015e7091b4c3868e"
+          }
+        }
+      }
+    }
+  },
+  "emulators": {
+    "dataconnect": {
+      "dataDir": "dataconnect/.dataconnect/pgliteData"
+    }
+  },
+  "dataconnect": {
+    "source": "dataconnect"
+  },
+  "auth": {
+    "providers": {
+      "anonymous": true,
+      "emailPassword": true,
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "Wedding-Flower-Decorations",
+        "supportEmail": "support@undefined.firebaseapp.com"
+      }
+    }
+  },
+  "firestore": {
+    "database": "(default)",
+    "location": "nam5",
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "extensions": {},
+  "functions": [
+    {
+      "codebase": "default",
+      "disallowLegacyRuntimeConfig": true,
+      "ignore": [
+        "venv",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log",
+        "*.local"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run lint",
+        "npm --prefix \"$RESOURCE_DIR\" run build"
+      ],
+      "source": "functions",
+      "runtime": "python314"
+    }
+  ],
+  "database": {
+    "rules": "database.rules.json"
+  },
+  "remoteconfig": {
+    "template": "remoteconfig.template.json"
+  }
+}

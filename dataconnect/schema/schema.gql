@@ -1,0 +1,43 @@
+type Wedding @table {
+  title: String!
+  weddingDate: Date!
+  budgetLimit: Float
+  themeColorPalette: String
+}
+
+type Arrangement @table {
+  name: String!
+  type: String!
+  status: String!
+  estimatedCost: Float
+  actualCost: Float
+  notes: String
+  wedding: Wedding!
+  venueArea: VenueArea
+}
+
+type VenueArea @table {
+  name: String!
+  wedding: Wedding!
+}
+
+type FlowerItem @table {
+  name: String!
+  color: String!
+  seasonAvailability: String
+  costPerStem: Float
+  arrangement: Arrangement!
+}
+
+type ReferenceImage @table {
+  imageUrl: String!
+  description: String!
+  wedding: Wedding!
+}
+
+type Vendor @table {
+  name: String!
+  contactEmail: String!
+  portfolioUrl: String
+  wedding: Wedding!
+}

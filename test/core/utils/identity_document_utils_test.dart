@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile_app/core/utils/identity_document_utils.dart';
+import 'package:mobile_app/core/utils/identity_document_utils/identity_document_utils.dart';
 
 void main() {
   group('scoreDocumentText', () {

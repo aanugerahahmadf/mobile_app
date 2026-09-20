@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
-import 'package:mobile_app/core/services/image_scan_analyzer.dart';
+import 'package:mobile_app/core/services/image_scan_analyzer/image_scan_analyzer.dart';
 
 /// Membuat berkas gambar PNG sementara dengan satu warna merata.
 Future<File> writeSolidFile(int r, int g, int b, int size) async {

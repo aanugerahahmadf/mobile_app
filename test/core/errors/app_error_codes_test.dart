@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile_app/core/errors/app_error_codes.dart';
+import 'package:mobile_app/core/errors/app_error_codes/app_error_codes.dart';
 
 void main() {
   group('AppErrorCodes', () {

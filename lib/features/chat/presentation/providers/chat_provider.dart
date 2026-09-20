@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../../core/errors/app_error_codes.dart';
-import '../../data/chat_repository_impl.dart';
-import '../../domain/chat_repository.dart';
+import '../../../../core/errors/app_error_codes/app_error_codes.dart';
+import '../../data/chat_repository_impl/chat_repository_impl.dart';
+import '../../domain/chat_repository/chat_repository.dart';
 
 sealed class ChatState {
   const ChatState();
@@ -15,8 +15,10 @@ class ChatLoading extends ChatState {
 class ChatConversationsLoaded extends ChatState {
   final List<Map<String, dynamic>> conversations;
   final int unreadCount;
-  final bool isSuperAdmin;
-  const ChatConversationsLoaded(this.conversations, {this.unreadCount = 0, this.isSuperAdmin = false});
+  const ChatConversationsLoaded(
+    this.conversations, {
+    this.unreadCount = 0,
+  });
 }
 
 class ChatMessagesLoaded extends ChatState {
@@ -24,7 +26,12 @@ class ChatMessagesLoaded extends ChatState {
   final List<Map<String, dynamic>> messages;
   final Map<String, dynamic>? otherUser;
   final bool isTyping;
-  const ChatMessagesLoaded(this.conversation, this.messages, {this.otherUser, this.isTyping = false});
+  const ChatMessagesLoaded(
+    this.conversation,
+    this.messages, {
+    this.otherUser,
+    this.isTyping = false,
+  });
 }
 
 class ChatError extends ChatState {
@@ -41,11 +48,18 @@ class ChatNotifier extends StateNotifier<ChatState> {
     state = const ChatLoading();
     try {
       final result = await _repository.getConversations();
-      final conversations = (result['conversations'] as List<dynamic>?)?.cast<Map<String, dynamic>>() ?? [];
-      final isAdmin = result['is_super_admin'] as bool? ?? false;
-      state = ChatConversationsLoaded(conversations, unreadCount: 0, isSuperAdmin: isAdmin);
+      final conversations =
+          (result['conversations'] as List<dynamic>?)
+              ?.cast<Map<String, dynamic>>() ??
+          [];
+      state = ChatConversationsLoaded(
+        conversations,
+        unreadCount: 0,
+      );
     } on DioException catch (e) {
-      state = ChatError(e.error?.toString() ?? AppErrorCodes.failedLoadConversations);
+      state = ChatError(
+        e.error?.toString() ?? AppErrorCodes.failedLoadConversations,
+      );
     } catch (e) {
       state = ChatError(e.toString());
     }
@@ -55,12 +69,17 @@ class ChatNotifier extends StateNotifier<ChatState> {
     state = const ChatLoading();
     try {
       final result = await _repository.getMessages(conversationId);
-      final messages = (result['messages'] as List<dynamic>?)?.cast<Map<String, dynamic>>() ?? [];
+      final messages =
+          (result['messages'] as List<dynamic>?)
+              ?.cast<Map<String, dynamic>>() ??
+          [];
       final otherUser = result['other_user'] as Map<String, dynamic>?;
       final conversation = <String, dynamic>{'id': conversationId};
       state = ChatMessagesLoaded(conversation, messages, otherUser: otherUser);
     } on DioException catch (e) {
-      state = ChatError(e.error?.toString() ?? AppErrorCodes.failedLoadMessages);
+      state = ChatError(
+        e.error?.toString() ?? AppErrorCodes.failedLoadMessages,
+      );
     } catch (e) {
       state = ChatError(e.toString());
     }
@@ -69,7 +88,10 @@ class ChatNotifier extends StateNotifier<ChatState> {
   Future<void> refreshMessages(String conversationId) async {
     try {
       final result = await _repository.getMessages(conversationId);
-      final messages = (result['messages'] as List<dynamic>?)?.cast<Map<String, dynamic>>() ?? [];
+      final messages =
+          (result['messages'] as List<dynamic>?)
+              ?.cast<Map<String, dynamic>>() ??
+          [];
       final otherUser = result['other_user'] as Map<String, dynamic>?;
       if (state is ChatMessagesLoaded) {
         final current = state as ChatMessagesLoaded;
@@ -136,7 +158,11 @@ class ChatNotifier extends StateNotifier<ChatState> {
       if (state is ChatMessagesLoaded) {
         final current = state as ChatMessagesLoaded;
         final updatedMessages = [...current.messages, constructed];
-        state = ChatMessagesLoaded(current.conversation, updatedMessages, otherUser: current.otherUser);
+        state = ChatMessagesLoaded(
+          current.conversation,
+          updatedMessages,
+          otherUser: current.otherUser,
+        );
       }
       setTyping(true);
     } on DioException catch (e) {
@@ -145,7 +171,10 @@ class ChatNotifier extends StateNotifier<ChatState> {
     }
   }
 
-  Future<void> deleteMessage(String messageId, {required String deleteType}) async {
+  Future<void> deleteMessage(
+    String messageId, {
+    required String deleteType,
+  }) async {
     try {
       await _repository.deleteMessage(messageId, deleteType: deleteType);
       if (state is ChatMessagesLoaded) {
@@ -167,7 +196,11 @@ class ChatNotifier extends StateNotifier<ChatState> {
             updatedMessages.add(msg);
           }
         }
-        state = ChatMessagesLoaded(current.conversation, updatedMessages, otherUser: current.otherUser);
+        state = ChatMessagesLoaded(
+          current.conversation,
+          updatedMessages,
+          otherUser: current.otherUser,
+        );
       }
     } on DioException catch (e) {
       throw Exception(e.error?.toString() ?? AppErrorCodes.failedSendMessage);
@@ -181,8 +214,12 @@ class ChatNotifier extends StateNotifier<ChatState> {
         final current = state as ChatMessagesLoaded;
         final updatedMessages = current.messages.map((msg) {
           if (msg['id'].toString() == messageId) {
-            final meta = Map<String, dynamic>.from(msg['meta'] as Map<String, dynamic>? ?? {});
-            final starredBy = List<String>.from(meta['starred_by'] as List<dynamic>? ?? []);
+            final meta = Map<String, dynamic>.from(
+              msg['meta'] as Map<String, dynamic>? ?? {},
+            );
+            final starredBy = List<String>.from(
+              meta['starred_by'] as List<dynamic>? ?? [],
+            );
             final currentUserId = ''; // Will be updated from UI
             if (starredBy.contains(currentUserId)) {
               starredBy.remove(currentUserId);
@@ -194,7 +231,11 @@ class ChatNotifier extends StateNotifier<ChatState> {
           }
           return msg;
         }).toList();
-        state = ChatMessagesLoaded(current.conversation, updatedMessages, otherUser: current.otherUser);
+        state = ChatMessagesLoaded(
+          current.conversation,
+          updatedMessages,
+          otherUser: current.otherUser,
+        );
       }
     } on DioException catch (_) {}
   }
@@ -204,13 +245,19 @@ class ChatNotifier extends StateNotifier<ChatState> {
       final current = state as ChatMessagesLoaded;
       final updatedMessages = current.messages.map((msg) {
         if (msg['id'].toString() == messageId) {
-          final meta = Map<String, dynamic>.from(msg['meta'] as Map<String, dynamic>? ?? {});
+          final meta = Map<String, dynamic>.from(
+            msg['meta'] as Map<String, dynamic>? ?? {},
+          );
           meta.addAll(newMeta);
           return {...msg, 'meta': meta};
         }
         return msg;
       }).toList();
-      state = ChatMessagesLoaded(current.conversation, updatedMessages, otherUser: current.otherUser);
+      state = ChatMessagesLoaded(
+        current.conversation,
+        updatedMessages,
+        otherUser: current.otherUser,
+      );
     }
   }
 
@@ -227,12 +274,118 @@ class ChatNotifier extends StateNotifier<ChatState> {
   }
 
   Future<int> startConversation({Map<String, dynamic>? itemContext}) async {
-    final result = await _repository.startConversation(itemContext: itemContext);
+    final result = await _repository.startConversation(
+      itemContext: itemContext,
+    );
     return result['id'] as int;
   }
 
-  Future<List<Map<String, dynamic>>> getCustomersForChat() async {
-    return await _repository.getCustomersForChat();
+  Future<int> startGuestConversation({
+    required String guestId,
+    String? csCategory,
+  }) async {
+    final result = await _repository.startGuestConversation(
+      guestId: guestId,
+      csCategory: csCategory,
+    );
+    return result['id'] as int;
+  }
+
+  Future<void> loadGuestMessages(
+    String conversationId, {
+    required String guestId,
+  }) async {
+    state = const ChatLoading();
+    try {
+      final result = await _repository.getGuestMessages(
+        conversationId,
+        guestId: guestId,
+      );
+      final messages =
+          (result['messages'] as List<dynamic>?)
+              ?.cast<Map<String, dynamic>>() ??
+          [];
+      final otherUser = result['other_user'] as Map<String, dynamic>?;
+      state = ChatMessagesLoaded(
+        <String, dynamic>{'id': conversationId},
+        messages,
+        otherUser: otherUser,
+      );
+    } on DioException catch (e) {
+      state = ChatError(
+        e.error?.toString() ?? AppErrorCodes.failedLoadMessages,
+      );
+    } catch (e) {
+      state = ChatError(e.toString());
+    }
+  }
+
+  Future<void> refreshGuestMessages(
+    String conversationId, {
+    required String guestId,
+  }) async {
+    try {
+      final result = await _repository.getGuestMessages(
+        conversationId,
+        guestId: guestId,
+      );
+      final messages =
+          (result['messages'] as List<dynamic>?)
+              ?.cast<Map<String, dynamic>>() ??
+          [];
+      final otherUser = result['other_user'] as Map<String, dynamic>?;
+      if (state is ChatMessagesLoaded) {
+        final current = state as ChatMessagesLoaded;
+        state = ChatMessagesLoaded(
+          current.conversation,
+          messages,
+          otherUser: otherUser ?? current.otherUser,
+          isTyping: current.isTyping,
+        );
+      }
+    } on DioException catch (_) {
+    } catch (_) {}
+  }
+
+  Future<void> sendGuestMessage({
+    required int inboxId,
+    required String message,
+    required String guestId,
+    required String senderName,
+    String? csCategory,
+  }) async {
+    try {
+      final sent = await _repository.sendGuestMessage(
+        inboxId: inboxId,
+        message: message,
+        guestId: guestId,
+        csCategory: csCategory,
+      );
+      final constructed = <String, dynamic>{
+        'id': sent['id'],
+        'message': message,
+        'sender_id': sent['user_id'],
+        'sender_name': senderName,
+        'is_me': true,
+        'read_by': <String>[],
+        'attachments': sent['attachments'] as List<dynamic>? ?? <String>[],
+        'meta': sent['meta'],
+        'created_at': sent['created_at'] ?? DateTime.now().toIso8601String(),
+      };
+      if (state is ChatMessagesLoaded) {
+        final current = state as ChatMessagesLoaded;
+        final updatedMessages = [...current.messages, constructed];
+        state = ChatMessagesLoaded(
+          current.conversation,
+          updatedMessages,
+          otherUser: current.otherUser,
+        );
+      }
+      setTyping(true);
+    } on DioException catch (e) {
+      setTyping(false);
+      throw Exception(e.error?.toString() ?? AppErrorCodes.failedSendMessage);
+    }
   }
 }
 

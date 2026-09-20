@@ -10,8 +10,16 @@ class HistoryState {
 
   const HistoryState({this.items = const [], this.loading = false, this.error});
 
-  HistoryState copyWith({List<HistoryModel>? items, bool? loading, String? error}) {
-    return HistoryState(items: items ?? this.items, loading: loading ?? this.loading, error: error);
+  HistoryState copyWith({
+    List<HistoryModel>? items,
+    bool? loading,
+    String? error,
+  }) {
+    return HistoryState(
+      items: items ?? this.items,
+      loading: loading ?? this.loading,
+      error: error,
+    );
   }
 }
 
@@ -30,8 +38,12 @@ class HistoryNotifier extends StateNotifier<HistoryState> {
   }
 }
 
-final historyRepositoryProvider = Provider((ref) => HistoryRepositoryImpl() as HistoryRepository);
+final historyRepositoryProvider = Provider(
+  (ref) => HistoryRepositoryImpl() as HistoryRepository,
+);
 
-final historyProvider = StateNotifierProvider<HistoryNotifier, HistoryState>((ref) {
+final historyProvider = StateNotifierProvider<HistoryNotifier, HistoryState>((
+  ref,
+) {
   return HistoryNotifier(ref.read(historyRepositoryProvider));
 });

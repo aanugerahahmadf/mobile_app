@@ -6,25 +6,25 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'core/constants/app_colors.dart';
-import 'core/providers/theme_provider.dart';
-import 'core/providers/locale_provider.dart';
-import 'core/router/app_router.dart';
-import 'core/services/notification_service.dart';
-import 'core/theme/app_theme.dart';
-import 'features/auth/presentation/providers/biometric_settings_provider.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'core/constants/app_colors/app_colors.dart';
+import 'core/providers/theme_provider/theme_provider.dart';
+import 'core/providers/locale_provider/locale_provider.dart';
+import 'core/router/app_router/app_router.dart';
+import 'core/services/notification_service/notification_service.dart';
+import 'core/theme/app_theme/app_theme.dart';
+import 'features/auth/presentation/providers/biometric_settings_provider/biometric_settings_provider.dart';
 import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  try {
+    await initializeDateFormatting();
+  } catch (_) {}
   await NotificationService.instance.initialize();
-  runApp(
-    ProviderScope(
-      child: const WeddingApp(),
-    ),
-  );
+  runApp(ProviderScope(child: const WeddingApp()));
 }
 
 class WeddingApp extends ConsumerStatefulWidget {
@@ -34,13 +34,13 @@ class WeddingApp extends ConsumerStatefulWidget {
   ConsumerState<WeddingApp> createState() => _WeddingAppState();
 }
 
-class _WeddingAppState extends ConsumerState<WeddingApp> with WidgetsBindingObserver {
+class _WeddingAppState extends ConsumerState<WeddingApp>
+    with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      NotificationService.instance.setNavigatorKey(rootNavigatorKey);
       NotificationService.instance.onNavigate = (route) => appRouter.go(route);
       NotificationService.instance.handleInitialMessage();
     });
@@ -61,7 +61,9 @@ class _WeddingAppState extends ConsumerState<WeddingApp> with WidgetsBindingObse
 
   Future<void> _maybeShowLock() async {
     if (isAppLockSuppressed()) return;
-    final flags = await loadAppLockFlags(email: ref.read(currentAccountEmailProvider));
+    final flags = await loadAppLockFlags(
+      email: ref.read(currentAccountEmailProvider),
+    );
     if (!flags.any || !mounted) return;
     final routerState = appRouter.routerDelegate.currentConfiguration;
     final uri = routerState.uri.toString();
@@ -80,17 +82,23 @@ class _WeddingAppState extends ConsumerState<WeddingApp> with WidgetsBindingObse
   Widget build(BuildContext context) {
     final themeMode = ref.watch(themeProvider);
     final locale = ref.watch(localeProvider);
-    final isDark = themeMode == ThemeMode.dark ||
-        (themeMode == ThemeMode.system && MediaQuery.of(context).platformBrightness == Brightness.dark);
+    final isDark =
+        themeMode == ThemeMode.dark ||
+        (themeMode == ThemeMode.system &&
+            MediaQuery.of(context).platformBrightness == Brightness.dark);
 
     AppColors.updateBrightness(isDark);
 
-    SystemChrome.setSystemUIOverlayStyle(SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
-      systemNavigationBarColor: isDark ? AppColors.darkSurface : Colors.white,
-      systemNavigationBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
-    ));
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        systemNavigationBarColor: isDark ? AppColors.darkSurface : Colors.white,
+        systemNavigationBarIconBrightness: isDark
+            ? Brightness.light
+            : Brightness.dark,
+      ),
+    );
 
     return MaterialApp.router(
       title: 'Wedding Flower Decorations',
@@ -108,7 +116,7 @@ class _WeddingAppState extends ConsumerState<WeddingApp> with WidgetsBindingObse
           for (final supported in supportedLocales) {
             if (supported.languageCode == deviceLocale.languageCode &&
                 (supported.countryCode == null ||
-                 supported.countryCode == deviceLocale.countryCode)) {
+                    supported.countryCode == deviceLocale.countryCode)) {
               return supported;
             }
           }

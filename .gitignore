@@ -36,6 +36,9 @@ migrate_working_dir/
 # Generated localization
 lib/l10n/app_localizations*.dart
 
+# Generated Firebase Data Connect (not wired into app; no SDK installed)
+lib/dataconnect_generated/
+
 # Environment
 .env
 .env.*

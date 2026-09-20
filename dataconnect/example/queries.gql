@@ -1,0 +1,119 @@
+mutation InsertWedding @auth(level: USER) {
+  wedding_insert(data: { title: "My Wedding", weddingDate: "2025-10-10" })
+}
+
+mutation UpdateWedding($id: UUID!, $title: String) @auth(level: USER) {
+  wedding_update(key: { id: $id }, data: { title: $title })
+}
+
+mutation DeleteWedding($id: UUID!) @auth(level: USER) {
+  wedding_delete(key: { id: $id })
+}
+
+query GetWedding($id: UUID!) @auth(level: USER) {
+  wedding(id: $id) { title weddingDate budgetLimit }
+}
+
+query ListWeddings @auth(level: USER) {
+  weddings { title weddingDate }
+}
+
+mutation InsertArrangement($name: String!, $type: String!, $status: String!, $weddingId: UUID!) @auth(level: USER) {
+  arrangement_insert(data: { name: $name, type: $type, status: $status, weddingId: $weddingId })
+}
+
+mutation UpdateArrangement($id: UUID!, $actualCost: Float) @auth(level: USER) {
+  arrangement_update(key: { id: $id }, data: { actualCost: $actualCost })
+}
+
+mutation DeleteArrangement($id: UUID!) @auth(level: USER) {
+  arrangement_delete(key: { id: $id })
+}
+
+query GetArrangement($id: UUID!) @auth(level: USER) {
+  arrangement(id: $id) { name type actualCost }
+}
+
+query ListArrangements @auth(level: USER) {
+  arrangements { name type }
+}
+
+mutation InsertVenueArea($name: String!, $weddingId: UUID!) @auth(level: USER) {
+  venueArea_insert(data: { name: $name, weddingId: $weddingId })
+}
+
+mutation UpdateVenueArea($id: UUID!, $name: String) @auth(level: USER) {
+  venueArea_update(key: { id: $id }, data: { name: $name })
+}
+
+mutation DeleteVenueArea($id: UUID!) @auth(level: USER) {
+  venueArea_delete(key: { id: $id })
+}
+
+query GetVenueArea($id: UUID!) @auth(level: USER) {
+  venueArea(id: $id) { name }
+}
+
+query ListVenueAreas @auth(level: USER) {
+  venueAreas { name }
+}
+
+mutation InsertFlowerItem($name: String!, $color: String!, $arrangementId: UUID!) @auth(level: USER) {
+  flowerItem_insert(data: { name: $name, color: $color, arrangementId: $arrangementId })
+}
+
+mutation UpdateFlowerItem($id: UUID!, $costPerStem: Float) @auth(level: USER) {
+  flowerItem_update(key: { id: $id }, data: { costPerStem: $costPerStem })
+}
+
+mutation DeleteFlowerItem($id: UUID!) @auth(level: USER) {
+  flowerItem_delete(key: { id: $id })
+}
+
+query GetFlowerItem($id: UUID!) @auth(level: USER) {
+  flowerItem(id: $id) { name color costPerStem }
+}
+
+query ListFlowerItems @auth(level: USER) {
+  flowerItems { name color }
+}
+
+mutation InsertReferenceImage($imageUrl: String!, $description: String!, $weddingId: UUID!) @auth(level: USER) {
+  referenceImage_insert(data: { imageUrl: $imageUrl, description: $description, weddingId: $weddingId })
+}
+
+mutation UpdateReferenceImage($id: UUID!, $description: String) @auth(level: USER) {
+  referenceImage_update(key: { id: $id }, data: { description: $description })
+}
+
+mutation DeleteReferenceImage($id: UUID!) @auth(level: USER) {
+  referenceImage_delete(key: { id: $id })
+}
+
+query GetReferenceImage($id: UUID!) @auth(level: USER) {
+  referenceImage(id: $id) { imageUrl description }
+}
+
+query ListReferenceImages @auth(level: USER) {
+  referenceImages { imageUrl description }
+}
+
+mutation InsertVendor($name: String!, $contactEmail: String!, $weddingId: UUID!) @auth(level: USER) {
+  vendor_insert(data: { name: $name, contactEmail: $contactEmail, weddingId: $weddingId })
+}
+
+mutation UpdateVendor($id: UUID!, $portfolioUrl: String) @auth(level: USER) {
+  vendor_update(key: { id: $id }, data: { portfolioUrl: $portfolioUrl })
+}
+
+mutation DeleteVendor($id: UUID!) @auth(level: USER) {
+  vendor_delete(key: { id: $id })
+}
+
+query GetVendor($id: UUID!) @auth(level: USER) {
+  vendor(id: $id) { name contactEmail portfolioUrl }
+}
+
+query ListVendors @auth(level: USER) {
+  vendors { name contactEmail }
+}

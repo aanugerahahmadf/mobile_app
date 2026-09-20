@@ -1,0 +1,32 @@
+mutation SeedData @transaction {
+  wedding_insertMany(data: [
+    { id: "00000000-0000-0000-0000-000000000001", title: "Smith Wedding", weddingDate: "2025-06-15", budgetLimit: 25000.0, themeColorPalette: "Blue and White" },
+    { id: "00000000-0000-0000-0000-000000000002", title: "Doe Wedding", weddingDate: "2025-08-20", budgetLimit: 30000.0, themeColorPalette: "Gold and Green" },
+    { id: "00000000-0000-0000-0000-000000000003", title: "Garcia Wedding", weddingDate: "2025-09-10", budgetLimit: 20000.0, themeColorPalette: "Red and Silver" }
+  ])
+  venueArea_insertMany(data: [
+    { id: "10000000-0000-0000-0000-000000000001", name: "Main Ballroom", weddingId: "00000000-0000-0000-0000-000000000001" },
+    { id: "10000000-0000-0000-0000-000000000002", name: "Garden Terrace", weddingId: "00000000-0000-0000-0000-000000000002" },
+    { id: "10000000-0000-0000-0000-000000000003", name: "Beachside", weddingId: "00000000-0000-0000-0000-000000000003" }
+  ])
+  arrangement_insertMany(data: [
+    { id: "20000000-0000-0000-0000-000000000001", name: "Centerpiece", type: "Floral", status: "Booked", estimatedCost: 500.0, actualCost: 550.0, notes: "Requires vase", weddingId: "00000000-0000-0000-0000-000000000001", venueAreaId: "10000000-0000-0000-0000-000000000001" },
+    { id: "20000000-0000-0000-0000-000000000002", name: "Archway", type: "Floral", status: "Pending", estimatedCost: 1200.0, actualCost: 0.0, notes: "Custom build", weddingId: "00000000-0000-0000-0000-000000000002", venueAreaId: "10000000-0000-0000-0000-000000000002" },
+    { id: "20000000-0000-0000-0000-000000000003", name: "Bouquets", type: "Floral", status: "Confirmed", estimatedCost: 800.0, actualCost: 750.0, notes: "Include ribbons", weddingId: "00000000-0000-0000-0000-000000000003", venueAreaId: "10000000-0000-0000-0000-000000000003" }
+  ])
+  flowerItem_insertMany(data: [
+    { id: "30000000-0000-0000-0000-000000000001", name: "Rose", color: "Red", seasonAvailability: "Year-round", costPerStem: 3.5, arrangementId: "20000000-0000-0000-0000-000000000001" },
+    { id: "30000000-0000-0000-0000-000000000002", name: "Tulip", color: "White", seasonAvailability: "Spring", costPerStem: 2.0, arrangementId: "20000000-0000-0000-0000-000000000001" },
+    { id: "30000000-0000-0000-0000-000000000003", name: "Lily", color: "Yellow", seasonAvailability: "Summer", costPerStem: 4.0, arrangementId: "20000000-0000-0000-0000-000000000003" }
+  ])
+  referenceImage_insertMany(data: [
+    { id: "40000000-0000-0000-0000-000000000001", imageUrl: "https://example.com/a.jpg", description: "Table setting", weddingId: "00000000-0000-0000-0000-000000000001" },
+    { id: "40000000-0000-0000-0000-000000000002", imageUrl: "https://example.com/b.jpg", description: "Arch design", weddingId: "00000000-0000-0000-0000-000000000002" },
+    { id: "40000000-0000-0000-0000-000000000003", imageUrl: "https://example.com/c.jpg", description: "Bouquet style", weddingId: "00000000-0000-0000-0000-000000000003" }
+  ])
+  vendor_insertMany(data: [
+    { id: "50000000-0000-0000-0000-000000000001", name: "Floral Experts", contactEmail: "contact@florals.com", portfolioUrl: "https://florals.com", weddingId: "00000000-0000-0000-0000-000000000001" },
+    { id: "50000000-0000-0000-0000-000000000002", name: "Elite Venues", contactEmail: "info@venues.com", portfolioUrl: "https://venues.com", weddingId: "00000000-0000-0000-0000-000000000002" },
+    { id: "50000000-0000-0000-0000-000000000003", name: "Photography Pros", contactEmail: "pics@photo.com", portfolioUrl: "https://photo.com", weddingId: "00000000-0000-0000-0000-000000000003" }
+  ])
+}

@@ -1,4 +1,4 @@
-import '../../../../core/utils/number_utils.dart';
+import '../../../../core/utils/number_utils/number_utils.dart';
 
 class HistoryModel {
   final int id;
