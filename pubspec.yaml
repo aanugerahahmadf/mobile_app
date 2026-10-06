@@ -64,7 +64,16 @@ dependencies:
   qr_flutter: ^4.1.0
   flutter_tts: ^4.2.2
   supabase_flutter: ^2.17.2
-  record: ^5.1.2
+  # 6.2.1 adalah versi pertama yang menyelaraskan constraint dengan
+  # record_linux 1.3.x dan record_platform_interface 1.6.0.
+  #
+  # Di 5.x, constraint-nya `record_linux: '>=0.5.0 <1.0.0'` TAPI
+  # `record_platform_interface` dibiarkan terbuka. Akibatnya pub memilih
+  # record_linux 0.7.2 (terbaru di bawah 1.0.0) bersama rpi 1.6.0, padahal
+  # 0.7.2 belum mengimplementasikan API baru rpi 1.6.0 (`startStream` dan
+  # `hasPermission(recorderId, {request})`). `flutter build apk` gagal dengan
+  # "The non-abstract class 'RecordLinux' is missing implementations".
+  record: ^6.2.1
 
 dev_dependencies:
   flutter_test:

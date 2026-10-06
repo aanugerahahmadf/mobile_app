@@ -14,9 +14,23 @@ class AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final token = await _storage.read(key: 'auth_token');
-    if (token != null) {
-      options.headers['Authorization'] = 'Bearer $token';
+    // Dibungkus try/catch, sama seperti LocaleInterceptor di bawah.
+    //
+    // Sebelumnya `read()` dipanggil telanjang. Kalau secure storage gagal —
+    // plugin tidak terdaftar di platform tertentu, keystore rusak, atau dalam
+    // unit test yang tidak menyiapkan method channel — exception-nya membuat
+    // SETIAP request gagal, bahkan yang tidak butuh autentikasi, dan
+    // ErrorInterceptor mengubahnya jadi NetworkFailure yang menyesatkan.
+    //
+    // Menurunannya jadi request tanpa token lebih baik: server yang memutuskan
+    // 401, dan itu ditangani sebagai AuthFailure.
+    try {
+      final token = await _storage.read(key: 'auth_token');
+      if (token != null && token.isNotEmpty) {
+        options.headers['Authorization'] = 'Bearer $token';
+      }
+    } catch (_) {
+      // Lanjut tanpa token.
     }
     handler.next(options);
   }
