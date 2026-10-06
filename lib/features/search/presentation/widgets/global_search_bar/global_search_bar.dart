@@ -20,11 +20,19 @@ class GlobalSearchBar extends ConsumerStatefulWidget {
   final bool compact;
   final bool showChat;
 
+  /// Tampilkan tombol kamera di dalam kolom pencarian.
+  ///
+  /// Setel `false` kalau halaman tersebut sudah punya tombol kamera sendiri di
+  /// sebelah kolom pencarian — kalau tidak, dua tombol identik dengan aksi sama
+  /// (buka sheet pilih sumber gambar) tampil bersamaan.
+  final bool showCamera;
+
   const GlobalSearchBar({
     super.key,
     this.translucent = false,
     this.compact = false,
     this.showChat = true,
+    this.showCamera = true,
   });
 
   @override
@@ -368,20 +376,21 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
                 suffixIcon: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    IconButton(
-                      icon: Icon(
-                        Icons.camera_alt_rounded,
-                        color: _iconColor,
-                        size: 20,
+                    if (widget.showCamera)
+                      IconButton(
+                        icon: Icon(
+                          Icons.camera_alt_rounded,
+                          color: _iconColor,
+                          size: 20,
+                        ),
+                        onPressed: _showPickerOptions,
+                        constraints: const BoxConstraints(
+                          minWidth: 36,
+                          minHeight: 36,
+                        ),
+                        splashRadius: 18,
+                        padding: EdgeInsets.zero,
                       ),
-                      onPressed: _showPickerOptions,
-                      constraints: const BoxConstraints(
-                        minWidth: 36,
-                        minHeight: 36,
-                      ),
-                      splashRadius: 18,
-                      padding: EdgeInsets.zero,
-                    ),
                     if (_controller.text.isNotEmpty)
                       IconButton(
                         icon: Icon(

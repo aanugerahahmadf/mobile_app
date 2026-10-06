@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -17,7 +18,6 @@ class MainShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentIndex = ref.watch(bottomNavIndexProvider);
-    final activeBranch = navigationShell.currentIndex;
     final authState = ref.watch(authProvider);
     final rawAvatar = authState is AuthAuthenticated
         ? authState.user.avatarUrl
@@ -25,6 +25,15 @@ class MainShell extends ConsumerWidget {
     final avatarUrl = rawAvatar != null && rawAvatar.isNotEmpty
         ? rawAvatar
         : null;
+
+    // Bottom bar HANYA tampil di halaman utama: Home, Orders, Cart, Profile.
+    // Semua halaman lain (detail, chat, checkout, dll) tidak menampilkan bottom bar.
+    final location = GoRouterState.of(context).uri.path;
+    const allowedPaths = {'/home', '/orders', '/cart', '/profile'};
+    final normalized = location.length > 1 && location.endsWith('/')
+        ? location.substring(0, location.length - 1)
+        : location;
+    final showBar = allowedPaths.contains(normalized);
 
     return PopScope(
       canPop: currentIndex == 0,
@@ -34,8 +43,9 @@ class MainShell extends ConsumerWidget {
         navigationShell.goBranch(0);
       },
       child: Scaffold(
+        extendBody: true, // konten memanjang ke belakang bar agar blur terlihat
         body: navigationShell,
-        bottomNavigationBar: activeBranch == 2
+        bottomNavigationBar: !showBar
             ? null
             : Material(
                 type: MaterialType.transparency,
@@ -60,18 +70,19 @@ class _ModernBottomBar extends StatelessWidget {
   final String? avatarUrl;
   final ValueChanged<int> onTap;
 
-  static const _allItems = [
+  // Branch yang punya tombol di bar: Home, Orders, Cart, Profile
+  static const branchIndices = [0, 1, 3, 4];
+
+  static const _items = [
     _BarItem(Icons.home_outlined, Icons.home),
     _BarItem(Icons.receipt_long_outlined, Icons.receipt_long),
-    _BarItem(Icons.chat_outlined, Icons.chat),
     _BarItem(Icons.shopping_cart_outlined, Icons.shopping_cart),
     _BarItem(Icons.person_outline_rounded, Icons.person_rounded),
   ];
 
-  static List<String> _allLabels(AppLocalizations l) => [
+  static List<String> _labels(AppLocalizations l) => [
     l.navHome,
     l.navOrders,
-    l.navChat,
     l.navCart,
     l.navProfile,
   ];
@@ -296,43 +307,54 @@ class _ModernBottomBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final visibleIndices = [0, 1, 3, 4];
-    final visibleItems = visibleIndices.map((i) => _allItems[i]).toList();
-    final visibleLabels = visibleIndices.map((i) => _allLabels(l)[i]).toList();
+    // Index branch di router (tetap sama seperti sebelumnya)
+    final visibleIndices = branchIndices;
+    final visibleItems = _items;
+    final visibleLabels = _labels(l);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surfaceColor,
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.white.withAlpha(8)
-                : Colors.black.withAlpha(16),
-            blurRadius: 24,
-            offset: const Offset(0, -6),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Bar melayang: ada jarak ke tepi layar (kiri, kanan, bawah)
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+        child: Container(
+          // Shadow lembut supaya bar terlihat mengambang
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.12),
+                blurRadius: 24,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(4, 4, 4, 4),
+          // Potong blur mengikuti bentuk pill ( )
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+              child: Container(
+                decoration: BoxDecoration(
+                  // Semi-transparan agar efek blur terlihat
+                  color: AppColors.surfaceColor.withValues(alpha: 0.7),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: isDark ? 0.10 : 0.35),
+                  ),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(4, 4, 4, 4),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: List.generate(visibleItems.length, (i) {
               final item = visibleItems[i];
               final branchIdx = visibleIndices[i];
               final isSelected = branchIdx == currentIndex;
-              final isChat = branchIdx == 2;
               final isProfile = branchIdx == 4;
 
-              if (isChat) {
-                return _buildCenterButton(
-                  item,
-                  isSelected,
-                  onTap: () => onTap(branchIdx),
-                );
-              }
               return _buildTab(
                 context,
                 item,
@@ -352,6 +374,10 @@ class _ModernBottomBar extends StatelessWidget {
                     : null,
               );
             }),
+          ),
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -429,41 +455,6 @@ class _ModernBottomBar extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCenterButton(
-    _BarItem item,
-    bool isSelected, {
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 52,
-        height: 52,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: isSelected
-                ? [
-                    AppColors.primaryColor,
-                    AppColors.primaryColor.withAlpha(200),
-                  ]
-                : [
-                    AppColors.primaryColor.withAlpha(180),
-                    AppColors.primaryColor.withAlpha(120),
-                  ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          isSelected ? Icons.chat : Icons.chat_outlined,
-          color: Colors.white,
-          size: 26,
         ),
       ),
     );

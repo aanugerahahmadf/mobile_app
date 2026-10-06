@@ -14,13 +14,18 @@ import '../../../features/order/presentation/pages/order_history/order_history_p
 import '../../../features/order/presentation/pages/order_detail/order_detail_page.dart';
 import '../../../features/chat/presentation/pages/chat_list/chat_list_page.dart';
 import '../../../features/chat/presentation/pages/chat_detail/chat_detail_page.dart';
-import '../../../features/search/presentation/pages/search_results/search_results_page.dart';
+import '../../../features/search/presentation/pages/search/search_page.dart';
 import '../../../features/notification/presentation/pages/notification/notification_page.dart';
 import '../../../features/notification/presentation/pages/notification_detail/notification_detail_page.dart';
 import '../../../features/notification/data/models/notification_model/notification_model.dart';
 import '../../../features/profile/presentation/pages/settings/notification_settings/notification_settings_page.dart';
 import '../../../features/profile/presentation/pages/settings/password_and_security/sign_in_and_recovery/change_password/change_password_page.dart';
 import '../../../features/profile/presentation/pages/settings/password_and_security/sign_in_and_recovery/two_faktor_authentication/two_factor_settings_page.dart';
+// Alias supaya dua halaman 2FA tidak tertukar: yang di `features/auth`
+// adalah Two Factor AUTH (tengah alur, akhir di Home), yang di sini Two
+// Factor SETUP (dari Pengaturan, akhir kembali ke daftar Keamanan).
+import '../../../features/profile/presentation/pages/settings/password_and_security/sign_in_and_recovery/two_faktor_authentication/two_factor_setup_page.dart'
+    as security_two_factor_setup;
 import '../../../features/profile/presentation/pages/settings/password_and_security/sign_in_and_recovery/saved_sign_in/saved_login_info_page.dart';
 import '../../../features/profile/presentation/pages/settings/password_and_security/sign_in_and_recovery/two_faktor_authentication/trusted_devices_page.dart';
 import '../../../features/profile/presentation/pages/settings/password_and_security/security_check/where_you_sign_in/login_activity_page.dart';
@@ -55,6 +60,8 @@ import '../../../features/profile/presentation/pages/settings/settings_page.dart
 import '../../../features/profile/presentation/pages/settings/language/language_page.dart';
 import '../../../features/profile/presentation/pages/settings/password_and_security/password_and_security_page.dart';
 import '../../../features/auth/presentation/pages/app_lock/app_lock_page.dart';
+import '../../../features/auth/presentation/pages/security_question/security_question_page.dart';
+import '../../../features/auth/presentation/pages/two_factor_setup/two_factor_setup_page.dart';
 
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -87,8 +94,12 @@ final appRouter = GoRouter(
   redirect: (context, state) async {
     final prefs = await SharedPreferences.getInstance();
     final onboardingSeen = prefs.getBool('onboarding_seen') ?? false;
-    if (!onboardingSeen) return '/landing';
-    return null;
+    // Jangan pernah memantulkan pengguna yang SEDANG di '/landing', kalau tidak
+    // `context.go('/home')` dari LandingPage akanmental balik ke sini terus.
+    if (onboardingSeen) return null;
+    final atLanding = state.matchedLocation == '/landing';
+    if (atLanding) return null;
+    return '/landing';
   },
   routes: [
     GoRoute(path: '/landing', builder: (_, _) => const LandingPage()),
@@ -196,6 +207,28 @@ final appRouter = GoRouter(
       path: '/two-factor-settings',
       builder: (_, _) => const TwoFactorSettingsPage(),
     ),
+    // Dua halaman 2FA yang berbeda, sama seperti di backend:
+    //
+    //   /two-factor-setup          -> Two Factor Auth  (Auth\TwoFactorAuth)
+    //                                 tengah alur auth, selesai ke Home
+    //   /security/two-factor-setup -> Two Factor Setup (TwoFactorySetup)
+    //                                 dari Pengaturan, selesai kembali ke
+    //                                 daftar Keamanan
+    //
+    // Dipisah karena tujuan akhirnya berbeda. Alurnya sendiri sama, dan
+    // keduanya memakai TwoFactorSetupFlow yang sama.
+    GoRoute(
+      path: '/two-factor-setup',
+      builder: (_, _) => const TwoFactorSetupPage(),
+    ),
+    GoRoute(
+      path: '/security/two-factor-setup',
+      builder: (_, _) => const security_two_factor_setup.TwoFactorSetupPage(),
+    ),
+    GoRoute(
+      path: '/security-question',
+      builder: (_, _) => const SecurityQuestionPage(),
+    ),
     GoRoute(
       path: '/saved-login-info',
       builder: (_, _) => const SavedLoginInfoPage(),
@@ -221,7 +254,7 @@ final appRouter = GoRouter(
       builder: (_, state) {
         final query =
             (state.extra as Map<String, dynamic>?)?['query'] as String? ?? '';
-        return SearchResultsPage(query: query);
+        return SearchPage(initialQuery: query);
       },
     ),
     GoRoute(

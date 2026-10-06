@@ -61,7 +61,7 @@
         "npm --prefix \"$RESOURCE_DIR\" run build"
       ],
       "source": "functions",
-      "runtime": "python314"
+      "runtime": "nodejs22"
     }
   ],
   "database": {

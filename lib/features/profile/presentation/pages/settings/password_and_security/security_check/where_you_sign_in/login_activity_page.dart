@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import '../../../../../../../../core/widgets/guest_auth_prompt/guest_auth_prompt.dart';
 import '../../../../../../../auth/presentation/providers/auth_provider/auth_provider.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
+import '../../../../../../../../core/api/api_endpoints/api_endpoints.dart';
 import '../../../../../../../../core/api/dio_client/dio_client.dart';
 import '../../../../../../../../core/constants/app_colors/app_colors.dart';
 import '../../../../../../../../core/constants/app_text_styles/app_text_styles.dart';
@@ -21,6 +22,7 @@ class _LoginActivityPageState extends ConsumerState<LoginActivityPage> {
   Map<String, dynamic>? _current;
   List<Map<String, dynamic>> _others = [];
   bool _loading = true;
+  bool _removingAll = false;
   String? _error;
 
   bool get _isAuthenticated => ref.read(authProvider) is AuthAuthenticated;
@@ -74,7 +76,7 @@ class _LoginActivityPageState extends ConsumerState<LoginActivityPage> {
     if (!_isAuthenticated) return;
     final l = AppLocalizations.of(context)!;
     try {
-      await DioClient.instance.delete('/security/login-activity/$id');
+      await DioClient.instance.delete(ApiEndpoints.securityRemoveSession(id));
       if (mounted) {
         AppSnackBar.show(context, l.sessionRemoved, type: SnackBarType.success);
         _fetchSessions();
@@ -88,6 +90,137 @@ class _LoginActivityPageState extends ConsumerState<LoginActivityPage> {
         );
       }
     }
+  }
+
+  /// Keluarkan semua sesi perangkat lain sekaligus.
+  ///
+  /// Padanan logoutOtherBrowserSessions() di panel Filament.
+  ///
+  /// [password] wajib dan diverifikasi server -- lihat catatan di
+  /// [_showRemoveAllSessionsDialog]. Sesi perangkat ini sendiri tidak ikut
+  /// dihapus -- itu sebabnya endpoint server menyisakan satu baris dengan id
+  /// sesi pemanggil.
+  Future<void> _removeAllOtherSessions(String password) async {
+    if (!_isAuthenticated) return;
+    final l = AppLocalizations.of(context)!;
+    setState(() => _removingAll = true);
+    try {
+      await DioClient.instance.post(
+        ApiEndpoints.securityRemoveAllOtherSessions,
+        data: {'password': password},
+      );
+      if (mounted) {
+        AppSnackBar.show(
+          context,
+          l.allSessionsRemoved,
+          type: SnackBarType.success,
+        );
+        _fetchSessions();
+      }
+    } on DioException catch (e) {
+      if (mounted) {
+        AppSnackBar.show(
+          context,
+          e.message ?? l.failed,
+          type: SnackBarType.error,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _removingAll = false);
+    }
+  }
+
+  /// Konfirmasi "Keluar dari Sesi Browser Lain" -- kata sandi WAJIB.
+  ///
+  /// Di Filament, `deleteBrowserSessions` punya `->requiresConfirmation()`
+  /// dengan form berisi TextInput password, dan
+  /// `logoutOtherBrowserSessions()` membandingkannya dengan
+  /// `Hash::check($password, Auth::user()->password)` sebelum menghapus apa
+  /// pun.
+  ///
+  /// Mobile sebelumnya hanya menampilkan dialog ya/tidak dan langsung
+  /// menghapus. Itu menurunkan pemeriksaan yang ada sengaja di web: aksi
+  /// yang memutus akses orang lain dari semua perangkat lain bisa memicu
+  /// tanpa membuktikan siapa yang meminta.
+  ///
+  /// Verifikasi dilakukan di server -- password dikirim ke
+  /// /security/sessions/remove-all dan dibandingkan di sana, bukan dicek di
+  /// klien. Password tidak pernah disimpan di perangkat.
+  Future<void> _showRemoveAllSessionsDialog() async {
+    final l = AppLocalizations.of(context)!;
+    final passwordController = TextEditingController();
+    var obscure = true;
+    String? error;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text(l.logoutAllOtherSessions),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l.logoutAllOtherSessionsConfirm,
+                style: AppTextStyles.bodySmall,
+              ),
+              const SizedBox(height: AppSizes.sm),
+              Text(
+                l.logoutAllOtherSessionsPasswordConfirm,
+                style: AppTextStyles.bodySmall,
+              ),
+              const SizedBox(height: AppSizes.md),
+              TextField(
+                controller: passwordController,
+                obscureText: obscure,
+                autofocus: true,
+                decoration: InputDecoration(
+                  labelText: l.password,
+                  errorText: error,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      obscure ? Icons.visibility_off : Icons.visibility,
+                      size: 20,
+                    ),
+                    onPressed: () => setState(() => obscure = !obscure),
+                  ),
+                ),
+                onSubmitted: (_) => Navigator.of(ctx).pop(true),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(l.cancel),
+            ),
+            TextButton(
+              onPressed: () {
+                if (passwordController.text.isEmpty) {
+                  setState(() => error = l.requiredField);
+
+                  return;
+                }
+                Navigator.of(ctx).pop(true);
+              },
+              child: Text(
+                l.removeAll,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    final password = passwordController.text;
+    passwordController.dispose();
+
+    if (confirmed != true || password.isEmpty) return;
+
+    await _removeAllOtherSessions(password);
   }
 
   String _formatLastActive(String? iso) {
@@ -158,6 +291,13 @@ class _LoginActivityPageState extends ConsumerState<LoginActivityPage> {
               child: ListView(
                 padding: const EdgeInsets.all(AppSizes.md),
                 children: [
+                  // ═══ SUBJUDUL HALAMAN ═══
+                  Text(
+                    l.signInActivityPageSubtitle,
+                    style: AppTextStyles.bodySmall,
+                  ),
+                  const SizedBox(height: AppSizes.md),
+
                   // ═══ PERANGKAT INI ═══
                   _sectionHeader(l.thisDevice.toUpperCase()),
                   if (_current != null)
@@ -345,6 +485,32 @@ class _LoginActivityPageState extends ConsumerState<LoginActivityPage> {
                         ),
                       ),
                     ),
+
+                  // ── Keluarkan semua sesi lain ─────────────────────
+                  const SizedBox(height: AppSizes.sm),
+                  OutlinedButton.icon(
+                    onPressed: _removingAll
+                        ? null
+                        : _showRemoveAllSessionsDialog,
+                    icon: _removingAll
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.logout, size: 18),
+                    label: Text(l.logoutAllOtherSessions),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Theme.of(context).colorScheme.error,
+                      side: BorderSide(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                      minimumSize: const Size.fromHeight(48),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),

@@ -6,6 +6,7 @@ import '../../../../../../../auth/presentation/providers/auth_provider/auth_prov
 import 'package:dio/dio.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
+import '../../../../../../../../core/api/api_endpoints/api_endpoints.dart';
 import '../../../../../../../../core/api/dio_client/dio_client.dart';
 import '../../../../../../../../core/constants/app_colors/app_colors.dart';
 import '../../../../../../../../core/constants/app_text_styles/app_text_styles.dart';
@@ -22,6 +23,8 @@ class TwoFactorSettingsPage extends ConsumerStatefulWidget {
 
 class _TwoFactorSettingsPageState extends ConsumerState<TwoFactorSettingsPage> {
   bool _twoFactorEnabled = false;
+  bool _hasAuthenticator = false;
+  String _twoFactorType = 'none';
   String? _whatsappNumber;
   bool _whatsappVerified = false;
   int _backupCodesRemaining = 0;
@@ -49,12 +52,24 @@ class _TwoFactorSettingsPageState extends ConsumerState<TwoFactorSettingsPage> {
       _error = null;
     });
     try {
-      final resp = await DioClient.instance.get('/security/two-factor/status');
+      final resp = await DioClient.instance.get(
+        ApiEndpoints.securityTwoFactorStatus,
+      );
       final data = resp.data;
       if (data is Map<String, dynamic> && data['data'] is Map) {
         final d = data['data'] as Map<String, dynamic>;
         setState(() {
           _twoFactorEnabled = d['two_factor_enabled'] ?? false;
+          // Metode 2FA yang benar-benar aktif, bukan sekadar toggle-nya.
+          //
+          // Ini yang membuat halaman ini bisa menampilkan metode yang
+          // sedang dipakai -- "Aplikasi Autentikasi" atau "Email" -- dan
+          // menentukan label tombol setup. Tanpa field ini, toggle WhatsApp
+          // dan setup TOTP sama-sama terlihat sebagai saklar nyala/turun
+          // padahal keduanya hal yang berbeda: yang satu menyalakan
+          // kode via WhatsApp, yang lain menyiapkan 2FA sungguhan.
+          _twoFactorType = d['two_factor_type'] as String? ?? 'none';
+          _hasAuthenticator = _twoFactorType != 'none';
           _whatsappNumber = d['whatsapp_number'] as String?;
           _whatsappVerified = d['whatsapp_verified'] ?? false;
           _backupCodesRemaining = d['backup_codes_remaining'] ?? 0;
@@ -385,33 +400,50 @@ class _TwoFactorSettingsPageState extends ConsumerState<TwoFactorSettingsPage> {
               ),
             ),
             const SizedBox(height: AppSizes.md),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(
-                Icons.phonelink_lock_outlined,
-                color: AppColors.primaryColor,
-              ),
-              title: Text(l.loginRequests, style: AppTextStyles.bodyMedium),
-              subtitle: Text(
-                l.loginRequestsDesc,
-                style: AppTextStyles.bodySmall,
-              ),
-            ),
-            const Divider(height: 1, indent: 56),
-            ListTile(
+            // "Permintaan Sign In" sengaja tidak ada di sini.
+//
+// Di panel Filament ada HandlesPasswordSecurity::toggleRequestSignIn(),
+// tapi method itu hanya menulis ke session() dan TIDAK ada satu pun kode
+// yang membacanya -- bukan middleware, bukan halaman. Jadi tombolnya
+// berubah dari "Nonaktif" ke "Aktif" lalu hilang lagi begitu halaman
+// dimuat ulang. Menyalinnya ke mobile hanya berarti mengajarkan pengguna
+// tentang tombol yang tidak pernah berpengaruh apa pun.
+ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(
                 Icons.phonelink_setup_outlined,
                 color: AppColors.primaryColor,
               ),
-              title: Text(
-                l.authenticatorApp,
-                style: AppTextStyles.bodyMedium,
-              ),
+              title: Text(l.authenticatorApp, style: AppTextStyles.bodyMedium),
               subtitle: Text(
-                l.authenticatorAppDesc,
+                _hasAuthenticator
+                    ? l.authenticatorAppActiveDesc
+                    : l.authenticatorAppInactiveDesc,
                 style: AppTextStyles.bodySmall,
               ),
+              // Dua arah ke halaman setup 2FA yang sama: "Tambahkan" kalau
+              // belum ada metodenya, "Kelola" kalau sudah.
+              //
+              // Di backend tombol ini menuju TwoFactorySetup. Sebelum ini tile-nya tidak
+              // punya onTap sama sekali, jadi menekan tile hanya menutup
+              // sheet tanpa terjadi apa-apa -- dan tidak ada jalan dari
+              // halaman ini ke setup 2FA.
+              //
+              // Menuju /security/two-factor-setup (Two Factor Setup), bukan
+              // /two-factor-setup (Two Factor Auth): yang terakhir berakhir
+              // di Home, jadi hati-hati --
+              trailing: Text(
+                _hasAuthenticator
+                    ? l.manageAuthenticatorApp
+                    : l.addAuthenticatorApp,
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.primaryColor,
+                ),
+              ),
+              onTap: () {
+                Navigator.of(ctx).pop();
+                context.push('/security/two-factor-setup');
+              },
             ),
             const Divider(height: 1, indent: 56),
             ListTile(
@@ -473,6 +505,20 @@ class _TwoFactorSettingsPageState extends ConsumerState<TwoFactorSettingsPage> {
           : ListView(
               children: [
                 const SizedBox(height: AppSizes.sm),
+
+                // ═══ SUBJUDUL HALAMAN ═══
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSizes.md,
+                    0,
+                    AppSizes.md,
+                    AppSizes.md,
+                  ),
+                  child: Text(
+                    l.twoFactorPageSubtitle,
+                    style: AppTextStyles.bodySmall,
+                  ),
+                ),
 
                 // ═══ STATUS 2FA ═══
                 Card(
@@ -583,6 +629,54 @@ class _TwoFactorSettingsPageState extends ConsumerState<TwoFactorSettingsPage> {
                         ),
                       ),
                     ],
+                  ),
+                ),
+                const SizedBox(height: AppSizes.lg),
+
+                // ═══ METODE YANG AKTIF ═══
+                //
+                // Baris ini yang menjawab pertanyaan paling sering muncul
+                // di halaman ini: "kode saya sebenarnya datang dari mana?".
+                // Tanpa itu, saklar WhatsApp terlihat seperti satu-satunya
+                // saklar 2FA, padahal yang menyalakannya adalah
+                // `two_factor_type` -- dua hal yang berbeda.
+                _sectionHeader(l.twoFactorActiveMethod.toUpperCase()),
+                Card(
+                  margin: const EdgeInsets.symmetric(horizontal: AppSizes.md),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ListTile(
+                    leading: Icon(
+                      _hasAuthenticator
+                          ? Icons.phonelink_lock_outlined
+                          : Icons.lock_open_outlined,
+                      color: _hasAuthenticator
+                          ? Colors.green
+                          : AppColors.textSecondary,
+                    ),
+                    title: Text(
+                      _hasAuthenticator
+                          ? (_twoFactorType == 'email'
+                                ? l.twoFactorMethodEmail
+                                : l.twoFactorMethodAuthenticator)
+                          : l.twoFactorSetupNone,
+                      style: AppTextStyles.bodyMedium,
+                    ),
+                    subtitle: Text(
+                      _hasAuthenticator ? l.active : l.notActive,
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: _hasAuthenticator
+                            ? Colors.green
+                            : AppColors.textSecondary,
+                      ),
+                    ),
+                    onTap: _hasAuthenticator
+                        ? () => context.push('/security/two-factor-setup')
+                        : null,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ),
                 const SizedBox(height: AppSizes.lg),

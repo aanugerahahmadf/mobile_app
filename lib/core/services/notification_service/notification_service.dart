@@ -1,4 +1,4 @@
-import 'dart:io' show Platform;
+﻿import 'dart:io' show Platform;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -34,7 +34,7 @@ class NotificationService {
   static const AndroidNotificationChannel _channel = AndroidNotificationChannel(
     'wedding_notifications',
     'Notifikasi Wedding',
-    description: 'Notifikasi dari aplikasi Wedding Organizer',
+    description: 'Notifikasi dari aplikasi Dekorasi Bunga Pernikahan / Wedding Flower Decorations',
     importance: Importance.high,
     playSound: true,
     enableVibration: true,

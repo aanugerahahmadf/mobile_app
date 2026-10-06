@@ -50,7 +50,11 @@ void main() {
       ),
     ));
     await tester.pump(const Duration(milliseconds: 800));
-    expect(find.text('Mulai Sekarang'), findsOneWidget);
+    // Label diambil dari l10n (locale 'id'):
+    //   signInToAccount -> "Masuk ke Akun"
+    //   continueAsGuest -> "Lanjut sebagai Tamu"
+    // Ekspektasi lama "Mulai Sekarang" sudah tidak dipakai lagi.
+    expect(find.text('Masuk ke Akun'), findsOneWidget);
     expect(find.text('Lanjut sebagai Tamu'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });

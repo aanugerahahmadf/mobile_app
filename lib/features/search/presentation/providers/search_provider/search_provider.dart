@@ -10,11 +10,20 @@ class SearchState {
 
   const SearchState({this.results, this.loading = false, this.error});
 
-  SearchState copyWith({SearchResult? results, bool? loading, String? error}) {
+  /// Sentinel untuk membedakan "argumen tidak diberikan" dari "nilai eksplisit
+  /// null". Tanpa ini `copyWith(error: null)` tidak bisa dipakai untuk
+  /// membersihkan error, karena `null` selalu berarti "tidak diberikan".
+  static const Object _unset = Object();
+
+  SearchState copyWith({
+    SearchResult? results,
+    bool? loading,
+    Object? error = _unset,
+  }) {
     return SearchState(
       results: results ?? this.results,
       loading: loading ?? this.loading,
-      error: error,
+      error: identical(error, _unset) ? this.error : error as String?,
     );
   }
 }
@@ -27,7 +36,9 @@ class SearchNotifier extends StateNotifier<SearchState> {
     state = state.copyWith(loading: true, error: null);
     try {
       final results = await _repository.search(query, page: page);
-      state = state.copyWith(results: results, loading: false);
+      // `error: null` eksplisit: pencarian yang berhasil harus ikut
+      // membersihkan error dari percobaan sebelumnya.
+      state = state.copyWith(results: results, loading: false, error: null);
     } catch (e) {
       state = state.copyWith(loading: false, error: e.toString());
     }

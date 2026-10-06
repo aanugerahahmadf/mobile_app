@@ -194,7 +194,15 @@ class ImageScanAnalyzer {
     } catch (_) {
       return false;
     } finally {
-      detector.close();
+      // WAJIB di-await. `close()` mengembalikan Future; kalau dibuang begitu
+      // saja, error plugin (mis. MissingPluginException di test environment)
+      // melempar lewat setelah blok try/catch selesai sehingga tidak pernah
+      // tertangkap dan muncul sebagai "test failed setelah selesai".
+      try {
+        await detector.close();
+      } catch (_) {
+        // Plugin sudah tidak tersedia (mis. unit test) — abaikan.
+      }
     }
   }
 

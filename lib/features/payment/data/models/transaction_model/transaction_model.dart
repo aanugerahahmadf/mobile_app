@@ -12,6 +12,7 @@ class TransactionModel {
   final String? paymentMethod;
   final String? virtualAccountNo;
   final String? virtualAccountExpiry;
+  final String? virtualAccountName;
   final String status;
   final String? paidAt;
   final String? notes;
@@ -31,6 +32,7 @@ class TransactionModel {
     this.paymentMethod,
     this.virtualAccountNo,
     this.virtualAccountExpiry,
+    this.virtualAccountName,
     required this.status,
     this.paidAt,
     this.notes,
@@ -55,6 +57,10 @@ class TransactionModel {
           (json['metadata'] as Map<String, dynamic>?)?['virtual_account_no']
               as String?,
       virtualAccountExpiry: json['virtual_account_expiry'] as String?,
+      virtualAccountName:
+          json['virtual_account_name'] as String? ??
+          (json['metadata'] as Map<String, dynamic>?)?['virtual_account_name']
+              as String?,
       status: (json['status'] ?? 'unpaid') as String,
       paidAt: json['paid_at'] as String?,
       notes: json['notes'] as String?,

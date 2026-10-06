@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import '../../../../../../../../core/widgets/guest_auth_prompt/guest_auth_prompt.dart';
 import '../../../../../../../auth/presentation/providers/auth_provider/auth_provider.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
+import '../../../../../../../../core/api/api_endpoints/api_endpoints.dart';
 import '../../../../../../../../core/api/dio_client/dio_client.dart';
 import '../../../../../../../../core/constants/app_colors/app_colors.dart';
 import '../../../../../../../../core/constants/app_text_styles/app_text_styles.dart';
@@ -69,9 +70,39 @@ class _TrustedDevicesPageState extends ConsumerState<TrustedDevicesPage> {
     if (!_isAuthenticated) return;
     final l = AppLocalizations.of(context)!;
     try {
-      await DioClient.instance.delete('/security/trusted-devices/$id');
+      await DioClient.instance.delete(ApiEndpoints.securityRemoveTrustedDevice(id));
       if (mounted) {
         AppSnackBar.show(context, l.deviceRemoved, type: SnackBarType.success);
+        _fetchDevices();
+      }
+    } on DioException catch (e) {
+      if (mounted) {
+        AppSnackBar.show(
+          context,
+          e.message ?? l.failed,
+          type: SnackBarType.error,
+        );
+      }
+    }
+  }
+
+  /// Hapus semua perangkat terpercaya sekaligus.
+  ///
+  /// Padanan removeAllTrustedDevices() di panel Filament. Diformat sebagai
+  /// dialog konfirmasi dulu karena efeknya tidak bisa dibatalkan per-item.
+  Future<void> _removeAllDevices() async {
+    if (!_isAuthenticated) return;
+    final l = AppLocalizations.of(context)!;
+    try {
+      await DioClient.instance.delete(
+        ApiEndpoints.securityRemoveAllTrustedDevices,
+      );
+      if (mounted) {
+        AppSnackBar.show(
+          context,
+          l.allDevicesRemoved,
+          type: SnackBarType.success,
+        );
         _fetchDevices();
       }
     } on DioException catch (e) {
@@ -228,6 +259,15 @@ class _TrustedDevicesPageState extends ConsumerState<TrustedDevicesPage> {
                 },
               ),
             ),
+      floatingActionButton: _devices.isEmpty
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: _showRemoveAllDialog,
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Colors.white,
+              icon: const Icon(Icons.delete_sweep_outlined),
+              label: Text(l.removeAll),
+            ),
     );
   }
 
@@ -251,6 +291,34 @@ class _TrustedDevicesPageState extends ConsumerState<TrustedDevicesPage> {
             },
             child: Text(
               l.remove,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showRemoveAllDialog() {
+    final l = AppLocalizations.of(context)!;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(l.removeAllTrustedDevices),
+        content: Text(l.removeAllTrustedDevicesConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(l.cancel),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              _removeAllDevices();
+            },
+            child: Text(
+              l.removeAll,
               style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           ),

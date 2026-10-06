@@ -15,32 +15,32 @@ enum SuggestionType {
   weddingPolicy,
   vendors;
 
-  String get badgeLabel {
+  String badgeLabel(AppLocalizations l) {
     switch (this) {
       case SuggestionType.packages:
-        return 'Packages';
+        return l.packages;
       case SuggestionType.products:
-        return 'Products';
+        return l.products;
       case SuggestionType.categories:
-        return 'Categories';
+        return l.categories;
       case SuggestionType.vouchers:
-        return 'Vouchers';
+        return l.vouchers;
       case SuggestionType.orders:
-        return 'Orders';
+        return l.order;
       case SuggestionType.reviews:
-        return 'Reviews';
+        return l.reviews;
       case SuggestionType.terms:
-        return 'Terms';
+        return l.termsAndConditions;
       case SuggestionType.privacy:
-        return 'Privacy';
+        return l.privacyPolicy;
       case SuggestionType.helps:
-        return 'Help';
+        return l.helpCenter;
       case SuggestionType.histories:
-        return 'History';
+        return l.history;
       case SuggestionType.weddingPolicy:
-        return 'Policy';
+        return l.weddingPolicy;
       case SuggestionType.vendors:
-        return 'Vendors';
+        return l.vendors;
     }
   }
 
@@ -99,8 +99,9 @@ class SearchSuggestion {
 
   factory SearchSuggestion.fromJson(
     SuggestionType type,
-    Map<String, dynamic> json,
-  ) {
+    Map<String, dynamic> json, {
+    AppLocalizations? l,
+  }) {
     final id = int.tryParse('${json['id']}') ?? 0;
     final imageUrl = _extractImage(json);
 
@@ -124,8 +125,8 @@ class SearchSuggestion {
             json['expired_at'] as String? ??
             '';
         final sub2 = [
-          if (discount.toString().isNotEmpty) 'Diskon: $discount',
-          if (validUntil.isNotEmpty) 'Sampai: $validUntil',
+          if (discount.toString().isNotEmpty) '${l?.discount ?? 'Diskon'}: $discount',
+          if (validUntil.isNotEmpty) '${l?.validUntil ?? 'Sampai'}: $validUntil',
         ].join(' • ');
         return SearchSuggestion(
           type: type,
@@ -145,7 +146,8 @@ class SearchSuggestion {
             ? (json['user'] as Map)['name'] as String?
             : json['customer_name'] as String?;
         final sub2 = [
-          if (total.toString().isNotEmpty) _formatCurrency(_parsePrice(total)),
+          if (total.toString().isNotEmpty)
+            Formatters.currency(_parsePrice(total)),
           if (customer != null && customer.isNotEmpty) customer,
         ].join(' • ');
         return SearchSuggestion(
@@ -165,6 +167,11 @@ class SearchSuggestion {
             ? (json['user'] as Map)['name'] as String?
             : json['customer_name'] as String?;
         final sub2 = [
+          // Bintang dipakai langsung, bukan lewat AppLocalizations: itu
+          // simbol, bukan teks, dan tidak diterjemahkan. Sebelumnya memakai
+          // kunci `ratingStar` yang tidak pernah ada di ARB mana pun --
+          // satu-satunya jalan ke sini adalah `?? '★'` yang tidak pernah
+          // terkonfirmasi compiler.
           if (rating != null) '★ $rating',
           if (user != null && user.isNotEmpty) user,
         ].join(' • ');
@@ -259,7 +266,7 @@ class SearchSuggestion {
           name: json['store_name'] as String?,
           subtitle: sub2.isNotEmpty ? sub2 : null,
           subtitle2:
-              '${json['packages_count'] ?? 0} packages, ${json['products_count'] ?? 0} products',
+              '${json['packages_count'] ?? 0} ${l?.packages ?? 'packages'}, ${json['products_count'] ?? 0} ${l?.products ?? 'products'}',
           imageUrl: logo != null && logo.isNotEmpty
               ? Formatters.imageUrl(logo)
               : null,
@@ -270,8 +277,12 @@ class SearchSuggestion {
       case SuggestionType.packages:
       case SuggestionType.products:
         final price = _pickPrice(json);
-        final name = json['name'] as String? ?? '';
-        final subtitle = price > 0 ? _formatCurrency(price) : null;
+        // `name` sengaja dibiarkan null saat tidak ada, bukan diubah jadi ''.
+        // Field-nya `String?`, semua konsumen di UI sudah aman terhadap null,
+        // dan cabang `subtitle2` di bawah ini memakai konvensi yang sama
+        // (string kosong -> null).
+        final name = json['name'] as String?;
+        final subtitle = price > 0 ? Formatters.currency(price) : null;
         final desc = json['description'] as String? ?? '';
         final category = json['category'] is Map
             ? (json['category'] as Map)['name'] as String?
@@ -327,9 +338,5 @@ class SearchSuggestion {
     if (v is double) return v.toInt();
     if (v is String) return double.tryParse(v)?.toInt() ?? 0;
     return 0;
-  }
-
-  static String _formatCurrency(int amount) {
-    return 'Rp ${amount.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}';
   }
 }

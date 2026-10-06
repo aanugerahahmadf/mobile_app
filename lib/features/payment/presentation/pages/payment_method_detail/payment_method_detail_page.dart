@@ -888,13 +888,22 @@ class _PaymentMethodDetailPageState
           else ...[
             _buildVaNumber(l),
             const SizedBox(height: AppSizes.sm),
+            // Nama pemilik VA = nama pengguna sendiri. Inilah yang tampil di
+            // aplikasi BRI saat VA ini dipilih sebagai tujuan transfer.
+            if (_va!['virtual_account_name'] != null)
+              _buildInfoRow(
+                l.accountHolder,
+                _va!['virtual_account_name'] as String,
+              ),
             if (_va!['virtual_account_expiry'] != null)
               _buildInfoRow(
                 l.vaExpiredAt,
                 _formatDate(_va!['virtual_account_expiry'] as String),
               ),
-            if (_va!['account_holder'] != null)
-              _buildInfoRow(l.accountHolder, _va!['account_holder'] as String),
+            // Rekening tujuan BRI TIDAK ditampilkan di sini. Yang harus
+            // diketik pengguna adalah nomor VA di atas; menampilkan rekening
+            // admin berlabel "Nomor Rekening" berisiko membuat pengguna
+            // transfer ke nomor yang salah.
           ],
         ],
       ),

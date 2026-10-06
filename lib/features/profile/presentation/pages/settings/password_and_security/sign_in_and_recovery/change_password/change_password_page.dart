@@ -1,7 +1,9 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
+import '../../../../../../../../core/api/api_endpoints/api_endpoints.dart';
 import '../../../../../../../../core/api/dio_client/dio_client.dart';
 import '../../../../../../../../core/constants/app_colors/app_colors.dart';
 import '../../../../../../../../core/constants/app_text_styles/app_text_styles.dart';
@@ -63,8 +65,8 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
 
     setState(() => _saving = true);
     try {
-      await DioClient.instance.post(
-        '/profile/change-password',
+      final response = await DioClient.instance.post(
+        ApiEndpoints.changePassword,
         data: {
           'current_password': _currentPasswordController.text,
           'new_password': _newPasswordController.text,
@@ -72,29 +74,72 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
           'logout_others': _logoutOthers,
         },
       );
-      if (mounted) {
-        AppSnackBar.show(
-          context,
-          l.passwordChanged,
-          type: SnackBarType.success,
-        );
-        Navigator.of(context).pop();
-      }
-    } catch (e) {
-      String msg = l.failed;
-      if (e is Exception) {
-        final raw = e.toString();
-        if (raw.contains('Kata sandi saat ini salah') ||
-            raw.contains('password')) {
-          msg = l.currentPasswordIncorrect;
-        }
-      }
-      if (mounted) {
-        AppSnackBar.show(context, msg, type: SnackBarType.error);
-      }
+
+      if (!mounted) return;
+
+      // Server membalas berapa perangkat yang ikut dikeluarkan, jadi
+      // checkbox-nya bisa mengonfirmasi dirinya alih-alih diam saja.
+      // Field `data` tidak ada di respons lama -- abaikan kalau null.
+      final loggedOut = _loggedOutCount(response.data);
+
+      AppSnackBar.show(
+        context,
+        loggedOut > 0
+            ? '${l.passwordChanged} $loggedOut ${l.otherDevicesLoggedOut}'
+            : l.passwordChanged,
+        type: SnackBarType.success,
+      );
+      Navigator.of(context).pop();
+    } on DioException catch (e) {
+      if (!mounted) return;
+      AppSnackBar.show(
+        context,
+        _extractError(e) ?? l.failed,
+        type: SnackBarType.error,
+      );
     } finally {
       if (mounted) setState(() => _saving = false);
     }
+  }
+
+  /// Berapa perangkat lain yang ikut dikeluarkan, dari respons server.
+///
+/// 0 kalau server tidak mengirim field-nya --respons lama tidak
+/// membalas jumlah, dan checkbox tetap berfungsi, hanya tidak bisa
+/// menampilkan hitungannya.
+static int _loggedOutCount(Object? body) {
+  if (body is! Map<String, dynamic>) return 0;
+  final data = body['data'];
+  if (data is! Map<String, dynamic>) return 0;
+  final count = data['logged_out_other_devices'];
+  return count is num ? count.toInt() : 0;
+}
+
+/// Ambil pesan error yang bisa ditampilkan ke pengguna.
+  ///
+  /// Memprioritaskan pesan per-field dari `errors` (mis. "Kata sandi saat ini
+  /// salah"), karena itu yang bisa ditindaklanjuti; `message` top-level
+  /// dipakai sebagai cadangan.
+  ///
+  /// Versi lama menelusuri `e.toString()` dan mencocokkan kata
+  /// "password" di dalamnya. Untuk DioException teks itu selalu berupa
+  /// "DioException [bad response]: ...", jadi setiap error yang involve
+  /// kata sandi -- termasuk yang tidak berkaitan dengan kata sandi lama --
+  /// akan ditampilkan sebagai "Kata sandi saat ini salah" padahal
+  /// penyebabnya lain.
+  static String? _extractError(Object e) {
+    if (e is! DioException) return null;
+    final data = e.response?.data;
+    if (data is Map<String, dynamic>) {
+      final errors = data['errors'] as Map<String, dynamic>?;
+      if (errors != null && errors.isNotEmpty) {
+        final first = errors[errors.keys.first];
+        if (first is List && first.isNotEmpty) return '${first.first}';
+      }
+      final msg = data['message'] as String?;
+      if (msg != null && msg.isNotEmpty) return msg;
+    }
+    return null;
   }
 
   @override
@@ -119,6 +164,13 @@ class _ChangePasswordPageState extends ConsumerState<ChangePasswordPage> {
         child: ListView(
           padding: const EdgeInsets.all(AppSizes.md),
           children: [
+            // ── Subjudul halaman ─────────────────────────────────────
+            Text(
+              l.changePasswordPageSubtitle,
+              style: AppTextStyles.bodySmall,
+            ),
+            const SizedBox(height: AppSizes.md),
+
             // ── Kata Sandi Saat Ini (diperbarui ...) ────────────────
             Text(l.currentPassword, style: AppTextStyles.bodySmall),
             if (lastUpdated != null) ...[

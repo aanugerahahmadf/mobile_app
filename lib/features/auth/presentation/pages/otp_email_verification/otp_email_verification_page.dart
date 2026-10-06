@@ -92,6 +92,10 @@ class _OtpEmailVerificationPageState extends State<OtpEmailVerificationPage> {
           l.verificationCodeSent,
           type: SnackBarType.success,
         );
+        // OtpEmailVerificationPrompt::verify() di backend: setelah OTP valid,
+        // akun yang profilnya belum lengkap diarahkan ke CompleteProfile.
+        // CompleteProfile sendiri yang meneruskan ke SecurityQuestion, jadi
+        // kedua hop itu tidak digabung di sini.
         if (widget.purpose == 'google_register') {
           context.pushReplacement('/complete-profile');
         } else if (widget.purpose == 'verify_email') {

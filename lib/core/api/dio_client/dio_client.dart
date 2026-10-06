@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -80,7 +81,30 @@ class ErrorInterceptor extends Interceptor {
 }
 
 class DioClient {
-  static Dio get instance {
+  /// Instance tunggal yang benar-benar dipakai.
+  ///
+  /// Sebelumnya `instance` adalah getter yang membangun `Dio` BARU setiap kali
+  /// diakses. Akibatnya setiap repository yang menyimpan `DioClient.instance`
+  /// di field konstruktor mendapat objek dan interceptor sendiri: connection
+  /// pool tidak pernah dipakai ulang, `AuthInterceptor` dipasang berulang
+  /// kali, dan setiap repository memicu permintaan baru.
+  ///
+  /// Di test, ini muncul sebagai race: SearchRepositoryImpl memanggil
+  /// AppConfig.apiBaseUrl (dan dengan itu membangun Dio) saat dikonstruksi,
+  /// dan assertion bisa berjalan sebelum nilai itu siap.
+  /// Akibatnya test/search_repository_test.dart gagal sekitar
+  /// 1 dari 8 kali jalan, sulit direproduksi, dan membuat CI merah
+  /// secara acak.
+  static Dio? _cached;
+
+  static Dio get instance => _cached ??= _build();
+
+  /// Buang instance tersimpan. Dipakai test yang butuh `Dio` yang bersih,
+  /// dan setelah `dotenv` dimuat ulang.
+  @visibleForTesting
+  static void reset() => _cached = null;
+
+  static Dio _build() {
     final dio = Dio(
       BaseOptions(
         baseUrl: AppConfig.apiBaseUrl,

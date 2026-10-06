@@ -9,6 +9,13 @@ class ApiEndpoints {
   static const String resetPassword = '/reset-password';
   static const String sendOtp = '/auth/send-otp';
   static const String verifyOtp = '/auth/verify-otp';
+
+  // Tantangan 2FA setelah Sign In. Padanan OtpEmailOrTwoFactory di panel
+  // Filament: login() membalas tanpa token bila 2FA akun aktif, lalu kode
+  // diverifikasi lewat endpoint di sini sebelum token benar-benar terbit.
+  static const String twoFactorVerify = '/auth/two-factor/verify';
+  static const String twoFactorResend = '/auth/two-factor/resend';
+
   static const String googleLogin = '/auth/google';
   static const String facebookLogin = '/auth/facebook';
   static const String appleLogin = '/auth/apple';
@@ -88,6 +95,7 @@ class ApiEndpoints {
   // Reports
   static const String reports = '/reports';
   static const String myReports = '/reports';
+  static String reportPdf(String id) => '/reports/$id/pdf';
 
   // Chat / Messages
   static const String conversations = '/messages/conversations';
@@ -152,9 +160,28 @@ class ApiEndpoints {
   static const String securityTwoFactorStatus = '/security/two-factor/status';
   static const String securityTwoFactorToggle = '/security/two-factor/toggle';
   static const String securityBackupCodes = '/security/two-factor/backup-codes';
+
+  // Setup 2FA. Dipakai DUA halaman: Two Factor Auth (tengah alur auth, akhir
+  // di Home) dan Two Factor Setup (Pengaturan, akhir kembali ke daftar
+  // Keamanan). Keduanya endpoint yang sama -- sama seperti di Filament, di
+  // mana Auth\TwoFactorAuth dan TwoFactorySetup sama-sama turunan
+  // TwoFactorAuthenticatorPage.
+  static const String securityTwoFactorSetup = '/security/two-factor/setup';
+  static const String securityTwoFactorSetupVerify =
+      '/security/two-factor/setup/verify';
+  static const String securityTwoFactorSetupResend =
+      '/security/two-factor/setup/resend';
   static const String securityTrustedDevices = '/security/trusted-devices';
   static String securityRemoveTrustedDevice(int id) =>
       '/security/trusted-devices/$id';
+  static const String securityRemoveAllTrustedDevices =
+      '/security/trusted-devices';
+  static const String securityRemoveAllOtherSessions =
+      '/security/sessions/remove-all';
+  static const String securityChangeEmailSendOtp =
+      '/security/change-email/send-otp';
+  static const String securityChangeEmailVerifyOtp =
+      '/security/change-email/verify-otp';
   static const String securitySavedLogin = '/security/saved-login';
   static const String securitySavedLoginToggle = '/security/saved-login/toggle';
   static const String securityLoginActivity = '/security/login-activity';

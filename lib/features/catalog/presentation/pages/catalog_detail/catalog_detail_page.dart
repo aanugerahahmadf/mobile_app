@@ -21,6 +21,7 @@ import '../../../../chat/presentation/utils/cs_chat_launcher/cs_chat_launcher.da
 import '../../../../chat/presentation/utils/cs_guest_chat/cs_guest_chat.dart';
 import '../../../../auth/presentation/providers/auth_provider/auth_provider.dart';
 import '../../../../cart/presentation/providers/cart_provider/cart_provider.dart';
+import '../../../../review/presentation/providers/review_provider/review_provider.dart';
 import '../../../../review/presentation/widgets/review_photos_grid/review_photos_grid.dart';
 import '../../providers/catalog_provider.dart';
 
@@ -35,11 +36,14 @@ class CatalogDetailPage extends ConsumerStatefulWidget {
 
 class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
   final PageController _pageController = PageController();
+  final TextEditingController _reviewController = TextEditingController();
   int _currentPage = 0;
   bool _descExpanded = false;
   bool _loading = true;
   bool _cartLoading = false;
   bool _favLoading = false;
+  bool _reviewSubmitting = false;
+  int _reviewRating = 5;
   String? _error;
   Map<String, dynamic>? _data;
   bool _initialized = false;
@@ -61,6 +65,7 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
   @override
   void dispose() {
     _pageController.dispose();
+    _reviewController.dispose();
     super.dispose();
   }
 
@@ -379,32 +384,32 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
                     ),
                   ),
                 ],
-                if (reviews.isNotEmpty) ...[
-                  SizedBox(height: AppSizes.md),
-                  const Divider(),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(l.reviews, style: AppTextStyles.titleMedium),
-                      InkWell(
-                        onTap: _openAllReviews,
-                        borderRadius: BorderRadius.circular(8),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 4,
-                            vertical: 2,
-                          ),
-                          child: Text(
-                            '${reviews.length}',
-                            style: AppTextStyles.bodySmall.copyWith(
-                              color: AppColors.primaryColor,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
+                SizedBox(height: AppSizes.md),
+                const Divider(),
+                _buildInlineReviewComposer(),
+                SizedBox(height: AppSizes.sm),
+                Row(
+                  children: [
+                    Text(l.reviews, style: AppTextStyles.titleMedium),
+                    const Spacer(),
+                    TextButton.icon(
+                      onPressed: _openWriteReview,
+                      icon: const Icon(Icons.rate_review_outlined, size: 18),
+                      label: Text(l.writeReview),
+                    ),
+                    if (reviews.isNotEmpty)
+                      TextButton(
+                        onPressed: _openAllReviews,
+                        child: Text('${reviews.length}'),
                       ),
-                    ],
-                  ),
+                  ],
+                ),
+                if (reviews.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: AppSizes.xs),
+                    child: Text(l.beFirstReview, style: AppTextStyles.bodySmall),
+                  )
+                else ...[
                   SizedBox(height: AppSizes.sm),
                   ...reviews.map(
                     (r) =>
@@ -620,8 +625,134 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
     );
   }
 
+  Future<void> _openWriteReview() async {
+    if (ref.read(authProvider) is! AuthAuthenticated) {
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        builder: (_) => const GuestAuthPrompt(icon: Icons.rate_review_outlined),
+      );
+      return;
+    }
+
+    final item = _data;
+    if (item == null) return;
+    final isPackage = widget.type == 'packages' || item['type'] == 'package';
+    final submitted = await context.push<bool>(
+      '/write-review',
+      extra: {
+        'package_id': isPackage ? widget.id : '',
+        'product_id': isPackage ? '' : widget.id,
+        'name': item['name'] as String? ?? '',
+      },
+    );
+    if (submitted == true && mounted) await _fetchDetail();
+  }
+
+  Future<void> _submitInlineReview() async {
+    if (_reviewSubmitting) return;
+    if (ref.read(authProvider) is! AuthAuthenticated) {
+      showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        builder: (_) => const GuestAuthPrompt(icon: Icons.rate_review_outlined),
+      );
+      return;
+    }
+
+    final l = AppLocalizations.of(context)!;
+    final comment = _reviewController.text.trim();
+    if (comment.isEmpty) {
+      AppSnackBar.show(context, l.writeYourReview, type: SnackBarType.warning);
+      return;
+    }
+
+    final item = _data;
+    if (item == null) return;
+    final isPackage = widget.type == 'packages' || item['type'] == 'package';
+    setState(() => _reviewSubmitting = true);
+    try {
+      await ref.read(reviewProvider.notifier).createReview({
+        if (isPackage) 'package_id': widget.id else 'product_id': widget.id,
+        'rating': _reviewRating,
+        'comment': comment,
+      });
+      if (!mounted) return;
+      _reviewController.clear();
+      AppSnackBar.show(context, l.reviewSubmitted, type: SnackBarType.success);
+      await _fetchDetail();
+    } catch (e) {
+      if (mounted) {
+        AppSnackBar.show(
+          context,
+          '${l.reviewFailed}: ${LocalizedError.of(l, e.toString())}',
+          type: SnackBarType.error,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _reviewSubmitting = false);
+    }
+  }
+
+  Widget _buildInlineReviewComposer() {
+    final l = AppLocalizations.of(context)!;
+    final signedIn = ref.watch(authProvider) is AuthAuthenticated;
+    return Container(
+      padding: const EdgeInsets.all(AppSizes.sm),
+      decoration: BoxDecoration(
+        color: AppColors.secondaryColor.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l.writeReview, style: AppTextStyles.titleSmall),
+          SizedBox(height: AppSizes.xs),
+          Row(
+            children: List.generate(
+              5,
+              (index) => IconButton(
+                tooltip: '${index + 1}',
+                visualDensity: VisualDensity.compact,
+                onPressed: signedIn
+                    ? () => setState(() => _reviewRating = index + 1)
+                    : _submitInlineReview,
+                icon: Icon(
+                  index < _reviewRating ? Icons.star : Icons.star_border,
+                  color: AppColors.warningColor,
+                ),
+              ),
+            ),
+          ),
+          TextField(
+            controller: _reviewController,
+            minLines: 2,
+            maxLines: 4,
+            enabled: signedIn && !_reviewSubmitting,
+            decoration: InputDecoration(
+              hintText: signedIn ? l.writeYourReview : l.writeReview,
+              border: const OutlineInputBorder(),
+            ),
+          ),
+          SizedBox(height: AppSizes.sm),
+          Align(
+            alignment: Alignment.centerRight,
+            child: AppButton(
+              label: l.submitReview,
+              loading: _reviewSubmitting,
+              onPressed: _submitInlineReview,
+              type: ButtonType.primary,
+              width: 150,
+              height: 42,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _openUserReviews(Map<String, dynamic> r) {
-    final userId = r['user_id']?.toString();
+    final userId = _reviewUserId(r);
     if (userId == null || userId.isEmpty) {
       _openAllReviews();
       return;
@@ -632,11 +763,22 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
     );
   }
 
+  String? _reviewUserId(Map<String, dynamic> r) {
+    final directId = (r['user_id'] ?? r['reviewer_id'])?.toString();
+    if (directId != null && directId.isNotEmpty) return directId;
+    final user = r['user'];
+    if (user is Map<String, dynamic>) {
+      final nestedId = (user['id'] ?? user['uuid'])?.toString();
+      if (nestedId != null && nestedId.isNotEmpty) return nestedId;
+    }
+    return null;
+  }
+
   String _reviewUserName(Map<String, dynamic> r) {
     final flat = r['user_name'] as String?;
     if (flat != null && flat.isNotEmpty) return flat;
     final user = r['user'] as Map<String, dynamic>?;
-    return (user?['full_name'] as String?) ?? '';
+    return (user?['full_name'] ?? user?['name'] ?? '') as String;
   }
 
   String? _reviewAvatar(Map<String, dynamic> r) {

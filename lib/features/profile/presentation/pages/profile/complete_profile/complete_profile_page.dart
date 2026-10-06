@@ -297,6 +297,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
       }
       _dataLoaded = true;
       if (mounted) setState(() {});
+      _redirectIfAlreadyComplete(userData);
     });
     // Fallback: jika profil belum dimuat (mis. baru selesai registrasi), isi
     // email dari akun terautentikasi agar tidak terkirim kosong ke backend.
@@ -307,6 +308,47 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
         if (mounted) setState(() {});
       }
     }
+  }
+
+  /// Sudah lengkap -> langsung ke Security Question, jangan stuck di form.
+  ///
+  /// Padanan `CompleteProfilePage::mount()` di Filament, yang me-redirect ke
+  /// Home kalau `isProfileComplete()`. Bedanya hanya tujuan: di mobile
+  /// Security Question adalah langkah setelah profil, jadi form yang sudah
+  /// tidak ada isinya harus mengarah ke sana, bukan keluar dari alur.
+  ///
+  /// Dipanggil setelah profil termuat, bukan dari initState: perlu data
+  /// profil untuk tahu apakah field wajibnya sudah terisi, dan profil baru
+  /// ada setelah fetch selesai.
+  void _redirectIfAlreadyComplete(Map<String, dynamic>? userData) {
+    if (userData == null) return;
+
+    // Field yang sama persis dengan User::isProfileComplete() di backend.
+    // Daftar ini harus disimpan sinkron dengan sana; kalau backend menambah
+    // field baru dan daftar ini tidak, akun yang dianggap belum lengkap di
+    // mobile akan lolos ke form yang isinya sudah penuh.
+    const required = [
+      'first_name',
+      'mid_name',
+      'last_name',
+      'whatsapp',
+      'gender',
+      'address',
+      'occupation',
+      'identity_type',
+    ];
+    final isComplete = required.every((field) {
+      final value = userData[field];
+      // Nilai di sini dynamic, jadi harus dikonversi dulu sebelum .trim()
+      // -- bukan berarti sudah pasti String.
+      return value != null && value.toString().trim().isNotEmpty;
+    });
+    if (!isComplete) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.go('/security-question');
+    });
   }
 
   GlobalKey? _sectionKey(String section) {
@@ -683,10 +725,16 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
               l.profileSavedVerifyEmail,
               type: SnackBarType.success,
             );
+            // Complete Profile → OTP → Security Question.
+            //
+            // Sama seperti OtpEmailVerificationPrompt::verify() di backend:
+            // setelah OTP valid, alur berlanjut ke SecurityQuestion, bukan
+            // berhenti di halaman profil.
             showOtpVerificationSheet(
               context,
               email: newEmail,
               purpose: 'verify_email',
+              onVerified: () async => context.go('/security-question'),
             );
           }
         } catch (_) {
@@ -696,7 +744,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
               l.profileSavedFailedSendOtp,
               type: SnackBarType.warning,
             );
-            context.go('/home');
+            context.go('/security-question');
           }
         }
       } else {
@@ -706,7 +754,11 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
             l.profileUpdated,
             type: SnackBarType.success,
           );
-          context.go('/home');
+          // Complete Profile → Security Question.
+          //
+          // SecurityQuestionPage yang sendirinya mengarahkan ke Home kalau
+          // penandanya sudah terisi, jadi tidak perlu dicek di sini.
+          context.go('/security-question');
         }
       }
     } catch (e) {

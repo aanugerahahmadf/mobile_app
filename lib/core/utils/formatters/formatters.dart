@@ -47,7 +47,19 @@ class Formatters {
       if (diff.inMinutes < 60) return '${diff.inMinutes} menit lalu';
       if (diff.inHours < 24) return '${diff.inHours} jam lalu';
       if (diff.inDays < 7) return '${diff.inDays} hari lalu';
-      return DateFormat('dd MMM', 'id').format(date);
+      // Tanpa cabang ini, chat/activity yang lebih dari 7 hari langsung
+      // difallback ke tanggal absolut, jadi pengguna kehilangan konteks
+      // "berapa lama lalu".
+      if (diff.inDays < 30) {
+        final weeks = diff.inDays ~/ 7;
+        return weeks == 1 ? '1 minggu lalu' : '$weeks minggu lalu';
+      }
+      if (diff.inDays < 365) {
+        final months = diff.inDays ~/ 30;
+        return months == 1 ? '1 bulan lalu' : '$months bulan lalu';
+      }
+      final years = diff.inDays ~/ 365;
+      return years == 1 ? '1 tahun lalu' : '$years tahun lalu';
     } catch (_) {
       return dateStr;
     }

@@ -1,3 +1,4 @@
+import 'package:mobile_app/l10n/app_localizations.dart';
 import '../search_suggestion/search_suggestion.dart';
 
 class SearchResult {
@@ -5,7 +6,10 @@ class SearchResult {
 
   const SearchResult({this.items = const []});
 
-  factory SearchResult.fromJson(Map<String, dynamic> json) {
+  factory SearchResult.fromJson(
+    Map<String, dynamic> json, {
+    AppLocalizations? l,
+  }) {
     final data = json['data'] as Map<String, dynamic>? ?? json;
     final items = <SearchSuggestion>[];
 
@@ -13,7 +17,9 @@ class SearchResult {
       final list =
           (data[entry.key] as List<dynamic>?)?.cast<Map<String, dynamic>>() ??
           [];
-      items.addAll(list.map((e) => SearchSuggestion.fromJson(entry.value, e)));
+      items.addAll(
+        list.map((e) => SearchSuggestion.fromJson(entry.value, e, l: l)),
+      );
     }
 
     return SearchResult(items: items);

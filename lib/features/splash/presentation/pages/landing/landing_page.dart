@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../../core/constants/app_colors/app_colors.dart';
 import '../../../../../core/constants/app_sizes/app_sizes.dart';
 import '../../../../../core/utils/guest_mode/guest_mode.dart';
@@ -9,6 +10,7 @@ import '../../../../../core/widgets/app_button/app_button.dart';
 import '../../../../auth/presentation/providers/auth_provider/auth_provider.dart';
 import '../../../../auth/presentation/providers/biometric_settings_provider/biometric_settings_provider.dart';
 import '../../../../auth/presentation/widgets/auth_modals/auth_modals.dart';
+import '../../../../auth/presentation/widgets/social_login_button/social_login_button.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 
 class LandingPage extends ConsumerStatefulWidget {
@@ -27,7 +29,22 @@ class _LandingPageState extends ConsumerState<LandingPage> {
     });
   }
 
+  /// Tandai bahwa pengguna sudah melewati layar awal.
+  ///
+  /// Flag `onboarding_seen` dibaca `redirect` global di `app_router.dart`.
+  /// Selama flag ini belum true, semua navigasi dipaksa balik ke '/landing'.
+  /// Karena itu flag wajib di-set di MOMEN pengguna melanjutkan (login berhasil
+  /// atau "continue as guest"), bukan hanya di layar onboarding — halaman itu
+  /// tidak pernah di-route sehingga tidak pernah dieksekusi.
+  Future<void> _markOnboardingSeen() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('onboarding_seen', true);
+  }
+
   Future<void> _routeAfterAuth() async {
+    // Set flag dulu: bila `loadAppLockFlags` melempar, pengguna tidak boleh
+    // terjebak di '/landing' tanpa jalan keluar.
+    await _markOnboardingSeen();
     final flags = await loadAppLockFlags(
       email: ref.read(currentAccountEmailProvider),
     );
@@ -144,7 +161,7 @@ class _LandingPageState extends ConsumerState<LandingPage> {
       child: Column(
         children: [
           AppButton(
-                label: l.getStarted,
+                label: l.signInToAccount,
                 type: ButtonType.primaryGradient,
                 icon: Icons.arrow_forward_rounded,
                 height: 52,
@@ -153,6 +170,11 @@ class _LandingPageState extends ConsumerState<LandingPage> {
               .animate()
               .fadeIn(duration: 500.ms, delay: 200.ms)
               .slideY(begin: 0.2, duration: 500.ms),
+          const SizedBox(height: AppSizes.sm),
+          SocialLoginButton(
+            provider: SocialProvider.google,
+            onPressed: () => ref.read(authProvider.notifier).googleLogin(),
+          ),
           const SizedBox(height: AppSizes.sm),
           AppButton(
                 label: l.continueAsGuest,
@@ -170,6 +192,7 @@ class _LandingPageState extends ConsumerState<LandingPage> {
 
   Future<void> _continueAsGuest() async {
     await ref.read(guestModeProvider.notifier).setEnabled(true);
+    await _markOnboardingSeen();
     if (mounted) context.go('/home');
   }
 }

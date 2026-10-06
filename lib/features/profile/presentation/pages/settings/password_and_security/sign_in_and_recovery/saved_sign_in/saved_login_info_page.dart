@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:dio/dio.dart';
 import '../../../../../../../../core/widgets/guest_auth_prompt/guest_auth_prompt.dart';
 import '../../../../../../../auth/presentation/providers/auth_provider/auth_provider.dart';
@@ -135,6 +136,13 @@ class _SavedLoginInfoPageState extends ConsumerState<SavedLoginInfoPage> {
           : ListView(
               padding: const EdgeInsets.all(AppSizes.md),
               children: [
+                // ═══ SUBJUDUL HALAMAN ═══
+                Text(
+                  l.savedLoginPageSubtitle,
+                  style: AppTextStyles.bodySmall,
+                ),
+                const SizedBox(height: AppSizes.md),
+
                 // ═══ ICON + EXPLANATION ═══
                 Card(
                   shape: RoundedRectangleBorder(
@@ -195,6 +203,49 @@ class _SavedLoginInfoPageState extends ConsumerState<SavedLoginInfoPage> {
                     ),
                     value: _savedLoginEnabled,
                     onChanged: _toggling ? null : (v) => _toggleSavedLogin(v),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSizes.lg),
+
+                // Daftar perangkat + tombol hapus.
+                //
+                // Halaman `SavedLogin` di Filament BUKAN hanya saklar
+                // simpan-tidak: di bawah saklarnya ada daftar
+                // $devices dengan tombol "Hapus" per perangkat dan "Hapus
+                // Semua Sign In Tersimpan" di akhir. Mobile sebelumnya
+                // hanya punya saklarnya, jadi separuh isi halaman hilang
+                // tanpa jejak -- tidak ada tempat pengguna mencabut
+                // perangkat yang menyimpan info Sign In-nya.
+                //
+                // Daftar penuhnya tidak digabung di sini tapi dibuka lewat
+                // /trusted-devices: isinya persis sama (daftar + hapus per
+                // perangkat + hapus semua, dari endpoint yang sama), dan
+                // halaman itu sudah ada serta dipakai juga dari Two Factor.
+                Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ListTile(
+                    leading: const Icon(
+                      Icons.devices_other,
+                      color: AppColors.primaryColor,
+                    ),
+                    title: Text(
+                      l.savedLoginDevices,
+                      style: AppTextStyles.bodyMedium,
+                    ),
+                    subtitle: Text(
+                      l.savedLoginDevicesDesc,
+                      style: AppTextStyles.bodySmall,
+                    ),
+                    trailing: Icon(
+                      Icons.chevron_right,
+                      color: AppColors.textSecondary,
+                    ),
+                    onTap: () => context.push('/trusted-devices'),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),

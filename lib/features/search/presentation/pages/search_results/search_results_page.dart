@@ -152,7 +152,7 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
         .toList();
     final grouped = <String, List<SearchSuggestion>>{};
     for (final item in visibleItems) {
-      grouped.putIfAbsent(item.type.badgeLabel, () => []).add(item);
+      grouped.putIfAbsent(item.type.badgeLabel(l), () => []).add(item);
     }
 
     final sortedKeys = grouped.keys.toList()
@@ -175,7 +175,7 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
             l,
             key,
             grouped[key]!,
-            items.firstWhere((i) => i.type.badgeLabel == key).type,
+            items.firstWhere((i) => i.type.badgeLabel(l) == key).type,
           ),
         ),
       ],

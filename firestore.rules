@@ -1,18 +1,26 @@
-rules_version='2'
+rules_version='2';
 
+// Firestore belum dipakai oleh aplikasi.
+//
+// Library Firebase yang benar-benar dipakai hanya `firebase_core` (init) dan
+// `firebase_messaging` (FCM push). Tidak ada import `cloud_firestore` atau
+// `firebase_database` di lib/ — data disimpan di backend Laravel, diakses via
+// REST API + Sanctum.
+//
+// Rules ini sebelumnya memakai template Firebase "publik 30 hari":
+//
+//     allow read, write: if request.time < timestamp.date(2026, 10, 5);
+//
+// Tanggal itu sudah lewat, jadi sejak 5 Oktober 2026 SEMUA akses Firestore
+// ditolak. Kebetulan itu aman, tapi hanya karena kedaluwarsa, bukan karena
+// disengaja.
+//
+// Sekarang ditulis eksplisit: tolak semua. Kalau Firestore nanti dipakai,
+// rules ini harus ditulis ulang untuk collection yang benar-benar diakses.
 service cloud.firestore {
   match /databases/{database}/documents {
     match /{document=**} {
-      // This rule allows anyone with your database reference to view, edit,
-      // and delete all data in your database. It is useful for getting
-      // started, but it is configured to expire after 30 days because it
-      // leaves your app open to attackers. At that time, all client
-      // requests to your database will be denied.
-      //
-      // Make sure to write security rules for your app before that time, or
-      // else all client requests to your database will be denied until you
-      // update your rules.
-      allow read, write: if request.time < timestamp.date(2026, 10, 5);
+      allow read, write: if false;
     }
   }
 }

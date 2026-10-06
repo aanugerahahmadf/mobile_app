@@ -453,7 +453,17 @@ Future<void> showOtpVerificationSheet(
   );
 }
 
-Future<void> showResetPasswordSheet(BuildContext context) {
+/// Reset kata sandi setelah OTP terverifikasi.
+///
+/// [email] dan [otp] WAJIB diteruskan. Endpoint /reset-password memverifikasi
+/// ulang keduanya -- bukan sekadar menandai "sudah lewat OTP" -- jadi sheet ini
+/// tidak bisa dibuka tanpa membawa bukti yang asli. sheets sebelumnya tidak
+/// mengirim apa pun sehingga selalu ditolak 422.
+Future<void> showResetPasswordSheet(
+  BuildContext context, {
+  required String email,
+  required String otp,
+}) {
   return showModalBottomSheet(
     context: _rootContext(context),
     isScrollControlled: true,
@@ -461,9 +471,421 @@ Future<void> showResetPasswordSheet(BuildContext context) {
     isDismissible: false,
     enableDrag: false,
     backgroundColor: Colors.transparent,
-    builder: (_) =>
-        const _AuthSheetWrapper(child: _ResetPasswordSheetContent()),
+    builder: (_) => _AuthSheetWrapper(
+      child: _ResetPasswordSheetContent(email: email, otp: otp),
+    ),
   );
+}
+
+/// Verifikasi 2FA setelah Sign In.
+///
+/// Padanan `OtpEmailOrTwoFactory` di panel Filament: satu tempat untuk tiga
+/// cara membuktikan identitas (aplikasi autentikasi / email / kode
+/// pemulihan), dipilih lewat "Opsi Lainnya". Tidak ada centang "ingat
+/// perangkat ini" -- di panel centang itu default-nya menyala, dan begitu
+/// menyala 2FA tidak pernah diminta lagi. Mobile selalu meminta.
+Future<void> showTwoFactorVerifySheet(BuildContext context) {
+  return showModalBottomSheet(
+    context: _rootContext(context),
+    isScrollControlled: true,
+    useSafeArea: true,
+    isDismissible: false,
+    enableDrag: false,
+    backgroundColor: Colors.transparent,
+    builder: (_) => const _AuthSheetWrapper(
+      child: _TwoFactorVerifySheetContent(),
+    ),
+  );
+}
+
+class _TwoFactorVerifySheetContent extends ConsumerStatefulWidget {
+  const _TwoFactorVerifySheetContent();
+
+  @override
+  ConsumerState<_TwoFactorVerifySheetContent> createState() =>
+      _TwoFactorVerifySheetContentState();
+}
+
+class _TwoFactorVerifySheetContentState
+    extends ConsumerState<_TwoFactorVerifySheetContent> {
+  static const String _methodAuthenticator = 'authenticator';
+  static const String _methodEmail = 'email';
+  static const String _methodRecovery = 'recovery';
+
+  final _formKey = GlobalKey<FormState>();
+  final _codeController = TextEditingController();
+
+  /// Challenge dibaca dari provider, bukan diteruskan sebagai argumen.
+  ///
+  /// `showTwoFactorVerifySheet()` tidak menerima apa pun: sheet ini hanya
+  /// muncul setelah [AuthTwoFactorRequired], jadi membacanya dari sana
+  /// memastikan challenge yang dipakai adalah challenge yang sedang aktif --
+  /// bukan salinan yang bisa sudah basi.
+  AuthTwoFactorRequired? get _challenge {
+    final state = ref.read(authProvider);
+    return state is AuthTwoFactorRequired ? state : null;
+  }
+
+  late String _method;
+  bool _verifying = false;
+  bool _resending = false;
+  bool _moreOpen = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _method = _challenge?.method ?? _methodAuthenticator;
+  }
+
+  @override
+  void dispose() {
+    _codeController.dispose();
+    super.dispose();
+  }
+
+  bool get _isRecovery => _method == _methodRecovery;
+  bool get _isEmail => _method == _methodEmail;
+
+  /// Kode pemulihan "abcd-efgh" -> "ABCD-EFGH".
+  ///
+  /// Dilakukan di sisi klien karena SQLite/MySQL membandingkan string
+  /// case-sensitive, dan pengguna tidak selalu mengetik huruf besar.
+  String get _normalizedCode => _isRecovery
+      ? _codeController.text.trim().toUpperCase()
+      : _codeController.text.replaceAll(RegExp(r'\D'), '');
+
+  String _hint(AppLocalizations l) {
+    if (_isRecovery) return l.twoFactorRecoveryHint;
+    if (_isEmail) return l.twoFactorEmailHint;
+    return l.twoFactorAuthenticatorHint;
+  }
+
+  void _switchMethod(String method) {
+    if (method == _method) return;
+    setState(() {
+      _method = method;
+      _moreOpen = false;
+      _codeController.clear();
+    });
+  }
+
+  Future<void> _onVerify() async {
+    final l = AppLocalizations.of(context)!;
+    final challenge = _challenge;
+    if (challenge == null) {
+      _closeAndSignIn();
+      return;
+    }
+
+    final code = _normalizedCode;
+    final valid = _isRecovery ? code.length == 9 : code.length == 6;
+    if (!valid) {
+      AppNotification.show(
+        context,
+        _isRecovery ? l.twoFactorRecoveryCodeLabel : l.enter6DigitOtp,
+        type: NotificationType.error,
+      );
+      return;
+    }
+
+    // Context milik Navigator, bukan milik State sheet ini. Diambil sebelum
+    // sheet ditutup karena `context` yang jadi tidak aktif setelah pop,
+    // sedangkan context milik Navigator tidak pernah ikut hilang -- jadi
+    // tetap aman dipakai setelah `await`.
+    //
+    // Karena itu lint use_build_context_synchronously tidak berlaku di
+    // pemakaian di bawah, dan diabaikan dengan alasan.
+    // ignore: use_build_context_synchronously
+    final navContext = Navigator.of(context).context;
+
+    setState(() => _verifying = true);
+    try {
+      await ref
+          .read(authProvider.notifier)
+          .verifyTwoFactor(
+            challengeToken: challenge.challengeToken,
+            code: code,
+            method: _method,
+          );
+
+      // Berhasil: provider sudah menjadi AuthAuthenticated. Sheet ditutup
+      // supaya listener di halaman Sign In -- yang masih hidup di bawah
+      // sheet ini -- bisa menjalankan sisa alurnya. Navigasi dari sini
+      // justru akan menggandakan langkah yang sama.
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    } on TwoFactorVerifyException catch (e) {
+      if (!mounted) return;
+      setState(() => _verifying = false);
+
+      // Challenge kedaluwarsa: tidak ada yang bisa dicoba lagi, jadi sheet
+      // menutup diri dan pengguna kembali ke form Sign In.
+      if (e.sessionExpired) {
+        Navigator.of(context).pop();
+        _backToSignIn(
+          // ignore: use_build_context_synchronously
+          navContext,
+          e.message.isEmpty ? l.twoFactorSessionExpired : e.message,
+        );
+        return;
+      }
+
+      _codeController.clear();
+      AppNotification.show(
+        context,
+        e.message.isEmpty ? l.twoFactorWrongCodeBody : e.message,
+        type: NotificationType.error,
+      );
+    }
+  }
+
+  Future<void> _onResend() async {
+    final l = AppLocalizations.of(context)!;
+    final challenge = _challenge;
+    if (challenge == null || _resending) return;
+
+    setState(() => _resending = true);
+    final ok = await ref
+        .read(authProvider.notifier)
+        .resendTwoFactorCode(challenge.challengeToken);
+    if (!mounted) return;
+    setState(() => _resending = false);
+
+    AppNotification.show(
+      context,
+      ok ? l.verificationCodeSent : l.failedSendVerificationCode,
+      type: ok ? NotificationType.success : NotificationType.error,
+    );
+  }
+
+  void _closeAndSignIn() {
+    if (!mounted) return;
+    // Challenge yang ditinggalkan harus dibuang dari provider, kalau tidak
+    // state AuthTwoFactorRequired tertinggal dan sheet berikutnya akan
+    // menemukan challenge lama yang sudah tidak berlaku di server.
+    ref.read(authProvider.notifier).resetTwoFactorChallenge();
+    if (!mounted) return;
+    // ignore: use_build_context_synchronously
+    final navContext = Navigator.of(context).context;
+    Navigator.of(context).pop();
+    showSignInSheet(navContext);
+  }
+
+  /// Tutup sheet ini lalu buka ulang form Sign In, dengan pesan kesalahan.
+  ///
+  /// Dipisah jadi method sendiri supaya `navContext` dipakai di dalam fungsi
+  /// yang tidak punya async gap -- di tempat aslinya, memakai context yang
+  /// diambil sebelum `await` tetap dianggap lemah oleh analyzer karena ia
+  /// tidak bisa membuktikan context itu milik Navigator.
+  void _backToSignIn(BuildContext navContext, String? message) {
+    final l = AppLocalizations.of(navContext)!;
+    AppNotification.show(
+      navContext,
+      message ?? l.twoFactorSessionExpired,
+      type: NotificationType.error,
+    );
+    showSignInSheet(navContext);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final challenge = _challenge;
+
+    // Challenge hilang (mis. state's sudah berubah di bawahnya). Sheet tidak
+    // lagi punya apa-apa untuk diverifikasi, jadi jangan render form yang
+    // pasti ditolak server.
+    if (challenge == null) {
+      return const SizedBox.shrink();
+    }
+
+    return SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(
+        AppSizes.lg,
+        AppSizes.sm,
+        AppSizes.lg,
+        AppSizes.lg + MediaQuery.of(context).viewInsets.bottom,
+      ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: AppSizes.sm),
+            Row(
+              children: [
+                SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: _verifying ? null : _closeAndSignIn,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    _isRecovery
+                        ? l.twoFactorRecoveryTitle
+                        : l.twoFactorVerifyTitle,
+                    style: AppTextStyles.headlineMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(width: 40),
+              ],
+            ),
+            const SizedBox(height: AppSizes.xs),
+            Text(
+              _hint(l),
+              style: AppTextStyles.bodyLarge.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: AppSizes.xl),
+
+            // ── Kode ────────────────────────────────────────────────
+            TextField(
+              controller: _codeController,
+              autofocus: true,
+              textAlign: TextAlign.center,
+              keyboardType: _isRecovery
+                  ? TextInputType.text
+                  : TextInputType.number,
+              inputFormatters: _isRecovery
+                  ? [LengthLimitingTextInputFormatter(9), _UpperCaseFormatter()]
+                  : [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(6),
+                    ],
+              style: GoogleFonts.inter(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                letterSpacing: _isRecovery ? 2 : 6,
+              ),
+              decoration: InputDecoration(
+                counterText: '',
+                hintText: _isRecovery ? 'XXXX-XXXX' : 'XXXXXX',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+              ),
+              onChanged: (_) {
+                // Verifikasi otomatis begitu panjangnya pas, sama seperti
+                // sheet OTP email -- supaya tidak perlu menekan tombol dulu.
+                final code = _normalizedCode;
+                final ready =
+                    _isRecovery ? code.length == 9 : code.length == 6;
+                if (ready && !_verifying) _onVerify();
+              },
+            ),
+            const SizedBox(height: AppSizes.lg),
+
+            AppButton(
+              label: l.verify,
+              loading: _verifying,
+              onPressed: _onVerify,
+              type: ButtonType.primaryGradient,
+            ),
+
+            // ── Opsi Lainnya ───────────────────────────────────────
+            const SizedBox(height: AppSizes.md),
+            Center(
+              child: TextButton.icon(
+                onPressed: () => setState(() => _moreOpen = !_moreOpen),
+                icon: Icon(
+                  _moreOpen ? Icons.expand_less : Icons.expand_more,
+                  size: 18,
+                ),
+                label: Text(l.twoFactorOtherOptions),
+              ),
+            ),
+            if (_moreOpen) ...[
+              const SizedBox(height: AppSizes.xs),
+              _methodTile(
+                l.twoFactorMethodAuthenticator,
+                Icons.phonelink_setup_outlined,
+                _methodAuthenticator,
+              ),
+              _methodTile(
+                l.twoFactorMethodEmail,
+                Icons.email_outlined,
+                _methodEmail,
+              ),
+              _methodTile(
+                l.twoFactorMethodRecovery,
+                Icons.vpn_key_outlined,
+                _methodRecovery,
+              ),
+            ],
+
+            // ── Kirim ulang, hanya relevan untuk kode email ───────
+            if (_isEmail) ...[
+              const SizedBox(height: AppSizes.sm),
+              Center(
+                child: TextButton(
+                  onPressed: _resending ? null : _onResend,
+                  child: Text(
+                    _resending ? l.sending : l.twoFactorResendCode,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      color: AppColors.primaryColor,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+
+            // ── Jalan keluar terakhir ──────────────────────────────
+            // Untuk kasus perangkat autentikasi hilang DAN kode pemulihan
+            // tidak tersimpan. Sheet tidak bisa ditutup begitu saja: tanpa
+            // ini pengguna terkurung di alur yang tidak bisa ia selesaikan.
+            const SizedBox(height: AppSizes.lg),
+            Center(
+              child: TextButton(
+                onPressed: _verifying ? null : _closeAndSignIn,
+                child: Text(
+                  l.logout,
+                  style: AppTextStyles.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSizes.sm),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _methodTile(String label, IconData icon, String method) {
+    final selected = _method == method;
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(
+        icon,
+        color: selected ? AppColors.primaryColor : AppColors.textSecondary,
+      ),
+      title: Text(label, style: AppTextStyles.bodyMedium),
+      trailing: selected
+          ? Icon(Icons.check_circle, color: AppColors.primaryColor, size: 20)
+          : null,
+      onTap: () => _switchMethod(method),
+    );
+  }
+}
+
+/// Memaksa huruf besar saat mengetik kode pemulihan.
+class _UpperCaseFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    return newValue.copyWith(text: newValue.text.toUpperCase());
+  }
 }
 
 class _AuthSheetWrapper extends StatelessWidget {
@@ -580,7 +1002,23 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
     final authState = ref.watch(authProvider);
 
     ref.listen<AuthState>(authProvider, (_, state) {
-      if (state is AuthAuthenticated) {
+      if (state is AuthTwoFactorRequired) {
+        // Kata sandi benar, tapi akun ini memakai 2FA -- padanan
+        // SignIn -> OtpEmailOrTwoFactory di panel Filament.
+        //
+        // Sheet Sign In SENGAJA TIDAK ditutup di sini. Sheet 2FA menumpuk di
+        // atasnya, dan begitu kodenya benar sheet 2FA menutup diri sendiri --
+        // listener di bawah ini (masih hidup karena sheet Sign In belum
+        // ditutup) yang menyelesaikan sisa alurnya ke Home.
+        //
+        // Kalau sheet Sign In ditutup sekarang, setelah 2FA berhasil tidak
+        // ada listener yang tersisa untuk membawa pengguna ke Home, dan
+        // satu-satunya jalan keluar adalah menutup sheet 2FA secara manual.
+        //
+        // Sheet 2FA membaca challenge dari provider sendirinya, jadi di sini
+        // tidak ada apa pun yang perlu diteruskan.
+        showTwoFactorVerifySheet(context);
+      } else if (state is AuthAuthenticated) {
         clearGuestMode();
         if (state.needsOtp) {
           Navigator.of(context).pop();
@@ -1482,12 +1920,31 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
         final navigator = Navigator.of(context);
         final router = GoRouter.of(context);
         navigator.pop();
-        AppNotification.show(
+
+        // Sign Up --> OTP --> Security Question.
+        //
+        // Padanan SignUp -> OtpEmailVerificationPrompt -> SecurityQuestion di
+        // panel Filament. Sheet OTP yang mengirim kodenya sendiri (lihat
+        // _autoSendOtp), jadi di sini cukup membukanya.
+        //
+        // Sheet OTP dibuka langsung, tanpa dialog sukses di antaranya. Versi
+        // sebelumnya memakai dialog dengan tombol "Verifikasi" yang harus
+        // ditekan dulu: itu satu langkah ekstra yang tidak ada di panel, dan
+        // karena dialognya hanya bisa ditutup lewat tombol itu, satu ketukan
+        // di luar tidak apa-apanya -- alurnya tersendat bukan karena perlu
+        // keputusan pengguna.
+        //
+        // Dialog sukses juga tidak ditampilkan di belakang sheet OTP.
+        // AppNotification.show() itu dialog, bukan snackbar: kalau dialog,
+        // ia akan tetap ada di tumpukan route setelah sheet OTP menutup,
+        // megantung tanpa tombol yang tersisa -- persis masalah yang
+        // dijelaskan di _onVerify().
+        showOtpVerificationSheet(
           navigator.context,
-          l.registerSuccess,
-          type: NotificationType.success,
+          email: state.user.email,
+          purpose: 'verify_email',
+          onVerified: () async => router.go('/security-question'),
         );
-        router.go('/home');
       } else if (state is AuthError) {
         AppNotification.show(
           context,
@@ -2548,6 +3005,32 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
   }
 }
 
+/// Sheet OTP verifikasi email.
+///
+/// Isi dan judulnya mengikuti DUA halaman berbeda di panel Filament,
+/// karena memang dua halaman berbeda di sana -- bukan satu halaman dengan
+/// varyasi kecil:
+///
+///   purpose forgot_password    -> `VerifyOtp`
+///       Heading  "Verifikasi Kode OTP"
+///       Teks     "Masukkan 6 digit kode yang kami kirim ke email Anda."
+///       Tombol   "Verifikasi Kode"
+///       Email ditampilkan sebagai field yang terkunci, bukan disisipkan
+///       ke dalam kalimat -- itu bentuknya di sana.
+///
+///   purpose verify_email /     -> `OtpEmailVerificationPrompt`
+///   google_register
+///       Heading  "Verifikasi Email Anda"
+///       Teks     "Silakan masukkan 6 digit kode verifikasi yang telah
+///                kami kirimkan ke alamat email Anda."
+///       Tombol   "Verifikasi"
+///       Tidak ada field email: alamatnya sudah diketahui, jadi
+///      _mi_codes_ hanya muncul di teks subheading.
+///
+/// [_isForgotPassword] membedakan keduanya. Sebelumnya sheet ini memakai
+/// satu set judul generik ("Verifikasi" + "Masukkan kode OTP yang telah
+/// dikirim ke {email}") untuk keduanya, jadi kedua alur menampilkan
+/// kalimat berbeda dari webnya.
 class _OtpVerificationSheetContent extends StatefulWidget {
   final String? email;
   final String purpose;
@@ -2571,6 +3054,25 @@ class _OtpVerificationSheetContentState
   Timer? _resendTimer;
   bool _verifying = false;
   bool _sending = false;
+
+  /// `VerifyOtp` (lupa kata sandi) atau `OtpEmailVerificationPrompt`?
+  bool get _isForgotPassword => widget.purpose == 'forgot_password';
+
+  String _title(AppLocalizations l) =>
+      _isForgotPassword ? l.verifyOtpTitle : l.verifyEmailTitle;
+
+  String _subtitle(AppLocalizations l) =>
+      _isForgotPassword ? l.verifyOtpSubtitle : l.verifyEmailSubtitle;
+
+  String _actionLabel(AppLocalizations l) =>
+      _isForgotPassword ? l.verifyOtpAction : l.verify;
+
+  /// Cooldown kirim ulang, dalam detik.
+  ///
+  /// `OtpEmailVerificationPrompt` memakai 300. `VerifyOtp` tidak punya
+  /// tombol kirim ulang sama sekali, jadi nilai ini tidak dipakai di
+  /// alur lupa kata sandi -- bukan sekadar angka yang sama untuk keduanya.
+  static const int _resendCooldownSeconds = 300;
 
   @override
   void initState() {
@@ -2603,7 +3105,7 @@ class _OtpVerificationSheetContentState
   }
 
   Future<void> _startResendTimer() async {
-    _resendSeconds = 120;
+    _resendSeconds = _resendCooldownSeconds;
     _resendTimer?.cancel();
     _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_resendSeconds <= 0) {
@@ -2633,21 +3135,47 @@ class _OtpVerificationSheetContentState
         data: {'email': widget.email, 'otp': otp, 'purpose': widget.purpose},
       );
       if (!mounted) return;
-      AppNotification.show(
-        context,
-        l.verificationCodeSent,
-        type: NotificationType.success,
-      );
+
+      // Sheet ditutup DULU, baru pindah halaman. Urutannya penting:
+      // showDialog()/showModalBottomSheet() mendorong route-nya ke Navigator
+      // yang sama dengan sheet ini, jadi Navigator.pop() yang dipanggil
+      // sesudahnya akan menutup yang baru itu -- bukan sheet -- dan sheet-nya
+      // tertinggal di layar.
+      final router = GoRouter.of(context);
+
+      // Context milik Navigator, bukan milik State sheet ini. Diambil sebelum
+      // pop karena `context` milik State tidak aktif begitu sheet ditutup,
+      // sedangkan context milik Navigator tidak pernah ikut hilang -- jadi
+      // tetap aman dipakai setelah `await`.
+      //
+      // Karena itu lint use_build_context_synchronously tidak berlaku di
+      // pemakaian di bawah, dan diabaikan dengan alasan, bukan diam-diam.
+      // ignore: use_build_context_synchronously
+      final navContext = Navigator.of(context).context;
       Navigator.of(context).pop();
+
+      // Tidak ada dialog "berhasil" di sini.
+      //
+      // Setiap cabang di bawah sudah membuka sheet atau pindah halaman, dan
+      // layar itu sendiri yang mengonfirmasi OTP-nya diterima. Dialog sukses
+      // hanya akan menutupi tujuan itu dan memaksa pengguna menutupnya dulu.
+      //
+      // Teksnya juga salah untuk momen ini: "Kode OTP berhasil dikirim" --
+      // sementara yang terjadi adalah kode yang sudah DIVERIFIKASI.
+      // Layar berikutnya sudah cukup jelas.
       final onVerified = widget.onVerified;
       if (onVerified != null) {
         await onVerified();
       } else if (widget.purpose == 'forgot_password') {
-        showResetPasswordSheet(context);
+        _openResetPassword(
+          // ignore: use_build_context_synchronously
+          navContext,
+          otp,
+        );
       } else if (widget.purpose == 'google_register') {
-        context.go('/complete-profile');
+        router.go('/complete-profile');
       } else if (widget.purpose == 'verify_email') {
-        context.go('/home');
+        router.go('/home');
       }
     } on DioException catch (e) {
       final msg = e.response?.data?['message'] as String? ?? l.failedVerifyOtp;
@@ -2659,7 +3187,20 @@ class _OtpVerificationSheetContentState
     }
   }
 
-  Future<void> _onResend() async {
+  /// Buka sheet reset kata sandi dengan bukti OTP-nya.
+///
+/// Email dan OTP ikut dibawa karena endpoint /reset-password memverifikasi
+/// ulang keduanya, bukan sekadar percaya bahwa "sudah lewat OTP".
+///
+/// Dipisah dari [_onVerify] supaya `navContext` dipakai di dalam fungsi tanpa
+/// async gap -- di tempat aslinya analyzer tetap menandai pemakaian context
+/// yang diambil sebelum `await` sebagai lemah, walau context itu milik
+/// Navigator dan tidak pernah ikut hilang.
+void _openResetPassword(BuildContext navContext, String otp) {
+  showResetPasswordSheet(navContext, email: widget.email ?? '', otp: otp);
+}
+
+Future<void> _onResend() async {
     final l = AppLocalizations.of(context)!;
     if (_resendSeconds > 0 || _sending) return;
     setState(() => _sending = true);
@@ -2715,7 +3256,7 @@ class _OtpVerificationSheetContentState
               ),
               Expanded(
                 child: Text(
-                  l.verify,
+                  _title(l),
                   style: AppTextStyles.headlineMedium,
                   textAlign: TextAlign.center,
                 ),
@@ -2725,15 +3266,28 @@ class _OtpVerificationSheetContentState
           ),
           const SizedBox(height: AppSizes.xs),
           Text(
-            widget.email != null
-                ? '${l.enterOtpSentTo} ${widget.email!}'
-                : '${l.enterOtpSentTo} ${l.email}',
+            _subtitle(l),
             style: AppTextStyles.bodyMedium.copyWith(
               color: AppColors.textSecondary,
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
+
+          // Hanya VerifyOtp yang menampilkan email sebagai field terkunci.
+          // Di OtpEmailVerificationPrompt tidak ada field seperti ini --
+          // alamat email-nya sudah diketahui, jadi tidak perlu diulang.
+          if (_isForgotPassword && (widget.email?.isNotEmpty ?? false)) ...[
+            TextFormField(
+              initialValue: widget.email,
+              // enabled: false, bukan readOnly: di Filament field ini
+              // `->disabled()`, jadi warnanya juga abu-abu, bukan cuma
+              // tidak bisa diketik.
+              enabled: false,
+              decoration: InputDecoration(labelText: l.email),
+            ),
+            const SizedBox(height: AppSizes.sm),
+          ],
           TextField(
             controller: _otpController,
             focusNode: _otpFocusNode,
@@ -2785,8 +3339,13 @@ class _OtpVerificationSheetContentState
                   ),
                 ],
               ),
-            )
-          else
+            ),
+
+          // Tombol kirim ulang hanya milik OtpEmailVerificationPrompt.
+          // VerifyOtp (lupa kata sandi) tidak punya resendNotificationAction
+          // sama sekali, jadi tidak ada apa pun untuk ditampilkan di situ.
+          if (!_isForgotPassword) ...[
+            const SizedBox(height: 8),
             GestureDetector(
               onTap: _resendSeconds <= 0 && !_sending ? _onResend : null,
               child: Text(
@@ -2806,6 +3365,15 @@ class _OtpVerificationSheetContentState
                 ),
               ),
             ),
+          ],
+
+          const SizedBox(height: AppSizes.lg),
+          AppButton(
+            label: _actionLabel(l),
+            loading: _verifying,
+            onPressed: _onVerify,
+            type: ButtonType.primary,
+          ),
           const SizedBox(height: AppSizes.sm),
         ],
       ),
@@ -2814,7 +3382,10 @@ class _OtpVerificationSheetContentState
 }
 
 class _ResetPasswordSheetContent extends StatefulWidget {
-  const _ResetPasswordSheetContent();
+  final String email;
+  final String otp;
+
+  const _ResetPasswordSheetContent({required this.email, required this.otp});
 
   @override
   State<_ResetPasswordSheetContent> createState() =>
@@ -2842,9 +3413,15 @@ class _ResetPasswordSheetContentState
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
+      // email + otp ikut dikirim karena endpoint memverifikasi keduanya.
+      // Ini yang membuat alur ini benar-benar bisa lewat: tanpa keduanya,
+      // server tidak punya apa pun untuk dicocokkan -- see
+      // AuthController::resetPassword().
       await DioClient.instance.post(
         ApiEndpoints.resetPassword,
         data: {
+          'email': widget.email,
+          'otp': widget.otp,
           'password': _passwordController.text,
           'password_confirmation': _confirmPasswordController.text,
         },
@@ -2910,6 +3487,18 @@ class _ResetPasswordSheetContentState
               ),
             ),
             const SizedBox(height: AppSizes.xl),
+
+            // Email terkunci, persis seperti getEmailFormComponent() di
+            // OtpResetPassword.php (->disabled()). Menampilkan email mana
+            // yang sedang diubah kata sandinya penting: kalau dari perangkat
+            // bersama, ini satu-satunya pengingat akun mana yang dipakai.
+            TextFormField(
+              initialValue: widget.email,
+              enabled: false,
+              decoration: InputDecoration(labelText: l.email),
+            ),
+            const SizedBox(height: AppSizes.md),
+
             AppTextField(
               label: l.newPassword,
               controller: _passwordController,

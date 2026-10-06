@@ -13,6 +13,7 @@ import '../../../../../core/api/dio_client/dio_client.dart';
 import '../../../../../core/errors/app_error_codes/app_error_codes.dart';
 import '../../../../../core/services/notification_service/notification_service.dart';
 import '../../../../../core/utils/guest_mode/guest_mode.dart';
+import '../../../../../core/utils/security_question_prompt/security_question_prompt.dart';
 import '../../../data/models/user_model/user_model.dart';
 import '../biometric_settings_provider/biometric_settings_provider.dart' show resetAppLock;
 
@@ -69,6 +70,54 @@ class AuthAuthenticated extends AuthState {
 class AuthError extends AuthState {
   final String message;
   const AuthError(this.message);
+}
+
+/// Kata sandi sudah benar, tapi akun ini memakai 2FA -- belum ada token.
+///
+/// State ini bukan error: belum ada apa-apa yang salah, yang belum ada hanya
+/// bukti kedua. Dipisah dari [AuthError] supaya listener tidak sempat
+/// menampilkan "Autentikasi Gagal" untuk langkah yang memang diharapkan.
+///
+/// Sebaliknya dari [AuthAuthenticated] di semua hal yang penting: token
+/// BELUM ditulis ke penyimpanan, jadi aplikasi ini belum benar-benar masuk.
+/// Itulah yang membuat state ini aman -- kalau sheet 2FA ditutup, tidak ada
+/// yang tersisa untuk dibajak.
+class AuthTwoFactorRequired extends AuthState {
+  /// Token sementara milik challenge ini, bukan hak akses.
+  ///
+  /// Diteruskan apa adanya ke /auth/two-factor/verify. Tidak disimpan di
+  /// mana pun: ia hanya hidup selama sheet terbuka.
+  final String challengeToken;
+
+  /// Metode awal yang dipilih server: authenticator | email.
+  final String method;
+
+  /// Email tujuan kode, hanya untuk ditampilkan di sheet.
+  final String email;
+
+  const AuthTwoFactorRequired({
+    required this.challengeToken,
+    required this.method,
+    required this.email,
+  });
+}
+
+/// Kode 2FA salah / challenge kedaluwarsa.
+///
+/// Tanpa tipe ini, sheet 2FA harus membedakan "coba lagi" dari "sesi habis,
+/// Sign In ulang" dengan memeriksa string pesan -- rapuh, karena teks pesan
+/// ikut diterjemahkan.
+class TwoFactorVerifyException implements Exception {
+  final String message;
+
+  /// Challenge sudah tidak berlaku, jadi sheet perlu menutup diri dan
+  /// mengarahkan pengguna kembali ke form Sign In.
+  final bool sessionExpired;
+
+  const TwoFactorVerifyException(this.message, {this.sessionExpired = false});
+
+  @override
+  String toString() => message;
 }
 
 final _googleSignIn = GoogleSignIn(
@@ -203,6 +252,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final respData = response.data as Map<String, dynamic>? ?? {};
       final inner = respData['data'] as Map<String, dynamic>? ?? respData;
 
+      // 2FA aktif: server sengaja TIDAK menerbitkan token. Ini cabang
+      // terpisah, bukan error -- yang belum ada hanya bukti kedua.
+      if (respData['status'] == 'two_factor_required') {
+        state = AuthTwoFactorRequired(
+          challengeToken: inner['challenge_token'] as String? ?? '',
+          method: inner['method'] as String? ?? 'authenticator',
+          email: inner['email'] as String? ?? '',
+        );
+        return;
+      }
+
       final token = inner['token'] as String?;
       final userMap = inner['user'] as Map<String, dynamic>?;
       if (token == null || userMap == null) {
@@ -225,6 +285,91 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = AuthError(msg);
     } catch (e) {
       state = AuthError(AppErrorCodes.anErrorOccurred);
+    }
+  }
+
+  /// Verifikasi kode 2FA, lalu terbitkan sesi.
+  ///
+  /// Dipanggil dari sheet 2FA setelah [AuthTwoFactorRequired]. Berhasil ->
+  /// [AuthAuthenticated] seperti login biasa; token yang sama bookkeeping-nya
+  /// (disimpan ke secure storage + daftar akun tersimpan) supaya kedua jalan
+  /// masuk tidak menghasilkan state berbeda setelahnya.
+  Future<void> verifyTwoFactor({
+    required String challengeToken,
+    required String code,
+    required String method,
+  }) async {
+    final previous = state;
+    state = const AuthLoading();
+    try {
+      final response = await _dio.post(
+        ApiEndpoints.twoFactorVerify,
+        data: {
+          'challenge_token': challengeToken,
+          'code': code,
+          'method': method,
+        },
+      );
+      final respData = response.data as Map<String, dynamic>? ?? {};
+      final inner = respData['data'] as Map<String, dynamic>? ?? respData;
+
+      final token = inner['token'] as String?;
+      final userMap = inner['user'] as Map<String, dynamic>?;
+      if (token == null || userMap == null) {
+        throw Exception(AppErrorCodes.loginFailed);
+      }
+      final user = UserModel.fromJson(userMap);
+      await _storage.write(key: 'auth_token', value: token);
+      await _addOrUpdateAccount(
+        SavedAccount(
+          email: user.email,
+          fullName: user.fullName,
+          avatarUrl: user.avatarUrl,
+          token: token,
+        ),
+      );
+      _setAuthenticated(user);
+    } on DioException catch (e) {
+      // Kode salah: challenge di server masih hidup, jadi pengguna boleh
+      // mencoba lagi. State sebelumnya dikembalikan, bukan AuthInitial --
+      // pindah ke AuthInitial akan memutus sheet 2FA yang sedang terbuka.
+      // 401 = challenge sudah kedaluwarsa atau 2FA dimatikan di tengah
+      // jalan. Kode salah sendiri dijawab 422, jadi keduanya bisa dibedakan
+      // tanpa membaca teks pesan.
+      final expired = e.response?.statusCode == 401;
+
+      state = expired
+          ? const AuthInitial()
+          : (previous is AuthTwoFactorRequired ? previous : const AuthInitial());
+
+      throw TwoFactorVerifyException(
+        e.response?.data?['message'] as String? ??
+            e.response?.data?['error'] as String? ??
+            AppErrorCodes.loginFailed,
+        sessionExpired: expired,
+      );
+    } catch (e) {
+      state = previous is AuthTwoFactorRequired
+          ? previous
+          : const AuthInitial();
+      throw TwoFactorVerifyException(AppErrorCodes.anErrorOccurred);
+    }
+  }
+
+  /// Minta ulang kode email 2FA.
+  ///
+  /// Error sengaja TIDAK dilempar: gagal mengirim kode bukan kondisi yang
+  /// membuat sheet 2FA tidak bisa dipakai, dan kode yang sudah terkirim
+  /// mungkin masih berlaku.
+  Future<bool> resendTwoFactorCode(String challengeToken) async {
+    try {
+      await _dio.post(
+        ApiEndpoints.twoFactorResend,
+        data: {'challenge_token': challengeToken},
+      );
+      return true;
+    } catch (_) {
+      return false;
     }
   }
 
@@ -580,6 +725,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
       if (currentEmail != null) {
         _savedAccounts.removeWhere((a) => a.email == currentEmail);
         await resetAppLock(email: currentEmail);
+        // Penanda "pertanyaan keamanan sudah dijawab" ikut dihapus. Kalau
+        // tidak, akun yang dihapus lalu didaftarkan ulang dengan email yang
+        // sama akan langsung melewati langkah itu -- padahal bagi akun baru
+        // pertanyaannya belum pernah dijawab.
+        await SecurityQuestionPrompt.reset(currentEmail);
       }
       _savedAccounts = [];
       await clearGuestMode();
@@ -633,6 +783,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
       state = const AuthInitial();
     } catch (_) {
+      state = const AuthInitial();
+    }
+  }
+
+  /// Buang challenge 2FA yang sedang menggantung.
+  ///
+  /// Dipanggil saat pengguna menyerah di sheet verifikasi (tekan "Keluar"),
+  /// supaya state tidak tertinggal di [AuthTwoFactorRequired] -- kalau iya,
+  /// sheet berikutnya yang dibuka akan menemukan challenge lama dan
+  /// mengirim kodenya ke challenge yang sudah kedaluwarsa.
+  void resetTwoFactorChallenge() {
+    if (state is AuthTwoFactorRequired) {
       state = const AuthInitial();
     }
   }

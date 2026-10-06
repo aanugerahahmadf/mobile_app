@@ -19,11 +19,41 @@ import 'firebase_options.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Firebase hanya dipakai untuk push notification (FCM). Katalog, CBIR, dan
+  // pemesanan lewat REST API Laravel, jadi kegagalan Firebase tidak boleh
+  // membuat seluruh aplikasi gagal start -- pengguna tetap harus bisa masuk
+  // dan tetap bisa memakai fitur utama.
+  //
+  // Sebelum ini `Firebase.initializeApp` dibiarkan melempar. Akibatnya:
+  //   - platform tanpa konfigurasi Firebase (mis. linux) crash saat start;
+  //   - config salah atau Firebase tidak terjangkau saat startup -> putih kosong.
+  bool firebaseReady = false;
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    firebaseReady = true;
+  } catch (error, stack) {
+    debugPrint('Firebase gagal diinisialisasi: $error');
+    debugPrintStack(stackTrace: stack);
+  }
+
   try {
     await initializeDateFormatting();
   } catch (_) {}
-  await NotificationService.instance.initialize();
+
+  if (firebaseReady) {
+    try {
+      await NotificationService.instance.initialize();
+    } catch (error) {
+      // Notifikasi push tidak tersedia, aplikasi tetap jalan.
+      debugPrint('NotificationService gagal diinisialisasi: $error');
+    }
+  } else {
+    debugPrint('NotificationService dilewati karena Firebase tidak siap.');
+  }
+
   runApp(ProviderScope(child: const WeddingApp()));
 }
 

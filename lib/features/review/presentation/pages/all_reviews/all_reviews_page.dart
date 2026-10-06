@@ -81,7 +81,7 @@ class _AllReviewsPageState extends ConsumerState<AllReviewsPage> {
   }
 
   Future<void> _openUserReviews(Map<String, dynamic> r) async {
-    final userId = r['user_id']?.toString();
+    final userId = _userId(r);
     if (userId == null || userId.isEmpty || _navigationBusy || !mounted) return;
     _navigationBusy = true;
     try {
@@ -92,6 +92,17 @@ class _AllReviewsPageState extends ConsumerState<AllReviewsPage> {
     } finally {
       _navigationBusy = false;
     }
+  }
+
+  String? _userId(Map<String, dynamic> r) {
+    final directId = r['user_id']?.toString();
+    if (directId != null && directId.isNotEmpty) return directId;
+    final user = r['user'];
+    if (user is Map<String, dynamic>) {
+      final nestedId = user['id']?.toString();
+      if (nestedId != null && nestedId.isNotEmpty) return nestedId;
+    }
+    return null;
   }
 
   Future<void> _openWriteReview() async {
