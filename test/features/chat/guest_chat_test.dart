@@ -17,6 +17,7 @@ class _FakeChatRepository implements ChatRepository {
   Future<Map<String, dynamic>> startGuestConversation({
     required String guestId,
     String? csCategory,
+    String? name,
   }) async {
     guestStartCalls++;
     return {'id': 17};
@@ -28,6 +29,7 @@ class _FakeChatRepository implements ChatRepository {
     required String message,
     required String guestId,
     String? csCategory,
+    String? name,
   }) async {
     guestMessageCalls++;
     return {

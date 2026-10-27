@@ -15,12 +15,16 @@ class ChatCallService {
   String? token;
   String? guestId;
   final Set<String> _seenIce = {};
+  bool _remoteSet = false;
 
   Future<String> start(int inboxId, {String? guestId}) async {
     this.guestId = guestId;
-    final endpoint = guestId == null ? ApiEndpoints.chatCalls : ApiEndpoints.guestChatCalls;
-    final response = await _dio.post(endpoint,
-        data: {'inbox_id': inboxId, if (guestId != null) 'guest_id': guestId});
+    final endpoint = guestId == null
+        ? ApiEndpoints.chatCalls
+        : ApiEndpoints.guestChatCalls;
+    final data = <String, dynamic>{'inbox_id': inboxId};
+    if (guestId != null) data['guest_id'] = guestId;
+    final response = await _dio.post(endpoint, data: data);
     token = response.data['call']['token'] as String;
     await _prepareCaller();
     return token!;
@@ -29,7 +33,10 @@ class ChatCallService {
   Future<void> _prepareCaller() async {
     final configuration = <String, dynamic>{'iceServers': <dynamic>[]};
     _peer = await createPeerConnection(configuration);
-    _local = await navigator.mediaDevices.getUserMedia({'audio': true, 'video': false});
+    _local = await navigator.mediaDevices.getUserMedia({
+      'audio': true,
+      'video': false,
+    });
     for (final track in _local!.getTracks()) {
       await _peer!.addTrack(track, _local!);
     }
@@ -50,33 +57,65 @@ class ChatCallService {
   Future<Map<String, dynamic>> poll() async {
     final current = token;
     if (current == null) return const {};
-    final endpoint = guestId == null ? ApiEndpoints.chatCallState(current) : ApiEndpoints.guestChatCallState(current);
-    final response = await _dio.get(endpoint, queryParameters: {if (guestId != null) 'guest_id': guestId});
+    final endpoint = guestId == null
+        ? ApiEndpoints.chatCallState(current)
+        : ApiEndpoints.guestChatCallState(current);
+    final response = await _dio.get(
+      endpoint,
+      queryParameters: {if (guestId != null) 'guest_id': guestId},
+    );
     final call = Map<String, dynamic>.from(response.data['call'] as Map);
     final answer = call['answer'];
-    if (answer is Map && _peer != null && _peer!.remoteDescription == null) {
-      await _peer!.setRemoteDescription(RTCSessionDescription(answer['sdp'] as String?, answer['type'] as String?));
+    if (answer is Map && _peer != null && !_remoteSet) {
+      await _peer!.setRemoteDescription(
+        RTCSessionDescription(
+          answer['sdp'] as String?,
+          answer['type'] as String?,
+        ),
+      );
+      _remoteSet = true;
     }
     for (final raw in (call['ice_candidates'] as List? ?? const [])) {
       final candidate = Map<String, dynamic>.from(raw as Map);
-      final key = '${candidate['candidate']}:${candidate['sdpMid']}:${candidate['sdpMLineIndex']}';
+      final key =
+          '${candidate['candidate']}:${candidate['sdpMid']}:${candidate['sdpMLineIndex']}';
       if (_seenIce.add(key)) {
-        await _peer?.addCandidate(RTCIceCandidate(candidate['candidate'] as String?, candidate['sdpMid'] as String?, candidate['sdpMLineIndex'] as int?));
+        await _peer?.addCandidate(
+          RTCIceCandidate(
+            candidate['candidate'] as String?,
+            candidate['sdpMid'] as String?,
+            candidate['sdpMLineIndex'] as int?,
+          ),
+        );
       }
     }
     return call;
   }
 
   Future<void> _signal(String type, Map<String, dynamic> value) async {
-    final endpoint = guestId == null ? ApiEndpoints.chatCallSignal(token!) : ApiEndpoints.guestChatCallSignal(token!);
-    await _dio.post(endpoint, data: {'type': type, 'value': value, if (guestId != null) 'guest_id': guestId});
+    final endpoint = guestId == null
+        ? ApiEndpoints.chatCallSignal(token!)
+        : ApiEndpoints.guestChatCallSignal(token!);
+    await _dio.post(
+      endpoint,
+      data: {
+        'type': type,
+        'value': value,
+        if (guestId != null) 'guest_id': guestId,
+      },
+    );
   }
 
   Future<void> end() async {
     _timer?.cancel();
     if (token != null) {
-      final endpoint = guestId == null ? ApiEndpoints.chatCallEnd(token!) : ApiEndpoints.guestChatCallEnd(token!);
-      await _dio.post(endpoint, data: {if (guestId != null) 'guest_id': guestId});
+      final endpoint = guestId == null
+          ? ApiEndpoints.chatCallEnd(token!)
+          : ApiEndpoints.guestChatCallEnd(token!);
+      await _dio.post(
+        endpoint,
+        data: {if (guestId != null) 'guest_id': guestId},
+      );
     }
     await _local?.dispose();
     await _peer?.close();
@@ -84,5 +123,6 @@ class ChatCallService {
     _peer = null;
     token = null;
     guestId = null;
+    _remoteSet = false;
   }
 }

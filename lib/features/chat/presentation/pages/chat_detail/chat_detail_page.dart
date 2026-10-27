@@ -17,7 +17,7 @@ import '../../../../../core/constants/app_sizes/app_sizes.dart';
 import '../../../../../core/errors/localized_error/localized_error.dart';
 import '../../../../../core/utils/formatters/formatters.dart';
 import '../../../../../core/utils/guest_mode/guest_mode.dart';
-import '../../data/chat_call_service/chat_call_service.dart';
+import 'package:mobile_app/features/chat/data/chat_call_service/chat_call_service.dart';
 import '../../../../../core/widgets/media_viewer/media_viewer.dart';
 import '../../../../../core/widgets/app_action_sheet/app_action_sheet.dart';
 import 'package:file_picker/file_picker.dart';
@@ -71,13 +71,19 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(l.calls),
-        content: Text(_callActive ? 'Panggilan tersambung' : 'Memanggil…', textAlign: TextAlign.center),
+        content: Text(
+          _callActive ? 'Panggilan tersambung' : 'Memanggil…',
+          textAlign: TextAlign.center,
+        ),
         actions: [
           if (!_callActive)
             TextButton(
               onPressed: () async {
                 try {
-                  await _callService.start(int.parse(widget.id), guestId: _guestId);
+                  await _callService.start(
+                    int.parse(widget.id),
+                    guestId: _guestId,
+                  );
                   if (mounted) setState(() => _callActive = true);
                 } catch (_) {}
               },
