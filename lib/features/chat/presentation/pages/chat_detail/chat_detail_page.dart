@@ -20,7 +20,6 @@ import '../../../../../core/utils/guest_mode/guest_mode.dart';
 import '../../../../../core/widgets/media_viewer/media_viewer.dart';
 import '../../../../../core/widgets/app_action_sheet/app_action_sheet.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../../auth/presentation/providers/auth_provider/auth_provider.dart';
 import '../../providers/chat_provider.dart';
 import '../../utils/chat_text_normalizer/chat_text_normalizer.dart';
@@ -63,33 +62,23 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
 
   Future<void> _callOtherUser(Map<String, dynamic>? otherUser) async {
     final l = AppLocalizations.of(context)!;
-    final callUrl = otherUser?['call_url']?.toString();
-    if (callUrl != null && callUrl.isNotEmpty) {
-      final opened = await launchUrl(
-        Uri.parse(callUrl),
-        mode: LaunchMode.externalApplication,
-      );
-      if (opened) return;
-    }
-
-    final rawPhone = (otherUser?['phone'] ?? otherUser?['whatsapp'])?.toString();
-    final phone = rawPhone?.replaceAll(RegExp(r'[^0-9+]'), '');
-
-    if (phone == null || phone.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l.phoneNumber)),
-        );
-      }
-      return;
-    }
-
-    final uri = Uri(scheme: 'tel', path: phone);
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l.calls)),
-      );
-    }
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l.calls),
+        content: Text(
+          l.calls,
+          textAlign: TextAlign.center,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(l.close),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _downloadReportPdf(String reportId) async {
