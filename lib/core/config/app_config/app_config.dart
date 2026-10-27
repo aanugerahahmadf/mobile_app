@@ -37,6 +37,9 @@ class AppConfig {
       return _emulatorFallback;
     }
     final lower = trimmed.toLowerCase();
+    if (kReleaseMode && !lower.startsWith('https://')) {
+      throw StateError('Aplikasi release hanya boleh memakai API_BASE_URL HTTPS.');
+    }
     if (lower.contains(_placeholderHost)) {
       _warnPlaceholder('API_BASE_URL');
       return trimmed; // keep user's intent, but they will see the warning
