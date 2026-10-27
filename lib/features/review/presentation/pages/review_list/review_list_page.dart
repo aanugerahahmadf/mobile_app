@@ -16,15 +16,13 @@ import '../../../../auth/presentation/providers/auth_provider/auth_provider.dart
 import '../../providers/review_provider/review_provider.dart';
 
 class ReviewListPage extends ConsumerStatefulWidget {
-  final String packageId;
-  final String productId;
-  final String packageName;
+  final String catalogId;
+  final String catalogName;
 
   const ReviewListPage({
     super.key,
-    this.packageId = '',
-    this.productId = '',
-    this.packageName = '',
+    this.catalogId = '',
+    this.catalogName = '',
   });
 
   @override
@@ -77,7 +75,7 @@ class _ReviewListPageState extends ConsumerState<ReviewListPage> {
       AppSnackBar.show(context, l.writeYourReview, type: SnackBarType.warning);
       return;
     }
-    if (widget.packageId.isEmpty && widget.productId.isEmpty) {
+    if (widget.catalogId.isEmpty) {
       AppSnackBar.show(context, l.reviewFailed, type: SnackBarType.error);
       return;
     }
@@ -85,8 +83,7 @@ class _ReviewListPageState extends ConsumerState<ReviewListPage> {
     _submitting = true;
     try {
       await ref.read(reviewProvider.notifier).createReview({
-        if (widget.packageId.isNotEmpty) 'package_id': widget.packageId,
-        if (widget.productId.isNotEmpty) 'product_id': widget.productId,
+        'catalog_id': widget.catalogId,
         'rating': _rating,
         'title': _titleController.text.trim(),
         'comment': comment,
@@ -138,7 +135,7 @@ class _ReviewListPageState extends ConsumerState<ReviewListPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (widget.packageName.isNotEmpty) ...[
+            if (widget.catalogName.isNotEmpty) ...[
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(AppSizes.md),
@@ -147,7 +144,7 @@ class _ReviewListPageState extends ConsumerState<ReviewListPage> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  widget.packageName,
+                  widget.catalogName,
                   style: AppTextStyles.titleMedium,
                 ),
               ),

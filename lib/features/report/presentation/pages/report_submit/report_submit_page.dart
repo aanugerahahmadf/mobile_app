@@ -11,7 +11,7 @@ import '../../../../../core/widgets/app_snackbar/app_snackbar.dart';
 import '../../../../../core/widgets/app_options_picker_sheet/app_options_picker_sheet.dart';
 
 class ReportSubmitPage extends StatefulWidget {
-  /// Backend FQCN e.g. `App\Models\Product`, used for polymorphic morphTo.
+  /// Backend FQCN e.g. `App\Models\Catalog`, used for polymorphic morphTo.
   final String? reportableType;
   final String? reportableId;
   final String category;
@@ -68,12 +68,10 @@ class _ReportSubmitPageState extends State<ReportSubmitPage> {
 
   String _categoryLabel(AppLocalizations l) {
     switch (widget.category) {
-      case 'product':
-        return l.reportProduct;
+      case 'catalog':
+        return l.reportCatalog;
       case 'package':
         return l.reportPackage;
-      case 'vendor':
-        return l.reportVendor;
       case 'order':
         return l.reportOrder;
       case 'review':

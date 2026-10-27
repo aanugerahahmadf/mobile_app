@@ -70,7 +70,7 @@ class AboutPage extends ConsumerWidget {
                       about.title,
                       style: TextStyle(
                         fontSize: 20,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                         color: AppColors.textPrimary,
                       ),
                     ),
@@ -83,7 +83,7 @@ class AboutPage extends ConsumerWidget {
                   l.aboutApp,
                   style: TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
                   ),
                 ),
@@ -103,7 +103,7 @@ class AboutPage extends ConsumerWidget {
                   l.mission,
                   style: TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
                   ),
                 ),

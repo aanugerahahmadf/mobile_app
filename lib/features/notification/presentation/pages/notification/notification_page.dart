@@ -215,15 +215,15 @@ class _NotificationPageState extends ConsumerState<NotificationPage> {
       case 'promo':
         targetRoute = '/vouchers';
         break;
+      // Katalog sudah jadi satu entitas: notifikasi paket maupun produk
+      // mengarah ke route yang sama.
       case 'package':
       case 'new_package':
       case 'admin_package':
-        if (id != null) targetRoute = '/catalog/packages/$id';
-        break;
-      case 'product':
-      case 'new_product':
-      case 'admin_product':
-        if (id != null) targetRoute = '/catalog/products/$id';
+      case 'catalog':
+      case 'new_catalog':
+      case 'admin_catalog':
+        if (id != null) targetRoute = '/catalog/$id';
         break;
       case 'review':
         if (id != null) targetRoute = '/my-reviews';
@@ -247,7 +247,7 @@ class _NotificationPageState extends ConsumerState<NotificationPage> {
       'id',
       'order_id',
       'package_id',
-      'product_id',
+      'catalog_id',
       'user_id',
       'voucher_id',
       'review_id',
@@ -283,9 +283,9 @@ class _NotificationPageState extends ConsumerState<NotificationPage> {
       case 'new_package':
       case 'admin_package':
         return Icons.inventory_2;
-      case 'product':
-      case 'new_product':
-      case 'admin_product':
+      case 'catalog':
+      case 'new_catalog':
+      case 'admin_catalog':
         return Icons.shopping_bag;
       case 'review':
       case 'new_review':

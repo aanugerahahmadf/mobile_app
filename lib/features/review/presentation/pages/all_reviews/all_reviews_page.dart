@@ -18,15 +18,13 @@ import '../../widgets/review_photos_grid/review_photos_grid.dart';
 import '../../widgets/rating_summary/rating_summary.dart';
 
 class AllReviewsPage extends ConsumerStatefulWidget {
-  final String packageId;
-  final String productId;
+  final String catalogId;
   final String title;
   final List<Map<String, dynamic>> reviews;
 
   const AllReviewsPage({
     super.key,
-    this.packageId = '',
-    this.productId = '',
+    this.catalogId = '',
     this.title = '',
     this.reviews = const [],
   });
@@ -44,21 +42,13 @@ class _AllReviewsPageState extends ConsumerState<AllReviewsPage> {
   void initState() {
     super.initState();
     _useSeed =
-        widget.packageId.isEmpty &&
-        widget.productId.isEmpty &&
-        widget.reviews.isNotEmpty;
+        widget.catalogId.isEmpty && widget.reviews.isNotEmpty;
     if (!_useSeed) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final notifier = ref.read(reviewProvider.notifier);
         notifier.resetForItem();
-        notifier.fetchItemReviews(
-          packageId: widget.packageId,
-          productId: widget.productId,
-        );
-        notifier.fetchRatingSummary(
-          packageId: widget.packageId,
-          productId: widget.productId,
-        );
+        notifier.fetchItemReviews(catalogId: widget.catalogId);
+        notifier.fetchRatingSummary(catalogId: widget.catalogId);
       });
     }
     _scrollController.addListener(_onScroll);
@@ -76,7 +66,7 @@ class _AllReviewsPageState extends ConsumerState<AllReviewsPage> {
         _scrollController.position.maxScrollExtent - 200) {
       ref
           .read(reviewProvider.notifier)
-          .loadMore(packageId: widget.packageId, productId: widget.productId);
+          .loadMore(catalogId: widget.catalogId);
     }
   }
 
@@ -120,8 +110,7 @@ class _AllReviewsPageState extends ConsumerState<AllReviewsPage> {
       await context.push(
         '/write-review',
         extra: {
-          'package_id': widget.packageId,
-          'product_id': widget.productId,
+          'catalog_id': widget.catalogId,
           'name': widget.title,
         },
       );
@@ -133,14 +122,8 @@ class _AllReviewsPageState extends ConsumerState<AllReviewsPage> {
   void _onStarBarTap(int star) {
     final notifier = ref.read(reviewProvider.notifier);
     notifier.setFilterRating(star);
-    notifier.fetchItemReviews(
-      packageId: widget.packageId,
-      productId: widget.productId,
-    );
-    notifier.fetchRatingSummary(
-      packageId: widget.packageId,
-      productId: widget.productId,
-    );
+    notifier.fetchItemReviews(catalogId: widget.catalogId);
+    notifier.fetchRatingSummary(catalogId: widget.catalogId);
   }
 
   String _userName(Map<String, dynamic> r) {
@@ -159,14 +142,8 @@ class _AllReviewsPageState extends ConsumerState<AllReviewsPage> {
 
   Future<void> _refresh() async {
     final notifier = ref.read(reviewProvider.notifier);
-    await notifier.fetchItemReviews(
-      packageId: widget.packageId,
-      productId: widget.productId,
-    );
-    await notifier.fetchRatingSummary(
-      packageId: widget.packageId,
-      productId: widget.productId,
-    );
+    await notifier.fetchItemReviews(catalogId: widget.catalogId);
+    await notifier.fetchRatingSummary(catalogId: widget.catalogId);
   }
 
   @override
@@ -174,8 +151,7 @@ class _AllReviewsPageState extends ConsumerState<AllReviewsPage> {
     final l = AppLocalizations.of(context)!;
     final state = ref.watch(reviewProvider);
     final reviews = _useSeed ? widget.reviews : state.reviews;
-    final hasTarget =
-        widget.packageId.isNotEmpty || widget.productId.isNotEmpty;
+    final hasTarget = widget.catalogId.isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(

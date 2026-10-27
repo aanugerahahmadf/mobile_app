@@ -9,6 +9,7 @@ import '../../../../../core/utils/guest_mode/guest_mode.dart';
 import '../../../../../core/widgets/app_button/app_button.dart';
 import '../../../../auth/presentation/providers/auth_provider/auth_provider.dart';
 import '../../../../auth/presentation/providers/biometric_settings_provider/biometric_settings_provider.dart';
+import '../../../../auth/data/app_lock_service/app_lock_service.dart';
 import '../../../../auth/presentation/widgets/auth_modals/auth_modals.dart';
 import '../../../../auth/presentation/widgets/social_login_button/social_login_button.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
@@ -45,6 +46,14 @@ class _LandingPageState extends ConsumerState<LandingPage> {
     // Set flag dulu: bila `loadAppLockFlags` melempar, pengguna tidak boleh
     // terjebak di '/landing' tanpa jalan keluar.
     await _markOnboardingSeen();
+    // Sync from DB first so the latest app lock flags are available locally.
+    // Without this, a user who just enabled app lock on another device would
+    // bypass the lock screen on this device.
+    final service = AppLockService();
+    await syncAppLockFromDb(
+      service,
+      email: ref.read(currentAccountEmailProvider),
+    );
     final flags = await loadAppLockFlags(
       email: ref.read(currentAccountEmailProvider),
     );
@@ -70,8 +79,28 @@ class _LandingPageState extends ConsumerState<LandingPage> {
     }
 
     ref.listen<AuthState>(authProvider, (previous, next) {
+      // Tombol Google di halaman ini memanggil `googleLogin()` LANGSUNG,
+      // tanpa lewat sheet Sign In. Semua cabang yang hanya ada di dalam sheet
+      // (needsOtp -> Email OTP, needsCompletion -> Complete Profile,
+      // AuthTwoFactorRequired -> sheet 2FA) karena itu tidak pernah menyalakan
+      // dari sini: akun Google yang belum terdaftar, atau yang 2FA-nya aktif,
+      // akan diam-diam tertahan di landing tanpa OTP, tanpa challenge, dan
+      // tanpa tujuan.
+      //
+      // Karena itu jalur ini harus lewat handleAuthContinuation() yang sama
+      // dengan sheet -- satu sumber untuk kedua pintu Google.(popSheet: false
+      // karena di sini tidak ada sheet yang perlu ditutup.)
+      if (handleAuthContinuation(
+        context: context,
+        ref: ref,
+        state: next,
+        l: l,
+        popSheet: false,
+      )) {
+        return;
+      }
+
       if (next is AuthAuthenticated) {
-        if (next.needsOtp || next.needsCompletion) return;
         _routeAfterAuth();
       }
     });

@@ -46,8 +46,7 @@ class CartState {
     int total = 0;
     for (final item in items) {
       final qty = item['quantity'] as int? ?? 1;
-      final itemData =
-          (item['package'] ?? item['product']) as Map<String, dynamic>?;
+      final itemData = item['catalog'] as Map<String, dynamic>?;
       final rawPrice = itemData?['final_price'] ?? itemData?['price'];
       final price = (rawPrice is num ? rawPrice.toInt() : 0);
       total += price * qty;
@@ -59,8 +58,7 @@ class CartState {
     int total = 0;
     for (final item in selectedItems) {
       final qty = item['quantity'] as int? ?? 1;
-      final itemData =
-          (item['package'] ?? item['product']) as Map<String, dynamic>?;
+      final itemData = item['catalog'] as Map<String, dynamic>?;
       final rawPrice = itemData?['final_price'] ?? itemData?['price'];
       final price = (rawPrice is num ? rawPrice.toInt() : 0);
       total += price * qty;
@@ -120,14 +118,14 @@ class CartNotifier extends StateNotifier<CartState> {
   }
 
   Future<bool> addItem({
-    String? productId,
+    String? catalogId,
     String? packageId,
     int quantity = 1,
   }) async {
     if (_isGuest) return false;
     try {
       await _repository.addToCart(
-        productId: productId,
+        catalogId: catalogId,
         packageId: packageId,
         quantity: quantity,
       );
@@ -180,16 +178,10 @@ class CartNotifier extends StateNotifier<CartState> {
 
   Future<void> restoreItem(Map<String, dynamic> item) async {
     if (_isGuest) return;
-    final productId = item['product_id']?.toString();
-    final packageId = item['package_id']?.toString();
-    if (productId != null) {
+    final catalogId = item['catalog_id']?.toString();
+    if (catalogId != null) {
       await addItem(
-        productId: productId,
-        quantity: item['quantity'] as int? ?? 1,
-      );
-    } else if (packageId != null) {
-      await addItem(
-        packageId: packageId,
+        catalogId: catalogId,
         quantity: item['quantity'] as int? ?? 1,
       );
     }
@@ -199,18 +191,13 @@ class CartNotifier extends StateNotifier<CartState> {
     if (_isGuest) return;
     final item = state.items.where((i) => '${i['id']}' == cartId).firstOrNull;
     if (item == null) return;
-    final itemData =
-        (item['package'] ?? item['product']) as Map<String, dynamic>?;
+    final itemData = item['catalog'] as Map<String, dynamic>?;
     if (itemData == null) return;
-    final type = item['package'] != null ? 'packages' : 'products';
     final id = itemData['id']?.toString();
     if (id == null) return;
     _ref
         .read(wishlistProvider.notifier)
-        .toggle(
-          packageId: type == 'packages' ? id : null,
-          productId: type == 'products' ? id : null,
-        );
+        .toggle(catalogId: id);
     await removeItem(cartId);
   }
 

@@ -143,7 +143,7 @@ class _TwoFactorSetupPageState extends ConsumerState<TwoFactorSetupPage> {
                     title: Text(
                       code,
                       style: const TextStyle(
-                        fontFamily: 'monospace',
+                        fontFamily: 'InstrumentSans',
                         letterSpacing: 2,
                       ),
                     ),

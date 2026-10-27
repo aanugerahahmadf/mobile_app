@@ -1,16 +1,16 @@
 import 'dart:io';
-import 'dart:ui';
+import '../../../../../core/widgets/app_blur_backdrop/app_blur_backdrop.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
-import '../../../../../core/constants/app_colors/app_colors.dart';
 import '../../../../../core/constants/app_sizes/app_sizes.dart';
 import '../../../../../core/widgets/app_filter_widgets/app_filter_widgets.dart';
 import '../../../../../core/errors/localized_error/localized_error.dart';
 import '../../../../../core/widgets/app_shimmer/app_shimmer.dart';
 import '../../../../../core/widgets/app_empty_state/app_empty_state.dart';
 import '../../../../../core/widgets/app_error_state/app_error_state.dart';
+import '../../../../../core/widgets/app_breadcrumbs/app_breadcrumbs.dart';
 import '../../../../../core/api/dio_client/dio_client.dart';
 import '../../../../../core/api/api_endpoints/api_endpoints.dart';
 import '../../../../search/presentation/widgets/global_search_bar/global_search_bar.dart';
@@ -60,10 +60,7 @@ class _CbirResultPageState extends ConsumerState<CbirResultPage> {
     } catch (_) {}
   }
 
-  String _routeType(String cbirType) {
-    return cbirType == 'package' ? 'packages' : 'products';
-  }
-
+  // Katalog kini satu entitas, jadi tipe CBIR tidak lagi memengaruhi rute.
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
@@ -82,12 +79,14 @@ class _CbirResultPageState extends ConsumerState<CbirResultPage> {
               ),
               child: Row(
                 children: [
-                  IconButton(
-                    icon: Icon(Icons.arrow_back, color: AppColors.primaryColor),
-                    onPressed: () {
-                      ref.read(cbirProvider.notifier).reset();
-                      context.pop();
-                    },
+                  Expanded(
+                    child: AppBreadcrumbs(
+                      items: [
+                        AppBreadcrumbItem(l.home, onTap: () => context.go('/home')),
+                        AppBreadcrumbItem(l.search, onTap: () => context.go('/search')),
+                        AppBreadcrumbItem(l.searchResults),
+                      ],
+                    ),
                   ),
                   const Expanded(child: GlobalSearchBar(showChat: false)),
                 ],
@@ -144,55 +143,45 @@ class _CbirResultPageState extends ConsumerState<CbirResultPage> {
         AppSizes.md,
         0,
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(14),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.sm,
-              vertical: 6,
+      child: AppBlurBackdrop(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSizes.sm,
+          vertical: 6,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            StyledSortChips(
+              options: _sortOptions(l),
+              selectedValue: state.sortBy,
+              onChanged: (v) => notifier.setSortBy(v),
             ),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
+            SizedBox(height: 6),
+            Row(
               children: [
-                StyledSortChips(
-                  options: _sortOptions(l),
-                  selectedValue: state.sortBy,
-                  onChanged: (v) => notifier.setSortBy(v),
-                ),
-                SizedBox(height: 6),
-                Row(
-                  children: [
-                    if (_categories.isNotEmpty)
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: StyledCategoryDropdown(
-                            value: state.categoryId,
-                            hint: l.allCategories,
-                            categories: _categories,
-                            onChanged: (v) => notifier.setCategoryId(v),
-                          ),
-                        ),
+                if (_categories.isNotEmpty)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: StyledCategoryDropdown(
+                        value: state.categoryId,
+                        hint: l.allCategories,
+                        categories: _categories,
+                        onChanged: (v) => notifier.setCategoryId(v),
                       ),
-                    StyledChoiceChip(
-                      label: l.discount,
-                      selected: state.hasDiscount == true,
-                      onSelected: () =>
-                          notifier.setHasDiscount(state.hasDiscount != true),
-                      icon: Icons.discount_outlined,
                     ),
-                  ],
+                  ),
+                StyledChoiceChip(
+                  label: l.discount,
+                  selected: state.hasDiscount == true,
+                  onSelected: () =>
+                      notifier.setHasDiscount(state.hasDiscount != true),
+                  icon: Icons.discount_outlined,
                 ),
               ],
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -218,8 +207,7 @@ class _CbirResultPageState extends ConsumerState<CbirResultPage> {
       item: item.data,
       type: item.type,
       similarity: item.similarity,
-      onTap: () =>
-          context.go('/catalog/${_routeType(item.type)}/${item.data.id}'),
+      onTap: () => context.go('/catalog/${item.data.id}'),
     );
   }
 }

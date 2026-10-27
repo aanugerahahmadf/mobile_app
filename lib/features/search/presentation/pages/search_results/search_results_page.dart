@@ -147,9 +147,7 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
 
   Widget _buildGroupedResults(List<SearchSuggestion> items) {
     final l = AppLocalizations.of(context)!;
-    final visibleItems = items
-        .where((i) => i.type != SuggestionType.vendors)
-        .toList();
+    final visibleItems = items;
     final grouped = <String, List<SearchSuggestion>>{};
     for (final item in visibleItems) {
       grouped.putIfAbsent(item.type.badgeLabel(l), () => []).add(item);
@@ -263,13 +261,13 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
           overflow: TextOverflow.ellipsis,
         ),
         subtitle: (item.subtitle != null
-              ? Text(
-                  item.subtitle!,
-                  style: const TextStyle(fontSize: 11),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                )
-              : null),
+            ? Text(
+                item.subtitle!,
+                style: const TextStyle(fontSize: 11),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              )
+            : null),
         trailing: Container(
           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
           decoration: BoxDecoration(
@@ -316,18 +314,14 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
         return Icons.help_outline_rounded;
       case SuggestionType.histories:
         return Icons.history_rounded;
-      case SuggestionType.packages:
-      case SuggestionType.products:
+      case SuggestionType.catalog:
         return Icons.image_outlined;
-      case SuggestionType.vendors:
-        return Icons.store;
     }
   }
 
   void _navigateToType(SuggestionType type) {
     switch (type) {
-      case SuggestionType.packages:
-      case SuggestionType.products:
+      case SuggestionType.catalog:
         context.push('/catalog');
       case SuggestionType.categories:
         context.push('/catalog');
@@ -347,8 +341,6 @@ class _SearchResultsPageState extends ConsumerState<SearchResultsPage> {
         context.push('/help-center');
       case SuggestionType.weddingPolicy:
         context.push('/wedding-policy');
-      case SuggestionType.vendors:
-        break;
     }
   }
 

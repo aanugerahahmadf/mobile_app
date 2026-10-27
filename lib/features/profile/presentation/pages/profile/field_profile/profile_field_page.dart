@@ -648,7 +648,7 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldPage> {
               Text(
                 similarityText,
                 style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               const SizedBox(height: 8),

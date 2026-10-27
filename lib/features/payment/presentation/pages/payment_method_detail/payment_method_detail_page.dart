@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
@@ -50,7 +49,16 @@ class _PaymentMethodDetailPageState
   @override
   void initState() {
     super.initState();
-    _loadOrder();
+    _loadOrder().then((_) {
+      // VA dibuat otomatis ketika halaman metode VA dibuka. Tombol tetap
+      // tersedia sebagai retry bila provider sedang tidak tersedia.
+      if (mounted &&
+          ref.read(authProvider) is AuthAuthenticated &&
+          widget.method.type == 'virtual_account' &&
+          _va == null) {
+        _createVirtualAccount();
+      }
+    });
   }
 
   Future<void> _loadOrder() async {
@@ -328,7 +336,7 @@ class _PaymentMethodDetailPageState
   Widget _buildHeader(AppLocalizations l) {
     final item =
         _order!['package'] as Map<String, dynamic>? ??
-        _order!['product'] as Map<String, dynamic>?;
+        _order!['catalog'] as Map<String, dynamic>?;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSizes.md),
@@ -622,7 +630,7 @@ class _PaymentMethodDetailPageState
             l.totalPayment.toUpperCase(),
             style: AppTextStyles.labelSmall.copyWith(
               color: Colors.white70,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               letterSpacing: 0.6,
             ),
           ),
@@ -631,7 +639,7 @@ class _PaymentMethodDetailPageState
             Formatters.currency(amount),
             style: AppTextStyles.titleLarge.copyWith(
               color: Colors.white,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ],
@@ -667,7 +675,7 @@ class _PaymentMethodDetailPageState
                     '${i + 1}',
                     style: AppTextStyles.labelSmall.copyWith(
                       color: Colors.white,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
@@ -928,16 +936,17 @@ class _PaymentMethodDetailPageState
                   l.virtualAccountNo,
                   style: AppTextStyles.labelSmall.copyWith(
                     color: Colors.white70,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   vaNumber,
-                  style: GoogleFonts.inter(
+                  style: TextStyle(
+                    fontFamily: 'InstrumentSans',
                     color: Colors.white,
                     fontSize: 18,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                     letterSpacing: 1.2,
                   ),
                 ),
@@ -961,7 +970,7 @@ class _PaymentMethodDetailPageState
                 l.copy,
                 style: AppTextStyles.labelMedium.copyWith(
                   color: Colors.white,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),

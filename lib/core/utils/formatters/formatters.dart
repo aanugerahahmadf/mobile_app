@@ -90,7 +90,7 @@ class Formatters {
     return null;
   }
 
-  /// Ekstrak semua URL gambar dari raw item map (response API package/product).
+  /// Ekstrak semua URL gambar dari raw item map (response API package/catalog).
   ///
   /// Menangani berbagai bentuk yang dikirim backend/Filament:
   ///   1. `media`  — array object ({`original_url`/`url`}) ATAU array string URL

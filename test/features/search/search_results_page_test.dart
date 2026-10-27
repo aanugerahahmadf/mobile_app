@@ -108,16 +108,16 @@ void main() {
     testWidgets('displays search results', (tester) async {
       final items = [
         const SearchSuggestion(
-          type: SuggestionType.packages,
+          type: SuggestionType.catalog,
           id: 1,
           name: 'Paket Wedding Premium',
-          routePath: '/catalog/packages/1',
+          routePath: '/catalog/1',
         ),
         const SearchSuggestion(
-          type: SuggestionType.products,
+          type: SuggestionType.catalog,
           id: 2,
           name: 'Buket Bunga',
-          routePath: '/catalog/products/2',
+          routePath: '/catalog/2',
         ),
       ];
       fakeRepo.setResult(SearchResult(items: items));
@@ -150,10 +150,10 @@ void main() {
     testWidgets('has refresh indicator', (tester) async {
       final items = [
         const SearchSuggestion(
-          type: SuggestionType.packages,
+          type: SuggestionType.catalog,
           id: 1,
           name: 'Paket A',
-          routePath: '/catalog/packages/1',
+          routePath: '/catalog/1',
         ),
       ];
       fakeRepo.setResult(SearchResult(items: items));
@@ -163,19 +163,13 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(RefreshIndicator), findsOneWidget);
     });
-    testWidgets('filters out vendors from display', (tester) async {
+    testWidgets('displays package results', (tester) async {
       final items = [
         const SearchSuggestion(
-          type: SuggestionType.vendors,
-          id: 1,
-          name: 'Vendor A',
-          routePath: '/vendor/1',
-        ),
-        const SearchSuggestion(
-          type: SuggestionType.packages,
+          type: SuggestionType.catalog,
           id: 2,
           name: 'Paket A',
-          routePath: '/catalog/packages/2',
+          routePath: '/catalog/2',
         ),
       ];
       fakeRepo.setResult(SearchResult(items: items));
@@ -183,22 +177,21 @@ void main() {
         wrapWidget(const SearchResultsPage(query: 'test')),
       );
       await tester.pumpAndSettle();
-      expect(find.text('Vendor A'), findsNothing);
       expect(find.text('Paket A'), findsOneWidget);
     });
     testWidgets('shows result count', (tester) async {
       final items = [
         const SearchSuggestion(
-          type: SuggestionType.packages,
+          type: SuggestionType.catalog,
           id: 1,
           name: 'Paket A',
-          routePath: '/catalog/packages/1',
+          routePath: '/catalog/1',
         ),
         const SearchSuggestion(
-          type: SuggestionType.packages,
+          type: SuggestionType.catalog,
           id: 2,
           name: 'Paket B',
-          routePath: '/catalog/packages/2',
+          routePath: '/catalog/2',
         ),
       ];
       fakeRepo.setResult(SearchResult(items: items));
@@ -214,10 +207,10 @@ void main() {
       final items = List.generate(
         6,
         (i) => SearchSuggestion(
-          type: SuggestionType.packages,
+          type: SuggestionType.catalog,
           id: i + 1,
           name: 'Paket $i',
-          routePath: '/catalog/packages/${i + 1}',
+          routePath: '/catalog/${i + 1}',
         ),
       );
       fakeRepo.setResult(SearchResult(items: items));
@@ -284,16 +277,16 @@ void main() {
     testWidgets('shows dividers between sections', (tester) async {
       final items = [
         const SearchSuggestion(
-          type: SuggestionType.packages,
+          type: SuggestionType.catalog,
           id: 1,
           name: 'Paket A',
-          routePath: '/catalog/packages/1',
+          routePath: '/catalog/1',
         ),
         const SearchSuggestion(
-          type: SuggestionType.products,
+          type: SuggestionType.catalog,
           id: 2,
-          name: 'Product A',
-          routePath: '/catalog/products/2',
+          name: 'Catalog A',
+          routePath: '/catalog/2',
         ),
       ];
       fakeRepo.setResult(SearchResult(items: items));

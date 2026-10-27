@@ -1,8 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import '../../../../../../../../core/widgets/guest_auth_prompt/guest_auth_prompt.dart';
 import '../../../../../../../auth/presentation/providers/auth_provider/auth_provider.dart';
+import '../../../../../../../auth/presentation/widgets/auth_modals/auth_modals.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../../../../../core/api/api_endpoints/api_endpoints.dart';
 import '../../../../../../../../core/api/dio_client/dio_client.dart';
@@ -116,8 +117,74 @@ class _TrustedDevicesPageState extends ConsumerState<TrustedDevicesPage> {
     }
   }
 
-  String _formatDate(String? iso) {
-    if (iso == null) return '';
+  /// Jawaban "Ya, Ini Saya" untuk perangkat yang masih menunggu
+  /// konfirmasi (trusted_at null). Menandai perangkat sebagai milik user --
+  /// padanan tombol confirmItIsMe() di web DeviceTrustPrompt.
+  Future<void> _verifyDevice(int id) async {
+    if (!_isAuthenticated) return;
+    final l = AppLocalizations.of(context)!;
+    try {
+      await DioClient.instance.post(
+        ApiEndpoints.securityVerifyTrustedDevice(id),
+      );
+      if (mounted) {
+        AppSnackBar.show(context, l.deviceTrustedMsg, type: SnackBarType.success);
+        _fetchDevices();
+      }
+    } on DioException catch (e) {
+      if (mounted) {
+        AppSnackBar.show(
+          context,
+          e.message ?? l.failed,
+          type: SnackBarType.error,
+        );
+      }
+    }
+  }
+
+  /// Jawaban "Bukan saya": server mencabut SEMUA token Sanctum -- termasuk
+  /// token HP yang memanggil ini -- jadi sesinya memang habis meski respons
+  /// masih terkirim. Keluar rapi (logoutForReauth), lalu buka sheet Sign In:
+  /// pemilik akun yang sedang meninjau langsung masuk lagi, penyerang tidak.
+  Future<void> _rejectDevice(int id) async {
+    if (!_isAuthenticated) return;
+    final l = AppLocalizations.of(context)!;
+    try {
+      await DioClient.instance.post(
+        ApiEndpoints.securityRejectTrustedDevice(id),
+      );
+      // Respons bisa gagal terbaca di sisi server SETELAH token dicabut --
+      // anggap sukses jika HTTP-nya menembus atau 401 (token sudah mati).
+      if (!mounted) return;
+      AppSnackBar.show(context, l.deviceRejectedMsg, type: SnackBarType.error);
+      await ref.read(authProvider.notifier).logoutForReauth();
+      if (!mounted) return;
+      await showSignInSheet(context);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        // Token sudah dicabut server -- berarti penolakan terjadi.
+        if (mounted) {
+          AppSnackBar.show(
+            context,
+            l.deviceRejectedMsg,
+            type: SnackBarType.error,
+          );
+          await ref.read(authProvider.notifier).logoutForReauth();
+          if (mounted) await showSignInSheet(context);
+        }
+        return;
+      }
+      if (mounted) {
+        AppSnackBar.show(
+          context,
+          e.message ?? l.failed,
+          type: SnackBarType.error,
+        );
+      }
+    }
+  }
+
+  String _formatDate(String? iso) {    if (iso == null) return '';
     try {
       final dt = DateTime.parse(iso).toLocal();
       final months = [
@@ -205,6 +272,14 @@ class _TrustedDevicesPageState extends ConsumerState<TrustedDevicesPage> {
                 separatorBuilder: (_, _) => const SizedBox(height: AppSizes.sm),
                 itemBuilder: (context, index) {
                   final device = _devices[index];
+
+                  // Perangkat yang belum dijawab ("Perangkat Baru -- Apakah
+                  // Ini Anda?" masih menggantung): kartu tanya DUA tombol,
+                  // bukan kartu daftar biasa.
+                  if (device['trusted_at'] == null) {
+                    return _buildPendingCard(device, l);
+                  }
+
                   return Card(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -268,6 +343,104 @@ class _TrustedDevicesPageState extends ConsumerState<TrustedDevicesPage> {
               icon: const Icon(Icons.delete_sweep_outlined),
               label: Text(l.removeAll),
             ),
+    );
+  }
+
+  /// Kartu perangkat yang menunggu konfirmasi -- padanan visual halaman
+  /// web DeviceTrustPrompt: rincian perangkat + dua aksi tegas.
+  Widget _buildPendingCard(Map<String, dynamic> device, AppLocalizations l) {
+    final theme = Theme.of(context);
+    final warnColor = Colors.orange.shade700;
+
+    return Card(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: warnColor.withValues(alpha: 0.5)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSizes.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  backgroundColor: warnColor.withValues(alpha: 0.12),
+                  child: Icon(
+                    Icons.phonelink_ring_outlined,
+                    color: warnColor,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: AppSizes.sm),
+                Expanded(
+                  child: Text(
+                    l.newDeviceQuestion,
+                    style: AppTextStyles.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: warnColor,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSizes.sm),
+            Text(
+              device['device_name'] ?? 'Unknown Device',
+              style: AppTextStyles.bodyMedium.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              [
+                if (device['platform'] != null) device['platform'],
+                if (device['last_ip'] != null) device['last_ip'],
+              ].join(' · '),
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            if (device['first_seen_at'] != null) ...[
+              const SizedBox(height: 2),
+              Text(
+                '${l.firstUsed} ${_formatDate(device['first_seen_at'])}',
+                style: AppTextStyles.bodySmall.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+            const SizedBox(height: AppSizes.md),
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: () => _verifyDevice(device['id'] as int),
+                    icon: const Icon(Icons.check_circle_outline, size: 18),
+                    label: Text(l.yesItWasMe, overflow: TextOverflow.ellipsis),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.green.shade700,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSizes.sm),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: () => _rejectDevice(device['id'] as int),
+                    icon: const Icon(Icons.block_outlined, size: 18),
+                    label: Text(l.noItWasNotMe, overflow: TextOverflow.ellipsis),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: theme.colorScheme.error,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 

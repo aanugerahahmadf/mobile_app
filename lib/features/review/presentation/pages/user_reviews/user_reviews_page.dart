@@ -221,13 +221,9 @@ class _UserReviewsPageState extends State<UserReviewsPage> {
   }
 
   String _itemName(Map<String, dynamic> r) {
-    final package = r['package'] as Map<String, dynamic>?;
-    if (package != null && package['name'] != null) {
-      return package['name'] as String;
-    }
-    final product = r['product'] as Map<String, dynamic>?;
-    if (product != null && product['name'] != null) {
-      return product['name'] as String;
+    final catalog = r['catalog'] as Map<String, dynamic>?;
+    if (catalog != null && catalog['name'] != null) {
+      return catalog['name'] as String;
     }
     return '';
   }

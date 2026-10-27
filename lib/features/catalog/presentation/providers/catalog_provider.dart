@@ -6,40 +6,28 @@ final catalogRepositoryProvider = Provider<CatalogRepository>((ref) {
   return CatalogRepositoryImpl();
 });
 
-final catalogPackageListProvider =
+final catalogListProvider =
     FutureProvider.family<Map<String, dynamic>, Map<String, dynamic>>((
       ref,
       params,
     ) async {
       final repo = ref.watch(catalogRepositoryProvider);
-      return repo.getPackages(
+      return repo.getCatalog(
         categoryId: params['category_id']?.toString(),
         search: params['search']?.toString(),
         sort: params['sort']?.toString(),
-      );
-    });
-
-final catalogProductListProvider =
-    FutureProvider.family<Map<String, dynamic>, Map<String, dynamic>>((
-      ref,
-      params,
-    ) async {
-      final repo = ref.watch(catalogRepositoryProvider);
-      return repo.getProducts(
-        categoryId: params['category_id']?.toString(),
-        search: params['search']?.toString(),
-        sort: params['sort']?.toString(),
+        perPage: int.tryParse('${params['per_page'] ?? ''}'),
       );
     });
 
 final catalogDetailProvider =
-    FutureProvider.family<Map<String, dynamic>, ({String type, String id})>((
-      ref,
-      params,
-    ) async {
+    FutureProvider.family<Map<String, dynamic>, String>((ref, id) async {
       final repo = ref.watch(catalogRepositoryProvider);
-      if (params.type == 'packages') {
-        return repo.getPackageDetail(params.id);
-      }
-      return repo.getProductDetail(params.id);
+      return repo.getCatalogDetail(id);
+    });
+
+final catalogTiersProvider =
+    FutureProvider.family<Map<String, dynamic>, String>((ref, id) async {
+      final repo = ref.watch(catalogRepositoryProvider);
+      return repo.getCatalogTiers(id);
     });

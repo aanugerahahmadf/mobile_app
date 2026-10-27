@@ -16,12 +16,12 @@ class CartRepositoryImpl implements CartRepository {
 
   @override
   Future<Map<String, dynamic>> addToCart({
-    String? productId,
+    String? catalogId,
     String? packageId,
     int quantity = 1,
   }) async {
     final body = <String, dynamic>{'quantity': quantity};
-    if (productId != null) body['product_id'] = productId;
+    if (catalogId != null) body['catalog_id'] = catalogId;
     if (packageId != null) body['package_id'] = packageId;
     final response = await _dio.post(ApiEndpoints.cartAdd, data: body);
     return response.data['data'] as Map<String, dynamic>;

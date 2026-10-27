@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../constants/app_colors/app_colors.dart';
 import '../../constants/app_sizes/app_sizes.dart';
+import '../app_blur_backdrop/app_blur_backdrop.dart';
 
 class AppBottomSheet {
   static Future<T?> show<T>(
@@ -15,39 +16,40 @@ class AppBottomSheet {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: initial,
-        minChildSize: min,
-        maxChildSize: max,
-        expand: false,
-        builder: (context, scrollController) => Padding(
-          padding: const EdgeInsets.all(AppSizes.md),
-          child: ListView(
-            controller: scrollController,
-            children: [
-              Center(
-                child: Container(
-                  width: 40, height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.dividerColor,
-                    borderRadius: BorderRadius.circular(2),
+      backgroundColor: Colors.transparent,
+      builder: (context) => AppBlurBackdrop(
+        borderRadius: 24,
+        child: DraggableScrollableSheet(
+          initialChildSize: initial,
+          minChildSize: min,
+          maxChildSize: max,
+          expand: false,
+          builder: (context, scrollController) => Padding(
+            padding: const EdgeInsets.all(AppSizes.md),
+            child: ListView(
+              controller: scrollController,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40, height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.dividerColor,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
                 ),
-              ),
-              if (title != null) ...[
-                const SizedBox(height: 16),
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleLarge,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
+                if (title != null) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleLarge,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                child,
               ],
-              child,
-            ],
+            ),
           ),
         ),
       ),

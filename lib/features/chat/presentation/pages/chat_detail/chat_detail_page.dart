@@ -17,6 +17,7 @@ import '../../../../../core/constants/app_sizes/app_sizes.dart';
 import '../../../../../core/errors/localized_error/localized_error.dart';
 import '../../../../../core/utils/formatters/formatters.dart';
 import '../../../../../core/utils/guest_mode/guest_mode.dart';
+import 'package:mobile_app/features/chat/data/chat_call_service/chat_call_service.dart';
 import '../../../../../core/widgets/media_viewer/media_viewer.dart';
 import '../../../../../core/widgets/app_action_sheet/app_action_sheet.dart';
 import 'package:file_picker/file_picker.dart';
@@ -27,6 +28,7 @@ import '../../utils/cs_guest_chat/cs_guest_chat.dart';
 import '../../widgets/account_recovery_form_sheet/account_recovery_form_sheet.dart';
 import '../../widgets/structured_chat_text/structured_chat_text.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
+import '../../../../../core/widgets/app_breadcrumbs/app_breadcrumbs.dart';
 
 class ChatDetailPage extends ConsumerStatefulWidget {
   final String id;
@@ -52,6 +54,9 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
   Timer? _pollTimer;
   bool _categorySent = false;
   String? _guestId;
+  String? _guestName;
+  final _callService = ChatCallService();
+  bool _callActive = false;
   Map<String, dynamic>? _replyToMessage;
   bool _isTranslating = false;
   bool _isSearching = false;
@@ -59,6 +64,49 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
   bool _accountRecoveryActive = false;
   String? _recoveryEmail;
   bool _csReportSubmitted = false;
+
+  Future<void> _callOtherUser(Map<String, dynamic>? otherUser) async {
+    final l = AppLocalizations.of(context)!;
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l.calls),
+        content: Text(
+          _callActive ? 'Panggilan tersambung' : 'Memanggil…',
+          textAlign: TextAlign.center,
+        ),
+        actions: [
+          if (!_callActive)
+            TextButton(
+              onPressed: () async {
+                try {
+                  await _callService.start(
+                    int.parse(widget.id),
+                    guestId: _guestId,
+                  );
+                  if (mounted) setState(() => _callActive = true);
+                } catch (_) {}
+              },
+              child: const Text('Mulai'),
+            ),
+          if (_callActive)
+            TextButton(
+              onPressed: () async {
+                await _callService.end();
+                if (mounted) setState(() => _callActive = false);
+                if (dialogContext.mounted) Navigator.pop(dialogContext);
+              },
+              child: const Text('Akhiri'),
+            ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(l.close),
+          ),
+        ],
+      ),
+    );
+  }
 
   Future<void> _downloadReportPdf(String reportId) async {
     final l = AppLocalizations.of(context)!;
@@ -73,9 +121,9 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
       await OpenFile.open(file.path);
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l.failedSendMessage)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l.failedSendMessage)));
       }
     }
   }
@@ -92,59 +140,160 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
       'decor_consultation': 'Konsultasi Dekorasi',
       'general_question': 'Pertanyaan Umum',
     };
-    final categoryLabel = categoryLabels[category] ?? categoryLabels['general_question']!;
+    final categoryLabel =
+        categoryLabels[category] ?? categoryLabels['general_question']!;
     final detailLabels = {
       'bug_report': 'Langkah, hasil yang diharapkan, dan hasil yang terjadi',
-      'account_issue': 'Jelaskan kendala login, verifikasi, atau profil akun Anda',
+      'account_issue':
+          'Jelaskan kendala login, verifikasi, atau profil akun Anda',
       'order_help': 'Sertakan nomor pesanan dan bantuan yang Anda perlukan',
       'payment_issue': 'Sertakan metode pembayaran dan status transaksi',
-      'decor_consultation': 'Ceritakan tema, tanggal, lokasi, dan anggaran acara',
+      'decor_consultation':
+          'Ceritakan tema, tanggal, lokasi, dan anggaran acara',
       'general_question': 'Tuliskan pertanyaan atau kebutuhan bantuan Anda',
     };
-    final detailLabel = detailLabels[category] ?? detailLabels['general_question']!;
+    final detailLabel =
+        detailLabels[category] ?? detailLabels['general_question']!;
     final result = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
       showDragHandle: true,
       builder: (sheetContext) => StatefulBuilder(
         builder: (context, setSheetState) => Padding(
-          padding: EdgeInsets.fromLTRB(20, 8, 20, MediaQuery.of(context).viewInsets.bottom + 20),
+          padding: EdgeInsets.fromLTRB(
+            20,
+            8,
+            20,
+            MediaQuery.of(context).viewInsets.bottom + 20,
+          ),
           child: SingleChildScrollView(
-            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Formulir $categoryLabel', style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: 16),
-              TextField(controller: reasonController, decoration: const InputDecoration(labelText: 'Judul / alasan laporan', border: OutlineInputBorder()), textInputAction: TextInputAction.next),
-              const SizedBox(height: 12),
-              TextField(controller: descriptionController, minLines: 4, maxLines: 7, maxLength: 2000, decoration: InputDecoration(labelText: detailLabel, border: const OutlineInputBorder(), alignLabelWithHint: true)),
-              OutlinedButton.icon(
-                onPressed: () async {
-                  final picked = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'mp4', 'mov', 'webm'], allowMultiple: true, withData: false);
-                  if (picked == null) return;
-                  setSheetState(() { attachments.addAll(picked.files.where((f) => f.path != null).take((5 - attachments.length).clamp(0, 5).toInt())); });
-                },
-                icon: const Icon(Icons.attach_file), label: Text('Tambah foto/video (${attachments.length}/5)'),
-              ),
-              if (attachments.isNotEmpty) ...attachments.map((file) => ListTile(dense: true, leading: const Icon(Icons.attach_file), title: Text(file.name, maxLines: 1, overflow: TextOverflow.ellipsis), trailing: IconButton(icon: const Icon(Icons.close), onPressed: () => setSheetState(() => attachments.remove(file))))),
-              const SizedBox(height: 8),
-              SizedBox(width: double.infinity, child: FilledButton(
-                onPressed: () async {
-                  if (reasonController.text.trim().isEmpty || descriptionController.text.trim().isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Judul dan deskripsi wajib diisi.'))); return;
-                  }
-                  try {
-                    final fields = <String, dynamic>{'category': category, 'reason': reasonController.text.trim(), 'description': descriptionController.text.trim()};
-                    for (var i = 0; i < attachments.length; i++) {
-                      fields['attachments[$i]'] = await MultipartFile.fromFile(attachments[i].path!, filename: attachments[i].name);
-                    }
-                    final response = await DioClient.instance.post(ApiEndpoints.reports, data: FormData.fromMap(fields));
-                    final reportId = response.data['data']?['id']?.toString();
-                    if (reportId != null && sheetContext.mounted) Navigator.pop(sheetContext, reportId);
-                  } catch (_) {
-                    if (sheetContext.mounted) ScaffoldMessenger.of(sheetContext).showSnackBar(const SnackBar(content: Text('Laporan gagal dikirim. Silakan coba lagi.')));
-                  }
-                }, child: const Text('Kirim & Unduh PDF'),
-              )),
-            ]),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Formulir $categoryLabel',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: reasonController,
+                  decoration: const InputDecoration(
+                    labelText: 'Judul / alasan laporan',
+                    border: OutlineInputBorder(),
+                  ),
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: descriptionController,
+                  minLines: 4,
+                  maxLines: 7,
+                  maxLength: 2000,
+                  decoration: InputDecoration(
+                    labelText: detailLabel,
+                    border: const OutlineInputBorder(),
+                    alignLabelWithHint: true,
+                  ),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    final picked = await FilePicker.platform.pickFiles(
+                      type: FileType.custom,
+                      allowedExtensions: [
+                        'jpg',
+                        'jpeg',
+                        'png',
+                        'webp',
+                        'mp4',
+                        'mov',
+                        'webm',
+                      ],
+                      allowMultiple: true,
+                      withData: false,
+                    );
+                    if (picked == null) return;
+                    setSheetState(() {
+                      attachments.addAll(
+                        picked.files
+                            .where((f) => f.path != null)
+                            .take((5 - attachments.length).clamp(0, 5).toInt()),
+                      );
+                    });
+                  },
+                  icon: const Icon(Icons.attach_file),
+                  label: Text('Tambah foto/video (${attachments.length}/5)'),
+                ),
+                if (attachments.isNotEmpty)
+                  ...attachments.map(
+                    (file) => ListTile(
+                      dense: true,
+                      leading: const Icon(Icons.attach_file),
+                      title: Text(
+                        file.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () =>
+                            setSheetState(() => attachments.remove(file)),
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () async {
+                      if (reasonController.text.trim().isEmpty ||
+                          descriptionController.text.trim().isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Judul dan deskripsi wajib diisi.'),
+                          ),
+                        );
+                        return;
+                      }
+                      try {
+                        final fields = <String, dynamic>{
+                          'category': category,
+                          'reason': reasonController.text.trim(),
+                          'description': descriptionController.text.trim(),
+                        };
+                        for (var i = 0; i < attachments.length; i++) {
+                          fields['attachments[$i]'] =
+                              await MultipartFile.fromFile(
+                                attachments[i].path!,
+                                filename: attachments[i].name,
+                              );
+                        }
+                        final response = await DioClient.instance.post(
+                          ApiEndpoints.reports,
+                          data: FormData.fromMap(fields),
+                        );
+                        final reportId = response.data['data']?['id']
+                            ?.toString();
+                        if (reportId != null && sheetContext.mounted) {
+                          Navigator.pop(sheetContext, reportId);
+                        }
+                      } catch (_) {
+                        if (sheetContext.mounted) {
+                          ScaffoldMessenger.of(sheetContext).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Laporan gagal dikirim. Silakan coba lagi.',
+                              ),
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    child: const Text('Kirim & Unduh PDF'),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -153,7 +302,9 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
     descriptionController.dispose();
     if (result != null && mounted) {
       setState(() => _csReportSubmitted = true);
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Laporan terkirim ke admin.')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Laporan terkirim ke admin.')),
+      );
       await _downloadReportPdf(result);
     }
   }
@@ -220,6 +371,36 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
       if (_guestId == null && isGuest) {
         _guestId = await getOrCreateGuestId();
       }
+      if (_guestId != null) {
+        _guestName = await getGuestName();
+        if (_guestName == null && mounted) {
+          final controller = TextEditingController();
+          final name = await showDialog<String>(
+            context: context,
+            barrierDismissible: false,
+            builder: (dialogContext) => AlertDialog(
+              title: const Text('Nama Anda'),
+              content: TextField(
+                controller: controller,
+                autofocus: true,
+                textCapitalization: TextCapitalization.words,
+                decoration: const InputDecoration(hintText: 'Masukkan nama'),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('Simpan'),
+                ),
+              ],
+            ),
+          );
+          controller.dispose();
+          if (name != null && name.trim().isNotEmpty) {
+            await setGuestName(name);
+            _guestName = name.trim();
+          }
+        }
+      }
       if (!mounted) return;
       if (_guestId != null) {
         ref
@@ -244,6 +425,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
   @override
   void dispose() {
     _pollTimer?.cancel();
+    _callService.end();
     _messageController.dispose();
     _messageFocusNode.dispose();
     _scrollController.dispose();
@@ -257,7 +439,9 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
       ref.read(authProvider) is! AuthAuthenticated;
 
   void _startPolling() {
-    _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+    // Bot replies are queued without an artificial delay; poll frequently so
+    // the user sees the answer almost immediately.
+    _pollTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       final notifier = ref.read(chatProvider.notifier);
       if (_guestId != null) {
         notifier.refreshGuestMessages(widget.id, guestId: _guestId!);
@@ -270,7 +454,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
   String _senderName() {
     final l = AppLocalizations.of(context)!;
     if (_guestId != null) {
-      return l.guestName;
+      return _guestName?.isNotEmpty == true ? _guestName! : l.guestName;
     }
     final auth = ref.read(authProvider);
     if (auth is AuthAuthenticated) {
@@ -564,6 +748,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
               guestId: _guestId!,
               senderName: _senderName(),
               csCategory: csCategory,
+              name: _guestName,
             );
         _scrollToBottom();
         if (text.isNotEmpty) {
@@ -676,7 +861,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
                 _attachmentOption(
                   icon: Icons.category_rounded,
                   title: l.catalog,
-                  subtitle: l.shareProduct,
+                  subtitle: l.shareCatalog,
                   onTap: () {
                     Navigator.pop(context);
                     _pickFromCatalog();
@@ -757,17 +942,13 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
     if (_guestId != null) return;
     try {
       final dio = DioClient.instance;
-      final results = await Future.wait([
-        dio.get(ApiEndpoints.packages, queryParameters: {'per_page': 20}),
-        dio.get(ApiEndpoints.products, queryParameters: {'per_page': 20}),
-      ]);
-      final packages = ((results[0].data['data'] as List?) ?? [])
-          .map((e) => e as Map<String, dynamic>..['_type'] = 'package')
+      final response = await dio.get(
+        ApiEndpoints.catalog,
+        queryParameters: {'per_page': 20},
+      );
+      final items = ((response.data['data'] as List?) ?? [])
+          .map((e) => e as Map<String, dynamic>..['_type'] = 'catalog')
           .toList();
-      final products = ((results[1].data['data'] as List?) ?? [])
-          .map((e) => e as Map<String, dynamic>..['_type'] = 'product')
-          .toList();
-      final items = [...packages, ...products];
       if (items.isEmpty || !mounted) return;
       final l = AppLocalizations.of(context)!;
       final selected = await showModalBottomSheet<Map<String, dynamic>>(
@@ -795,7 +976,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
                   vertical: 16,
                 ),
                 child: Text(
-                  l.chooseProduct,
+                  l.catalog,
                   style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
@@ -1599,9 +1780,16 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/chat-list'),
+        automaticallyImplyLeading: false,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(36),
+          child: AppBreadcrumbs(
+            items: [
+              AppBreadcrumbItem(l.home, onTap: () => context.go('/home')),
+              AppBreadcrumbItem(l.navChat, onTap: () => context.go('/chat-list')),
+              AppBreadcrumbItem(otherName),
+            ],
+          ),
         ),
         title: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1669,6 +1857,11 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
           ],
         ),
         actions: [
+          IconButton(
+            tooltip: l.calls,
+            icon: const Icon(Icons.phone_rounded, size: 22),
+            onPressed: () => _callOtherUser(otherUser),
+          ),
           IconButton(
             icon: Icon(
               _isSearching ? Icons.close_rounded : Icons.search_rounded,
@@ -2065,7 +2258,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    type == 'package' ? l.packageLabel : l.productLabel,
+                    type == 'package' ? l.packageLabel : l.catalogLabel,
                     style: TextStyle(
                       fontSize: 10,
                       color: AppColors.primaryColor,
@@ -2261,8 +2454,20 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
         : null;
     final displaySenderName = isBot ? l.csBotSenderName : senderName;
 
-    const reportCategories = {'bug_report', 'account_issue', 'order_help', 'payment_issue', 'decor_consultation', 'general_question'};
-    final showCsReportButton = isBot && widget.csCategory != null && reportCategories.contains(widget.csCategory) && !_csReportSubmitted && !_isGuestSession;
+    const reportCategories = {
+      'bug_report',
+      'account_issue',
+      'order_help',
+      'payment_issue',
+      'decor_consultation',
+      'general_question',
+    };
+    final showCsReportButton =
+        isBot &&
+        widget.csCategory != null &&
+        reportCategories.contains(widget.csCategory) &&
+        !_csReportSubmitted &&
+        !_isGuestSession;
     final messageBubble = Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Align(

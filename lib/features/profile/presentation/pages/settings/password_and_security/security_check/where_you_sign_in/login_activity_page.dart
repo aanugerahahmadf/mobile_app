@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import '../../../../../../../../core/widgets/guest_auth_prompt/guest_auth_prompt.dart';
@@ -291,14 +291,14 @@ class _LoginActivityPageState extends ConsumerState<LoginActivityPage> {
               child: ListView(
                 padding: const EdgeInsets.all(AppSizes.md),
                 children: [
-                  // ═══ SUBJUDUL HALAMAN ═══
+                  // --- SUBJUDUL HALAMAN ---
                   Text(
                     l.signInActivityPageSubtitle,
                     style: AppTextStyles.bodySmall,
                   ),
                   const SizedBox(height: AppSizes.md),
 
-                  // ═══ PERANGKAT INI ═══
+                  // --- PERANGKAT INI ---
                   _sectionHeader(l.thisDevice.toUpperCase()),
                   if (_current != null)
                     Card(
@@ -391,7 +391,7 @@ class _LoginActivityPageState extends ConsumerState<LoginActivityPage> {
                     ),
                   const SizedBox(height: AppSizes.lg),
 
-                  // ═══ LOGIN PERANGKAT LAIN ═══
+                  // --- LOGIN PERANGKAT LAIN ---
                   _sectionHeader(l.otherDeviceLogins.toUpperCase()),
                   if (_others.isEmpty)
                     Card(
@@ -486,7 +486,7 @@ class _LoginActivityPageState extends ConsumerState<LoginActivityPage> {
                       ),
                     ),
 
-                  // ── Keluarkan semua sesi lain ─────────────────────
+                  // -- Keluarkan semua sesi lain ---------------------
                   const SizedBox(height: AppSizes.sm),
                   OutlinedButton.icon(
                     onPressed: _removingAll

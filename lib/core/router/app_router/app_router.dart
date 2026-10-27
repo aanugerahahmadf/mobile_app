@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../features/splash/presentation/pages/landing/landing_page.dart';
+import '../../../features/splash/presentation/pages/startup/startup_page.dart';
 import '../../../features/home/presentation/pages/home/home_page.dart';
 import '../../../features/home/presentation/pages/main/main.dart';
 import '../../../features/auth/presentation/pages/switch_account/switch_account_page.dart';
-import '../../../features/catalog/presentation/pages/catalog_list/catalog_list_page.dart';
 import '../../../features/catalog/presentation/pages/catalog_detail/catalog_detail_page.dart';
 import '../../../features/cbir/presentation/pages/cbir_result/cbir_result_page.dart';
 import '../../../features/cart/presentation/pages/cart/cart_page.dart';
@@ -50,13 +50,15 @@ import '../../../features/wishlist/presentation/pages/wishlist/wishlist_page.dar
 import '../../../features/voucher/presentation/pages/voucher_list/voucher_list_page.dart';
 import '../../../features/voucher/presentation/pages/voucher_detail/voucher_detail_page.dart';
 import '../../../features/voucher/data/models/voucher_model/voucher_model.dart';
-import '../../../features/catalog/presentation/pages/catalog_combined/catalog_combined_page.dart';
+import '../../../features/catalog/presentation/pages/catalog_grid/catalog_grid_page.dart';
 import '../../../features/legal/presentation/pages/terms_of_service/terms_of_service_page.dart';
 import '../../../features/legal/presentation/pages/privacy_policy/privacy_policy_page.dart';
 import '../../../features/legal/presentation/pages/wedding_policy/wedding_policy_page.dart';
 import '../../../features/legal/presentation/pages/help_center/help_center_page.dart';
 import '../../../features/legal/presentation/pages/privacy_and_term/privacy_and_term_page.dart';
 import '../../../features/profile/presentation/pages/settings/settings_page.dart';
+import '../../../features/profile/presentation/pages/settings/storage_and_data/storage_and_data_page.dart';
+
 import '../../../features/profile/presentation/pages/settings/language/language_page.dart';
 import '../../../features/profile/presentation/pages/settings/password_and_security/password_and_security_page.dart';
 import '../../../features/auth/presentation/pages/app_lock/app_lock_page.dart';
@@ -89,11 +91,12 @@ class _RouteObserver extends NavigatorObserver {
 
 final appRouter = GoRouter(
   navigatorKey: rootNavigatorKey,
-  initialLocation: '/landing',
+  initialLocation: '/startup',
   observers: [_RouteObserver()],
   redirect: (context, state) async {
     final prefs = await SharedPreferences.getInstance();
     final onboardingSeen = prefs.getBool('onboarding_seen') ?? false;
+    if (state.matchedLocation == '/startup') return null;
     // Jangan pernah memantulkan pengguna yang SEDANG di '/landing', kalau tidak
     // `context.go('/home')` dari LandingPage akanmental balik ke sini terus.
     if (onboardingSeen) return null;
@@ -102,6 +105,7 @@ final appRouter = GoRouter(
     return '/landing';
   },
   routes: [
+    GoRoute(path: '/startup', builder: (_, _) => const StartupPage()),
     GoRoute(path: '/landing', builder: (_, _) => const LandingPage()),
     StatefulShellRoute.indexedStack(
       builder: (_, _, navigationShell) =>
@@ -140,16 +144,8 @@ final appRouter = GoRouter(
       ],
     ),
     GoRoute(
-      path: '/catalog/:type',
-      builder: (_, state) =>
-          CatalogListPage(type: state.pathParameters['type']!),
-    ),
-    GoRoute(
-      path: '/catalog/:type/:id',
-      builder: (_, state) => CatalogDetailPage(
-        type: state.pathParameters['type']!,
-        id: state.pathParameters['id']!,
-      ),
+      path: '/catalog/:id',
+      builder: (_, state) => CatalogDetailPage(id: state.pathParameters['id']!),
     ),
     GoRoute(path: '/cbir-result', builder: (_, _) => const CbirResultPage()),
     GoRoute(
@@ -159,6 +155,7 @@ final appRouter = GoRouter(
         return CheckoutPage(
           type: extra?['type'] as String?,
           id: extra?['id'] as String?,
+          tierId: extra?['tier_id'] as int?,
         );
       },
     ),
@@ -298,9 +295,8 @@ final appRouter = GoRouter(
       builder: (_, state) {
         final extra = state.extra as Map<String, dynamic>?;
         return ReviewListPage(
-          packageId: extra?['package_id'] as String? ?? '',
-          productId: extra?['product_id'] as String? ?? '',
-          packageName: extra?['name'] as String? ?? '',
+          catalogId: extra?['catalog_id'] as String? ?? '',
+          catalogName: extra?['name'] as String? ?? '',
         );
       },
     ),
@@ -309,8 +305,7 @@ final appRouter = GoRouter(
       builder: (_, state) {
         final extra = state.extra as Map<String, dynamic>?;
         return AllReviewsPage(
-          packageId: extra?['package_id'] as String? ?? '',
-          productId: extra?['product_id'] as String? ?? '',
+          catalogId: extra?['catalog_id'] as String? ?? '',
           title: extra?['title'] as String? ?? '',
           reviews:
               (extra?['reviews'] as List?)?.cast<Map<String, dynamic>>() ?? [],
@@ -347,7 +342,15 @@ final appRouter = GoRouter(
       },
     ),
     GoRoute(path: '/wishlist', builder: (_, _) => const WishlistPage()),
-    GoRoute(path: '/catalog', builder: (_, _) => const CatalogCombinedPage()),
+    GoRoute(
+      path: '/catalog',
+      builder: (_, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+        return CatalogGridPage(
+          initialCategoryId: extra?['category_id'] as String?,
+        );
+      },
+    ),
     GoRoute(
       path: '/terms-of-service',
       builder: (_, _) => const TermsOfServicePage(),
@@ -370,13 +373,13 @@ final appRouter = GoRouter(
       builder: (_, _) => const SwitchAccountPage(),
     ),
     GoRoute(path: '/settings', builder: (_, _) => const SettingsPage()),
+    GoRoute(path: '/storage-and-data', builder: (_, _) => const StorageAndDataPage()),
     GoRoute(path: '/language', builder: (_, _) => const LanguagePage()),
     GoRoute(path: '/app-lock', builder: (_, _) => const AppLockPage()),
     GoRoute(
       path: '/payment/:orderId',
-      builder: (_, state) => PaymentInstructionPage(
-        orderId: state.pathParameters['orderId']!,
-      ),
+      builder: (_, state) =>
+          PaymentInstructionPage(orderId: state.pathParameters['orderId']!),
     ),
     GoRoute(
       path: '/payment-method/:orderId',
@@ -397,3 +400,4 @@ final appRouter = GoRouter(
     ),
   ],
 );
+

@@ -4,6 +4,9 @@ on:
   push:
     tags: ['v*']
   workflow_dispatch:
+  schedule:
+    # Rilis otomatis setiap hari Sabtu (00:00 UTC)
+    - cron: '0 0 * * 6'
 
 permissions:
   contents: write
@@ -83,7 +86,7 @@ jobs:
   release:
     name: Create GitHub Release
     needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'schedule'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -94,16 +97,28 @@ jobs:
           name: android-release
           path: release-artifacts
 
+      - name: Compute release name
+        id: relname
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "name=Weekly $(date -u +%Y.%m.%d)" >> $GITHUB_OUTPUT
+            echo "tag=weekly-$(date -u +%Y%m%d)-${{ github.run_number }}" >> $GITHUB_OUTPUT
+          else
+            echo "name=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+            echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Generate release notes
         run: |
-          echo "## Release ${{ github.ref_name }}" > release-notes.md
+          echo "## Release ${{ steps.relname.outputs.name }}" > release-notes.md
           echo "" >> release-notes.md
           echo "APK & AAB dibangun otomatis oleh GitHub Actions." >> release-notes.md
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          name: Release ${{ github.ref_name }}
+          tag_name: ${{ steps.relname.outputs.tag }}
+          name: Release ${{ steps.relname.outputs.name }}
           body_path: release-notes.md
           draft: false
           prerelease: ${{ contains(github.ref_name, 'beta') || contains(github.ref_name, 'alpha') }}

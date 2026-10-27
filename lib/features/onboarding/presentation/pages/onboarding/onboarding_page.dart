@@ -211,7 +211,7 @@ class _OnboardingSlide extends StatelessWidget {
                   title,
                   style: TextStyle(
                     fontSize: 28,
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w600,
                     color: Colors.white,
                     height: 1.3,
                     shadows: [

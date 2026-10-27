@@ -67,7 +67,7 @@ class ScanScorePanel extends StatelessWidget {
                 '$percent%',
                 style: AppTextStyles.bodyMedium.copyWith(
                   color: color,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],

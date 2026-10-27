@@ -158,10 +158,8 @@ class _MyReviewsPageState extends ConsumerState<MyReviewsPage> {
   }
 
   Widget _buildReviewCard(AppLocalizations l, Map<String, dynamic> r) {
-    final package = r['package'] as Map<String, dynamic>?;
-    final product = r['product'] as Map<String, dynamic>?;
-    final item = package ?? product;
-    final media = item?['media'] as List? ?? [];
+    final catalog = r['catalog'] as Map<String, dynamic>?;
+    final media = catalog?['media'] as List? ?? [];
     final firstMedia = media.isNotEmpty && media[0] is Map
         ? media[0] as Map
         : null;
@@ -171,7 +169,7 @@ class _MyReviewsPageState extends ConsumerState<MyReviewsPage> {
                 (firstMedia['original_url'] as String?),
           )
         : '';
-    final name = (item?['name'] as String?) ?? 'Paket';
+    final name = (catalog?['name'] as String?) ?? 'Paket';
     final rating = (r['rating'] as num?)?.toInt() ?? 0;
     final title = r['title'] as String? ?? '';
     final comment = r['comment'] as String? ?? '';
@@ -309,20 +307,16 @@ class _MyReviewsPageState extends ConsumerState<MyReviewsPage> {
   }
 
   Future<void> _openItemReviews(Map<String, dynamic> r) async {
-    final package = r['package'] as Map<String, dynamic>?;
-    final product = r['product'] as Map<String, dynamic>?;
-    final item = package ?? product;
-    final id = '${item?['id'] ?? ''}';
+    final catalog = r['catalog'] as Map<String, dynamic>?;
+    final id = '${catalog?['id'] ?? ''}';
     if (id.isEmpty || _navigationBusy || !mounted) return;
-    final isPackage = package != null;
     _navigationBusy = true;
     try {
       await context.push(
         '/item-reviews',
         extra: {
-          'package_id': isPackage ? id : '',
-          'product_id': isPackage ? '' : id,
-          'title': (item?['name'] as String?) ?? '',
+          'catalog_id': id,
+          'title': (catalog?['name'] as String?) ?? '',
         },
       );
     } finally {

@@ -5,8 +5,7 @@ class OrderModel {
   final int id;
   final int userId;
   final String? userName;
-  final int? packageId;
-  final int? productId;
+  final int? catalogId;
   final String title;
   final String orderNumber;
   final double totalPrice;
@@ -31,8 +30,6 @@ class OrderModel {
   final Map<String, dynamic>? payment;
   final Map<String, dynamic>? shippingAddress;
   final ItemModel? item;
-  final ItemModel? package;
-  final ItemModel? product;
   final String? createdAt;
   final String? updatedAt;
 
@@ -40,8 +37,7 @@ class OrderModel {
     required this.id,
     required this.userId,
     this.userName,
-    this.packageId,
-    this.productId,
+    this.catalogId,
     required this.title,
     required this.orderNumber,
     required this.totalPrice,
@@ -66,8 +62,6 @@ class OrderModel {
     this.payment,
     this.shippingAddress,
     this.item,
-    this.package,
-    this.product,
     this.createdAt,
     this.updatedAt,
   });
@@ -77,8 +71,7 @@ class OrderModel {
       id: json['id'] as int,
       userId: (json['user_id'] ?? 0) as int,
       userName: json['user_name'] as String?,
-      packageId: json['package_id'] as int?,
-      productId: json['product_id'] as int?,
+      catalogId: json['catalog_id'] as int?,
       title: (json['title'] ?? 'Order') as String,
       orderNumber: (json['order_number'] ?? '') as String,
       totalPrice: parseDouble(json['total_price']),
@@ -107,18 +100,11 @@ class OrderModel {
       item: json['item'] != null
           ? ItemModel.fromJson(json['item'] as Map<String, dynamic>)
           : null,
-      package: json['package'] != null
-          ? ItemModel.fromJson(json['package'] as Map<String, dynamic>)
-          : null,
-      product: json['product'] != null
-          ? ItemModel.fromJson(json['product'] as Map<String, dynamic>)
-          : null,
       createdAt: json['created_at'] as String?,
       updatedAt: json['updated_at'] as String?,
     );
   }
 
-  String? get itemImageUrl =>
-      item?.imageUrl ?? package?.imageUrl ?? product?.imageUrl;
-  String? get itemName => item?.name ?? package?.name ?? product?.name;
+  String? get itemImageUrl => item?.imageUrl;
+  String? get itemName => item?.name;
 }

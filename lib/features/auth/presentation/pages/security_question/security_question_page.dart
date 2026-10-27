@@ -9,6 +9,7 @@ import '../../../../../core/constants/app_text_styles/app_text_styles.dart';
 import '../../../../../core/utils/security_question_prompt/security_question_prompt.dart';
 import '../../../../../core/widgets/app_button/app_button.dart';
 import '../../providers/auth_provider/auth_provider.dart';
+import '../../widgets/auth_modals/auth_modals.dart';
 
 /// Satu kali Pondasi Keamanan, dijalankan setelah OTP verifikasi dan
 /// setelah Complete Profile.
@@ -17,8 +18,18 @@ import '../../providers/auth_provider/auth_provider.dart';
 ///
 ///   Setelah OTP verifikasi   --+
 ///   Setelah Complete Profile --+--> Security Question
-///                                        |-- Tidak --> Home
-///                                        `-- Ya    --> Two Factor Auth --> Home
+///                                        |-- Tidak --> Sign In --> Home
+///                                        `-- Ya    --> Two Factor Auth
+///                                                       --> Sign In
+///                                                       --> 2FA challenge
+///                                                       --> Home
+///
+/// Kenapa harus Sign In lagi, bukan langsung Home: sesi yang/setup 2FA ini
+/// belum pernah melewati challenge 2FA. Kalau langsung ke Home, 2FA terpasang
+/// tapi tidak pernah diuji -- dan middleware baru akanMenolaknya pada Sign In
+/// berikutnya. Paksakan Sign In supaya 2FA benar-benar diuji sekali, persis
+/// seperti `SecurityQuestion::skipAction()` / `TwoFactorAuth::verifyTOTP()`
+/// di panel Filament yang keduanya `auth()->logout()` dulu.
 ///
 /// Tidak pernah ditanyakan di setiap Sign In. Halaman ini hanya dituju dari
 /// dua alur di atas, dan sekali menjawab langsung dicatat di perangkat supaya
@@ -79,12 +90,29 @@ class _SecurityQuestionPageState extends ConsumerState<SecurityQuestionPage> {
     context.go('/home');
   }
 
+  /// Tutup sesi lalu buka sheet Sign In.
+  ///
+  /// Memakai [AuthNotifier.logoutForReauth], bukan [AuthNotifier.logout]:
+  /// yang kedua akan langsung masuk ke akun tersimpan lain kalau ada, sehingga
+  /// orang yang sedang menyiapkan keamanan akun ini justru terbawa ke akun
+  /// yang berbeda.
+  ///
+  /// Sheet Sign In yang opened di sini sudah menangani challenge 2FA: kalau 2FA
+  /// aktif, signIn() mengembalikan `AuthTwoFactorRequired` dan sheet 2FA
+  /// ikut terbuka. Itu tahap "OtpEmailOrTwoFactory" di alur -- tidak perlu
+  /// ditangani di halaman ini.
+  Future<void> _signInAgain() async {
+    await ref.read(authProvider.notifier).logoutForReauth();
+    if (!mounted) return;
+    await showSignInSheet(context);
+  }
+
   Future<void> _skip() async {
     if (_answering) return;
     setState(() => _answering = true);
     await SecurityQuestionPrompt.markAnswered(_email ?? '');
     if (!mounted) return;
-    _goHome();
+    await _signInAgain();
   }
 
   Future<void> _strengthen() async {

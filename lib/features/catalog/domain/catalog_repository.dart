@@ -1,16 +1,12 @@
 abstract class CatalogRepository {
-  Future<Map<String, dynamic>> getPackages({
+  Future<Map<String, dynamic>> getCatalog({
     String? categoryId,
     String? search,
     String? sort,
+    String? sortBy,
+    String? sortDirection,
     int? perPage,
   });
-  Future<Map<String, dynamic>> getPackageDetail(String id);
-  Future<Map<String, dynamic>> getProducts({
-    String? categoryId,
-    String? search,
-    String? sort,
-    int? perPage,
-  });
-  Future<Map<String, dynamic>> getProductDetail(String id);
+  Future<Map<String, dynamic>> getCatalogDetail(String id);
+  Future<Map<String, dynamic>> getCatalogTiers(String id);
 }

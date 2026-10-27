@@ -47,6 +47,22 @@ class AppConfig {
     return trimmed;
   }
 
+  /// Native gRPC endpoint.  REST's `/api` URL is intentionally not reused:
+  /// gRPC uses its own HTTP/2 listener and must never inherit a REST path.
+  static String get grpcBaseUrl {
+    final raw = dotenv.get(
+      'GRPC_BASE_URL',
+      fallback: kReleaseMode ? '' : 'http://127.0.0.1:50051',
+    ).trim().replaceAll(RegExp(r'/+$'), '');
+    if (raw.isEmpty) {
+      throw StateError('GRPC_BASE_URL wajib dikonfigurasi.');
+    }
+    if (kReleaseMode && !raw.toLowerCase().startsWith('https://')) {
+      throw StateError('Release gRPC wajib menggunakan GRPC_BASE_URL HTTPS.');
+    }
+    return raw;
+  }
+
   /// Scheme + host + port extracted from [apiBaseUrl], used to build
   /// absolute URLs for relative image paths.
   static String get storageBaseHost {

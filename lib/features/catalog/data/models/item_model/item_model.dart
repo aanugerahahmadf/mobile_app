@@ -2,6 +2,7 @@ import '../../../../../core/utils/number_utils/number_utils.dart';
 import '../../../../../core/utils/formatters/formatters.dart';
 import '../category_model/category_model.dart';
 import '../review_model/review_model.dart';
+import '../tier_model/tier_model.dart';
 
 class ItemModel {
   final int id;
@@ -20,15 +21,18 @@ class ItemModel {
   final int? minCapacity;
   final int? maxCapacity;
   final String? imageUrl;
+  final String? thumbnailUrl;
   final String? videoUrl;
   final List<dynamic>? media;
+  final List<Map<String, dynamic>>? galleryUrls;
   final double finalPrice;
   final double averageRating;
   final bool isWishlisted;
   final CategoryModel? category;
   final List<ReviewModel>? reviews;
-  final String? vendorId;
-  final Map<String, dynamic>? vendor;
+  /// Package tiers belonging to this catalog. Catalog price is only a legacy
+  /// fallback; customer-facing prices must come from these tiers.
+  final List<TierModel> tiers;
   final String? createdAt;
   final String? updatedAt;
 
@@ -49,21 +53,39 @@ class ItemModel {
     this.minCapacity,
     this.maxCapacity,
     this.imageUrl,
+    this.thumbnailUrl,
     this.videoUrl,
     this.media,
+    this.galleryUrls,
     this.finalPrice = 0,
     this.averageRating = 0,
     this.isWishlisted = false,
     this.category,
     this.reviews,
-    this.vendorId,
-    this.vendor,
+    this.tiers = const [],
     this.createdAt,
     this.updatedAt,
   });
 
   bool get hasDiscount =>
       discountPrice != null && discountPrice! > 0 && discountPrice! < price;
+
+  TierModel? get startingTier {
+    if (tiers.isEmpty) return null;
+    final available = tiers.where((tier) => tier.stock > 0).toList();
+    final source = available.isEmpty ? tiers : available;
+    source.sort((a, b) => a.effectiveFinalPrice.compareTo(b.effectiveFinalPrice));
+    return source.first;
+  }
+
+  double get displayPrice => startingTier?.effectiveFinalPrice ??
+      (finalPrice > 0
+          ? finalPrice
+          : (hasDiscount ? discountPrice! : price));
+
+  double? get displayOriginalPrice => startingTier?.hasDiscount == true
+      ? startingTier!.price
+      : null;
 
   String? get categoryName => category?.name;
 
@@ -78,6 +100,40 @@ class ItemModel {
     return urls.map((u) => {'url': u}).toList();
   }
 
+  /// Normalisasi `gallery_urls` dari API. Backend mengirim
+  /// `{id, url, thumb, collection, order}` per foto; `thumb` adalah varian
+  /// WebP kecil (~320px) yang dipakai untuk strip thumbnail, sedangkan `url`
+  /// (~1024px) untuk hero. Semua URL dinormalisasi lewat [Formatters.imageUrl].
+  static List<Map<String, dynamic>>? _normalizeGallery(
+    Map<String, dynamic> json,
+  ) {
+    final raw = json['gallery_urls'];
+    if (raw is! List || raw.isEmpty) return null;
+    final gallery = <Map<String, dynamic>>[];
+    for (final entry in raw) {
+      if (entry is! Map) continue;
+      final map = Map<String, dynamic>.from(entry);
+      final url = Formatters.imageUrl(map['url'] as String?);
+      if (url.isEmpty) continue;
+      final thumb = Formatters.imageUrl(map['thumb'] as String?);
+      gallery.add({
+        'id': map['id'],
+        'url': url,
+        'thumb': thumb.isNotEmpty ? thumb : url,
+        'collection': map['collection'],
+        'order': map['order'],
+      });
+    }
+    if (gallery.isEmpty) return null;
+    gallery.sort((a, b) {
+      final ao = a['order'];
+      final bo = b['order'];
+      if (ao is num && bo is num) return ao.compareTo(bo);
+      return 0;
+    });
+    return gallery;
+  }
+
   factory ItemModel.fromJson(Map<String, dynamic> json) {
     return ItemModel(
       id: parseInt(json['id']),
@@ -86,8 +142,8 @@ class ItemModel {
       slug: (json['slug'] ?? '') as String,
       description: json['description'] as String?,
       price: parseDouble(json['price']),
-      discountPrice: json['discount_price'] != null
-          ? parseDouble(json['discount_price'])
+      discountPrice: (json['discount_price'] ?? json['discountPrice']) != null
+          ? parseDouble(json['discount_price'] ?? json['discountPrice'])
           : null,
       stock: parseInt(json['stock'] ?? json['stock_count'] ?? 0),
       isActive: json['is_active'] as bool? ?? true,
@@ -102,9 +158,18 @@ class ItemModel {
       imageUrl: (json['image'] ?? json['image_url']) != null
           ? Formatters.imageUrl((json['image'] ?? json['image_url']) as String)
           : null,
+      // Thumbnail kecil (~320px WebP). Kalau backend belum mengirimnya,
+      // fallback ke gambar utama supaya kartu grid tidak pernah kosong.
+      thumbnailUrl: json['thumbnail_url'] != null
+          ? Formatters.imageUrl(json['thumbnail_url'] as String?)
+          : null,
       videoUrl: json['video_url'] as String?,
       media: _normalizeMedia(json),
-      finalPrice: parseDouble(json['final_price'] ?? json['price']),
+      galleryUrls: _normalizeGallery(json),
+      finalPrice: parseDouble(
+        json['final_price'] ?? json['finalPrice'] ?? json['discount_price'] ??
+            json['discountPrice'] ?? json['price'],
+      ),
       averageRating: parseDouble(json['average_rating']),
       isWishlisted: json['is_wishlisted'] as bool? ?? false,
       category: json['category'] != null
@@ -115,8 +180,12 @@ class ItemModel {
                 .map((e) => ReviewModel.fromJson(e as Map<String, dynamic>))
                 .toList()
           : null,
-      vendorId: json['vendor_id']?.toString(),
-      vendor: json['vendor'] as Map<String, dynamic>?,
+      tiers: json['tiers'] is List
+          ? (json['tiers'] as List)
+                .whereType<Map>()
+                .map((e) => TierModel.fromJson(Map<String, dynamic>.from(e)))
+                .toList()
+          : const [],
       createdAt: json['created_at'] as String?,
       updatedAt: json['updated_at'] as String?,
     );
@@ -139,13 +208,13 @@ class ItemModel {
     'min_capacity': minCapacity,
     'max_capacity': maxCapacity,
     'image_url': imageUrl,
+    'thumbnail_url': thumbnailUrl,
     'video_url': videoUrl,
     'final_price': finalPrice,
     'is_wishlisted': isWishlisted,
     'category': category?.toJson(),
-    'vendor_id': vendorId,
-    'vendor': vendor,
     'created_at': createdAt,
     'updated_at': updatedAt,
+    'tiers': tiers.map((tier) => tier.toJson()).toList(),
   };
 }

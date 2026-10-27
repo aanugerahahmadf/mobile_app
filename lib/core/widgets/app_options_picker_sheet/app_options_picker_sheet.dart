@@ -428,7 +428,7 @@ class _GridCell extends StatelessWidget {
               color: selected
                   ? AppColors.primaryColor
                   : AppColors.textPrimary,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
             ),
           ),
         ),

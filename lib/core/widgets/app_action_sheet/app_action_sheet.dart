@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import '../../constants/app_colors/app_colors.dart';
 import '../../constants/app_text_styles/app_text_styles.dart';
+import '../app_blur_backdrop/app_blur_backdrop.dart';
 
 class AppSheetAction<T> {
   final T value;
@@ -60,18 +61,8 @@ Future<T?> showAppActionSheet<T>(
     barrierColor: Colors.black.withValues(alpha: 0.6),
     builder: (sheetContext) => Material(
       color: Colors.transparent,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.surfaceColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
-              blurRadius: 30,
-              offset: const Offset(0, -4),
-            ),
-          ],
-        ),
+      child: AppBlurBackdrop(
+        borderRadius: 28,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -8,6 +8,8 @@ const _fingerprintUnlockKey = 'fingerprint_unlock_enabled';
 const _faceUnlockKey = 'face_unlock_enabled';
 const _pinUnlockEnabledKey = 'pin_unlock_enabled';
 const _pinKey = 'app_lock_pin';
+const _passwordUnlockEnabledKey = 'password_unlock_enabled';
+const _passwordKey = 'app_lock_password';
 
 const _storage = FlutterSecureStorage();
 
@@ -60,13 +62,15 @@ class AppLockFlags {
     required this.fingerprint,
     required this.face,
     required this.pin,
+    required this.password,
   });
 
   final bool fingerprint;
   final bool face;
   final bool pin;
+  final bool password;
 
-  bool get any => fingerprint || face || pin;
+  bool get any => fingerprint || face || pin || password;
 }
 
 /// Reads the app lock flags directly from storage (avoids async load race).
@@ -77,6 +81,8 @@ Future<AppLockFlags> loadAppLockFlags({String? email}) async {
         prefs.getBool(_scopedKey(_fingerprintUnlockKey, email)) ?? false,
     face: prefs.getBool(_scopedKey(_faceUnlockKey, email)) ?? false,
     pin: prefs.getBool(_scopedKey(_pinUnlockEnabledKey, email)) ?? false,
+    password:
+        prefs.getBool(_scopedKey(_passwordUnlockEnabledKey, email)) ?? false,
   );
 }
 
@@ -116,7 +122,8 @@ final appLockEnabledProvider = Provider<bool>((ref) {
   final fingerprint = ref.watch(fingerprintUnlockProvider);
   final face = ref.watch(faceUnlockProvider);
   final pin = ref.watch(pinUnlockProvider);
-  return fingerprint || face || pin;
+  final password = ref.watch(passwordUnlockProvider);
+  return fingerprint || face || pin || password;
 });
 
 final fingerprintUnlockProvider =
@@ -212,6 +219,38 @@ class PinUnlockNotifier extends StateNotifier<bool> {
   }
 }
 
+final passwordUnlockProvider =
+    StateNotifierProvider<PasswordUnlockNotifier, bool>((ref) {
+  return PasswordUnlockNotifier(
+    ref.watch(currentAccountEmailProvider),
+    ref.watch(appLockServiceProvider),
+  );
+});
+
+class PasswordUnlockNotifier extends StateNotifier<bool> {
+  PasswordUnlockNotifier(this._email, this._service) : super(false) {
+    _load();
+  }
+
+  final String? _email;
+  final AppLockService _service;
+
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    state = prefs.getBool(_scopedKey(_passwordUnlockEnabledKey, _email)) ?? false;
+  }
+
+  Future<void> setEnabled(bool value) async {
+    state = value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_scopedKey(_passwordUnlockEnabledKey, _email), value);
+    // The backend currently stores the account-level PIN/biometric flags only.
+    // Password remains device-local and is never sent to the API.
+    if (!value) await clearAppLockPassword(email: _email);
+    _service.updateFlags();
+  }
+}
+
 /// Returns true when a PIN has been stored on this device.
 Future<bool> hasStoredPin({String? email}) async {
   final pin = await _storage.read(key: _scopedKey(_pinKey, email));
@@ -242,6 +281,27 @@ Future<bool> verifyPin(String pin, {String? email}) async {
   return stored == pin;
 }
 
+Future<bool> hasStoredAppLockPassword({String? email}) async {
+  final value = await _storage.read(key: _scopedKey(_passwordKey, email));
+  return value != null && value.isNotEmpty;
+}
+
+Future<void> saveAppLockPassword(String password, {String? email}) async {
+  await _storage.write(
+    key: _scopedKey(_passwordKey, email),
+    value: password,
+  );
+}
+
+Future<bool> verifyAppLockPassword(String password, {String? email}) async {
+  final stored = await _storage.read(key: _scopedKey(_passwordKey, email));
+  return stored != null && stored == password;
+}
+
+Future<void> clearAppLockPassword({String? email}) async {
+  await _storage.delete(key: _scopedKey(_passwordKey, email));
+}
+
 /// Disables every app lock method (fingerprint, Face ID, PIN) and removes the
 /// stored PIN. Used by the "forgot PIN" reset on the lock screen.
 Future<void> resetAppLock({String? email, AppLockService? service}) async {
@@ -249,7 +309,9 @@ Future<void> resetAppLock({String? email, AppLockService? service}) async {
   await prefs.setBool(_scopedKey(_fingerprintUnlockKey, email), false);
   await prefs.setBool(_scopedKey(_faceUnlockKey, email), false);
   await prefs.setBool(_scopedKey(_pinUnlockEnabledKey, email), false);
+  await prefs.setBool(_scopedKey(_passwordUnlockEnabledKey, email), false);
   await _storage.delete(key: _scopedKey(_pinKey, email));
+  await clearAppLockPassword(email: email);
   // Sync to DB so the server doesn't re-enable locks on next sync.
   service?.updateFlags(
     fingerprintEnabled: false,

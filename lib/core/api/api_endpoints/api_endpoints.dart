@@ -38,15 +38,11 @@ class ApiEndpoints {
   static const String categories = '/categories';
   static const String categoriesWithPackages = '/categories-with-packages';
 
-  // Packages
-  static const String packages = '/packages';
-  static const String packagesFeatured = '/packages/featured';
-  static const String packagesOnSale = '/packages/on-sale';
-
-  // Products
-  static const String products = '/products';
-  static const String productsFeatured = '/products/featured';
-  static const String productsOnSale = '/products/on-sale';
+  // Catalog (paket & produk kini satu entitas: /catalog)
+  static const String catalog = '/catalog';
+  static const String catalogFeatured = '/catalog/featured';
+  static const String catalogOnSale = '/catalog/on-sale';
+  static const String catalogPublic = '/catalog/public';
 
   // Cart
   static const String cart = '/cart';
@@ -70,10 +66,6 @@ class ApiEndpoints {
   static const String cbirStats = '/cbir/stats';
   static const String cbirEvaluate = '/cbir/evaluate';
   static const String cbirHealth = '/cbir/health';
-
-  // Vendors
-  static const String vendors = '/vendors';
-  static String vendorDetail(String id) => '/vendors/$id';
 
   // Vouchers
   static const String vouchers = '/vouchers';
@@ -115,8 +107,8 @@ class ApiEndpoints {
   static const String walletHistory = '/wallet/history';
 
   // Dynamic endpoints
-  static String packageDetail(String id) => '/packages/$id';
-  static String productDetail(String id) => '/products/$id';
+  static String catalogDetail(String id) => '/catalog/$id';
+  static String catalogTiers(String id) => '/catalog/$id/tiers';
   static String cartItem(String id) => '/cart/$id';
   static String bookingDetail(String id) => '/bookings/$id';
   static String bookingPay(String id) => '/bookings/$id/pay';
@@ -133,14 +125,27 @@ class ApiEndpoints {
   static const String guestChatStart = '/messages/guest/start';
   static const String guestChatSend = '/messages/guest/send';
   static String guestChatMessages(String inboxId) => '/messages/guest/$inboxId';
+  static const String chatCalls = '/messages/calls';
+  static const String guestChatCalls = '/messages/guest/calls';
+  static String guestChatCallState(String token) =>
+      '/messages/guest/calls/$token';
+  static String guestChatCallSignal(String token) =>
+      '/messages/guest/calls/$token/signal';
+  static String guestChatCallEnd(String token) =>
+      '/messages/guest/calls/$token/end';
+  static String chatCallState(String token) => '/messages/calls/$token';
+  static String chatCallSignal(String token) => '/messages/calls/$token/signal';
+  static String chatCallAccept(String token) => '/messages/calls/$token/accept';
+  static String chatCallEnd(String token) => '/messages/calls/$token/end';
+  static String chatCallActive(String inboxId) =>
+      '/messages/$inboxId/calls/active';
+  static String guestChatCallActive(String inboxId) =>
+      '/messages/guest/$inboxId/calls/active';
   static String voucherClaim(String id) => '/vouchers/$id/claim';
   static String notificationRead(String id) => '/notifications/$id/read';
-  static String packageReviews(String id) => '/reviews/package/$id';
-  static String productReviews(String id) => '/reviews/product/$id';
-  static String packageReviewSummary(String id) =>
-      '/reviews/package/$id/summary';
-  static String productReviewSummary(String id) =>
-      '/reviews/product/$id/summary';
+  static String catalogReviews(String id) => '/reviews/catalog/$id';
+  static String catalogReviewSummary(String id) =>
+      '/reviews/catalog/$id/summary';
   static String reviewVote(int id) => '/reviews/$id/vote';
   static String reviewReply(int id) => '/reviews/$id/reply';
   static String reviewDeleteReply(int reviewId, int replyId) =>
@@ -174,6 +179,12 @@ class ApiEndpoints {
   static const String securityTrustedDevices = '/security/trusted-devices';
   static String securityRemoveTrustedDevice(int id) =>
       '/security/trusted-devices/$id';
+  // Jawaban "Perangkat Baru -- Apakah Ini Anda?": verify = "Ya, Ini Saya",
+  // reject = "Bukan Saya" (token HP yang memanggil ikut dicabut di server).
+  static String securityVerifyTrustedDevice(int id) =>
+      '/security/trusted-devices/$id/verify';
+  static String securityRejectTrustedDevice(int id) =>
+      '/security/trusted-devices/$id/reject';
   static const String securityRemoveAllTrustedDevices =
       '/security/trusted-devices';
   static const String securityRemoveAllOtherSessions =

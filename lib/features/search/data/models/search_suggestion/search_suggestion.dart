@@ -2,8 +2,7 @@ import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../../core/utils/formatters/formatters.dart';
 
 enum SuggestionType {
-  packages,
-  products,
+  catalog,
   categories,
   vouchers,
   orders,
@@ -12,15 +11,12 @@ enum SuggestionType {
   privacy,
   helps,
   histories,
-  weddingPolicy,
-  vendors;
+  weddingPolicy;
 
   String badgeLabel(AppLocalizations l) {
     switch (this) {
-      case SuggestionType.packages:
-        return l.packages;
-      case SuggestionType.products:
-        return l.products;
+      case SuggestionType.catalog:
+        return l.catalog;
       case SuggestionType.categories:
         return l.categories;
       case SuggestionType.vouchers:
@@ -39,17 +35,13 @@ enum SuggestionType {
         return l.history;
       case SuggestionType.weddingPolicy:
         return l.weddingPolicy;
-      case SuggestionType.vendors:
-        return l.vendors;
     }
   }
 
   String localizedLabel(AppLocalizations l) {
     switch (this) {
-      case SuggestionType.packages:
-        return l.packages;
-      case SuggestionType.products:
-        return l.products;
+      case SuggestionType.catalog:
+        return l.catalog;
       case SuggestionType.categories:
         return l.categories;
       case SuggestionType.vouchers:
@@ -68,8 +60,6 @@ enum SuggestionType {
         return l.history;
       case SuggestionType.weddingPolicy:
         return l.weddingPolicy;
-      case SuggestionType.vendors:
-        return l.vendors;
     }
   }
 }
@@ -125,8 +115,10 @@ class SearchSuggestion {
             json['expired_at'] as String? ??
             '';
         final sub2 = [
-          if (discount.toString().isNotEmpty) '${l?.discount ?? 'Diskon'}: $discount',
-          if (validUntil.isNotEmpty) '${l?.validUntil ?? 'Sampai'}: $validUntil',
+          if (discount.toString().isNotEmpty)
+            '${l?.discount ?? 'Diskon'}: $discount',
+          if (validUntil.isNotEmpty)
+            '${l?.validUntil ?? 'Sampai'}: $validUntil',
         ].join(' • ');
         return SearchSuggestion(
           type: type,
@@ -252,30 +244,7 @@ class SearchSuggestion {
           routePath: '/history',
         );
 
-      case SuggestionType.vendors:
-        final logo = json['logo'] as String?;
-        final desc = json['store_description'] as String?;
-        final contact = json['contact_person'] as String?;
-        final sub2 = [
-          if (desc != null && desc.isNotEmpty) desc,
-          if (contact != null && contact.isNotEmpty) contact,
-        ].join(' • ');
-        return SearchSuggestion(
-          type: type,
-          id: id,
-          name: json['store_name'] as String?,
-          subtitle: sub2.isNotEmpty ? sub2 : null,
-          subtitle2:
-              '${json['packages_count'] ?? 0} ${l?.packages ?? 'packages'}, ${json['products_count'] ?? 0} ${l?.products ?? 'products'}',
-          imageUrl: logo != null && logo.isNotEmpty
-              ? Formatters.imageUrl(logo)
-              : null,
-          routePath: '/vendor/$id',
-          rawData: json,
-        );
-
-      case SuggestionType.packages:
-      case SuggestionType.products:
+      case SuggestionType.catalog:
         final price = _pickPrice(json);
         // `name` sengaja dibiarkan null saat tidak ada, bukan diubah jadi ''.
         // Field-nya `String?`, semua konsumen di UI sudah aman terhadap null,
@@ -298,13 +267,18 @@ class SearchSuggestion {
           subtitle: subtitle,
           subtitle2: sub2.isNotEmpty ? sub2 : null,
           imageUrl: imageUrl,
-          routePath: '/catalog/${type.name}/$id',
+          routePath: '/catalog/$id',
           rawData: json,
         );
     }
   }
 
   static String? _extractImage(Map<String, dynamic> json) {
+    // Thumbnail kecil lebih dulu: baris hasil pencarian hanya ~40-48px.
+    final thumbnailUrl = json['thumbnail_url'] as String?;
+    if (thumbnailUrl != null && thumbnailUrl.isNotEmpty) {
+      return Formatters.imageUrl(thumbnailUrl);
+    }
     final imageUrl = json['image_url'] as String?;
     if (imageUrl != null && imageUrl.isNotEmpty) {
       return Formatters.imageUrl(imageUrl);

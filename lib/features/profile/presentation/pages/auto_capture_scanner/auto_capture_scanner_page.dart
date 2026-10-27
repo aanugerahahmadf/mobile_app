@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:math';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../../core/constants/app_colors/app_colors.dart';
 import '../../../../../core/constants/app_text_styles/app_text_styles.dart';
@@ -40,11 +41,14 @@ class AutoCaptureScannerPage extends StatefulWidget {
 class _AutoCaptureScannerPageState extends State<AutoCaptureScannerPage>
     with WidgetsBindingObserver {
   CameraController? _cameraController;
+  final FlutterTts _tts = FlutterTts();
   bool _cameraReady = false;
   bool _captured = false;
   bool _detected = false;
   bool _tooDark = false;
   bool _blurry = false;
+  bool _isMuted = false;
+  bool _spokeTooDark = false;
   File? _capturedImage;
   int _stableCounter = 0;
   bool _isProcessing = false;
@@ -55,12 +59,14 @@ class _AutoCaptureScannerPageState extends State<AutoCaptureScannerPage>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _initializeCamera();
+    _initTts();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _cameraController?.dispose();
+    _tts.stop();
     super.dispose();
   }
 
@@ -88,6 +94,25 @@ class _AutoCaptureScannerPageState extends State<AutoCaptureScannerPage>
     await _initCamera();
   }
 
+  Future<void> _initTts() async {
+    final locale = Platform.localeName;
+    final langCode = locale.split('_').first;
+    if (langCode == 'id') {
+      await _tts.setLanguage('id-ID');
+    } else {
+      await _tts.setLanguage('en-US');
+    }
+    await _tts.setSpeechRate(0.5);
+    await _tts.setVolume(1.0);
+    await _tts.setPitch(1.0);
+  }
+
+  Future<void> _speak(String text) async {
+    if (_isMuted) return;
+    await _tts.stop();
+    await _tts.speak(text);
+  }
+
   Future<void> _initCamera() async {
     try {
       await _cameraController!.initialize();
@@ -95,6 +120,10 @@ class _AutoCaptureScannerPageState extends State<AutoCaptureScannerPage>
         await _cameraController!.setFocusMode(FocusMode.auto);
         setState(() => _cameraReady = true);
         _cameraController!.startImageStream(_processImage);
+        if (mounted) {
+          final l = AppLocalizations.of(context);
+          if (l != null) _speak(l.voiceAutoCaptureGreeting);
+        }
       }
     } catch (_) {
       if (mounted) {
@@ -117,10 +146,19 @@ class _AutoCaptureScannerPageState extends State<AutoCaptureScannerPage>
           _tooDark = quality.brightness < 60;
           _blurry = !quality.inFocus;
         });
+        if (_tooDark && !_spokeTooDark) {
+          setState(() => _spokeTooDark = true);
+          final l = AppLocalizations.of(context);
+          if (l != null) _speak(l.voiceAutoCaptureTooDark);
+        } else if (!_tooDark) {
+          setState(() => _spokeTooDark = false);
+        }
         if (quality.inFocus && quality.brightness >= 60) {
           _stableCounter++;
           if (_stableCounter >= 5) {
             setState(() => _detected = true);
+            final l = AppLocalizations.of(context);
+            if (l != null) _speak(l.voiceAutoCaptureDetected);
             _capturePhoto();
           }
         } else {
@@ -180,6 +218,8 @@ class _AutoCaptureScannerPageState extends State<AutoCaptureScannerPage>
         _capturedImage = File(photo.path);
         _cameraController!.stopImageStream();
       });
+      final l = AppLocalizations.of(context);
+      if (l != null) _speak(l.voiceAutoCaptureCaptured);
     } catch (_) {
       _stableCounter = 0;
       if (mounted) setState(() => _detected = false);
@@ -240,6 +280,11 @@ class _AutoCaptureScannerPageState extends State<AutoCaptureScannerPage>
         CameraPreview(_cameraController!),
         _buildOverlay(),
         Positioned(
+          top: MediaQuery.of(context).padding.top + 8,
+          right: 16,
+          child: _buildMuteButton(),
+        ),
+        Positioned(
           left: 0,
           right: 0,
           bottom: MediaQuery.of(context).padding.bottom + 40,
@@ -265,6 +310,35 @@ class _AutoCaptureScannerPageState extends State<AutoCaptureScannerPage>
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildMuteButton() {
+    return GestureDetector(
+      onTap: () {
+        setState(() => _isMuted = !_isMuted);
+        if (_isMuted) {
+          _tts.stop();
+        } else {
+          final l = AppLocalizations.of(context);
+          if (l != null) {
+            _speak(l.voiceAutoCaptureGreeting);
+          }
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.5),
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white24),
+        ),
+        child: Icon(
+          _isMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
+          color: Colors.white,
+          size: 22,
+        ),
+      ),
     );
   }
 

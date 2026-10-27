@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../../core/constants/app_colors/app_colors.dart';
 import '../../../../../core/constants/app_sizes/app_sizes.dart';
@@ -61,9 +60,9 @@ class WeddingPolicyPage extends ConsumerWidget {
             children: [
               Text(
                 content.title,
-                style: GoogleFonts.inter(
+                style: TextStyle(fontFamily: 'InstrumentSans', 
                   fontSize: 18,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
                 ),
               ),
@@ -71,7 +70,7 @@ class WeddingPolicyPage extends ConsumerWidget {
                 const SizedBox(height: 8),
                 Text(
                   l.lastUpdatedFormat(content.updatedAt!),
-                  style: GoogleFonts.inter(
+                  style: TextStyle(fontFamily: 'InstrumentSans', 
                     fontSize: 12,
                     color: AppColors.textSecondary,
                   ),
@@ -92,16 +91,16 @@ class WeddingPolicyPage extends ConsumerWidget {
                             padding: const EdgeInsets.only(bottom: 4),
                             child: Text(
                               heading,
-                              style: GoogleFonts.inter(
+                              style: TextStyle(fontFamily: 'InstrumentSans', 
                                 fontSize: 14,
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 color: AppColors.textPrimary,
                               ),
                             ),
                           ),
                         Text(
                           body ?? '',
-                          style: GoogleFonts.inter(
+                          style: TextStyle(fontFamily: 'InstrumentSans', 
                             fontSize: 14,
                             height: 1.6,
                             color: AppColors.textPrimary,
@@ -120,7 +119,7 @@ class WeddingPolicyPage extends ConsumerWidget {
                                   (content.content?['content'] as String? ??
                                       ''))
                             : ''),
-                  style: GoogleFonts.inter(
+                  style: TextStyle(fontFamily: 'InstrumentSans', 
                     fontSize: 14,
                     height: 1.6,
                     color: AppColors.textPrimary,

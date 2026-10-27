@@ -19,20 +19,8 @@ class _DelayedReviewRepository implements ReviewRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> getPackageReviews(
-    String packageId, {
-    String sort = 'newest',
-    int? rating,
-    bool withPhoto = false,
-    int page = 1,
-  }) async => {
-    'reviews': [],
-    'pagination': {'current_page': 1, 'last_page': 1, 'total': 0},
-  };
-
-  @override
-  Future<Map<String, dynamic>> getProductReviews(
-    String productId, {
+  Future<Map<String, dynamic>> getCatalogReviews(
+    String catalogId, {
     String sort = 'newest',
     int? rating,
     bool withPhoto = false,
@@ -60,13 +48,8 @@ class _DelayedReviewRepository implements ReviewRepository {
   Future<void> deleteReview(int id) async {}
 
   @override
-  Future<Map<String, dynamic>> getPackageRatingSummary(
-    String packageId,
-  ) async => {};
-
-  @override
-  Future<Map<String, dynamic>> getProductRatingSummary(
-    String productId,
+  Future<Map<String, dynamic>> getCatalogRatingSummary(
+    String catalogId,
   ) async => {};
 
   @override

@@ -94,7 +94,7 @@ class VoucherCard extends StatelessWidget {
                               'POTONGAN',
                               style: TextStyle(
                                 fontSize: 7,
-                                fontWeight: FontWeight.w800,
+                                fontWeight: FontWeight.w600,
                                 color: Colors.white.withAlpha(204),
                                 letterSpacing: 1.0,
                               ),
@@ -103,7 +103,7 @@ class VoucherCard extends StatelessWidget {
                             discLabel,
                             style: const TextStyle(
                               fontSize: 20,
-                              fontWeight: FontWeight.w900,
+                              fontWeight: FontWeight.w600,
                               color: Colors.white,
                               height: 1.1,
                             ),
@@ -113,7 +113,7 @@ class VoucherCard extends StatelessWidget {
                               'DISKON',
                               style: TextStyle(
                                 fontSize: 7,
-                                fontWeight: FontWeight.w800,
+                                fontWeight: FontWeight.w600,
                                 color: Colors.white70,
                                 letterSpacing: 1.2,
                               ),
@@ -154,7 +154,7 @@ class VoucherCard extends StatelessWidget {
                                 code,
                                 style: const TextStyle(
                                   fontSize: 9,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w600,
                                   color: Color(0xFFFF4B2B),
                                   letterSpacing: 1.0,
                                 ),

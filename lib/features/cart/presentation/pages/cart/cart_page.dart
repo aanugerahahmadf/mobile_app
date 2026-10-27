@@ -91,16 +91,19 @@ class CartPage extends ConsumerWidget {
                       itemBuilder: (context, index) {
                         final item = cartState.items[index];
                         final itemData =
-                            (item['package'] ?? item['product'])
-                                as Map<String, dynamic>? ??
-                            {};
+                            item['catalog'] as Map<String, dynamic>? ??
+                        {};
                         final qty = item['quantity'] as int? ?? 1;
                         final stock = Formatters.parsePrice(itemData['stock']);
                         final price = Formatters.parsePrice(
                           itemData['final_price'] ?? itemData['price'],
                         );
+                        // `thumbnail_url` (~320px WebP) cukup untuk sel 80px di keranjang.
                         final imageUrl =
-                            (itemData['image_url'] as String?) ?? '';
+                            (itemData['thumbnail_url'] ??
+                                    itemData['image_url'] ??
+                                    '')
+                                as String;
                         final name = itemData['name'] as String? ?? 'Item';
                         final cartId = '${item['id']}';
                         final isSelected =
@@ -148,6 +151,7 @@ class CartPage extends ConsumerWidget {
                                     width: 80,
                                     height: 80,
                                     fit: BoxFit.cover,
+                                    memCacheWidth: 240,
                                     placeholder: (_, _) => Shimmer.fromColors(
                                       baseColor: AppColors.shimmerBase,
                                       highlightColor:
@@ -255,24 +259,28 @@ class CartPage extends ConsumerWidget {
                                         color: AppColors.textSecondary,
                                       ),
                                       onPressed: () async {
-                                        final v = await showAppActionSheet<
-                                            String>(
-                                          context,
-                                          actions: [
-                                            AppSheetAction(
-                                              value: 'save',
-                                              label: l.saveForLater,
-                                              icon: Icons.bookmark_border,
-                                            ),
-                                            AppSheetAction(
-                                              value: 'delete',
-                                              label: l.delete,
-                                              icon: Icons.delete_outline,
-                                              destructive: true,
-                                            ),
-                                          ],
-                                        );
-                                        if (v == null || !context.mounted) return;
+                                        final v =
+                                            await showAppActionSheet<String>(
+                                              context,
+                                              actions: [
+                                                AppSheetAction(
+                                                  value: 'save',
+                                                  label: l.saveForLater,
+                                                  icon: Icons.bookmark_border,
+                                                ),
+                                                AppSheetAction(
+                                                  value: 'delete',
+                                                  label: l.delete,
+                                                  icon: Icons.delete_outline,
+                                                  destructive: true,
+                                                ),
+                                              ],
+                                            );
+
+                                        if (v == null || !context.mounted) {
+                                           return;
+                                         }
+
                                         if (v == 'save') {
                                           await notifier.saveForLater(cartId);
                                           if (context.mounted) {

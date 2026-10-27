@@ -13,6 +13,7 @@ import '../../../../../core/widgets/app_error_state/app_error_state.dart';
 import '../../../../../core/widgets/app_button/app_button.dart';
 import '../../../../../core/widgets/app_snackbar/app_snackbar.dart';
 import '../../../../../core/widgets/guest_auth_prompt/guest_auth_prompt.dart';
+import '../../../../../core/widgets/app_breadcrumbs/app_breadcrumbs.dart';
 import '../../../../../core/utils/formatters/formatters.dart';
 import '../../../../../core/api/dio_client/dio_client.dart';
 import '../../../../../core/api/api_endpoints/api_endpoints.dart';
@@ -23,12 +24,13 @@ import '../../../../auth/presentation/providers/auth_provider/auth_provider.dart
 import '../../../../cart/presentation/providers/cart_provider/cart_provider.dart';
 import '../../../../review/presentation/providers/review_provider/review_provider.dart';
 import '../../../../review/presentation/widgets/review_photos_grid/review_photos_grid.dart';
+import '../../../data/models/tier_model/tier_model.dart';
+import '../../widgets/tier_selector/tier_selector.dart';
 import '../../providers/catalog_provider.dart';
 
 class CatalogDetailPage extends ConsumerStatefulWidget {
-  final String type;
   final String id;
-  const CatalogDetailPage({super.key, required this.type, required this.id});
+  const CatalogDetailPage({super.key, required this.id});
 
   @override
   ConsumerState<CatalogDetailPage> createState() => _CatalogDetailPageState();
@@ -46,6 +48,7 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
   int _reviewRating = 5;
   String? _error;
   Map<String, dynamic>? _data;
+  TierModel? _selectedTier;
   bool _initialized = false;
 
   @override
@@ -69,6 +72,27 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
     super.dispose();
   }
 
+  /// Tier/varian dari entitas katalog ini. Backend menyertakan `tiers`
+  /// pada respons detail `/api/catalog/{id}`.
+  List<TierModel> get _tiers {
+    final raw = _data?['tiers'];
+    if (raw is! List) return const [];
+    return raw
+        .whereType<Map<String, dynamic>>()
+        .map(TierModel.fromJson)
+        .toList()
+      ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+  }
+
+  /// Katalog ini pada dasarnya paket (bukan katalog)? Backend tidak
+  /// mengirim field `type` pada entitas katalog, jadi kita andalkan
+  /// `resource_type` untuk membedakan paket dari katalog.
+  bool get _isPackageItem {
+    final data = _data;
+    if (data == null) return false;
+    return data['type'] == 'package' || data['resource_type'] == 'package';
+  }
+
   Future<void> _fetchDetail() async {
     final dataNotFoundMsg = AppLocalizations.of(context)!.dataNotFound;
     setState(() {
@@ -77,15 +101,20 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
     });
     try {
       final repo = ref.read(catalogRepositoryProvider);
-      final res = widget.type == 'packages'
-          ? await repo.getPackageDetail(widget.id)
-          : await repo.getProductDetail(widget.id);
+      final res = await repo.getCatalogDetail(widget.id);
       _data = res['data'] as Map<String, dynamic>?;
       if (_data == null) throw Exception(dataNotFoundMsg);
+      // Default tier = tier pertama (yg sort_order terkecil).
+      final tiers = _tiers;
+      _selectedTier = tiers.isNotEmpty ? tiers.first : null;
     } catch (e) {
       _error = e.toString();
     }
     if (mounted) setState(() => _loading = false);
+  }
+
+  void _selectTier(TierModel? tier) {
+    setState(() => _selectedTier = tier);
   }
 
   Future<void> _addToCart() async {
@@ -102,9 +131,12 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
     try {
       final ok = await ref
           .read(cartProvider.notifier)
-          .addItem(
-            productId: widget.type == 'products' ? widget.id : null,
-            packageId: widget.type == 'packages' ? widget.id : null,
+           .addItem(
+            // Catalog is the parent product; the selected package tier is a
+            // real packages row and must travel as package_id. Never send a
+            // tier id as catalog_id: that silently points at another catalog.
+            catalogId: widget.id,
+            packageId: _selectedTier?.id.toString(),
           );
       if (mounted) {
         if (ok) {
@@ -133,10 +165,7 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
       await DioClient.instance.post(
         ApiEndpoints.wishlistToggle,
         data: {
-          if (widget.type == 'packages')
-            'package_id': widget.id
-          else
-            'product_id': widget.id,
+          'catalog_id': widget.id,
         },
       );
       if (mounted) {
@@ -161,10 +190,10 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
       if (auth is AuthAuthenticated) {
         inboxId = await notifier.startConversation(
           itemContext: {
-            'type': widget.type == 'packages' ? 'package' : 'product',
+            'type': 'catalog',
             'item_id': widget.id,
             'item_name': _data!['name'] as String? ?? '',
-            'item_price': _data!['price'],
+            'item_price': _selectedTier?.effectiveFinalPrice ?? _data!['price'],
             'item_image': imageUrl,
           },
         );
@@ -187,6 +216,15 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
   }
 
   void _buyNow() {
+    final l = AppLocalizations.of(context)!;
+    if (_tiers.isNotEmpty && _selectedTier == null) {
+      AppSnackBar.show(
+        context,
+        l.choosePackageFirst,
+        type: SnackBarType.warning,
+      );
+      return;
+    }
     if (ref.read(authProvider) is! AuthAuthenticated) {
       showModalBottomSheet<void>(
         context: context,
@@ -195,14 +233,23 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
       );
       return;
     }
-    context.push('/checkout', extra: {'type': widget.type, 'id': widget.id});
+    context.push(
+      '/checkout',
+      extra: {
+        'type': _isPackageItem ? 'packages' : 'catalogs',
+        'id': widget.id,
+        'tier_id': _selectedTier?.id,
+      },
+    );
   }
 
   void _shareItem() {
     final name = _data?['name'] as String? ?? '';
-    final price = _data?['final_price'] ?? _data?['price'] ?? '';
-    final link =
-        'https://wedding-organizer.app/detail/${widget.type}/${widget.id}';
+    final price = _selectedTier?.effectiveFinalPrice ??
+        _data?['final_price'] ??
+        _data?['finalPrice'] ??
+        0;
+    final link = 'https://weddingflowerdecorations.app/catalog/${widget.id}';
     Share.share(
       '$name\n${Formatters.currency(price is num ? price.toInt() : 0)}\n$link',
     );
@@ -212,20 +259,19 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
     if (_data == null) return;
     final l = AppLocalizations.of(context)!;
     final name = _data?['name'] as String? ?? '';
-    final isPackage =
-        widget.type == 'packages' || (_data?['type'] as String?) == 'package';
+    final isPackage = _isPackageItem;
     final imageUrl = Formatters.itemMediaUrls(_data).firstOrNull ?? '';
     openReportChat(
       context,
       ref,
-      category: isPackage ? 'package' : 'product',
+      category: isPackage ? 'package' : 'catalog',
       itemName: name,
-      details: isPackage ? l.packageLabel : l.productLabel,
+      details: isPackage ? l.packageLabel : l.catalogLabel,
       itemContext: {
-        'type': isPackage ? 'package' : 'product',
+        'type': isPackage ? 'package' : 'catalog',
         'item_id': widget.id,
         'name': name,
-        'price': _data!['price'],
+        'price': _selectedTier?.effectiveFinalPrice ?? _data!['price'],
         'image': imageUrl,
       },
     );
@@ -247,9 +293,20 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+        automaticallyImplyLeading: false,
+        title: Text(l.catalog),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(36),
+          child: AppBreadcrumbs(
+            items: [
+              AppBreadcrumbItem(l.home, onTap: () => context.go('/home')),
+              AppBreadcrumbItem(l.catalog, onTap: () => context.go('/catalog')),
+              AppBreadcrumbItem(l.catalogDetail),
+              if (_data?['name'] is String &&
+                  (_data!['name'] as String).trim().isNotEmpty)
+                AppBreadcrumbItem((_data!['name'] as String).trim()),
+            ],
+          ),
         ),
         actions: [
           IconButton(icon: const Icon(Icons.share), onPressed: _shareItem),
@@ -302,14 +359,33 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
     );
   }
 
+  /// Foto galeri dari `gallery_urls` (backend sudah mengirim varian `url`
+  /// ~1024px dan `thumb` ~320px). Fallback ke `Formatters.itemMediaUrls`
+  /// supaya respons lama tanpa `gallery_urls` tetap tampil.
+  List<Map<String, dynamic>> get _gallery {
+    final raw = _data?['gallery_urls'];
+    if (raw is List && raw.isNotEmpty) {
+      return raw.whereType<Map<String, dynamic>>().toList();
+    }
+    return Formatters.itemMediaUrls(
+      _data,
+    ).map((u) => <String, dynamic>{'url': u, 'thumb': u}).toList();
+  }
+
   Widget _buildContent() {
     final l = AppLocalizations.of(context)!;
     final item = _data!;
-    final imageUrls = Formatters.itemMediaUrls(item);
+    final gallery = _gallery;
     final name = item['name'] as String? ?? '';
     final description = item['description'] as String? ?? '';
-    final priceRaw = item['final_price'] ?? item['price'];
-    final discountRaw = item['discount_price'];
+    // Harga mengikuti tier terpilih; tanpa tier memakai harga katalog.
+    final tier = _selectedTier;
+    final priceRaw = tier != null
+        ? tier.effectiveFinalPrice
+        : (item['final_price'] ?? item['finalPrice'] ?? item['price']);
+    final discountRaw = tier?.hasDiscount == true
+        ? tier!.discountPrice
+        : (item['discount_price'] ?? item['discountPrice']);
     final price = priceRaw is num
         ? priceRaw.toInt()
         : (priceRaw is String ? (double.tryParse(priceRaw)?.toInt() ?? 0) : 0);
@@ -331,7 +407,7 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (imageUrls.isNotEmpty) _buildImageSlider(imageUrls),
+          if (gallery.isNotEmpty) _buildImageSlider(gallery),
           Padding(
             padding: const EdgeInsets.all(AppSizes.md),
             child: Column(
@@ -407,13 +483,27 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
                 if (reviews.isEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: AppSizes.xs),
-                    child: Text(l.beFirstReview, style: AppTextStyles.bodySmall),
+                    child: Text(
+                      l.beFirstReview,
+                      style: AppTextStyles.bodySmall,
+                    ),
                   )
                 else ...[
                   SizedBox(height: AppSizes.sm),
                   ...reviews.map(
                     (r) =>
                         _buildReviewCard(r, onTap: () => _openUserReviews(r)),
+                  ),
+                ],
+                // Selector tier diletakkan paling akhir, tepat di atas baris
+                // tombol aksi (Order now / Add to Cart / Chat / Favorites).
+                if (_tiers.isNotEmpty) ...[
+                  SizedBox(height: AppSizes.md),
+                  const Divider(),
+                  TierSelector(
+                    tiers: _tiers,
+                    selected: _selectedTier,
+                    onChanged: _selectTier,
                   ),
                 ],
               ],
@@ -424,7 +514,9 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
     );
   }
 
-  Widget _buildImageSlider(List<String> imageUrls) {
+  Widget _buildImageSlider(List<Map<String, dynamic>> gallery) {
+    // Hero 300px tinggi full-lebar -> decode ~1080px, bukan gambar asli.
+    const heroCacheWidth = 1080;
     return Column(
       children: [
         SizedBox(
@@ -434,12 +526,13 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
               PageView.builder(
                 controller: _pageController,
                 onPageChanged: (i) => setState(() => _currentPage = i),
-                itemCount: imageUrls.length,
+                itemCount: gallery.length,
                 itemBuilder: (_, i) {
                   return Image.network(
-                    imageUrls[i],
+                    '${gallery[i]['url'] ?? ''}',
                     width: double.infinity,
                     fit: BoxFit.cover,
+                    cacheWidth: heroCacheWidth,
                     loadingBuilder: (context, child, loadingProgress) {
                       if (loadingProgress == null) return child;
                       return const AppShimmer(height: 300);
@@ -469,7 +562,7 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
-                    '${_currentPage + 1}/${imageUrls.length}',
+                    '${_currentPage + 1}/${gallery.length}',
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 12,
@@ -478,7 +571,7 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
                   ),
                 ),
               ),
-              if (imageUrls.length > 1)
+              if (gallery.length > 1)
                 Positioned(
                   bottom: AppSizes.md,
                   left: 0,
@@ -486,7 +579,7 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(
-                      imageUrls.length,
+                      gallery.length,
                       (i) => Container(
                         margin: const EdgeInsets.symmetric(horizontal: 3),
                         width: _currentPage == i ? 24 : 8,
@@ -504,14 +597,14 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
             ],
           ),
         ),
-        if (imageUrls.length > 1) ...[
+        if (gallery.length > 1) ...[
           const SizedBox(height: AppSizes.sm),
           SizedBox(
             height: 64,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
-              itemCount: imageUrls.length,
+              itemCount: gallery.length,
               separatorBuilder: (_, _) => const SizedBox(width: AppSizes.sm),
               itemBuilder: (_, i) => GestureDetector(
                 onTap: () {
@@ -523,10 +616,13 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
                       child: Image.network(
-                        imageUrls[i],
+                        // Strip thumbnail memakai varian `thumb` (~320px WebP),
+                        // bukan gambar penuh.
+                        '${gallery[i]['thumb'] ?? gallery[i]['url'] ?? ''}',
                         width: 64,
                         height: 64,
                         fit: BoxFit.cover,
+                        cacheWidth: 160,
                         errorBuilder: (_, _, _) => Container(
                           width: 64,
                           height: 64,
@@ -612,13 +708,13 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
   void _openAllReviews() {
     final item = _data;
     if (item == null) return;
-    final isPackage = widget.type == 'packages' || item['type'] == 'package';
+    final isPackage = _isPackageItem;
     context.push(
       '/item-reviews',
       extra: {
         'title': item['name'] as String? ?? '',
         'package_id': isPackage ? widget.id : '',
-        'product_id': isPackage ? '' : widget.id,
+        'catalog_id': isPackage ? '' : widget.id,
         'reviews':
             (item['reviews'] as List?)?.cast<Map<String, dynamic>>() ?? [],
       },
@@ -637,12 +733,12 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
 
     final item = _data;
     if (item == null) return;
-    final isPackage = widget.type == 'packages' || item['type'] == 'package';
+    final isPackage = _isPackageItem;
     final submitted = await context.push<bool>(
       '/write-review',
       extra: {
         'package_id': isPackage ? widget.id : '',
-        'product_id': isPackage ? '' : widget.id,
+        'catalog_id': isPackage ? '' : widget.id,
         'name': item['name'] as String? ?? '',
       },
     );
@@ -669,11 +765,11 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
 
     final item = _data;
     if (item == null) return;
-    final isPackage = widget.type == 'packages' || item['type'] == 'package';
+    final isPackage = _isPackageItem;
     setState(() => _reviewSubmitting = true);
     try {
       await ref.read(reviewProvider.notifier).createReview({
-        if (isPackage) 'package_id': widget.id else 'product_id': widget.id,
+        if (isPackage) 'package_id': widget.id else 'catalog_id': widget.id,
         'rating': _reviewRating,
         'comment': comment,
       });

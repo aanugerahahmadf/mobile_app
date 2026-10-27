@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:local_auth/local_auth.dart';
@@ -10,11 +10,13 @@ import '../../../../../core/errors/app_error_codes/app_error_codes.dart';
 import '../../../../../core/errors/localized_error/localized_error.dart';
 import '../../../../../core/utils/cache_utils/cache_utils.dart';
 import '../../../../../core/widgets/guest_auth_prompt/guest_auth_prompt.dart';
+import '../../../../../core/widgets/app_breadcrumbs/app_breadcrumbs.dart';
 import '../../../../../core/providers/theme_provider/theme_provider.dart';
 import '../../../../auth/data/biometric_auth_service/biometric_auth_service.dart';
 import '../../../../auth/presentation/providers/auth_provider/auth_provider.dart';
 import '../../../../auth/presentation/providers/biometric_settings_provider/biometric_settings_provider.dart';
 import '../../../../auth/presentation/widgets/pin_setup_sheet/pin_setup_sheet.dart';
+import '../../../../auth/presentation/widgets/password_setup_sheet/password_setup_sheet.dart';
 import '../../../../chat/presentation/utils/cs_chat_launcher/cs_chat_launcher.dart';
 
 class SettingsPage extends ConsumerStatefulWidget {
@@ -77,47 +79,19 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         ).showSnackBar(SnackBar(content: Text(l.failed)));
       }
     } else {
-      // Face ID = verifikasi wajah via AI Core (FaceNet) + enrollment.
-      await _enrollFaceForAppLock(l);
-    }
-  }
-
-  Future<void> _enrollFaceForAppLock(AppLocalizations l) async {
-    if (ref.read(authProvider) is! AuthAuthenticated) {
-      _showGuestPrompt();
-      return;
-    }
-    // Navigate to face scanner to capture a live face photo.
-    final path = await context.push<String>('/face-scanner');
-    if (path == null || !mounted) return;
-
-    // Show loading while AI Core verifies & enrolls.
-    if (!mounted) return;
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
-    );
-
-    final appLockService = ref.read(appLockServiceProvider);
-    final result = await appLockService.enrollFace(path);
-
-    if (!mounted) return;
-    Navigator.of(context).pop(); // dismiss loading
-
-    if (result != null && result['face_enrolled'] == true) {
-      ref.read(faceUnlockProvider.notifier).setEnabled(true);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l.success)));
-    } else {
-      final reason = result?['reason'] as String?;
-      final msg = switch (reason) {
-        'FACE_MISMATCH' => 'Wajah tidak cocok dengan data KYC',
-        'KYC_NOT_COMPLETED' => 'Verifikasi identitas (KYC) belum diselesaikan',
-        _ => result?['message'] as String? ?? l.failed,
-      };
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+      // Face ID uses the native platform biometric prompt. On iOS this is
+      // Face ID; on Android it is the enrolled device biometric.
+      final service = BiometricAuthService();
+      final reason = l.unlockWith.replaceFirst('%s', l.appLockFaceId);
+      suppressAppLock(const Duration(seconds: 20));
+      final success = await service.authenticate(reason: reason);
+      if (!mounted) return;
+      if (success) {
+        ref.read(faceUnlockProvider.notifier).setEnabled(true);
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.success)));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.failed)));
+      }
     }
   }
 
@@ -183,6 +157,22 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
       return;
     }
     await showPinSetupSheet(context, mode: PinSheetMode.disable);
+  }
+
+  Future<void> _addPassword() async {
+    if (ref.read(authProvider) is! AuthAuthenticated) {
+      _showGuestPrompt();
+      return;
+    }
+    await showPasswordSetupSheet(context);
+  }
+
+  Future<void> _editPassword() async {
+    await showPasswordSetupSheet(context, mode: PasswordSheetMode.change);
+  }
+
+  Future<void> _deletePassword() async {
+    await showPasswordSetupSheet(context, mode: PasswordSheetMode.disable);
   }
 
   void _confirmDeleteBiometric(BiometricType type, AppLocalizations l) {
@@ -292,13 +282,20 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final isDark = themeMode == ThemeMode.dark;
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
+        automaticallyImplyLeading: false,
         title: Text(l.settings),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(36),
+          child: AppBreadcrumbs(
+            items: [
+              AppBreadcrumbItem(l.home, onTap: () => context.go('/home')),
+              AppBreadcrumbItem(l.profile, onTap: () => context.go('/profile')),
+              AppBreadcrumbItem(l.settings),
+            ],
+          ),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(AppSizes.md),
@@ -328,7 +325,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             ),
             const SizedBox(height: AppSizes.md),
 
-            // ── TAMPILAN ──────────────────────────────────────────────
+            // â”€â”€ TAMPILAN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             Text(l.appearance.toUpperCase(), style: AppTextStyles.bodySmall),
             const SizedBox(height: AppSizes.sm),
             Card(
@@ -356,7 +353,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             ),
             const SizedBox(height: AppSizes.lg),
 
-            // ── KATA SANDI DAN KEAMANAN ───────────────────────────────
+            // â”€â”€ KATA SANDI DAN KEAMANAN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             Text(
               l.passwordAndSecurity.toUpperCase(),
               style: AppTextStyles.bodySmall,
@@ -369,7 +366,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             ),
             const SizedBox(height: AppSizes.lg),
 
-            // ── KUNCI APLIKASI ────────────────────────────────────────
+            // â”€â”€ KUNCI APLIKASI â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             Text(l.appLock.toUpperCase(), style: AppTextStyles.bodySmall),
             const SizedBox(height: AppSizes.sm),
             Text(
@@ -406,9 +403,25 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
               onEdit: _editPin,
               onDelete: () => _deletePin(l),
             ),
+            _lockMethodCard(
+              icon: Icons.password_outlined,
+              title: l.appLockPassword,
+              subtitle: l.usePasswordToUnlock,
+              enabled: ref.watch(passwordUnlockProvider),
+              onAdd: _addPassword,
+              onEdit: _editPassword,
+              onDelete: _deletePassword,
+            ),
             const SizedBox(height: AppSizes.lg),
 
-            // ── PENYIMPANAN ──────────────────────────────────────────
+            _menuTile(
+              Icons.storage_outlined,
+              'Penyimpanan dan data',
+              () => context.push('/storage-and-data'),
+            ),
+            const SizedBox(height: AppSizes.lg),
+
+            // â”€â”€ PENYIMPANAN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             Text(l.clearCache.toUpperCase(), style: AppTextStyles.bodySmall),
             const SizedBox(height: AppSizes.sm),
             Card(
@@ -440,7 +453,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
             ),
             const SizedBox(height: AppSizes.lg),
 
-            // ── HAPUS AKUN ────────────────────────────────────────────
+            // â”€â”€ HAPUS AKUN â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             Card(
               margin: EdgeInsets.zero,
               shape: RoundedRectangleBorder(
@@ -654,3 +667,6 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
     );
   }
 }
+
+
+

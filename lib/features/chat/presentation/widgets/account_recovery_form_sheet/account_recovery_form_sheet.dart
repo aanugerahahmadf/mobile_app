@@ -439,7 +439,7 @@ class _AccountRecoveryFormSheetState
                 l.csAccountFormTitle,
                 style: AppTextStyles.titleLarge.copyWith(
                   fontSize: 22,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                 ),
                 textAlign: TextAlign.center,
               ),

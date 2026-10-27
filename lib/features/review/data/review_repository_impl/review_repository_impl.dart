@@ -70,8 +70,8 @@ class ReviewRepositoryImpl implements ReviewRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> getPackageReviews(
-    String packageId, {
+  Future<Map<String, dynamic>> getCatalogReviews(
+    String catalogId, {
     String sort = 'newest',
     int? rating,
     bool withPhoto = false,
@@ -85,33 +85,7 @@ class ReviewRepositoryImpl implements ReviewRepository {
     if (rating != null) params['rating'] = rating;
     if (withPhoto) params['with_photo'] = true;
     final response = await _dio.get(
-      ApiEndpoints.packageReviews(packageId),
-      queryParameters: params,
-    );
-    return {
-      'reviews':
-          (response.data['data'] as List?)?.cast<Map<String, dynamic>>() ?? [],
-      'pagination': response.data['pagination'],
-    };
-  }
-
-  @override
-  Future<Map<String, dynamic>> getProductReviews(
-    String productId, {
-    String sort = 'newest',
-    int? rating,
-    bool withPhoto = false,
-    int page = 1,
-  }) async {
-    final params = <String, dynamic>{
-      'sort': sort,
-      'per_page': 10,
-      'page': page,
-    };
-    if (rating != null) params['rating'] = rating;
-    if (withPhoto) params['with_photo'] = true;
-    final response = await _dio.get(
-      ApiEndpoints.productReviews(productId),
+      ApiEndpoints.catalogReviews(catalogId),
       queryParameters: params,
     );
     return {
@@ -134,17 +108,9 @@ class ReviewRepositoryImpl implements ReviewRepository {
   }
 
   @override
-  Future<Map<String, dynamic>> getPackageRatingSummary(String packageId) async {
+  Future<Map<String, dynamic>> getCatalogRatingSummary(String catalogId) async {
     final response = await _dio.get(
-      ApiEndpoints.packageReviewSummary(packageId),
-    );
-    return response.data['data'] as Map<String, dynamic>;
-  }
-
-  @override
-  Future<Map<String, dynamic>> getProductRatingSummary(String productId) async {
-    final response = await _dio.get(
-      ApiEndpoints.productReviewSummary(productId),
+      ApiEndpoints.catalogReviewSummary(catalogId),
     );
     return response.data['data'] as Map<String, dynamic>;
   }

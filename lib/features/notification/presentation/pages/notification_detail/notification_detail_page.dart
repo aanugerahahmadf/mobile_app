@@ -176,9 +176,9 @@ class NotificationDetailPage extends StatelessWidget {
       case 'new_package':
       case 'admin_package':
         return Icons.inventory_2;
-      case 'product':
-      case 'new_product':
-      case 'admin_product':
+      case 'catalog':
+      case 'new_catalog':
+      case 'admin_catalog':
         return Icons.shopping_bag;
       case 'review':
       case 'new_review':
@@ -210,7 +210,7 @@ class NotificationDetailPage extends StatelessWidget {
     'id',
     'order_id',
     'package_id',
-    'product_id',
+    'catalog_id',
     'user_id',
     'voucher_id',
     'review_id',

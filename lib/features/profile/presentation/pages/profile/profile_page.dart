@@ -857,7 +857,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 task.action,
                 style: const TextStyle(
                   fontSize: 10,
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w600,
                   color: Colors.white,
                 ),
               ),

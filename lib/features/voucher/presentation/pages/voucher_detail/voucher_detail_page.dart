@@ -63,7 +63,7 @@ class VoucherDetailPage extends ConsumerWidget {
                             voucher.code!,
                             style: const TextStyle(
                               fontSize: 22,
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w600,
                               color: Colors.white,
                               letterSpacing: 2,
                             ),
@@ -103,7 +103,7 @@ class VoucherDetailPage extends ConsumerWidget {
                         '**** **** **** ****',
                         style: const TextStyle(
                           fontSize: 18,
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w600,
                           color: Colors.white70,
                           letterSpacing: 3,
                         ),

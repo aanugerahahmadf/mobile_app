@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:local_auth/local_auth.dart';
 
 class BiometricAuthService {
@@ -8,10 +9,17 @@ class BiometricAuthService {
       final supported = await _localAuth.isDeviceSupported();
       if (!supported) return false;
 
-      final enrolled = await _localAuth.getAvailableBiometrics();
-      if (enrolled.isNotEmpty) return true;
+      // `canCheckBiometrics` is the most reliable indicator: it returns true
+      // only when at least one biometric is actually enrolled. On some devices
+      // (Xiaomi/MIUI) `getAvailableBiometrics()` returns an empty list even
+      // when a fingerprint is enrolled, so we fall back to `canCheckBiometrics`.
+      final canCheck = await _localAuth.canCheckBiometrics;
+      if (canCheck) return true;
 
-      return true;
+      // Additional fallback: if the device reports support but canCheckBiometrics
+      // is false, check if there are any enrolled biometrics.
+      final enrolled = await _localAuth.getAvailableBiometrics();
+      return enrolled.isNotEmpty;
     } catch (_) {
       return false;
     }
@@ -103,10 +111,14 @@ class BiometricAuthService {
         localizedReason: reason,
         options: const AuthenticationOptions(
           biometricOnly: true,
+          // stickyAuth keeps the auth valid after app goes to background and
+          // returns — useful so the lock screen doesn't re-prompt immediately.
           stickyAuth: true,
         ),
       );
-    } catch (_) {
+    } on Exception catch (e) {
+      // Log the error for debugging but don't crash.
+      debugPrint('Biometric auth failed: $e');
       return false;
     }
   }

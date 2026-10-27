@@ -97,7 +97,7 @@ class PinEntryPad extends StatelessWidget {
         digit,
         style: TextStyle(
           fontSize: 26,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w600,
           color: color,
         ),
       ),

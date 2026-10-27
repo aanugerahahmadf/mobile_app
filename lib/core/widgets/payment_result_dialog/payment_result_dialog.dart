@@ -107,7 +107,7 @@ class _PaymentResultContent extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(config.title,
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
@@ -129,7 +129,7 @@ class _PaymentResultContent extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(l.invoice,
-                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: AppColors.textTertiary, letterSpacing: 1),
+                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w600, color: AppColors.textTertiary, letterSpacing: 1),
                   ),
                   const SizedBox(height: 12),
                   _receiptRow(l.transactionId, config.transactionId ?? '-'),

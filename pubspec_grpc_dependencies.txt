@@ -1,0 +1,24 @@
+# Tambahkan dependencies berikut ke pubspec.yaml mobile_app Anda:
+#
+# dependencies:
+#   grpc: ^5.2.0
+#   protobuf: ^6.1.0
+#   graphql_flutter: ^5.1.2
+#   flutter_secure_storage: ^9.0.0
+#
+# dev_dependencies:
+#   build_runner: ^2.4.0
+#   json_serializable: ^6.7.0
+#
+# Untuk generate kode gRPC dari proto files:
+# 1. Install protoc compiler
+# 2. Install protoc-gen-dart: dart pub global activate protoc_plugin
+# 3. Jalankan perintah generate di bawah
+#
+# Generate Dart dari proto files Laravel:
+# protoc --dart_out=grpc:lib/core/api/grpc_client/generated/ \
+#   -I../Mobile-And-Backend/proto/ \
+#   ../Mobile-And-Backend/proto/*.proto
+#
+# Atau gunakan script generate:
+# cd scripts && ./generate_dart_grpc.sh

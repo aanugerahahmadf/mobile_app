@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import '../cs_guest_chat/cs_guest_chat.dart';
+import 'package:mobile_app/core/utils/guest_mode/guest_mode.dart';
 
 import '../../../../auth/presentation/providers/auth_provider/auth_provider.dart';
 import '../../providers/chat_provider.dart';
@@ -12,9 +13,8 @@ String reportCsCategory(String category) {
     case 'order':
     case 'payment':
       return 'order_help';
-    case 'product':
+    case 'catalog':
     case 'package':
-    case 'vendor':
     case 'review':
     default:
       return 'bug_report';
@@ -23,12 +23,10 @@ String reportCsCategory(String category) {
 
 String reportCategoryLabel(AppLocalizations l, String category) {
   switch (category) {
-    case 'product':
-      return l.reportProduct;
+    case 'catalog':
+      return l.reportCatalog;
     case 'package':
       return l.reportPackage;
-    case 'vendor':
-      return l.reportVendor;
     case 'order':
       return l.reportOrder;
     case 'review':
@@ -54,11 +52,12 @@ Future<void> openReportChat(
   final l = AppLocalizations.of(context)!;
   final auth = ref.read(authProvider);
   final isGuest = auth is! AuthAuthenticated;
+  final guestName = isGuest ? await getGuestName() : null;
   final senderName = auth is AuthAuthenticated
       ? (auth.user.fullName.isNotEmpty
             ? auth.user.fullName
             : auth.user.username)
-      : l.guestName;
+      : (guestName ?? l.guestName);
 
   final csCategory = reportCsCategory(category);
   final subject = itemName.trim().isNotEmpty
@@ -90,6 +89,7 @@ Future<void> openReportChat(
       inboxId = (await notifier.startGuestConversation(
         guestId: guestId,
         csCategory: csCategory,
+        name: guestName,
       )).toString();
     }
   } catch (_) {
@@ -125,6 +125,7 @@ Future<void> openReportChat(
         guestId: guestId!,
         senderName: senderName,
         csCategory: csCategory,
+        name: guestName,
       );
     }
   } catch (_) {}
