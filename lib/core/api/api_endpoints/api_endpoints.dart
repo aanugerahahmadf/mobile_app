@@ -125,6 +125,17 @@ class ApiEndpoints {
   static const String guestChatStart = '/messages/guest/start';
   static const String guestChatSend = '/messages/guest/send';
   static String guestChatMessages(String inboxId) => '/messages/guest/$inboxId';
+  static const String chatCalls = '/messages/calls';
+  static const String guestChatCalls = '/messages/guest/calls';
+  static String guestChatCallState(String token) => '/messages/guest/calls/$token';
+  static String guestChatCallSignal(String token) => '/messages/guest/calls/$token/signal';
+  static String guestChatCallEnd(String token) => '/messages/guest/calls/$token/end';
+  static String chatCallState(String token) => '/messages/calls/$token';
+  static String chatCallSignal(String token) => '/messages/calls/$token/signal';
+  static String chatCallAccept(String token) => '/messages/calls/$token/accept';
+  static String chatCallEnd(String token) => '/messages/calls/$token/end';
+  static String chatCallActive(String inboxId) => '/messages/$inboxId/calls/active';
+  static String guestChatCallActive(String inboxId) => '/messages/guest/$inboxId/calls/active';
   static String voucherClaim(String id) => '/vouchers/$id/claim';
   static String notificationRead(String id) => '/notifications/$id/read';
   static String catalogReviews(String id) => '/reviews/catalog/$id';

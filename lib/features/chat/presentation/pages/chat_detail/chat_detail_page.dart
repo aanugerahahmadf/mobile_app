@@ -17,6 +17,7 @@ import '../../../../../core/constants/app_sizes/app_sizes.dart';
 import '../../../../../core/errors/localized_error/localized_error.dart';
 import '../../../../../core/utils/formatters/formatters.dart';
 import '../../../../../core/utils/guest_mode/guest_mode.dart';
+import '../../data/chat_call_service/chat_call_service.dart';
 import '../../../../../core/widgets/media_viewer/media_viewer.dart';
 import '../../../../../core/widgets/app_action_sheet/app_action_sheet.dart';
 import 'package:file_picker/file_picker.dart';
@@ -53,6 +54,8 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
   bool _categorySent = false;
   String? _guestId;
   String? _guestName;
+  final _callService = ChatCallService();
+  bool _callActive = false;
   Map<String, dynamic>? _replyToMessage;
   bool _isTranslating = false;
   bool _isSearching = false;
@@ -68,11 +71,27 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: Text(l.calls),
-        content: Text(
-          'Panggilan internal aplikasi sedang disiapkan.',
-          textAlign: TextAlign.center,
-        ),
+        content: Text(_callActive ? 'Panggilan tersambung' : 'Memanggil…', textAlign: TextAlign.center),
         actions: [
+          if (!_callActive)
+            TextButton(
+              onPressed: () async {
+                try {
+                  await _callService.start(int.parse(widget.id), guestId: _guestId);
+                  if (mounted) setState(() => _callActive = true);
+                } catch (_) {}
+              },
+              child: const Text('Mulai'),
+            ),
+          if (_callActive)
+            TextButton(
+              onPressed: () async {
+                await _callService.end();
+                if (mounted) setState(() => _callActive = false);
+                if (dialogContext.mounted) Navigator.pop(dialogContext);
+              },
+              child: const Text('Akhiri'),
+            ),
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
             child: Text(l.close),
@@ -399,6 +418,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
   @override
   void dispose() {
     _pollTimer?.cancel();
+    _callService.end();
     _messageController.dispose();
     _messageFocusNode.dispose();
     _scrollController.dispose();
