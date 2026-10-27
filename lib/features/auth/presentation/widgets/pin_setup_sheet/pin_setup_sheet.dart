@@ -191,7 +191,7 @@ class _PinSetupSheetState extends ConsumerState<_PinSetupSheet> {
                 isDisable ? l.disablePin : _title(l),
                 style: const TextStyle(
                   fontSize: 20,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                   color: Colors.white,
                 ),
               ),

@@ -20,6 +20,7 @@ import '../../../../../core/utils/guest_mode/guest_mode.dart';
 import '../../../../../core/widgets/media_viewer/media_viewer.dart';
 import '../../../../../core/widgets/app_action_sheet/app_action_sheet.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../auth/presentation/providers/auth_provider/auth_provider.dart';
 import '../../providers/chat_provider.dart';
 import '../../utils/chat_text_normalizer/chat_text_normalizer.dart';
@@ -59,6 +60,34 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
   bool _accountRecoveryActive = false;
   String? _recoveryEmail;
   bool _csReportSubmitted = false;
+
+  Future<void> _callOtherUser(Map<String, dynamic>? otherUser) async {
+    final l = AppLocalizations.of(context)!;
+    final callUrl = otherUser?['call_url']?.toString();
+    if (callUrl != null && callUrl.isNotEmpty) {
+      await launchUrl(Uri.parse(callUrl), mode: LaunchMode.externalApplication);
+      return;
+    }
+
+    final rawPhone = (otherUser?['phone'] ?? otherUser?['whatsapp'])?.toString();
+    final phone = rawPhone?.replaceAll(RegExp(r'[^0-9+]'), '');
+
+    if (phone == null || phone.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l.phoneNumber)),
+        );
+      }
+      return;
+    }
+
+    final uri = Uri(scheme: 'tel', path: phone);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication) && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l.calls)),
+      );
+    }
+  }
 
   Future<void> _downloadReportPdf(String reportId) async {
     final l = AppLocalizations.of(context)!;
@@ -676,7 +705,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
                 _attachmentOption(
                   icon: Icons.category_rounded,
                   title: l.catalog,
-                  subtitle: l.shareProduct,
+                   subtitle: l.shareCatalog,
                   onTap: () {
                     Navigator.pop(context);
                     _pickFromCatalog();
@@ -757,17 +786,13 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
     if (_guestId != null) return;
     try {
       final dio = DioClient.instance;
-      final results = await Future.wait([
-        dio.get(ApiEndpoints.packages, queryParameters: {'per_page': 20}),
-        dio.get(ApiEndpoints.products, queryParameters: {'per_page': 20}),
-      ]);
-      final packages = ((results[0].data['data'] as List?) ?? [])
-          .map((e) => e as Map<String, dynamic>..['_type'] = 'package')
+      final response = await dio.get(
+        ApiEndpoints.catalog,
+        queryParameters: {'per_page': 20},
+      );
+      final items = ((response.data['data'] as List?) ?? [])
+          .map((e) => e as Map<String, dynamic>..['_type'] = 'catalog')
           .toList();
-      final products = ((results[1].data['data'] as List?) ?? [])
-          .map((e) => e as Map<String, dynamic>..['_type'] = 'product')
-          .toList();
-      final items = [...packages, ...products];
       if (items.isEmpty || !mounted) return;
       final l = AppLocalizations.of(context)!;
       final selected = await showModalBottomSheet<Map<String, dynamic>>(
@@ -795,7 +820,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
                   vertical: 16,
                 ),
                 child: Text(
-                  l.chooseProduct,
+                   l.catalog,
                   style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
@@ -1670,6 +1695,11 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
         ),
         actions: [
           IconButton(
+            tooltip: l.calls,
+            icon: const Icon(Icons.phone_rounded, size: 22),
+            onPressed: () => _callOtherUser(otherUser),
+          ),
+          IconButton(
             icon: Icon(
               _isSearching ? Icons.close_rounded : Icons.search_rounded,
               size: 22,
@@ -2065,7 +2095,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    type == 'package' ? l.packageLabel : l.productLabel,
+                     type == 'package' ? l.packageLabel : l.catalogLabel,
                     style: TextStyle(
                       fontSize: 10,
                       color: AppColors.primaryColor,

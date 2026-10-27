@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../../core/constants/app_colors/app_colors.dart';
 import '../../../../../core/constants/app_sizes/app_sizes.dart';
@@ -102,10 +101,10 @@ class _PaymentCountdownState extends State<PaymentCountdown> {
           if (hasDeadline)
             Text(
               _formatDuration(_remaining),
-              style: GoogleFonts.inter(
+              style: TextStyle(fontFamily: 'InstrumentSans', 
                 color: AppColors.primaryColor,
                 fontSize: 16,
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),

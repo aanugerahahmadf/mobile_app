@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../constants/app_colors/app_colors.dart';
+import '../app_blur_backdrop/app_blur_backdrop.dart';
 import '../../constants/app_text_styles/app_text_styles.dart';
 import '../app_shimmer/app_shimmer.dart';
 
@@ -29,18 +30,8 @@ class AppCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.surfaceColor,
-          borderRadius: BorderRadius.circular(8),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(10),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
+      child: AppBlurBackdrop(
+        borderRadius: 8,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

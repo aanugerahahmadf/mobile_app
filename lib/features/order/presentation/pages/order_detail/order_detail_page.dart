@@ -412,7 +412,7 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
                     const SizedBox(height: 8),
                     () {
                       final pkg = _order!['package'] as Map<String, dynamic>?;
-                      final prod = _order!['product'] as Map<String, dynamic>?;
+                      final prod = _order!['catalog'] as Map<String, dynamic>?;
                       final item = pkg ?? prod;
                       if (item == null) return const SizedBox.shrink();
                       final imageUrl = item['image_url'] as String? ?? '';

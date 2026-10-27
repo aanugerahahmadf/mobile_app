@@ -3,45 +3,43 @@ import '../../../../catalog/data/models/item_model/item_model.dart';
 class CartModel {
   final int id;
   final int userId;
-  final int? productId;
+  final int? catalogId;
   final int? packageId;
   final int quantity;
   final Map<String, dynamic>? meta;
-  final ItemModel? product;
-  final ItemModel? package;
+  final ItemModel? item;
   final String? createdAt;
   final String? updatedAt;
 
   const CartModel({
     required this.id,
     required this.userId,
-    this.productId,
+    this.catalogId,
     this.packageId,
     this.quantity = 1,
     this.meta,
-    this.product,
-    this.package,
+    this.item,
     this.createdAt,
     this.updatedAt,
   });
 
-  ItemModel? get item => product ?? package;
-  double get subtotal => (item?.finalPrice ?? 0) * quantity;
+  double get subtotal => (item?.displayPrice ?? 0) * quantity;
 
   factory CartModel.fromJson(Map<String, dynamic> json) {
     return CartModel(
       id: json['id'] as int,
       userId: (json['user_id'] ?? 0) as int,
-      productId: json['product_id'] as int?,
+      catalogId: json['catalog_id'] as int?,
       packageId: json['package_id'] as int?,
       quantity: (json['quantity'] ?? 1) as int,
       meta: json['meta'] as Map<String, dynamic>?,
-      product: json['product'] != null
-          ? ItemModel.fromJson(json['product'] as Map<String, dynamic>)
-          : null,
-      package: json['package'] != null
+      item: json['package'] != null
           ? ItemModel.fromJson(json['package'] as Map<String, dynamic>)
-          : null,
+          : (json['catalog'] != null
+              ? ItemModel.fromJson(json['catalog'] as Map<String, dynamic>)
+              : (json['item'] != null
+                  ? ItemModel.fromJson(json['item'] as Map<String, dynamic>)
+                  : null)),
       createdAt: json['created_at'] as String?,
       updatedAt: json['updated_at'] as String?,
     );
@@ -50,7 +48,7 @@ class CartModel {
   Map<String, dynamic> toJson() => {
     'id': id,
     'user_id': userId,
-    'product_id': productId,
+    'catalog_id': catalogId,
     'package_id': packageId,
     'quantity': quantity,
     'meta': meta,

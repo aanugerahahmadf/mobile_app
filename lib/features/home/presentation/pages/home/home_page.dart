@@ -1,4 +1,4 @@
-import 'dart:ui';
+import '../../../../../core/widgets/app_blur_backdrop/app_blur_backdrop.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -35,12 +35,21 @@ class _HomePageState extends ConsumerState<HomePage> {
   final _pageController = PageController(initialPage: 0x3FFFFFFF ~/ 2);
   List<Map<String, dynamic>> _combinedItems = [];
   bool _catalogLoading = false;
-  List<Map<String, dynamic>> _packageCategories = [];
-  List<Map<String, dynamic>> _productCategories = [];
+  List<Map<String, dynamic>> _catalogCategories = [];
   String? _selectedCategoryId;
   bool _hasDiscountOnly = false;
   double _minRating = 0;
   String _sortBy = 'latest';
+
+  double _effectiveItemPrice(Map<String, dynamic> json) {
+    final item = ItemModel.fromJson(json);
+    return item.displayPrice;
+  }
+
+  bool _itemHasTierDiscount(Map<String, dynamic> json) {
+    final item = ItemModel.fromJson(json);
+    return item.startingTier?.hasDiscount == true || item.hasDiscount;
+  }
 
   List<Map<String, dynamic>> get _filteredItems {
     var items = List<Map<String, dynamic>>.from(_combinedItems);
@@ -54,8 +63,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       items = items
           .where(
             (e) =>
-                e['discount_price'] != null &&
-                parseDouble(e['discount_price']) > 0,
+                _itemHasTierDiscount(e),
           )
           .toList();
     }
@@ -71,11 +79,11 @@ class _HomePageState extends ConsumerState<HomePage> {
     switch (_sortBy) {
       case 'price_asc':
         items.sort(
-          (a, b) => parseDouble(a['price']).compareTo(parseDouble(b['price'])),
+          (a, b) => _effectiveItemPrice(a).compareTo(_effectiveItemPrice(b)),
         );
       case 'price_desc':
         items.sort(
-          (a, b) => parseDouble(b['price']).compareTo(parseDouble(a['price'])),
+          (a, b) => _effectiveItemPrice(b).compareTo(_effectiveItemPrice(a)),
         );
       case 'rating_desc':
         items.sort((a, b) {
@@ -145,17 +153,11 @@ class _HomePageState extends ConsumerState<HomePage> {
   Future<void> _fetchCatalog() async {
     setState(() => _catalogLoading = true);
     try {
-      final results = await Future.wait([
-        DioClient.instance.get('${ApiEndpoints.packages}?per_page=all'),
-        DioClient.instance.get('${ApiEndpoints.products}?per_page=all'),
-      ]);
-      final packages = _extractList(
-        results[0].data,
-      ).map((e) => e..['_type'] = 'packages').toList();
-      final products = _extractList(
-        results[1].data,
-      ).map((e) => e..['_type'] = 'products').toList();
-      _combinedItems = [...packages, ...products]..shuffle();
+      final res = await DioClient.instance.get(
+        ApiEndpoints.catalog,
+        queryParameters: {'per_page': 'all'},
+      );
+      _combinedItems = _extractList(res.data)..shuffle();
     } catch (_) {}
     if (mounted) setState(() => _catalogLoading = false);
   }
@@ -170,48 +172,34 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   Future<void> _fetchCategories() async {
     try {
-      final results = await Future.wait([
-        DioClient.instance.get('${ApiEndpoints.categories}?type=package'),
-        DioClient.instance.get('${ApiEndpoints.categories}?type=product'),
-      ]);
-      if (mounted) {
-        setState(() {
-          for (final res in results) {
-            final data = res.data['data'];
-            if (data is List) {
-              final cats = data.cast<Map<String, dynamic>>();
-              if (results.indexOf(res) == 0) {
-                _packageCategories = cats;
-              } else {
-                _productCategories = cats;
-              }
-            }
-          }
-        });
+      final res = await DioClient.instance.get(ApiEndpoints.categories);
+      final data = res.data['data'];
+      if (data is List && mounted) {
+        setState(() => _catalogCategories = data.cast<Map<String, dynamic>>());
       }
     } catch (_) {}
   }
 
-  List<Map<String, dynamic>> get _allCategories {
-    final all = <String, Map<String, dynamic>>{};
-    for (final c in _packageCategories) {
-      all['${c['id']}'] = c;
-    }
-    for (final c in _productCategories) {
-      all['${c['id']}'] = c;
-    }
-    return all.values.toList();
-  }
+  List<Map<String, dynamic>> get _allCategories => _catalogCategories;
 
   @override
   Widget build(BuildContext context) {
-
     final l = AppLocalizations.of(context)!;
     final vouchers =
         (_homeData?['vouchers'] as List?)?.cast<Map<String, dynamic>>() ?? [];
 
     return Scaffold(
-      body: SafeArea(
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: Theme.of(context).brightness == Brightness.dark
+                ? const [Color(0xFF0F2440), Color(0xFF1A1A2E)]
+                : const [Color(0xFFEEF2FF), Color(0xFFF8F6F7)],
+          ),
+        ),
+        child: SafeArea(
         child: _loading
             ? const Center(child: CircularProgressIndicator())
             : Column(
@@ -247,26 +235,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                                   AppSizes.md,
                                   _filteredItems.isNotEmpty ? AppSizes.sm : 0,
                                 ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: BackdropFilter(
-                                    filter: ImageFilter.blur(
-                                      sigmaX: 8,
-                                      sigmaY: 8,
-                                    ),
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.surface,
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      padding: const EdgeInsets.all(
-                                        AppSizes.md,
-                                      ),
-                                      child: _buildCatalogHeader(l),
-                                    ),
-                                  ),
+                                child: AppBlurBackdrop(
+                                  borderRadius: 16,
+                                  padding: const EdgeInsets.all(AppSizes.md),
+                                  child: _buildCatalogHeader(l),
                                 ),
                               ),
                             ),
@@ -275,7 +247,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                 hasScrollBody: false,
                                 child: Center(
                                   child: Text(
-                                    l.noProductsFound,
+                                    l.noCatalogsFound,
                                     style: AppTextStyles.bodyMedium,
                                   ),
                                 ),
@@ -303,14 +275,10 @@ class _HomePageState extends ConsumerState<HomePage> {
                                     itemCount: _filteredItems.length,
                                     itemBuilder: (_, i) {
                                       final item = _filteredItems[i];
-                                      final type =
-                                          item['_type'] as String? ??
-                                          'packages';
                                       return CombinedCard(
                                         item: ItemModel.fromJson(item),
-                                        type: type,
                                         onTap: () => context.push(
-                                          '/catalog/$type/${item['id']}',
+                                          '/catalog/${item['id']}',
                                         ),
                                       );
                                     },
@@ -328,6 +296,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 ],
               ),
       ),
+      ),
     );
   }
 
@@ -344,21 +313,9 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Widget _buildWelcomeRow(AppLocalizations l) {
-    return Container(
+    return AppBlurBackdrop(
       margin: const EdgeInsets.fromLTRB(AppSizes.md, 0, AppSizes.md, 0),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.black.withValues(alpha: 0.3)
-                : Colors.black.withValues(alpha: 0.08),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+      borderRadius: 16,
       padding: const EdgeInsets.fromLTRB(
         AppSizes.sm,
         AppSizes.sm,
@@ -525,22 +482,19 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Widget _buildMenuSection(AppLocalizations l) {
-    return Container(
+    return AppBlurBackdrop(
       margin: const EdgeInsets.fromLTRB(
         AppSizes.md,
         AppSizes.sm,
         AppSizes.md,
         AppSizes.xs,
       ),
+      borderRadius: 16,
       padding: const EdgeInsets.fromLTRB(
         AppSizes.sm,
         AppSizes.md,
         AppSizes.sm,
         AppSizes.md,
-      ),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -561,13 +515,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   icon: Icons.card_giftcard,
                   bgColor: const Color(0xFFE3F0FF),
                   iconColor: const Color(0xFF2B7BE4),
-                  onTap: () => context.push('/catalog/packages'),
-                ),
-                MenuCard(
-                  icon: Icons.local_florist,
-                  bgColor: const Color(0xFFE8F5E9),
-                  iconColor: const Color(0xFF43A047),
-                  onTap: () => context.push('/catalog/products'),
+                  onTap: () => context.push('/catalog'),
                 ),
                 MenuCard(
                   icon: Icons.feedback_outlined,
@@ -599,52 +547,43 @@ class _HomePageState extends ConsumerState<HomePage> {
     List<Map<String, dynamic>> vouchers,
     AppLocalizations l,
   ) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-        child: Container(
-          margin: const EdgeInsets.fromLTRB(
-            AppSizes.md,
-            AppSizes.sm,
-            AppSizes.md,
-            AppSizes.xs,
+    return AppBlurBackdrop(
+      borderRadius: 16,
+      margin: const EdgeInsets.fromLTRB(
+        AppSizes.md,
+        AppSizes.sm,
+        AppSizes.md,
+        AppSizes.xs,
+      ),
+      padding: const EdgeInsets.fromLTRB(
+        AppSizes.sm,
+        AppSizes.md,
+        AppSizes.sm,
+        AppSizes.md,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l.specialPromo, style: AppTextStyles.titleLarge),
+          const SizedBox(height: AppSizes.sm),
+          SizedBox(
+            height: 140,
+            child: PageView.builder(
+              controller: _pageController,
+              itemCount: 0x3FFFFFFF,
+              itemBuilder: (context, index) {
+                final i = index % vouchers.length;
+                return VoucherCard(
+                  voucher: vouchers[i],
+                  onTap: () => context.push(
+                    '/vouchers/${vouchers[i]['id']}',
+                    extra: vouchers[i],
+                  ),
+                );
+              },
+            ),
           ),
-          padding: const EdgeInsets.fromLTRB(
-            AppSizes.sm,
-            AppSizes.md,
-            AppSizes.sm,
-            AppSizes.md,
-          ),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(l.specialPromo, style: AppTextStyles.titleLarge),
-              const SizedBox(height: AppSizes.sm),
-              SizedBox(
-                height: 140,
-                child: PageView.builder(
-                  controller: _pageController,
-                  itemCount: 0x3FFFFFFF,
-                  itemBuilder: (context, index) {
-                    final i = index % vouchers.length;
-                    return VoucherCard(
-                      voucher: vouchers[i],
-                      onTap: () => context.push(
-                        '/vouchers/${vouchers[i]['id']}',
-                        extra: vouchers[i],
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        ),
+        ],
       ),
     );
   }
@@ -741,7 +680,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     l.filterByRating,
                     style: TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
                     ),
                   ),
@@ -781,7 +720,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               l.allRatings,
               style: TextStyle(
                 fontSize: 14,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 color: isSelected
                     ? AppColors.primaryTextColor
                     : AppColors.textPrimary,

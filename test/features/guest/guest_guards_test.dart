@@ -38,8 +38,7 @@ class _FakeReviewNotifier extends ReviewNotifier {
 
   @override
   Future<void> fetchItemReviews({
-    String? packageId,
-    String? productId,
+    String catalogId = '',
     bool refresh = false,
   }) async {
     state = state.copyWith(
@@ -58,8 +57,7 @@ class _FakeReviewNotifier extends ReviewNotifier {
 
   @override
   Future<void> fetchRatingSummary({
-    String? packageId,
-    String? productId,
+    String catalogId = '',
   }) async {
     state = state.copyWith(loading: false);
   }
@@ -259,7 +257,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       _wrap(
-        const AllReviewsPage(packageId: '1', title: 'Paket Wedding'),
+        const AllReviewsPage(catalogId: '1', title: 'Paket Wedding'),
         extraOverrides: [
           reviewProvider.overrideWith((ref) => _FakeReviewNotifier()),
         ],
@@ -281,7 +279,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       _wrap(
-        const AllReviewsPage(packageId: '1', title: 'Paket Wedding'),
+        const AllReviewsPage(catalogId: '1', title: 'Paket Wedding'),
         extraOverrides: [
           reviewProvider.overrideWith((ref) => _FakeReviewNotifier()),
         ],

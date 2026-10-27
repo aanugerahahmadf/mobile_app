@@ -16,22 +16,22 @@ class WishlistRepositoryImpl implements WishlistRepository {
   }
 
   @override
-  Future<void> toggleWishlist({String? packageId, String? productId}) async {
+  Future<void> toggleWishlist({String? packageId, String? catalogId}) async {
     return DioClient.safeCall(() async {
       final body = <String, dynamic>{};
       if (packageId != null) body['package_id'] = packageId;
-      if (productId != null) body['product_id'] = productId;
+      if (catalogId != null) body['catalog_id'] = catalogId;
       await _dio.post(ApiEndpoints.wishlistToggle, data: body);
     });
   }
 
   @override
-  Future<void> removeFromWishlist(String id, {bool isProduct = false}) async {
+  Future<void> removeFromWishlist(String id, {bool isCatalog = false}) async {
     return DioClient.safeCall(() async {
-      if (isProduct) {
+      if (isCatalog) {
         await _dio.delete(
           ApiEndpoints.wishlistItem(id),
-          queryParameters: {'product_id': id},
+          queryParameters: {'catalog_id': id},
         );
       } else {
         await _dio.delete(ApiEndpoints.wishlistItem(id));

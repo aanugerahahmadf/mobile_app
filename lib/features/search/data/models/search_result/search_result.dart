@@ -26,8 +26,11 @@ class SearchResult {
   }
 
   static const Map<String, SuggestionType> _typeKeys = {
-    'packages': SuggestionType.packages,
-    'products': SuggestionType.products,
+    'catalog': SuggestionType.catalog,
+    // Backend lama masih mengirim hasil paket & produk terpisah; keduanya
+    // dipetakan ke SuggestionType.catalog supaya UI tidak punya dua label.
+    'packages': SuggestionType.catalog,
+    'catalogs': SuggestionType.catalog,
     'categories': SuggestionType.categories,
     'vouchers': SuggestionType.vouchers,
     'orders': SuggestionType.orders,
@@ -37,6 +40,5 @@ class SearchResult {
     'helps': SuggestionType.helps,
     'histories': SuggestionType.histories,
     'wedding_policy': SuggestionType.weddingPolicy,
-    'vendors': SuggestionType.vendors,
   };
 }

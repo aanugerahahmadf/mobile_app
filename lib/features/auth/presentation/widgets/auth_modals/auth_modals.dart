@@ -6,7 +6,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../../../../core/api/api_endpoints/api_endpoints.dart';
 import '../../../../../core/errors/localized_error/localized_error.dart';
 import '../../../../../core/reference/dropdown_option/dropdown_option.dart';
@@ -127,7 +126,7 @@ class _AgreementModalState extends State<_AgreementModal> {
                       title,
                       style: AppTextStyles.titleLarge.copyWith(
                         fontSize: 22,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -248,7 +247,7 @@ class _LegalContentView extends ConsumerWidget {
                     const SizedBox(height: 8),
                     Text(
                       '${l.lastUpdated}: ${content.updatedAt}',
-                      style: GoogleFonts.inter(
+                      style: TextStyle(fontFamily: 'InstrumentSans', 
                         fontSize: 12,
                         color: AppColors.textSecondary,
                       ),
@@ -269,16 +268,16 @@ class _LegalContentView extends ConsumerWidget {
                                 padding: const EdgeInsets.only(bottom: 4),
                                 child: Text(
                                   heading,
-                                  style: GoogleFonts.inter(
+                                  style: TextStyle(fontFamily: 'InstrumentSans', 
                                     fontSize: 14,
-                                    fontWeight: FontWeight.bold,
+                                    fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ),
                             Text(
                               body ?? '',
                               textAlign: TextAlign.justify,
-                              style: GoogleFonts.inter(
+                              style: TextStyle(fontFamily: 'InstrumentSans', 
                                 fontSize: 14,
                                 height: 1.6,
                               ),
@@ -297,7 +296,7 @@ class _LegalContentView extends ConsumerWidget {
                                           ''))
                                 : ''),
                       textAlign: TextAlign.justify,
-                      style: GoogleFonts.inter(fontSize: 14, height: 1.6),
+                      style: TextStyle(fontFamily: 'InstrumentSans', fontSize: 14, height: 1.6),
                     ),
                 ],
               ),
@@ -338,6 +337,81 @@ class _LegalContentView extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Rutekan hasil auth (Google maupun email/kata sandi) ke tahap berikutnya
+/// sesuai spec alur.
+///
+/// Dua tempat memanggil ini, dan keduanya WAJIB pakai fungsi yang sama:
+///
+///   - dari dalam sheet Sign In / Sign Up (`_AuthSheetSwitcher`), dan
+///   - dari LandingPage, yang memanggil `googleLogin()` tanpa sheet sama sekali.
+///
+/// Sebelumnya logika ini hanya hidup di dalam sheet. Akibatnya tombol Google
+/// di LandingPage tidak punya cabang `needsOtp` maupun `AuthTwoFactorRequired`:
+/// akun Google yang belum terdaftar atau yang 2FA-nya aktif akan diam-diam
+/// landing tanpa OTP, tanpa 2FA challenge, dan tanpa tujuan. Di sheet keduanya
+/// bekerja, jadi perilaku kedua pintu berbeda untuk kasus yang sama.
+///
+/// Cabang yang ditangani (urutan = urutan spec):
+///   1. `AuthTwoFactorRequired` -> sheet 2FA (OtpEmailOrTwoFactory)
+///   2. `needsOtp`              -> sheet OTP; setelah verifikasi -> Complete Profile
+///   3. `needsCompletion`       -> Complete Profile
+///   4. selain itu              -> Home (diserahkan ke pemanggil lewat listener-nya)
+///
+/// Mengembalikan `true` kalau handled di sini, `false` kalau bukan kasus
+/// Mengembalikan `true` kalau handled di sini, `false` kalau bukan salah satu
+// dari empat kasus di atas sehingga pemanggil boleh menanganinya sendiri.
+bool handleAuthContinuation({
+  required BuildContext context,
+  required WidgetRef ref,
+  required AuthState state,
+  required AppLocalizations l,
+  bool popSheet = true,
+}) {
+  if (state is AuthTwoFactorRequired) {
+    // Sheet Sign In SENGAJA TIDAK ditutup di sini. Sheet 2FA menumpuk di
+    // atasnya, dan begitu kodenya benar sheet 2FA menutup diri sendiri --
+    // listener pemanggil (masih hidup karena sheet Sign In belum ditutup) yang
+    // menyelesaikan sisa alurnya ke Home.
+    //
+    // Kalau sheet ditutup sekarang, setelah 2FA berhasil tidak ada listener
+    // yang tersisa untuk membawa pengguna ke Home, dan satu-satunya jalan keluar
+    // adalah menutup sheet 2FA secara manual.
+    showTwoFactorVerifySheet(context);
+    return true;
+  }
+
+  if (state is! AuthAuthenticated) return false;
+
+  clearGuestMode();
+
+  if (state.needsOtp) {
+    if (popSheet) Navigator.of(context).pop();
+    showOtpVerificationSheet(
+      context,
+      email: state.user.email,
+      purpose: 'google_register',
+    );
+    return true;
+  }
+
+  if (state.needsCompletion) {
+    final navigator = Navigator.of(context);
+    final router = GoRouter.of(context);
+    if (popSheet) navigator.pop();
+    AppNotification.show(
+      navigator.context,
+      l.completeYourProfile,
+      type: NotificationType.info,
+    );
+    router.push('/complete-profile');
+    return true;
+  }
+
+  // Kasus "langsung Home" TIDAK ditangani di sini: pemanggil punya listenernya
+  // sendiri yang juga menyinkronkan flag app-lock sebelum ke Home.
+  return false;
 }
 
 Future<void> showSignInSheet(BuildContext context) {
@@ -759,7 +833,7 @@ class _TwoFactorVerifySheetContentState
                       FilteringTextInputFormatter.digitsOnly,
                       LengthLimitingTextInputFormatter(6),
                     ],
-              style: GoogleFonts.inter(
+              style: TextStyle(fontFamily: 'InstrumentSans', 
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
                 letterSpacing: _isRecovery ? 2 : 6,
@@ -1002,52 +1076,32 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
     final authState = ref.watch(authProvider);
 
     ref.listen<AuthState>(authProvider, (_, state) {
-      if (state is AuthTwoFactorRequired) {
-        // Kata sandi benar, tapi akun ini memakai 2FA -- padanan
-        // SignIn -> OtpEmailOrTwoFactory di panel Filament.
-        //
-        // Sheet Sign In SENGAJA TIDAK ditutup di sini. Sheet 2FA menumpuk di
-        // atasnya, dan begitu kodenya benar sheet 2FA menutup diri sendiri --
-        // listener di bawah ini (masih hidup karena sheet Sign In belum
-        // ditutup) yang menyelesaikan sisa alurnya ke Home.
-        //
-        // Kalau sheet Sign In ditutup sekarang, setelah 2FA berhasil tidak
-        // ada listener yang tersisa untuk membawa pengguna ke Home, dan
-        // satu-satunya jalan keluar adalah menutup sheet 2FA secara manual.
-        //
-        // Sheet 2FA membaca challenge dari provider sendirinya, jadi di sini
-        // tidak ada apa pun yang perlu diteruskan.
-        showTwoFactorVerifySheet(context);
-      } else if (state is AuthAuthenticated) {
-        clearGuestMode();
-        if (state.needsOtp) {
-          Navigator.of(context).pop();
-          showOtpVerificationSheet(
-            context,
-            email: state.user.email,
-            purpose: 'google_register',
-          );
-        } else if (state.needsCompletion) {
-          final navigator = Navigator.of(context);
-          final router = GoRouter.of(context);
-          navigator.pop();
-          AppNotification.show(
-            navigator.context,
-            l.completeYourProfile,
-            type: NotificationType.info,
-          );
-          router.push('/complete-profile');
-        } else {
-          final navigator = Navigator.of(context);
-          final router = GoRouter.of(context);
-          navigator.pop();
-          AppNotification.show(
-            navigator.context,
-            l.loginSuccess,
-            type: NotificationType.success,
-          );
-          router.go('/home');
-        }
+      // Semua cabang alur (2FA challenge, needsOtp, needsCompletion) ditangani
+      // helper yang sama dengan yang dipakai LandingPage -- lihat
+      // handleAuthContinuation(). Logicanya sengaja TIDAK ditulis dua kali:
+      // dua pintu Google yang resmi harus berperilaku sama persis.
+      if (handleAuthContinuation(
+        context: context,
+        ref: ref,
+        state: state,
+        l: l,
+      )) {
+        return;
+      }
+
+      if (state is AuthAuthenticated) {
+        // Kasus "langsung Home": helper sengaja tidak menanganinya supaya
+        // listener ini tetap memegang kendali penuh (notifikasi sukses +
+        // router), dan supaya bisamenutup sheet-nya sendiri.
+        final navigator = Navigator.of(context);
+        final router = GoRouter.of(context);
+        navigator.pop();
+        AppNotification.show(
+          navigator.context,
+          l.loginSuccess,
+          type: NotificationType.success,
+        );
+        router.go('/home');
       } else if (state is AuthError) {
         AppNotification.show(
           context,
@@ -3174,6 +3228,16 @@ class _OtpVerificationSheetContentState
         );
       } else if (widget.purpose == 'google_register') {
         router.go('/complete-profile');
+      } else if (widget.purpose == 'signup') {
+        // Sign Up -> Email OTP -> Security Question.
+        //
+        // Sign Up -> Email OTP -> Security Question.
+        //
+        // Sebelumnya tujuan di sini `/home`. Email OTP yang sudah terverifikasi baru berarti
+        // akun yang baru dibuat; Pondasi Keamanan (Security Question) belum
+        // pernah ditanyakan, jadi langsung ke Home akan melewati langkah itu
+        // untuk semua akun yang daftar lewat email/password.
+        router.go('/security-question');
       } else if (widget.purpose == 'verify_email') {
         router.go('/home');
       }
@@ -3297,7 +3361,7 @@ Future<void> _onResend() async {
               FilteringTextInputFormatter.digitsOnly,
               LengthLimitingTextInputFormatter(6),
             ],
-            style: GoogleFonts.inter(
+            style: TextStyle(fontFamily: 'InstrumentSans', 
               fontSize: 20,
               fontWeight: FontWeight.w600,
               letterSpacing: 8,
@@ -3332,7 +3396,7 @@ Future<void> _onResend() async {
                   const SizedBox(width: 8),
                   Text(
                     l.verifying,
-                    style: GoogleFonts.inter(
+                    style: TextStyle(fontFamily: 'InstrumentSans', 
                       fontSize: 13,
                       color: AppColors.textSecondary,
                     ),
@@ -3354,7 +3418,7 @@ Future<void> _onResend() async {
                     : _resendSeconds > 0
                     ? '${l.resendOtp} · ${_resendSeconds}s'
                     : l.resendOtp,
-                style: GoogleFonts.inter(
+                style: TextStyle(fontFamily: 'InstrumentSans', 
                   fontSize: 13,
                   color: _resendSeconds <= 0 && !_sending
                       ? AppColors.primaryColor

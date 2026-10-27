@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
@@ -486,7 +486,7 @@ class _RecentEmailsPageState extends ConsumerState<RecentEmailsPage> {
             _buildChangeEmailForm(l),
             const SizedBox(height: AppSizes.lg),
 
-            // ── Email terbaru ────────────────────────────────────────
+            // -- Email terbaru ----------------------------------------
             Text(l.recentEmailsListTitle, style: AppTextStyles.titleMedium),
             const SizedBox(height: AppSizes.sm),
             if (_loading)

@@ -1,4 +1,4 @@
-import 'dart:ui';
+import '../../../../../core/widgets/app_blur_backdrop/app_blur_backdrop.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -134,7 +134,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                 '- ${Formatters.currency(item.amount.toInt())}',
                 valueStyle: AppTextStyles.titleMedium.copyWith(
                   color: AppColors.errorColor,
-                  fontWeight: FontWeight.w900,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               const Divider(height: 24),
@@ -211,47 +211,37 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
               AppSizes.md,
               0,
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(14),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                child: Container(
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  alignment: Alignment.centerLeft,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSizes.sm,
-                    ),
-                    itemCount: types.length,
-                    separatorBuilder: (_, _) =>
-                        const SizedBox(width: AppSizes.xs),
-                    itemBuilder: (_, i) {
-                      final isSelected = _activeType == types[i];
-                      final label = types[i] == null ? l.all : l.order;
-                      return Center(
-                        child: FilterChip(
-                          label: Text(
-                            label,
-                            style: TextStyle(
-                              color: isSelected
-                                  ? AppColors.primaryColor
-                                  : AppColors.textSecondary,
-                            ),
+            child: AppBlurBackdrop(
+              child: Container(
+                height: 48,
+                alignment: Alignment.centerLeft,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: AppSizes.sm),
+                  itemCount: types.length,
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(width: AppSizes.xs),
+                  itemBuilder: (_, i) {
+                    final isSelected = _activeType == types[i];
+                    final label = types[i] == null ? l.all : l.order;
+                    return Center(
+                      child: FilterChip(
+                        label: Text(
+                          label,
+                          style: TextStyle(
+                            color: isSelected
+                                ? AppColors.primaryColor
+                                : AppColors.textSecondary,
                           ),
-                          selected: isSelected,
-                          onSelected: (_) =>
-                              setState(() => _activeType = types[i]),
-                          selectedColor: AppColors.secondaryColor,
-                          checkmarkColor: AppColors.primaryColor,
                         ),
-                      );
-                    },
-                  ),
+                        selected: isSelected,
+                        onSelected: (_) =>
+                            setState(() => _activeType = types[i]),
+                        selectedColor: AppColors.secondaryColor,
+                        checkmarkColor: AppColors.primaryColor,
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -398,7 +388,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
                                     '- ${Formatters.currency(item.amount.toInt())}',
                                     style: AppTextStyles.titleLarge.copyWith(
                                       color: AppColors.errorColor,
-                                      fontWeight: FontWeight.w900,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                   const SizedBox(height: 4),

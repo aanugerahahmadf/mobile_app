@@ -1,4 +1,4 @@
-﻿import 'dart:io' show Platform;
+import 'dart:io' show Platform;
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -31,23 +31,56 @@ class NotificationService {
   static final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
 
+  // Nama resource di android/app/src/main/res/raw/notification_chime.wav.
+  // Diganti .wav -> dibunyikan SoundPool lewat channel notifikasi.
+  static const String _chimeResource = 'notification_chime';
+
+  /// Channel dengan suara output chime. ID memakai akhiran v2 karena
+  /// Android mengunci isi channel sejak pertama kali dibuat -- channel lama
+  /// (wedding_notifications) yang sudah ada di HP user tidak bisa diperbarui
+  /// isinya, sehingga id harus diganti supaya sound baru benar-benar aktif.
   static const AndroidNotificationChannel _channel = AndroidNotificationChannel(
-    'wedding_notifications',
+    'wedding_notifications_v2',
     'Notifikasi Wedding',
-    description: 'Notifikasi dari aplikasi Dekorasi Bunga Pernikahan / Wedding Flower Decorations',
+    description:
+        'Notifikasi dari aplikasi Dekorasi Bunga Pernikahan / Wedding Flower Decorations',
     importance: Importance.high,
     playSound: true,
+    sound: RawResourceAndroidNotificationSound(_chimeResource),
     enableVibration: true,
   );
 
   static const AndroidNotificationChannel _securityChannel =
       AndroidNotificationChannel(
-        'security_notifications',
+        'security_notifications_v2',
         'Notifikasi Keamanan',
         description: 'Notifikasi verifikasi login dan keamanan akun',
         importance: Importance.high,
         playSound: true,
+        sound: RawResourceAndroidNotificationSound(_chimeResource),
         enableVibration: true,
+      );
+
+  // Pasangan channel hening: Android tidak bisa membisukan channel yang sudah
+  // dibuat, jadi toggle suara di halaman pengaturan dipindah ke channel ini.
+  static const AndroidNotificationChannel _silentChannel =
+      AndroidNotificationChannel(
+        'wedding_notifications_silent',
+        'Notifikasi Wedding (Hening)',
+        description: 'Varian tanpa suara dan getar, dipakai saat suara dimatikan',
+        importance: Importance.high,
+        playSound: false,
+        enableVibration: false,
+      );
+
+  static const AndroidNotificationChannel _securitySilentChannel =
+      AndroidNotificationChannel(
+        'security_notifications_silent',
+        'Notifikasi Keamanan (Hening)',
+        description: 'Varian keamanan tanpa suara dan getar',
+        importance: Importance.high,
+        playSound: false,
+        enableVibration: false,
       );
 
   String? _fcmToken;
@@ -101,16 +134,19 @@ class NotificationService {
       settings: initSettings,
       onDidReceiveNotificationResponse: _onNotificationTap,
     );
-    await _localNotifications
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >()
-        ?.createNotificationChannel(_channel);
-    await _localNotifications
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >()
-        ?.createNotificationChannel(_securityChannel);
+    // Semua channel didaftarkan di sini supaya payload FCM yang mengarah ke
+    // channel_id ini (saat notifikasi tampil dari sistem, bukan dari app)
+    // menemukan channel yang sama dengan pengaturan suara yang konsisten.
+    final androidPlugin = _localNotifications
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    for (final channel in [
+      _channel,
+      _securityChannel,
+      _silentChannel,
+      _securitySilentChannel,
+    ]) {
+      await androidPlugin?.createNotificationChannel(channel);
+    }
   }
 
   Future<void> _setupFCM() async {
@@ -219,23 +255,34 @@ class NotificationService {
     }
 
     final isSecurity = type == 'security';
-    final channelId = isSecurity ? _securityChannel.id : _channel.id;
-    final channelName = isSecurity ? _securityChannel.name : _channel.name;
+
+    // Suara: pilih channel sesuai toggle. Channel dengan id v2 + _silent
+    // sudah dibuat di _initLocalNotifications() -- Android mengunci (
+    // immutable) isi channel sejak pertama dibuat, jadi "hening" butuh
+    // channel terpisah, bukan playSound yang diubah-ubah.
+    final AndroidNotificationChannel chosen = isSecurity
+        ? (_soundEnabled ? _securityChannel : _securitySilentChannel)
+        : (_soundEnabled ? _channel : _silentChannel);
 
     final androidDetails = AndroidNotificationDetails(
-      channelId,
-      channelName,
-      channelDescription: isSecurity
-          ? _securityChannel.description
-          : _channel.description,
+      chosen.id,
+      chosen.name,
+      channelDescription: chosen.description,
       importance: Importance.high,
       priority: Priority.high,
       icon: '@mipmap/ic_launcher',
       playSound: _soundEnabled,
       enableVibration: _soundEnabled,
+      // Chime custom ikut di sini agar channel baru otomatis dibuat
+      // flutter_local_notifications dengan sound yang sama saat first show.
+      sound: _soundEnabled
+          ? RawResourceAndroidNotificationSound(_chimeResource)
+          : null,
       fullScreenIntent: isSecurity,
     );
-    final iosDetails = DarwinNotificationDetails(presentSound: _soundEnabled);
+    final iosDetails = DarwinNotificationDetails(
+      presentSound: _soundEnabled,
+    );
     final windowsDetails = WindowsNotificationDetails(
       subtitle: notification?.body ?? '',
     );
@@ -288,14 +335,24 @@ class NotificationService {
       case 'message':
       case 'new_message':
         return '/chat/$id';
+      // Katalog sudah jadi satu entitas: notifikasi paket maupun produk
+      // mengarah ke route yang sama.
       case 'package':
-        return '/catalog/packages/$id';
-      case 'product':
-        return '/catalog/products/$id';
+      case 'new_package':
+      case 'admin_package':
+      case 'catalog':
+      case 'new_catalog':
+      case 'admin_catalog':
+        return '/catalog/$id';
       case 'promo':
         return '/vouchers';
       case 'review':
         return '/my-reviews';
+      // Pertanyaan keamanan perangkat baru: daratkan di daftar Perangkat
+      // Tepercaya -- kartu perangkat yang menunggu jawaban tampil paling
+      // atas di sana dengan tombol "Ya, Ini Saya" / "Bukan Saya".
+      case 'device_trust':
+        return '/trusted-devices';
       default:
         return '/notifications';
     }

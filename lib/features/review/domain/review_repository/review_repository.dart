@@ -3,15 +3,8 @@ abstract class ReviewRepository {
     Map<String, dynamic> data, {
     List<String>? photoPaths,
   });
-  Future<Map<String, dynamic>> getPackageReviews(
-    String packageId, {
-    String sort = 'newest',
-    int? rating,
-    bool withPhoto = false,
-    int page = 1,
-  });
-  Future<Map<String, dynamic>> getProductReviews(
-    String productId, {
+  Future<Map<String, dynamic>> getCatalogReviews(
+    String catalogId, {
     String sort = 'newest',
     int? rating,
     bool withPhoto = false,
@@ -26,8 +19,7 @@ abstract class ReviewRepository {
     List<String>? removedPhotoUrls,
   });
   Future<void> deleteReview(int id);
-  Future<Map<String, dynamic>> getPackageRatingSummary(String packageId);
-  Future<Map<String, dynamic>> getProductRatingSummary(String productId);
+  Future<Map<String, dynamic>> getCatalogRatingSummary(String catalogId);
   Future<Map<String, dynamic>> voteHelpful(int reviewId);
   Future<Map<String, dynamic>> replyToReview(int reviewId, String comment);
   Future<void> deleteReply(int reviewId, int replyId);

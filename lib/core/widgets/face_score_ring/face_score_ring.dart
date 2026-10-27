@@ -71,7 +71,7 @@ void paintFaceScoreRing(Canvas canvas, Rect faceRect, double score, bool ready) 
       style: TextStyle(
         color: color,
         fontSize: 16,
-        fontWeight: FontWeight.w800,
+        fontWeight: FontWeight.w600,
         shadows: const [Shadow(color: Colors.black, blurRadius: 8)],
       ),
     ),

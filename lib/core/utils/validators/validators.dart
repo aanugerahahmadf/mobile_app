@@ -36,7 +36,8 @@ class Validators {
     return null;
   }
 
-  static bool isPasswordStrong(String value) {
+  static bool isPasswordStrong(String? value) {
+    if (value == null) return false;
     return value.length >= 12 &&
         value.contains(RegExp(r'[A-Z]')) &&
         value.contains(RegExp(r'[a-z]')) &&
@@ -44,8 +45,9 @@ class Validators {
         value.contains(RegExp(r'[!@#\$%^&*(),.?":{}|<>]'));
   }
 
-  static String? confirmPassword(String? value, String password) {
+  static String? confirmPassword(String? value, String? password) {
     if (value == null || value.trim().isEmpty) return 'Wajib diisi';
+    if (password == null || password.trim().isEmpty) return 'Password tidak cocok';
     if (value != password) return 'Password tidak cocok';
     return null;
   }

@@ -1101,7 +1101,7 @@ class _AnchoredTimeOverlayState extends State<_AnchoredTimeOverlay> {
                     ':',
                     style: AppTextStyles.titleLarge.copyWith(
                       color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -1160,7 +1160,7 @@ class _TimePartChip extends StatelessWidget {
                   text,
                   style: AppTextStyles.titleMedium.copyWith(
                     color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(width: 6),

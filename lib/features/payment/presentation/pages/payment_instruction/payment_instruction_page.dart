@@ -146,7 +146,7 @@ class _PaymentInstructionPageState
   Widget _buildOrderSummary(AppLocalizations l) {
     final item =
         _order!['package'] as Map<String, dynamic>? ??
-        _order!['product'] as Map<String, dynamic>?;
+        _order!['catalog'] as Map<String, dynamic>?;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(AppSizes.md),

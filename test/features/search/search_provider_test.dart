@@ -1,4 +1,4 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_app/features/search/data/models/search_result/search_result.dart';
 import 'package:mobile_app/features/search/data/models/search_suggestion/search_suggestion.dart';
 import 'package:mobile_app/features/search/domain/search_repository/search_repository.dart';
@@ -51,14 +51,16 @@ void main() {
     });
 
     test('constructor with all fields', () {
-      final results = SearchResult(items: [
-        const SearchSuggestion(
-          type: SuggestionType.packages,
-          id: 1,
-          name: 'Test',
-          routePath: '/test',
-        ),
-      ]);
+      final results = SearchResult(
+        items: [
+          const SearchSuggestion(
+            type: SuggestionType.catalog,
+            id: 1,
+            name: 'Test',
+            routePath: '/test',
+          ),
+        ],
+      );
       final state = SearchState(
         results: results,
         loading: true,
@@ -72,19 +74,18 @@ void main() {
 
     test('copyWith updates fields correctly', () {
       const initialState = SearchState();
-      final results = SearchResult(items: [
-        const SearchSuggestion(
-          type: SuggestionType.products,
-          id: 2,
-          name: 'Product',
-          routePath: '/product',
-        ),
-      ]);
-
-      final newState = initialState.copyWith(
-        results: results,
-        loading: true,
+      final results = SearchResult(
+        items: [
+          const SearchSuggestion(
+            type: SuggestionType.catalog,
+            id: 2,
+            name: 'Catalog',
+            routePath: '/catalog',
+          ),
+        ],
       );
+
+      final newState = initialState.copyWith(results: results, loading: true);
 
       expect(newState.results, isNotNull);
       expect(newState.loading, isTrue);
@@ -92,14 +93,16 @@ void main() {
     });
 
     test('copyWith preserves existing values when not provided', () {
-      final results = SearchResult(items: [
-        const SearchSuggestion(
-          type: SuggestionType.categories,
-          id: 3,
-          name: 'Category',
-          routePath: '/category',
-        ),
-      ]);
+      final results = SearchResult(
+        items: [
+          const SearchSuggestion(
+            type: SuggestionType.categories,
+            id: 3,
+            name: 'Category',
+            routePath: '/category',
+          ),
+        ],
+      );
       final initialState = SearchState(
         results: results,
         loading: true,
@@ -145,10 +148,10 @@ void main() {
     test('search updates state with results on success', () async {
       final items = [
         const SearchSuggestion(
-          type: SuggestionType.packages,
+          type: SuggestionType.catalog,
           id: 1,
           name: 'Paket Wedding',
-          routePath: '/catalog/packages/1',
+          routePath: '/catalog/1',
         ),
       ];
       fakeRepo.setResult(SearchResult(items: items));
@@ -196,10 +199,10 @@ void main() {
 
       final items = [
         const SearchSuggestion(
-          type: SuggestionType.products,
+          type: SuggestionType.catalog,
           id: 1,
-          name: 'Product',
-          routePath: '/catalog/products/1',
+          name: 'Catalog',
+          routePath: '/catalog/1',
         ),
       ];
       fakeRepo.setResult(SearchResult(items: items));

@@ -805,7 +805,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
               Text(
                 similarityText,
                 style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               const SizedBox(height: 8),
@@ -1209,7 +1209,7 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfilePage> {
                         : (completionPercent >= 50
                               ? Colors.orange
                               : AppColors.primaryColor),
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),

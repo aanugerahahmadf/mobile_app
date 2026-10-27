@@ -1,4 +1,4 @@
-import 'dart:ui';
+import '../../../../../core/widgets/app_blur_backdrop/app_blur_backdrop.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -332,50 +332,40 @@ class _ModernBottomBar extends StatelessWidget {
             ],
           ),
           // Potong blur mengikuti bentuk pill ( )
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-              child: Container(
-                decoration: BoxDecoration(
-                  // Semi-transparan agar efek blur terlihat
-                  color: AppColors.surfaceColor.withValues(alpha: 0.7),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: isDark ? 0.10 : 0.35),
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(4, 4, 4, 4),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: List.generate(visibleItems.length, (i) {
-              final item = visibleItems[i];
-              final branchIdx = visibleIndices[i];
-              final isSelected = branchIdx == currentIndex;
-              final isProfile = branchIdx == 4;
+          child: AppBlurBackdrop(
+            borderRadius: 999,
+            border: Border.all(
+              color: Colors.white.withValues(alpha: isDark ? 0.10 : 0.35),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(4, 4, 4, 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: List.generate(visibleItems.length, (i) {
+                  final item = visibleItems[i];
+                  final branchIdx = visibleIndices[i];
+                  final isSelected = branchIdx == currentIndex;
+                  final isProfile = branchIdx == 4;
 
-              return _buildTab(
-                context,
-                item,
-                visibleLabels[i],
-                isSelected,
-                isProfile,
-                onTap: () => onTap(branchIdx),
-                onDoubleTap: isProfile
-                    ? () async {
-                        await ref
-                            .read(authProvider.notifier)
-                            .switchToNextAccount();
-                      }
-                    : null,
-                onLongPress: isProfile
-                    ? () => _showAccountSheet(context)
-                    : null,
-              );
-            }),
-          ),
-                ),
+                  return _buildTab(
+                    context,
+                    item,
+                    visibleLabels[i],
+                    isSelected,
+                    isProfile,
+                    onTap: () => onTap(branchIdx),
+                    onDoubleTap: isProfile
+                        ? () async {
+                            await ref
+                                .read(authProvider.notifier)
+                                .switchToNextAccount();
+                          }
+                        : null,
+                    onLongPress: isProfile
+                        ? () => _showAccountSheet(context)
+                        : null,
+                  );
+                }),
               ),
             ),
           ),
@@ -447,7 +437,7 @@ class _ModernBottomBar extends StatelessWidget {
                 label,
                 style: TextStyle(
                   fontSize: 10,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   color: isSelected
                       ? AppColors.primaryColor
                       : AppColors.textTertiary,

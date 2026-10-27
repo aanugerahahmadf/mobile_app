@@ -100,9 +100,7 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
     _loadingSuggestions = true;
     try {
       final result = await _repo.search(query);
-      _suggestions = result.items
-          .where((e) => e.type != SuggestionType.vendors)
-          .toList();
+      _suggestions = result.items;
     } catch (_) {
       _suggestions = [];
     }
@@ -515,35 +513,7 @@ class _GlobalSearchBarState extends ConsumerState<GlobalSearchBar> {
           Icons.history_rounded,
           const Color(0xFF546E7A),
         );
-      case SuggestionType.vendors:
-        if (item.imageUrl != null && item.imageUrl!.isNotEmpty) {
-          return ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: SizedBox(
-              width: 48,
-              height: 48,
-              child: CachedNetworkImage(
-                imageUrl: item.imageUrl!,
-                fit: BoxFit.cover,
-                errorWidget: (_, _, _) => Container(
-                  color: const Color(0xFFF3E5F5),
-                  child: const Icon(
-                    Icons.store,
-                    size: 22,
-                    color: Color(0xFF9C27B0),
-                  ),
-                ),
-              ),
-            ),
-          );
-        }
-        return _iconBox(
-          const Color(0xFFF3E5F5),
-          Icons.store,
-          const Color(0xFF9C27B0),
-        );
-      case SuggestionType.packages:
-      case SuggestionType.products:
+      case SuggestionType.catalog:
         if (item.imageUrl != null && item.imageUrl!.isNotEmpty) {
           return ClipRRect(
             borderRadius: BorderRadius.circular(10),

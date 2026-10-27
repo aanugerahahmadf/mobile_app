@@ -32,8 +32,11 @@ android {
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        versionCode = flutter.versionCode // build number pubspec (x.y.z+N)
+        // VersionName 4-segmen "1.0.0.<N>" yang tampil di HP. Build number
+        // pubspec naik otomatis tiap Sabtu lewat scripts/bump_weekly_version.ps1,
+        // jadi versi tampilan tidak perlu diubah manual.
+        versionName = "1.0.0.${flutter.versionCode}"
     }
 
     signingConfigs {

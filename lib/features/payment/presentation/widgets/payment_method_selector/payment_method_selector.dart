@@ -127,7 +127,7 @@ class PaymentMethodSelector extends StatelessWidget {
         title.toUpperCase(),
         style: AppTextStyles.labelSmall.copyWith(
           color: AppColors.textSecondary,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w600,
           letterSpacing: 0.4,
         ),
       ),

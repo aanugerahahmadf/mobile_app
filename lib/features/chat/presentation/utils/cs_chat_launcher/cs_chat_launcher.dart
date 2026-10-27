@@ -12,9 +12,8 @@ String reportCsCategory(String category) {
     case 'order':
     case 'payment':
       return 'order_help';
-    case 'product':
+    case 'catalog':
     case 'package':
-    case 'vendor':
     case 'review':
     default:
       return 'bug_report';
@@ -23,12 +22,10 @@ String reportCsCategory(String category) {
 
 String reportCategoryLabel(AppLocalizations l, String category) {
   switch (category) {
-    case 'product':
-      return l.reportProduct;
+    case 'catalog':
+      return l.reportCatalog;
     case 'package':
       return l.reportPackage;
-    case 'vendor':
-      return l.reportVendor;
     case 'order':
       return l.reportOrder;
     case 'review':

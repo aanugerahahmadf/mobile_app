@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 
 import '../../api/api_endpoints/api_endpoints.dart';
@@ -309,10 +308,10 @@ class _WhatsappOtpVerifierState extends State<WhatsappOtpVerifier> {
                     FilteringTextInputFormatter.digitsOnly,
                     LengthLimitingTextInputFormatter(6),
                   ],
-                  style: GoogleFonts.inter(fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: 6),
+                  style: TextStyle(fontFamily: 'InstrumentSans', fontSize: 18, fontWeight: FontWeight.w600, letterSpacing: 6),
                   decoration: InputDecoration(
                     hintText: '------',
-                    hintStyle: GoogleFonts.inter(letterSpacing: 6, color: AppColors.textTertiary),
+                    hintStyle: TextStyle(fontFamily: 'InstrumentSans', letterSpacing: 6, color: AppColors.textTertiary),
                     counterText: '',
                     filled: true,
                     fillColor: AppColors.secondaryColor.withAlpha(40),
@@ -343,7 +342,7 @@ class _WhatsappOtpVerifierState extends State<WhatsappOtpVerifier> {
                   onTap: _onResend,
                   child: Text(
                     l.resendOtp,
-                    style: GoogleFonts.inter(
+                    style: TextStyle(fontFamily: 'InstrumentSans', 
                       fontSize: 13,
                       color: AppColors.primaryColor,
                       fontWeight: FontWeight.w600,

@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 
 import '../../api/api_endpoints/api_endpoints.dart';
@@ -359,7 +358,7 @@ class _TwoFactorSetupFlowState extends State<TwoFactorSetupFlow> {
                   const SizedBox(height: AppSizes.xs),
                   SelectableText(
                     _secret,
-                    style: GoogleFonts.inter(
+                    style: TextStyle(fontFamily: 'InstrumentSans', 
                       fontSize: 14,
                       letterSpacing: 1.5,
                       fontWeight: FontWeight.w600,
@@ -404,7 +403,7 @@ class _TwoFactorSetupFlowState extends State<TwoFactorSetupFlow> {
             FilteringTextInputFormatter.digitsOnly,
             LengthLimitingTextInputFormatter(6),
           ],
-          style: GoogleFonts.inter(
+          style: TextStyle(fontFamily: 'InstrumentSans', 
             fontSize: 22,
             fontWeight: FontWeight.w600,
             letterSpacing: 8,

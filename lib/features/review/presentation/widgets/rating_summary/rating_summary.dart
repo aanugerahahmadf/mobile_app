@@ -63,7 +63,7 @@ class RatingSummary extends StatelessWidget {
         Text(
           average.toStringAsFixed(1),
           style: AppTextStyles.headlineLarge.copyWith(
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             color: AppColors.warningColor,
           ),
         ),

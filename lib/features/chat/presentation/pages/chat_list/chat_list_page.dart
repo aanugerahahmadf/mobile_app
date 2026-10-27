@@ -434,7 +434,7 @@ class _ChatListPageState extends ConsumerState<ChatListPage> {
                 Text(
                   l.csYourConversations,
                   style: AppTextStyles.titleMedium.copyWith(
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 Text(
@@ -536,7 +536,7 @@ class _ChatListPageState extends ConsumerState<ChatListPage> {
                   l.csWelcomeTitle,
                   style: AppTextStyles.titleMedium.copyWith(
                     color: Colors.white,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -642,7 +642,7 @@ class _ChatListPageState extends ConsumerState<ChatListPage> {
                     textAlign: TextAlign.center,
                     style: AppTextStyles.bodySmall.copyWith(
                       color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
                       fontSize: 11,
                     ),
                   ),
@@ -655,7 +655,7 @@ class _ChatListPageState extends ConsumerState<ChatListPage> {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: AppTextStyles.bodyMedium.copyWith(
-            fontWeight: unread > 0 ? FontWeight.w700 : FontWeight.w600,
+            fontWeight: unread > 0 ? FontWeight.w600 : FontWeight.w600,
           ),
         ),
         subtitle: Text(
@@ -697,7 +697,7 @@ class _ChatListPageState extends ConsumerState<ChatListPage> {
       initial,
       style: AppTextStyles.titleMedium.copyWith(
         color: AppColors.primaryColor,
-        fontWeight: FontWeight.bold,
+        fontWeight: FontWeight.w600,
       ),
     );
   }

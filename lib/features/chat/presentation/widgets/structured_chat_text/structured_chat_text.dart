@@ -49,7 +49,7 @@ class StructuredChatText extends StatelessWidget {
           trimmed.substring(4),
           style: style.copyWith(
             color: accent,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             fontSize: (style.fontSize ?? 14) + 3,
           ),
         ),
@@ -62,7 +62,7 @@ class StructuredChatText extends StatelessWidget {
           trimmed.substring(3),
           style: style.copyWith(
             color: accent,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             fontSize: (style.fontSize ?? 14) + 2,
           ),
         ),
@@ -75,7 +75,7 @@ class StructuredChatText extends StatelessWidget {
           trimmed.substring(2),
           style: style.copyWith(
             color: accent,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
             fontSize: (style.fontSize ?? 14) + 1,
           ),
         ),
@@ -129,7 +129,7 @@ class StructuredChatText extends StatelessWidget {
           children: [
             TextSpan(
               text: '$key: ',
-              style: style.copyWith(fontWeight: FontWeight.w700, color: accent),
+              style: style.copyWith(fontWeight: FontWeight.w600, color: accent),
             ),
             ..._buildSpans(value, style, accent),
           ],
@@ -161,7 +161,7 @@ class StructuredChatText extends StatelessWidget {
             width: 14,
             child: Text(
               marker,
-              style: style.copyWith(color: accent, fontWeight: FontWeight.w700),
+              style: style.copyWith(color: accent, fontWeight: FontWeight.w600),
             ),
           ),
           Expanded(
@@ -189,7 +189,7 @@ class StructuredChatText extends StatelessWidget {
         spans.add(
           TextSpan(
             text: token.substring(2, token.length - 2),
-            style: base.copyWith(fontWeight: FontWeight.w700, color: accent),
+            style: base.copyWith(fontWeight: FontWeight.w600, color: accent),
           ),
         );
       } else if (token.startsWith('`') && token.endsWith('`')) {
@@ -197,7 +197,7 @@ class StructuredChatText extends StatelessWidget {
           TextSpan(
             text: token.substring(1, token.length - 1),
             style: base.copyWith(
-              fontFamily: 'monospace',
+              fontFamily: 'InstrumentSans',
               backgroundColor: accent.withAlpha(30),
               color: accent,
             ),

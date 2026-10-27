@@ -6,7 +6,7 @@ class NotificationPrefs {
 
   static const Map<String, String> keys = {
     'messages': '${_prefix}messages',
-    'products': '${_prefix}products',
+    'catalogs': '${_prefix}catalogs',
     'packages': '${_prefix}packages',
     'vouchers': '${_prefix}vouchers',
     'orders': '${_prefix}orders',
@@ -17,7 +17,7 @@ class NotificationPrefs {
 
   static const Map<String, bool> defaults = {
     'messages': true,
-    'products': true,
+    'catalogs': true,
     'packages': true,
     'vouchers': true,
     'orders': true,
@@ -56,10 +56,10 @@ class NotificationPrefs {
       case 'chat':
       case 'new_message':
         return 'messages';
-      case 'product':
-      case 'admin_product':
-      case 'new_product':
-        return 'products';
+      case 'catalog':
+      case 'admin_catalog':
+      case 'new_catalog':
+        return 'catalogs';
       case 'package':
       case 'admin_package':
       case 'new_package':

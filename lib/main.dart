@@ -2,6 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -19,6 +20,16 @@ import 'firebase_options.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load();
+
+  // Font aplikasi tersedia dari ASET LOKAL (assets/fonts/), BUKAN unduhan
+  // runtime:
+  //   - tanpa internet, aplikasi tetap berfont benar (fetch runtime
+  //     akan diam-diam gagal dan teks jatuh ke font bawaan);
+  //   - unduhan runtime juga menambah latensi teks pertama.
+  // Kalau variant yang diminta tidak ada di aset, google_fonts bakal
+  // melempar -- sengaja, supaya bobot yang kelupusan instansi TERLIHAT
+  // saat development, bukan diam-diam dirender salah.
+  GoogleFonts.config.allowRuntimeFetching = false;
 
   // Firebase hanya dipakai untuk push notification (FCM). Katalog, CBIR, dan
   // pemesanan lewat REST API Laravel, jadi kegagalan Firebase tidak boleh
@@ -91,6 +102,10 @@ class _WeddingAppState extends ConsumerState<WeddingApp>
 
   Future<void> _maybeShowLock() async {
     if (isAppLockSuppressed()) return;
+    // Wait briefly for auth state to settle after resume. Without this delay,
+    // `currentAccountEmailProvider` may return null and the lock is skipped.
+    await Future.delayed(const Duration(milliseconds: 300));
+    if (!mounted) return;
     final flags = await loadAppLockFlags(
       email: ref.read(currentAccountEmailProvider),
     );
@@ -130,7 +145,17 @@ class _WeddingAppState extends ConsumerState<WeddingApp>
       ),
     );
 
-    return MaterialApp.router(
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? const [Color(0xFF0F2440), Color(0xFF1A1A2E), Color(0xFF121212)]
+              : const [Color(0xFFEEF2FF), Color(0xFFF8F6F7), Color(0xFFFFFFFF)],
+        ),
+      ),
+      child: MaterialApp.router(
       title: 'Wedding Flower Decorations',
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
       debugShowCheckedModeBanner: false,
@@ -164,6 +189,7 @@ class _WeddingAppState extends ConsumerState<WeddingApp>
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
       ],
+      ),
     );
   }
 }

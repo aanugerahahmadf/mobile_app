@@ -47,9 +47,9 @@ class WishlistNotifier extends StateNotifier<WishlistState> {
     }
   }
 
-  Future<void> toggle({String? packageId, String? productId}) async {
+  Future<void> toggle({String? catalogId}) async {
     try {
-      await _repo.toggleWishlist(packageId: packageId, productId: productId);
+      await _repo.toggleWishlist(catalogId: catalogId);
       await fetchWishlist();
     } catch (e) {
       state = state.copyWith(error: e.toString());
@@ -58,12 +58,9 @@ class WishlistNotifier extends StateNotifier<WishlistState> {
 
   Future<void> remove(Map<String, dynamic> item) async {
     try {
-      final isProduct = item['resource_type'] == 'product';
-      final itemId = isProduct
-          ? item['product_id']?.toString()
-          : item['package_id']?.toString();
-      if (itemId != null) {
-        await _repo.removeFromWishlist(itemId, isProduct: isProduct);
+      final catalogId = item['catalog_id']?.toString() ?? item['id']?.toString();
+      if (catalogId != null) {
+        await _repo.removeFromWishlist(catalogId);
       }
       await fetchWishlist();
     } catch (e) {

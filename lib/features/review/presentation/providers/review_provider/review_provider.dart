@@ -80,21 +80,13 @@ class ReviewNotifier extends StateNotifier<ReviewState> {
 
   // ── Fetch first page ────────────────────────────────────────────────
   Future<void> fetchItemReviews({
-    String packageId = '',
-    String productId = '',
+    String catalogId = '',
   }) async {
     state = state.copyWith(loading: true, clearError: true);
     try {
-      final result = packageId.isNotEmpty
-          ? await _repository.getPackageReviews(
-              packageId,
-              sort: state.sort,
-              rating: state.filterRating,
-              withPhoto: state.filterWithPhoto,
-            )
-          : productId.isNotEmpty
-          ? await _repository.getProductReviews(
-              productId,
+      final result = catalogId.isNotEmpty
+          ? await _repository.getCatalogReviews(
+              catalogId,
               sort: state.sort,
               rating: state.filterRating,
               withPhoto: state.filterWithPhoto,
@@ -125,22 +117,14 @@ class ReviewNotifier extends StateNotifier<ReviewState> {
   }
 
   // ── Load more (next page) ───────────────────────────────────────────
-  Future<void> loadMore({String packageId = '', String productId = ''}) async {
+  Future<void> loadMore({String catalogId = ''}) async {
     if (state.loadingMore || !state.hasMore) return;
     state = state.copyWith(loadingMore: true);
     try {
       final nextPage = state.currentPage + 1;
-      final result = packageId.isNotEmpty
-          ? await _repository.getPackageReviews(
-              packageId,
-              sort: state.sort,
-              rating: state.filterRating,
-              withPhoto: state.filterWithPhoto,
-              page: nextPage,
-            )
-          : productId.isNotEmpty
-          ? await _repository.getProductReviews(
-              productId,
+      final result = catalogId.isNotEmpty
+          ? await _repository.getCatalogReviews(
+              catalogId,
               sort: state.sort,
               rating: state.filterRating,
               withPhoto: state.filterWithPhoto,
@@ -174,15 +158,12 @@ class ReviewNotifier extends StateNotifier<ReviewState> {
 
   // ── Rating summary ──────────────────────────────────────────────────
   Future<void> fetchRatingSummary({
-    String packageId = '',
-    String productId = '',
+    String catalogId = '',
   }) async {
     try {
       Map<String, dynamic>? summary;
-      if (packageId.isNotEmpty) {
-        summary = await _repository.getPackageRatingSummary(packageId);
-      } else if (productId.isNotEmpty) {
-        summary = await _repository.getProductRatingSummary(productId);
+      if (catalogId.isNotEmpty) {
+        summary = await _repository.getCatalogRatingSummary(catalogId);
       }
       if (summary != null) state = state.copyWith(ratingSummary: summary);
     } catch (_) {}

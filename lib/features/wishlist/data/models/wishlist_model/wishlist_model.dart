@@ -3,16 +3,14 @@ import '../../../../catalog/data/models/item_model/item_model.dart';
 class WishlistModel {
   final int id;
   final String? resourceType;
-  final int? packageId;
-  final int? productId;
+  final int? catalogId;
   final ItemModel? item;
   final String? createdAt;
 
   const WishlistModel({
     required this.id,
     this.resourceType,
-    this.packageId,
-    this.productId,
+    this.catalogId,
     this.item,
     this.createdAt,
   });
@@ -32,8 +30,7 @@ class WishlistModel {
     return WishlistModel(
       id: json['id'] as int,
       resourceType: json['resource_type'] as String?,
-      packageId: json['package_id'] as int?,
-      productId: json['product_id'] as int?,
+      catalogId: json['catalog_id'] as int?,
       item: itemData != null ? parseItem(itemData) : null,
       createdAt: json['created_at'] as String?,
     );

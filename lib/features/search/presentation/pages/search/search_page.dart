@@ -166,7 +166,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
         final dir = await getApplicationDocumentsDirectory();
         await _audioRecorder.start(
           const RecordConfig(),
-          path: '${dir.path}/voice_search_${DateTime.now().millisecondsSinceEpoch}.m4a',
+          path:
+              '${dir.path}/voice_search_${DateTime.now().millisecondsSinceEpoch}.m4a',
         );
         setState(() => _isRecording = true);
       }
@@ -231,10 +232,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           size: 22,
         ),
         onPressed: _showPickerOptions,
-        constraints: const BoxConstraints(
-          minWidth: 44,
-          minHeight: 44,
-        ),
+        constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
         splashRadius: 22,
         padding: EdgeInsets.zero,
       ),
@@ -254,21 +252,24 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       child: IconButton(
         icon: Icon(
           _isRecording ? Icons.stop_rounded : Icons.mic_rounded,
-          color: _isRecording ? AppColors.primaryColor : AppColors.textSecondary,
+          color: _isRecording
+              ? AppColors.primaryColor
+              : AppColors.textSecondary,
           size: 22,
         ),
         onPressed: _toggleRecording,
-        constraints: const BoxConstraints(
-          minWidth: 44,
-          minHeight: 44,
-        ),
+        constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
         splashRadius: 22,
         padding: EdgeInsets.zero,
       ),
     );
   }
 
-  Widget _buildBody(BuildContext context, SearchState state, AppLocalizations l) {
+  Widget _buildBody(
+    BuildContext context,
+    SearchState state,
+    AppLocalizations l,
+  ) {
     if (_query.isEmpty) {
       return _buildEmptyQueryState(l);
     }
@@ -311,11 +312,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.search_rounded,
-              size: 64,
-              color: AppColors.textTertiary,
-            ),
+            Icon(Icons.search_rounded, size: 64, color: AppColors.textTertiary),
             const SizedBox(height: AppSizes.md),
             Text(
               l.searchPlaceholder,
@@ -330,9 +327,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
   Widget _buildGroupedResults(List<SearchSuggestion> items) {
     final l = AppLocalizations.of(context)!;
-    final visibleItems = items
-        .where((i) => i.type != SuggestionType.vendors)
-        .toList();
+    final visibleItems = items;
     final grouped = <String, List<SearchSuggestion>>{};
     for (final item in visibleItems) {
       grouped.putIfAbsent(item.type.badgeLabel(l), () => []).add(item);
@@ -499,18 +494,14 @@ class _SearchPageState extends ConsumerState<SearchPage> {
         return Icons.help_outline_rounded;
       case SuggestionType.histories:
         return Icons.history_rounded;
-      case SuggestionType.packages:
-      case SuggestionType.products:
+      case SuggestionType.catalog:
         return Icons.image_outlined;
-      case SuggestionType.vendors:
-        return Icons.store;
     }
   }
 
   void _navigateToType(SuggestionType type) {
     switch (type) {
-      case SuggestionType.packages:
-      case SuggestionType.products:
+      case SuggestionType.catalog:
         context.push('/catalog');
       case SuggestionType.categories:
         context.push('/catalog');
@@ -530,8 +521,6 @@ class _SearchPageState extends ConsumerState<SearchPage> {
         context.push('/help-center');
       case SuggestionType.weddingPolicy:
         context.push('/wedding-policy');
-      case SuggestionType.vendors:
-        break;
     }
   }
 

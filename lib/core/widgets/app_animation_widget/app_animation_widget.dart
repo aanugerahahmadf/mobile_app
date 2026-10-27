@@ -125,7 +125,7 @@ class AppSuccessAnimation extends StatelessWidget {
             ).animate().scale(duration: 800.ms, curve: Curves.easeOutBack).then().shake(duration: 400.ms),
             const SizedBox(height: 20),
             Text(title,
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
               textAlign: TextAlign.center,
             ).animate().fadeIn(duration: 400.ms, delay: 300.ms).slideY(begin: 0.2, end: 0),
             if (subtitle != null) ...[

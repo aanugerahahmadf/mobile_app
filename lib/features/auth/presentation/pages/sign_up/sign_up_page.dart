@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:io';
+import '../../../../../core/api/api_endpoints/api_endpoints.dart';
+import '../../../../../core/api/dio_client/dio_client.dart';
 import '../../../../../core/constants/app_colors/app_colors.dart';
 import '../../../../../core/constants/app_text_styles/app_text_styles.dart';
 import '../../../../../core/constants/app_sizes/app_sizes.dart';
@@ -569,6 +571,38 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
         );
   }
 
+  /// Kirim Email OTP dan buka sheet verifikasi untuk akun yang baru dibuat.
+  ///
+  /// Kegagalan kirim OTP tidak boleh membuat pengguna terjebak: akun SUDAH
+  /// dibuat dan sudah login, jadi kalau kode tidak sampai, pengguna tetap
+  /// boleh masuk lewat Sign In. Itu lebih baik daripada membiarkan halaman
+  /// Sign Up menggantung tanpa jalan keluar.
+  Future<void> _startSignupVerification(String email) async {
+    try {
+      await DioClient.instance.post(
+        ApiEndpoints.sendOtp,
+        data: {'email': email, 'purpose': 'signup'},
+      );
+    } catch (_) {
+      if (!mounted) return;
+      AppSnackBar.show(
+        context,
+        AppLocalizations.of(context)!.failedSendVerificationCode,
+        type: SnackBarType.error,
+      );
+    }
+
+    if (!mounted) return;
+    // Menutup Sign Up dulu: sheet OTP dibuka di root navigator, dan halaman
+    // Sign Up tidak boleh tetap menumpuk di bawahnya.
+    context.go('/home');
+    await showOtpVerificationSheet(
+      context,
+      email: email,
+      purpose: 'signup',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
@@ -593,7 +627,13 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
           l.registrationSuccess,
           type: SnackBarType.success,
         );
-        context.go('/home');
+        // Sign Up -> Email OTP -> Security Question -> Sign In -> Home.
+        //
+        // Sebelumnya melompat ke `/home` dan selesai di situ, sehingga akun
+        // yang daftar lewat email/password tidak pernah melewati Email OTP
+        // maupun Pondasi Keamanan. Alur lengkapnya ada di auth_modals.dart
+        // pada cabang `purpose == 'signup'`.
+        _startSignupVerification(state.user.email);
       } else if (state is AuthError) {
         AppSnackBar.show(
           context,

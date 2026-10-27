@@ -1,14 +1,12 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_app/features/search/data/models/search_suggestion/search_suggestion.dart';
 
 void main() {
   group('SuggestionType', () {
     test('has all expected values', () {
-      // 12 nilai, sama dengan yang didaftar di bawah. Sebelumnya tertulis 13
-      // padahal hanya 12 nilai yang di-assert, jadi test ini selalu gagal.
-      expect(SuggestionType.values.length, 12);
-      expect(SuggestionType.values, contains(SuggestionType.packages));
-      expect(SuggestionType.values, contains(SuggestionType.products));
+      // 10 nilai, sama dengan yang didaftar di bawah.
+      expect(SuggestionType.values.length, 10);
+      expect(SuggestionType.values, contains(SuggestionType.catalog));
       expect(SuggestionType.values, contains(SuggestionType.categories));
       expect(SuggestionType.values, contains(SuggestionType.vouchers));
       expect(SuggestionType.values, contains(SuggestionType.orders));
@@ -18,7 +16,6 @@ void main() {
       expect(SuggestionType.values, contains(SuggestionType.helps));
       expect(SuggestionType.values, contains(SuggestionType.histories));
       expect(SuggestionType.values, contains(SuggestionType.weddingPolicy));
-      expect(SuggestionType.values, contains(SuggestionType.vendors));
     });
   });
 
@@ -33,17 +30,17 @@ void main() {
         'image_url': 'https://example.com/image.jpg',
       };
       final suggestion = SearchSuggestion.fromJson(
-        SuggestionType.packages,
+        SuggestionType.catalog,
         json,
       );
-      expect(suggestion.type, SuggestionType.packages);
+      expect(suggestion.type, SuggestionType.catalog);
       expect(suggestion.id, 1);
       expect(suggestion.name, 'Paket Wedding Premium');
-      expect(suggestion.routePath, '/catalog/packages/1');
+      expect(suggestion.routePath, '/catalog/1');
       expect(suggestion.imageUrl, 'https://example.com/image.jpg');
     });
 
-    test('parses products correctly', () {
+    test('parses catalogs correctly', () {
       final json = {
         'id': 2,
         'name': 'Buket Bunga',
@@ -52,13 +49,13 @@ void main() {
         'category_name': 'Bunga',
       };
       final suggestion = SearchSuggestion.fromJson(
-        SuggestionType.products,
+        SuggestionType.catalog,
         json,
       );
-      expect(suggestion.type, SuggestionType.products);
+      expect(suggestion.type, SuggestionType.catalog);
       expect(suggestion.id, 2);
       expect(suggestion.name, 'Buket Bunga');
-      expect(suggestion.routePath, '/catalog/products/2');
+      expect(suggestion.routePath, '/catalog/2');
     });
 
     test('parses categories correctly', () {
@@ -105,10 +102,7 @@ void main() {
         'total': 2500000,
         'user': {'name': 'John Doe'},
       };
-      final suggestion = SearchSuggestion.fromJson(
-        SuggestionType.orders,
-        json,
-      );
+      final suggestion = SearchSuggestion.fromJson(SuggestionType.orders, json);
       expect(suggestion.type, SuggestionType.orders);
       expect(suggestion.id, 5);
       expect(suggestion.name, 'ORD-2024-001');
@@ -135,25 +129,14 @@ void main() {
       expect(suggestion.routePath, '/my-reviews');
     });
 
-    test('parses vendors correctly', () {
-      final json = {
-        'id': 7,
-        'store_name': 'Toko Bunga Indah',
-        'store_description': 'Terpercaya',
-        'contact_person': 'Budi',
-        'packages_count': 10,
-        'products_count': 20,
-        'logo': 'https://example.com/logo.jpg',
-      };
+    test('parses categories correctly', () {
+      final json = {'id': 9, 'name': 'Bunga Manis'};
       final suggestion = SearchSuggestion.fromJson(
-        SuggestionType.vendors,
+        SuggestionType.categories,
         json,
       );
-      expect(suggestion.type, SuggestionType.vendors);
-      expect(suggestion.id, 7);
-      expect(suggestion.name, 'Toko Bunga Indah');
-      expect(suggestion.imageUrl, 'https://example.com/logo.jpg');
-      expect(suggestion.routePath, '/vendor/7');
+      expect(suggestion.type, SuggestionType.categories);
+      expect(suggestion.id, 9);
     });
 
     test('parses terms correctly', () {
@@ -163,10 +146,7 @@ void main() {
         'title': 'Terms of Service',
         'description': 'Isi terms',
       };
-      final suggestion = SearchSuggestion.fromJson(
-        SuggestionType.terms,
-        json,
-      );
+      final suggestion = SearchSuggestion.fromJson(SuggestionType.terms, json);
       expect(suggestion.type, SuggestionType.terms);
       expect(suggestion.id, 8);
       expect(suggestion.name, 'Syarat Layanan');
@@ -196,10 +176,7 @@ void main() {
         'title': 'How to Order',
         'description': 'Panduan pemesanan',
       };
-      final suggestion = SearchSuggestion.fromJson(
-        SuggestionType.helps,
-        json,
-      );
+      final suggestion = SearchSuggestion.fromJson(SuggestionType.helps, json);
       expect(suggestion.type, SuggestionType.helps);
       expect(suggestion.id, 10);
       expect(suggestion.routePath, '/help-center');
@@ -242,7 +219,7 @@ void main() {
     test('handles null/empty fields gracefully', () {
       final json = <String, dynamic>{};
       final suggestion = SearchSuggestion.fromJson(
-        SuggestionType.packages,
+        SuggestionType.catalog,
         json,
       );
       expect(suggestion.id, 0);
@@ -263,7 +240,7 @@ void main() {
         ],
       };
       final suggestion = SearchSuggestion.fromJson(
-        SuggestionType.products,
+        SuggestionType.catalog,
         json,
       );
       expect(suggestion.imageUrl, 'https://example.com/original.jpg');
@@ -274,13 +251,11 @@ void main() {
         'id': 14,
         'name': 'Test',
         'media': [
-          {
-            'preview_url': 'https://example.com/preview.jpg',
-          },
+          {'preview_url': 'https://example.com/preview.jpg'},
         ],
       };
       final suggestion = SearchSuggestion.fromJson(
-        SuggestionType.products,
+        SuggestionType.catalog,
         json,
       );
       expect(suggestion.imageUrl, 'https://example.com/preview.jpg');
@@ -293,7 +268,7 @@ void main() {
         'image': 'https://example.com/image.jpg',
       };
       final suggestion = SearchSuggestion.fromJson(
-        SuggestionType.products,
+        SuggestionType.catalog,
         json,
       );
       expect(suggestion.imageUrl, 'https://example.com/image.jpg');
@@ -303,12 +278,12 @@ void main() {
   group('SearchSuggestion properties', () {
     test('const constructor works', () {
       const suggestion = SearchSuggestion(
-        type: SuggestionType.packages,
+        type: SuggestionType.catalog,
         id: 1,
         name: 'Test',
         routePath: '/test',
       );
-      expect(suggestion.type, SuggestionType.packages);
+      expect(suggestion.type, SuggestionType.catalog);
       expect(suggestion.id, 1);
       expect(suggestion.name, 'Test');
       expect(suggestion.routePath, '/test');

@@ -1,7 +1,11 @@
 name: mobile_app
 description: "Wedding Decoration Flower - CBIR Mobile App"
 publish_to: 'none'
-version: 1.0.0+1
+# Semver x.y.z pubspec + build number N yang naik OTOMATIS TIAP SABTU lewat
+# scripts/bump_weekly_version.ps1 terjadwal.
+# VersionName "1.0.0.<N>" yang tampil di HP di-derive di android/app/build.gradle.kts
+# karena pubspec hanya menerima semver x.y.z+build.
+version: 1.0.0+3
 
 environment:
   sdk: ^3.12.1
@@ -18,6 +22,15 @@ dependencies:
   go_router: ^17.3.0
   dio: ^5.7.0
   pretty_dio_logger: ^1.4.0
+  # GraphQL support (hybrid: REST + GraphQL)
+  graphql_flutter: ^5.1.2
+  gql: ^1.0.1
+  gql_http_link: ^1.0.1
+  gql_dedupe_link: ^2.0.3
+  # gRPC support
+  grpc: ^5.2.0
+  # Must match protoc-gen-dart 25 generated wedding.user.v1 clients.
+  protobuf: ^6.1.0
   flutter_secure_storage: ^10.3.1
   hive: ^2.2.3
   hive_flutter: ^1.1.0
@@ -39,6 +52,9 @@ dependencies:
   pusher_channels_flutter: ^2.4.0
   webview_flutter: ^4.10.0
   geolocator: ^13.0.2
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
+  geocoding: ^3.0.0
   permission_handler: ^12.0.3
   lottie: ^3.3.1
   flutter_animate: ^4.5.2
@@ -93,12 +109,23 @@ flutter:
     - assets/images/
     - assets/images/article/
     - assets/images/Google/
-    - assets/images/package/
+    - assets/images/catalog/
     - assets/images/placeholders/
-    - assets/images/product/
     - assets/images/tabIcons/
     - assets/animations/
     - assets/icons/
+    # Font aplikasi: Instrument Sans, tersedia secara lokal agar seluruh
+    # teks konsisten dan tidak bergantung pada unduhan runtime.
+    - assets/fonts/
+  fonts:
+    - family: InstrumentSans
+      fonts:
+        - asset: assets/fonts/Instrument_Sans/static/InstrumentSans-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Instrument_Sans/static/InstrumentSans-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Instrument_Sans/static/InstrumentSans-Italic.ttf
+          style: italic
 
 flutter_launcher_icons:
   android: true

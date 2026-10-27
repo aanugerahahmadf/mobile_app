@@ -1,4 +1,4 @@
-import 'dart:ui';
+import '../../../../../core/widgets/app_blur_backdrop/app_blur_backdrop.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -153,54 +153,44 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryPage>
               AppSizes.md,
               0,
             ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(14),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-                child: Container(
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  alignment: Alignment.centerLeft,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSizes.sm,
-                    ),
-                    itemCount: tabLabels.length,
-                    separatorBuilder: (_, _) =>
-                        const SizedBox(width: AppSizes.xs),
-                    itemBuilder: (_, i) {
-                      final isSelected = _tabController.index == i;
-                      return Center(
-                        child: FilterChip(
-                          label: Text(
-                            tabLabels[i],
-                            style: TextStyle(
-                              color: isSelected
-                                  ? AppColors.primaryColor
-                                  : AppColors.textSecondary,
-                            ),
+            child: AppBlurBackdrop(
+              child: Container(
+                height: 48,
+                alignment: Alignment.centerLeft,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: AppSizes.sm),
+                  itemCount: tabLabels.length,
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(width: AppSizes.xs),
+                  itemBuilder: (_, i) {
+                    final isSelected = _tabController.index == i;
+                    return Center(
+                      child: FilterChip(
+                        label: Text(
+                          tabLabels[i],
+                          style: TextStyle(
+                            color: isSelected
+                                ? AppColors.primaryColor
+                                : AppColors.textSecondary,
                           ),
-                          selected: isSelected,
-                          onSelected: (_) {
-                            setState(() => _activeStatus = _tabStatuses[i]);
-                            _tabController.animateTo(i);
-                            ref
-                                .read(orderProvider.notifier)
-                                .fetchOrders(
-                                  status: _activeStatus,
-                                  refresh: true,
-                                );
-                          },
-                          selectedColor: AppColors.secondaryColor,
-                          checkmarkColor: AppColors.primaryColor,
                         ),
-                      );
-                    },
-                  ),
+                        selected: isSelected,
+                        onSelected: (_) {
+                          setState(() => _activeStatus = _tabStatuses[i]);
+                          _tabController.animateTo(i);
+                          ref
+                              .read(orderProvider.notifier)
+                              .fetchOrders(
+                                status: _activeStatus,
+                                refresh: true,
+                              );
+                        },
+                        selectedColor: AppColors.secondaryColor,
+                        checkmarkColor: AppColors.primaryColor,
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
@@ -405,8 +395,8 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryPage>
                                         extra: {
                                           'package_id':
                                               '${order['package_id'] ?? ''}',
-                                          'product_id':
-                                              '${order['product_id'] ?? ''}',
+                                          'catalog_id':
+                                              '${order['catalog_id'] ?? ''}',
                                           'name':
                                               (order['item']
                                                   as Map<

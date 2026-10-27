@@ -1,4 +1,4 @@
-﻿import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_app/features/search/data/models/search_result/search_result.dart';
 import 'package:mobile_app/features/search/data/models/search_suggestion/search_suggestion.dart';
 
@@ -12,7 +12,7 @@ void main() {
     test('constructor with items', () {
       final items = [
         const SearchSuggestion(
-          type: SuggestionType.packages,
+          type: SuggestionType.catalog,
           id: 1,
           name: 'Test',
           routePath: '/test',
@@ -39,20 +39,20 @@ void main() {
       };
       final result = SearchResult.fromJson(json);
       expect(result.items.length, 2);
-      expect(result.items[0].type, SuggestionType.packages);
+      expect(result.items[0].type, SuggestionType.catalog);
       expect(result.items[0].name, 'Paket A');
       expect(result.items[1].name, 'Paket B');
     });
 
-    test('parses products correctly', () {
+    test('parses catalogs correctly', () {
       final json = {
-        'products': [
-          {'id': 3, 'name': 'Product A'},
+        'catalogs': [
+          {'id': 3, 'name': 'Catalog A'},
         ],
       };
       final result = SearchResult.fromJson(json);
       expect(result.items.length, 1);
-      expect(result.items[0].type, SuggestionType.products);
+      expect(result.items[0].type, SuggestionType.catalog);
     });
 
     test('parses categories correctly', () {
@@ -154,15 +154,14 @@ void main() {
       expect(result.items[0].type, SuggestionType.weddingPolicy);
     });
 
-    test('parses vendors correctly', () {
+    test('ignores unknown result keys', () {
       final json = {
-        'vendors': [
-          {'id': 13, 'store_name': 'Vendor A'},
+        'unknown_key': [
+          {'id': 13, 'store_name': 'Unknown A'},
         ],
       };
       final result = SearchResult.fromJson(json);
-      expect(result.items.length, 1);
-      expect(result.items[0].type, SuggestionType.vendors);
+      expect(result.items, isEmpty);
     });
 
     test('parses multiple types at once', () {
@@ -170,8 +169,8 @@ void main() {
         'packages': [
           {'id': 1, 'name': 'Paket A'},
         ],
-        'products': [
-          {'id': 2, 'name': 'Product A'},
+        'catalogs': [
+          {'id': 2, 'name': 'Catalog A'},
         ],
         'categories': [
           {'id': 3, 'name': 'Category A'},
@@ -188,10 +187,7 @@ void main() {
     });
 
     test('handles missing type keys gracefully', () {
-      final json = {
-        'packages': null,
-        'products': [],
-      };
+      final json = {'packages': null, 'catalogs': []};
       final result = SearchResult.fromJson(json);
       expect(result.items, isEmpty);
     });
@@ -212,7 +208,7 @@ void main() {
     test('handles empty lists for all types', () {
       final json = {
         'packages': [],
-        'products': [],
+        'catalogs': [],
         'categories': [],
         'vouchers': [],
         'orders': [],
@@ -222,7 +218,6 @@ void main() {
         'helps': [],
         'histories': [],
         'wedding_policy': [],
-        'vendors': [],
       };
       final result = SearchResult.fromJson(json);
       expect(result.items, isEmpty);

@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
@@ -31,7 +31,7 @@ class _MockAdapter implements HttpClientAdapter {
     return ResponseBody.fromString(
       jsonEncode({
         'status': 'success',
-        'data': <String, dynamic>{'packages': [], 'products': []},
+        'data': <String, dynamic>{'packages': [], 'catalogs': []},
       }),
       200,
       headers: {

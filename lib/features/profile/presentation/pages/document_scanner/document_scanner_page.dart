@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../../core/constants/app_colors/app_colors.dart';
@@ -34,12 +35,14 @@ class _DocumentScannerPageState extends State<DocumentScannerPage>
     with WidgetsBindingObserver {
   CameraController? _cameraController;
   TextRecognizer? _textRecognizer;
+  final FlutterTts _tts = FlutterTts();
   bool _isProcessing = false;
   bool _detected = false;
   bool _captured = false;
   bool _cameraReady = false;
   bool _tooFar = false;
   bool _validationFailed = false;
+  bool _isMuted = false;
   File? _capturedImage;
   int _stableCounter = 0;
   DateTime _lastProcessAt = DateTime.fromMillisecondsSinceEpoch(0);
@@ -50,6 +53,7 @@ class _DocumentScannerPageState extends State<DocumentScannerPage>
     WidgetsBinding.instance.addObserver(this);
     _initializeCamera();
     _textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
+    _initTts();
   }
 
   @override
@@ -57,6 +61,7 @@ class _DocumentScannerPageState extends State<DocumentScannerPage>
     WidgetsBinding.instance.removeObserver(this);
     _cameraController?.dispose();
     _textRecognizer?.close();
+    _tts.stop();
     super.dispose();
   }
 
@@ -84,12 +89,33 @@ class _DocumentScannerPageState extends State<DocumentScannerPage>
     await _initCamera();
   }
 
+  Future<void> _initTts() async {
+    final locale = Platform.localeName;
+    final langCode = locale.split('_').first;
+    if (langCode == 'id') {
+      await _tts.setLanguage('id-ID');
+    } else {
+      await _tts.setLanguage('en-US');
+    }
+    await _tts.setSpeechRate(0.5);
+    await _tts.setVolume(1.0);
+    await _tts.setPitch(1.0);
+  }
+
+  Future<void> _speak(String text) async {
+    if (_isMuted) return;
+    await _tts.stop();
+    await _tts.speak(text);
+  }
+
   Future<void> _initCamera() async {
     try {
       await _cameraController!.initialize();
       if (mounted) {
         setState(() => _cameraReady = true);
         _cameraController!.startImageStream(_processImage);
+        final l = AppLocalizations.of(context);
+        if (l != null) _speak(l.voiceDocumentGreeting);
       }
     } catch (_) {
       if (mounted) {
@@ -111,6 +137,10 @@ class _DocumentScannerPageState extends State<DocumentScannerPage>
         if (score >= 3) {
           _stableCounter++;
           setState(() => _detected = true);
+          if (_stableCounter == 1) {
+            final l = AppLocalizations.of(context);
+            if (l != null) _speak(l.voiceDocumentDetected);
+          }
           if (_stableCounter >= 6) {
             _capturePhoto();
           }
@@ -173,6 +203,10 @@ class _DocumentScannerPageState extends State<DocumentScannerPage>
       if (mounted) {
         setState(() {
           _tooFar = score > 0 && score < 3 && text.trim().length < 25;
+          if (_tooFar) {
+            final l = AppLocalizations.of(context);
+            if (l != null) _speak(l.voiceDocumentTooFar);
+          }
         });
       }
       return score;
@@ -195,12 +229,16 @@ class _DocumentScannerPageState extends State<DocumentScannerPage>
           _capturedImage = file;
           _cameraController!.stopImageStream();
         });
+        final l = AppLocalizations.of(context);
+        if (l != null) _speak(l.voiceDocumentCaptured);
       } else {
         _stableCounter = 0;
         setState(() {
           _detected = false;
           _validationFailed = true;
         });
+        final l = AppLocalizations.of(context);
+        if (l != null) _speak(l.voiceDocumentValidationFailed);
         Timer(const Duration(seconds: 2), () {
           if (mounted) setState(() => _validationFailed = false);
         });
@@ -271,6 +309,11 @@ class _DocumentScannerPageState extends State<DocumentScannerPage>
         CameraPreview(_cameraController!),
         _buildOverlay(),
         Positioned(
+          top: MediaQuery.of(context).padding.top + 8,
+          right: 16,
+          child: _buildMuteButton(),
+        ),
+        Positioned(
           left: 0,
           right: 0,
           bottom: bottomPadding + 120,
@@ -330,6 +373,35 @@ class _DocumentScannerPageState extends State<DocumentScannerPage>
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildMuteButton() {
+    return GestureDetector(
+      onTap: () {
+        setState(() => _isMuted = !_isMuted);
+        if (_isMuted) {
+          _tts.stop();
+        } else {
+          final l = AppLocalizations.of(context);
+          if (l != null) {
+            _speak(l.voiceDocumentGreeting);
+          }
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.5),
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white24),
+        ),
+        child: Icon(
+          _isMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
+          color: Colors.white,
+          size: 22,
+        ),
+      ),
     );
   }
 

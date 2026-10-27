@@ -103,9 +103,9 @@ class _NotificationSettingsPageState extends State<NotificationSettingsPage> {
                   l: l,
                   icon: Icons.shopping_bag_outlined,
                   iconColor: const Color(0xFF2196F3),
-                  title: l.productNotifications,
-                  subtitle: l.productNotificationsDesc,
-                  category: 'products',
+                  title: l.catalogNotifications,
+                  subtitle: l.catalogNotificationsDesc,
+                  category: 'catalogs',
                 ),
                 _buildCategoryTile(
                   l: l,

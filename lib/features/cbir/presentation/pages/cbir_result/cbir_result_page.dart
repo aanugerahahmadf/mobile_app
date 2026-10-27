@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'dart:ui';
+import '../../../../../core/widgets/app_blur_backdrop/app_blur_backdrop.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -60,10 +60,7 @@ class _CbirResultPageState extends ConsumerState<CbirResultPage> {
     } catch (_) {}
   }
 
-  String _routeType(String cbirType) {
-    return cbirType == 'package' ? 'packages' : 'products';
-  }
-
+  // Katalog kini satu entitas, jadi tipe CBIR tidak lagi memengaruhi rute.
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
@@ -144,55 +141,45 @@ class _CbirResultPageState extends ConsumerState<CbirResultPage> {
         AppSizes.md,
         0,
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(14),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSizes.sm,
-              vertical: 6,
+      child: AppBlurBackdrop(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSizes.sm,
+          vertical: 6,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            StyledSortChips(
+              options: _sortOptions(l),
+              selectedValue: state.sortBy,
+              onChanged: (v) => notifier.setSortBy(v),
             ),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
+            SizedBox(height: 6),
+            Row(
               children: [
-                StyledSortChips(
-                  options: _sortOptions(l),
-                  selectedValue: state.sortBy,
-                  onChanged: (v) => notifier.setSortBy(v),
-                ),
-                SizedBox(height: 6),
-                Row(
-                  children: [
-                    if (_categories.isNotEmpty)
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(right: 8),
-                          child: StyledCategoryDropdown(
-                            value: state.categoryId,
-                            hint: l.allCategories,
-                            categories: _categories,
-                            onChanged: (v) => notifier.setCategoryId(v),
-                          ),
-                        ),
+                if (_categories.isNotEmpty)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: StyledCategoryDropdown(
+                        value: state.categoryId,
+                        hint: l.allCategories,
+                        categories: _categories,
+                        onChanged: (v) => notifier.setCategoryId(v),
                       ),
-                    StyledChoiceChip(
-                      label: l.discount,
-                      selected: state.hasDiscount == true,
-                      onSelected: () =>
-                          notifier.setHasDiscount(state.hasDiscount != true),
-                      icon: Icons.discount_outlined,
                     ),
-                  ],
+                  ),
+                StyledChoiceChip(
+                  label: l.discount,
+                  selected: state.hasDiscount == true,
+                  onSelected: () =>
+                      notifier.setHasDiscount(state.hasDiscount != true),
+                  icon: Icons.discount_outlined,
                 ),
               ],
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -218,8 +205,7 @@ class _CbirResultPageState extends ConsumerState<CbirResultPage> {
       item: item.data,
       type: item.type,
       similarity: item.similarity,
-      onTap: () =>
-          context.go('/catalog/${_routeType(item.type)}/${item.data.id}'),
+      onTap: () => context.go('/catalog/${item.data.id}'),
     );
   }
 }

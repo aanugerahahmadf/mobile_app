@@ -394,6 +394,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final respData = response.data as Map<String, dynamic>? ?? {};
       final inner = respData['data'] as Map<String, dynamic>? ?? respData;
 
+      // 2FA aktif: server sengaja TIDAK menerbitkan token -- sama seperti pada
+      // login email/kata sandi.
+      //
+      // Cabang ini WAJIB ada di sini. Flow "akun Google sudah terdaftar + multi
+      // two factor aktif" berakhir di OtpEmailOrTwoFactory, dan tanpa baris ini
+      // response itu jatuh ke `token == null` di bawah lalu dilempar sebagai
+      // AuthError -- artinya akun Google yang 2FA-nya aktif tidak akan pernah
+      // sampai ke sheet challenge, selalu gagal login.
+      if (respData['status'] == 'two_factor_required') {
+        state = AuthTwoFactorRequired(
+          challengeToken: inner['challenge_token'] as String? ?? '',
+          method: inner['method'] as String? ?? 'authenticator',
+          email: inner['email'] as String? ?? '',
+        );
+        return;
+      }
+
       final token = inner['token'] as String?;
       final userMap = inner['user'] as Map<String, dynamic>?;
       if (token == null || userMap == null) {
@@ -456,6 +473,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final respData = response.data as Map<String, dynamic>? ?? {};
       final inner = respData['data'] as Map<String, dynamic>? ?? respData;
 
+      // 2FA aktif: server sengaja TIDAK menerbitkan token.
+      if (respData['status'] == 'two_factor_required') {
+        state = AuthTwoFactorRequired(
+          challengeToken: inner['challenge_token'] as String? ?? '',
+          method: inner['method'] as String? ?? 'authenticator',
+          email: inner['email'] as String? ?? '',
+        );
+        return;
+      }
+
       final token = inner['token'] as String?;
       final userMap = inner['user'] as Map<String, dynamic>?;
       if (token == null || userMap == null) {
@@ -515,6 +542,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       final respData = response.data as Map<String, dynamic>? ?? {};
       final inner = respData['data'] as Map<String, dynamic>? ?? respData;
+
+      // 2FA aktif: server sengaja TIDAK menerbitkan token.
+      if (respData['status'] == 'two_factor_required') {
+        state = AuthTwoFactorRequired(
+          challengeToken: inner['challenge_token'] as String? ?? '',
+          method: inner['method'] as String? ?? 'authenticator',
+          email: inner['email'] as String? ?? '',
+        );
+        return;
+      }
 
       final token = inner['token'] as String?;
       final userMap = inner['user'] as Map<String, dynamic>?;
@@ -690,6 +727,33 @@ class AuthNotifier extends StateNotifier<AuthState> {
     } catch (e) {
       state = AuthError(AppErrorCodes.anErrorOccurred);
     }
+  }
+
+  /// Logout untuk melanjutkan alur auth, lalu SIGN IN LAGI dengan akun yang
+  /// sama.
+  ///
+  /// Berbeda dengan [logout]: method itu, kalau ada akun tersimpan lain,
+  /// langsung `_switchToAccount(0)` -- jadi orang masuk ke akun yang BERBEDA.
+  /// Di alur Security Question itu berbahaya: akun yang sedang disiapkan 2FA
+  /// akan ditinggalkan, dan yang masuk justru akun lain di perangkat ini.
+  ///
+  /// Yang terjadi di sini persis seperti [logout], kecuali:
+  ///   - akun tersimpan TIDAK dihapus, hanya token aktifnya yang dibuang;
+  ///   - tidak ada switch ke akun lain;
+  ///   - state berakhir di AuthInitial supaya sheet Sign In bisa dibuka.
+  ///
+  /// Penanda "pertanyaan keamanan sudah dijawab" sengaja TIDAK dihapus --
+  /// hanya [deleteAccount] yang boleh melakukannya. Kalau penandanya ikut
+  /// hilang, Sign In berikutnya akan menanyakan Security Question lagi dan
+  /// alurnya berputar.
+  Future<void> logoutForReauth() async {
+    state = const AuthLoading();
+    try {
+      await _dio.post(ApiEndpoints.logout);
+    } catch (_) {}
+    await clearGuestMode();
+    await _storage.delete(key: 'auth_token');
+    state = const AuthInitial();
   }
 
   Future<void> logout() async {

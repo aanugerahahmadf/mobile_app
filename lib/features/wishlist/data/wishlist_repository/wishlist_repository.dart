@@ -11,21 +11,13 @@ class WishlistRepository {
     return [];
   }
 
-  Future<void> toggleWishlist({String? packageId, String? productId}) async {
+  Future<void> toggleWishlist({String? catalogId}) async {
     final body = <String, dynamic>{};
-    if (packageId != null) body['package_id'] = packageId;
-    if (productId != null) body['product_id'] = productId;
+    if (catalogId != null) body['catalog_id'] = catalogId;
     await _dio.post(ApiEndpoints.wishlistToggle, data: body);
   }
 
-  Future<void> removeFromWishlist(String id, {bool isProduct = false}) async {
-    if (isProduct) {
-      await _dio.delete(
-        ApiEndpoints.wishlistItem(id),
-        queryParameters: {'product_id': id},
-      );
-    } else {
-      await _dio.delete(ApiEndpoints.wishlistItem(id));
-    }
+  Future<void> removeFromWishlist(String catalogId) async {
+    await _dio.delete(ApiEndpoints.wishlistItem(catalogId));
   }
 }

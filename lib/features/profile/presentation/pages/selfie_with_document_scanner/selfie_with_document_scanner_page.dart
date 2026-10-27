@@ -3,6 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../../core/constants/app_colors/app_colors.dart';
@@ -40,11 +41,15 @@ class _SelfieWithDocumentScannerPageState
   CameraController? _cameraController;
   FaceDetector? _faceDetector;
   TextRecognizer? _textRecognizer;
+  final FlutterTts _tts = FlutterTts();
   bool _isDetecting = false;
   bool _cameraReady = false;
   bool _captured = false;
   bool _faceInPlace = false;
   bool _cardDetected = false;
+  bool _isMuted = false;
+  bool _spokeFaceDetected = false;
+  bool _spokeCardDetected = false;
   File? _capturedImage;
   int _stableCounter = 0;
   DateTime _lastProcessAt = DateTime.fromMillisecondsSinceEpoch(0);
@@ -63,6 +68,7 @@ class _SelfieWithDocumentScannerPageState
       ),
     );
     _textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
+    _initTts();
   }
 
   @override
@@ -71,6 +77,7 @@ class _SelfieWithDocumentScannerPageState
     _cameraController?.dispose();
     _faceDetector?.close();
     _textRecognizer?.close();
+    _tts.stop();
     super.dispose();
   }
 
@@ -102,12 +109,33 @@ class _SelfieWithDocumentScannerPageState
     await _initCamera();
   }
 
+  Future<void> _initTts() async {
+    final locale = Platform.localeName;
+    final langCode = locale.split('_').first;
+    if (langCode == 'id') {
+      await _tts.setLanguage('id-ID');
+    } else {
+      await _tts.setLanguage('en-US');
+    }
+    await _tts.setSpeechRate(0.5);
+    await _tts.setVolume(1.0);
+    await _tts.setPitch(1.0);
+  }
+
+  Future<void> _speak(String text) async {
+    if (_isMuted) return;
+    await _tts.stop();
+    await _tts.speak(text);
+  }
+
   Future<void> _initCamera() async {
     try {
       await _cameraController!.initialize();
       if (mounted) {
         setState(() => _cameraReady = true);
         _cameraController!.startImageStream(_processImage);
+        final l = AppLocalizations.of(context);
+        if (l != null) _speak(l.voiceSelfieDocGreeting);
       }
     } catch (_) {
       if (mounted) {
@@ -150,6 +178,24 @@ class _SelfieWithDocumentScannerPageState
       _faceInPlace = centered;
       _cardDetected = cardDetected;
     });
+
+    // Voice feedback for face detected
+    if (centered && !_spokeFaceDetected) {
+      setState(() => _spokeFaceDetected = true);
+      final l = AppLocalizations.of(context);
+      if (l != null) _speak(l.voiceSelfieDocFaceDetected);
+    } else if (!centered) {
+      setState(() => _spokeFaceDetected = false);
+    }
+
+    // Voice feedback for card detected
+    if (cardDetected && !_spokeCardDetected) {
+      setState(() => _spokeCardDetected = true);
+      final l = AppLocalizations.of(context);
+      if (l != null) _speak(l.voiceSelfieDocCardDetected);
+    } else if (!cardDetected) {
+      setState(() => _spokeCardDetected = false);
+    }
 
     if (centered && cardDetected) {
       _stableCounter++;
@@ -260,6 +306,8 @@ class _SelfieWithDocumentScannerPageState
         _capturedImage = File(photo.path);
         _cameraController!.stopImageStream();
       });
+      final l = AppLocalizations.of(context);
+      if (l != null) _speak(l.voiceSelfieDocCaptured);
     } catch (_) {
       _stableCounter = 0;
       if (mounted) setState(() => _faceInPlace = false);
@@ -353,6 +401,11 @@ class _SelfieWithDocumentScannerPageState
           ),
         ),
         Positioned(
+          top: MediaQuery.of(context).padding.top + 8,
+          right: 16,
+          child: _buildMuteButton(),
+        ),
+        Positioned(
           left: 20,
           right: 20,
           bottom: MediaQuery.of(context).padding.bottom + 104,
@@ -396,6 +449,35 @@ class _SelfieWithDocumentScannerPageState
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildMuteButton() {
+    return GestureDetector(
+      onTap: () {
+        setState(() => _isMuted = !_isMuted);
+        if (_isMuted) {
+          _tts.stop();
+        } else {
+          final l = AppLocalizations.of(context);
+          if (l != null) {
+            _speak(l.voiceSelfieDocGreeting);
+          }
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.5),
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white24),
+        ),
+        child: Icon(
+          _isMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
+          color: Colors.white,
+          size: 22,
+        ),
+      ),
     );
   }
 

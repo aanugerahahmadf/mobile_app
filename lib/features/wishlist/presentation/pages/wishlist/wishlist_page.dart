@@ -79,21 +79,18 @@ class _WishlistPageState extends ConsumerState<WishlistPage> {
                 itemCount: state.items.length,
                 itemBuilder: (_, i) {
                   final item = Map<String, dynamic>.from(state.items[i]);
-                  final resourceType =
-                      item['resource_type'] as String? ?? 'product';
-                  final type = resourceType == 'package'
-                      ? 'packages'
-                      : 'products';
-                  final itemId =
-                      item['product_id'] ?? item['package_id'] ?? item['id'];
-                  if (item['id'] == null && itemId != null) {
-                    item['id'] = itemId;
+                  // Wishlist lama masih menyimpan `id` baris, bukan id katalog;
+                  // fallback ke `catalog_id` supaya kartu tetap bisa dibuka.
+                  final catalogId =
+                      item['catalog_id'] ?? item['id'];
+                  if (item['id'] == null && catalogId != null) {
+                    item['id'] = catalogId;
                   }
 
                   return CombinedCard(
                     item: ItemModel.fromJson(item),
-                    type: type,
-                    onTap: () => context.go('/catalog/$type/$itemId'),
+                    type: 'catalog',
+                    onTap: () => context.go('/catalog/$catalogId'),
                   );
                 },
               ),

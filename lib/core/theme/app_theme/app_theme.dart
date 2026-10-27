@@ -1,9 +1,35 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../constants/app_colors/app_colors.dart';
 import '../../constants/app_sizes/app_sizes.dart';
 
 class AppTheme {
+  static TextTheme _textTheme(Color primary, Color secondary) {
+    TextStyle style(double size, FontWeight weight, Color color) => TextStyle(
+      fontFamily: 'InstrumentSans',
+      fontSize: size,
+      fontWeight: weight,
+      color: color,
+    );
+
+    return TextTheme(
+      displayLarge: style(57, FontWeight.w400, primary),
+      displayMedium: style(45, FontWeight.w400, primary),
+      displaySmall: style(36, FontWeight.w400, primary),
+      headlineLarge: style(32, FontWeight.w600, primary),
+      headlineMedium: style(28, FontWeight.w600, primary),
+      headlineSmall: style(24, FontWeight.w600, primary),
+      titleLarge: style(22, FontWeight.w600, primary),
+      titleMedium: style(16, FontWeight.w400, primary),
+      titleSmall: style(14, FontWeight.w400, primary),
+      bodyLarge: style(16, FontWeight.w400, primary),
+      bodyMedium: style(14, FontWeight.w400, primary),
+      bodySmall: style(12, FontWeight.w400, secondary),
+      labelLarge: style(14, FontWeight.w400, primary),
+      labelMedium: style(12, FontWeight.w400, secondary),
+      labelSmall: style(11, FontWeight.w400, secondary),
+    );
+  }
+
   static ThemeData get lightTheme {
     final colorScheme = ColorScheme.fromSeed(
       seedColor: AppColors.primaryColor,
@@ -20,17 +46,18 @@ class AppTheme {
 
     return ThemeData(
       useMaterial3: true,
-      fontFamily: GoogleFonts.inter().fontFamily,
+      fontFamily: 'InstrumentSans',
+      textTheme: _textTheme(AppColors.textPrimary, AppColors.textSecondary),
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: AppColors.backgroundColor,
+      scaffoldBackgroundColor: Colors.transparent,
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.surfaceColor,
         foregroundColor: AppColors.textPrimary,
         elevation: 0,
         scrolledUnderElevation: 1,
         centerTitle: true,
-        titleTextStyle: GoogleFonts.inter(
-          fontSize: 17, fontWeight: FontWeight.w600, color: AppColors.textPrimary,
+        titleTextStyle: TextStyle(fontFamily: 'InstrumentSans', 
+          fontSize: 22, fontWeight: FontWeight.w600, color: AppColors.textPrimary,
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -43,8 +70,8 @@ class AppTheme {
             borderRadius: BorderRadius.circular(AppSizes.buttonRadius),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 15),
-          textStyle: GoogleFonts.inter(
-            fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white,
+          textStyle: TextStyle(fontFamily: 'InstrumentSans', 
+            fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white,
           ),
         ),
       ),
@@ -56,15 +83,15 @@ class AppTheme {
             borderRadius: BorderRadius.circular(AppSizes.buttonRadius),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 15),
-          textStyle: GoogleFonts.inter(
-            fontSize: 15, fontWeight: FontWeight.w600,
+          textStyle: TextStyle(fontFamily: 'InstrumentSans', 
+            fontSize: 14, fontWeight: FontWeight.w600,
           ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primaryColor,
-          textStyle: GoogleFonts.inter(
+          textStyle: TextStyle(fontFamily: 'InstrumentSans', 
             fontSize: 14, fontWeight: FontWeight.w600,
           ),
         ),
@@ -72,7 +99,7 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.backgroundColor,
-        hintStyle: GoogleFonts.inter(
+        hintStyle: TextStyle(fontFamily: 'InstrumentSans', 
           fontSize: 14, fontWeight: FontWeight.w400,
           color: AppColors.textTertiary,
         ),
@@ -115,8 +142,8 @@ class AppTheme {
         unselectedItemColor: AppColors.textSecondary,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
-        selectedLabelStyle: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-        unselectedLabelStyle: TextStyle(fontSize: 11, fontWeight: FontWeight.w400),
+        selectedLabelStyle: TextStyle(fontFamily: 'InstrumentSans', fontSize: 12, fontWeight: FontWeight.w600),
+        unselectedLabelStyle: TextStyle(fontFamily: 'InstrumentSans', fontSize: 12, fontWeight: FontWeight.w400),
       ),
       dividerTheme: DividerThemeData(
         color: AppColors.dividerColor,
@@ -129,7 +156,7 @@ class AppTheme {
         ),
         side: BorderSide(color: AppColors.dividerColor),
         selectedColor: AppColors.primaryLight,
-        labelStyle: GoogleFonts.inter(
+        labelStyle: TextStyle(fontFamily: 'InstrumentSans', 
           fontSize: 13, fontWeight: FontWeight.w500,
         ),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -151,7 +178,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
         ),
-        contentTextStyle: GoogleFonts.inter(
+        contentTextStyle: TextStyle(fontFamily: 'InstrumentSans', 
           fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white,
         ),
       ),
@@ -174,17 +201,18 @@ class AppTheme {
 
     return ThemeData(
       useMaterial3: true,
-      fontFamily: GoogleFonts.inter().fontFamily,
+      fontFamily: 'InstrumentSans',
+      textTheme: _textTheme(AppColors.darkTextPrimary, AppColors.darkTextSecondary),
       colorScheme: colorScheme,
-      scaffoldBackgroundColor: AppColors.darkBackground,
+      scaffoldBackgroundColor: Colors.transparent,
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.darkSurface,
         foregroundColor: AppColors.darkTextPrimary,
         elevation: 0,
         scrolledUnderElevation: 1,
         centerTitle: true,
-        titleTextStyle: GoogleFonts.inter(
-          fontSize: 17, fontWeight: FontWeight.w600, color: AppColors.darkTextPrimary,
+        titleTextStyle: TextStyle(fontFamily: 'InstrumentSans', 
+          fontSize: 22, fontWeight: FontWeight.w600, color: AppColors.darkTextPrimary,
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -197,8 +225,8 @@ class AppTheme {
             borderRadius: BorderRadius.circular(AppSizes.buttonRadius),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 15),
-          textStyle: GoogleFonts.inter(
-            fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white,
+          textStyle: TextStyle(fontFamily: 'InstrumentSans', 
+            fontSize: 14, fontWeight: FontWeight.w600, color: Colors.white,
           ),
         ),
       ),
@@ -210,15 +238,15 @@ class AppTheme {
             borderRadius: BorderRadius.circular(AppSizes.buttonRadius),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 15),
-          textStyle: GoogleFonts.inter(
-            fontSize: 15, fontWeight: FontWeight.w600,
+          textStyle: TextStyle(fontFamily: 'InstrumentSans', 
+            fontSize: 14, fontWeight: FontWeight.w600,
           ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.accentColor,
-          textStyle: GoogleFonts.inter(
+          textStyle: TextStyle(fontFamily: 'InstrumentSans', 
             fontSize: 14, fontWeight: FontWeight.w600,
           ),
         ),
@@ -226,7 +254,7 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.darkSurface,
-        hintStyle: GoogleFonts.inter(
+        hintStyle: TextStyle(fontFamily: 'InstrumentSans', 
           fontSize: 14, fontWeight: FontWeight.w400,
           color: AppColors.darkTextTertiary,
         ),
@@ -269,8 +297,8 @@ class AppTheme {
         unselectedItemColor: AppColors.darkTextSecondary,
         type: BottomNavigationBarType.fixed,
         elevation: 0,
-        selectedLabelStyle: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-        unselectedLabelStyle: TextStyle(fontSize: 11, fontWeight: FontWeight.w400),
+        selectedLabelStyle: TextStyle(fontFamily: 'InstrumentSans', fontSize: 12, fontWeight: FontWeight.w600),
+        unselectedLabelStyle: TextStyle(fontFamily: 'InstrumentSans', fontSize: 12, fontWeight: FontWeight.w400),
       ),
       dividerTheme: DividerThemeData(
         color: AppColors.darkDivider,
@@ -283,7 +311,7 @@ class AppTheme {
         ),
         side: BorderSide(color: AppColors.darkDivider),
         selectedColor: AppColors.primaryDark,
-        labelStyle: GoogleFonts.inter(
+        labelStyle: TextStyle(fontFamily: 'InstrumentSans', 
           fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.darkTextPrimary,
         ),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -306,7 +334,7 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(14),
         ),
-        contentTextStyle: GoogleFonts.inter(
+        contentTextStyle: TextStyle(fontFamily: 'InstrumentSans', 
           fontSize: 14, fontWeight: FontWeight.w500, color: Colors.white,
         ),
       ),

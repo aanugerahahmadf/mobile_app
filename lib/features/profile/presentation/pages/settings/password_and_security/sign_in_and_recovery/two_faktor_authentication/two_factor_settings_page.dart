@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import '../../../../../../../../core/widgets/guest_auth_prompt/guest_auth_prompt.dart';
@@ -250,7 +250,7 @@ class _TwoFactorSettingsPageState extends ConsumerState<TwoFactorSettingsPage> {
                         Text(
                           code,
                           style: AppTextStyles.bodyMedium.copyWith(
-                            fontFamily: 'monospace',
+                            fontFamily: 'InstrumentSans',
                             letterSpacing: 2,
                           ),
                         ),

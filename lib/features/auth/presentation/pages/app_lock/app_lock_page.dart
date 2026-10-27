@@ -7,9 +7,11 @@ import '../../../../../core/constants/app_colors/app_colors.dart';
 import '../../providers/biometric_settings_provider/biometric_settings_provider.dart';
 import '../../providers/auth_provider/auth_provider.dart';
 import '../../../data/biometric_auth_service/biometric_auth_service.dart';
-import '../../widgets/pin_pad/pin_pad.dart';
 import '../../widgets/pin_setup_sheet/pin_setup_sheet.dart';
 import '../../widgets/auth_modals/auth_modals.dart';
+import 'pin_unlock/pin_unlock_page.dart';
+import 'password_unlock/password_unlock_page.dart';
+import 'biometric_unlock/biometric_unlock_page.dart';
 
 class AppLockPage extends ConsumerStatefulWidget {
   const AppLockPage({super.key});
@@ -25,8 +27,14 @@ class _AppLockPageState extends ConsumerState<AppLockPage>
   bool _pinEnabled = false;
   bool _faceEnabled = false;
   bool _fingerprintEnabled = false;
+  bool _passwordEnabled = false;
   bool _anyEnabled = false;
   String _pinBuffer = '';
+  final _passwordController = TextEditingController();
+  bool _passwordError = false;
+  // Track whether biometric auth was attempted and failed, so we can fall back
+  // to PIN instead of showing a blank screen or stuck loading indicator.
+  bool _biometricFailed = false;
   // Guards against re-prompting when the native biometric dialog closes (its
   // dismissal fires a lifecycle resume that would otherwise loop the prompt).
   DateTime _lastAuthAttempt = DateTime.fromMillisecondsSinceEpoch(0);
@@ -41,6 +49,7 @@ class _AppLockPageState extends ConsumerState<AppLockPage>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _passwordController.dispose();
     super.dispose();
   }
 
@@ -62,24 +71,40 @@ class _AppLockPageState extends ConsumerState<AppLockPage>
       _pinEnabled = flags.pin;
       _faceEnabled = flags.face;
       _fingerprintEnabled = flags.fingerprint;
-      _anyEnabled = flags.pin || _hasBiometric;
+      _passwordEnabled = flags.password;
+      _anyEnabled = flags.any;
     });
     if (!_anyEnabled) {
       _goHome();
       return;
     }
+    // Auto-prompt biometric on cold start, but fall back to PIN if it fails
+    // or is unavailable on the device.
     if (_hasBiometric) {
       await _authenticateBiometric();
+      // If biometric failed and PIN is available, show the PIN pad instead
+      // of leaving the user stuck on a blank screen.
+      if (_biometricFailed && _pinEnabled && mounted) {
+        setState(() {
+          _biometricFailed = false;
+        });
+      }
     }
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Reset the biometric-failed flag when the app is paused so that the next
+    // resume will try biometric again (the user may have enrolled it in settings).
+    if (state == AppLifecycleState.paused) {
+      _biometricFailed = false;
+    }
     // Don't re-prompt if: authenticating, no biometric enabled, recently prompted,
-    // or user is currently entering PIN digits (mid-entry).
+    // already fell back to PIN, or user is currently entering PIN digits (mid-entry).
     if (state == AppLifecycleState.resumed &&
         !_authenticating &&
         _hasBiometric &&
+        !_biometricFailed &&
         _pinBuffer.isEmpty &&
         DateTime.now().difference(_lastAuthAttempt).inSeconds > 2) {
       _authenticateBiometric();
@@ -91,47 +116,23 @@ class _AppLockPageState extends ConsumerState<AppLockPage>
     final l = AppLocalizations.of(context)!;
     setState(() => _authenticating = true);
 
-    // Face ID: use AI Core face verification (scan wajah → kamera → server).
-    // Sidik Jari: tetap pakai biometrik perangkat (local_auth).
-    if (_faceEnabled) {
-      await _authenticateWithAiFace(l);
-    } else {
-      await _authenticateWithDeviceBiometric(l);
-    }
-  }
-
-  Future<void> _authenticateWithAiFace(AppLocalizations l) async {
-    // Navigate to face scanner for a live face capture.
-    final path = await context.push<String>('/face-scanner');
-    // Always update timestamp to prevent lifecycle resume from re-prompting.
-    _lastAuthAttempt = DateTime.now();
-    if (path == null || !mounted) {
-      setState(() => _authenticating = false);
-      return;
-    }
-
-    // Verify face against enrolled reference via AI Core.
-    final appLockService = ref.read(appLockServiceProvider);
-    suppressAppLock(const Duration(seconds: 10));
-    final verified = await appLockService.verifyFaceOnServer(path);
-
-    _lastAuthAttempt = DateTime.now();
-    if (!mounted) return;
-    setState(() => _authenticating = false);
-    if (verified) {
-      _goHome();
-    } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(l.failed)));
-    }
+    // Both Face ID and fingerprint use the platform biometric prompt. This
+    // gives iOS Face ID and Android enrolled biometrics the OS-level security
+    // guarantees instead of treating a camera photo as Face ID.
+    await _authenticateWithDeviceBiometric(l);
   }
 
   Future<void> _authenticateWithDeviceBiometric(AppLocalizations l) async {
     final service = BiometricAuthService();
     final available = await service.isAvailable();
     if (!available) {
-      if (mounted) setState(() => _authenticating = false);
+      // Device biometric not available — fall back to PIN if enabled.
+      if (mounted) {
+        setState(() {
+          _authenticating = false;
+          _biometricFailed = true;
+        });
+      }
       return;
     }
     final typeName = await service.biometricTypeName;
@@ -140,8 +141,15 @@ class _AppLockPageState extends ConsumerState<AppLockPage>
     final success = await service.authenticate(reason: reason);
     _lastAuthAttempt = DateTime.now();
     if (!mounted) return;
-    setState(() => _authenticating = false);
-    if (success) _goHome();
+    if (success) {
+      _goHome();
+    } else {
+      // Biometric failed — mark it so the UI can fall back to PIN.
+      setState(() {
+        _authenticating = false;
+        _biometricFailed = true;
+      });
+    }
   }
 
   void _onPinDigit(String d) {
@@ -170,6 +178,22 @@ class _AppLockPageState extends ConsumerState<AppLockPage>
       setState(() {
         _pinBuffer = '';
         _pinError = true;
+      });
+    }
+  }
+
+  Future<void> _verifyPassword() async {
+    final ok = await verifyAppLockPassword(
+      _passwordController.text,
+      email: ref.read(currentAccountEmailProvider),
+    );
+    if (!mounted) return;
+    if (ok) {
+      _goHome();
+    } else {
+      setState(() {
+        _passwordController.clear();
+        _passwordError = true;
       });
     }
   }
@@ -250,7 +274,11 @@ class _AppLockPageState extends ConsumerState<AppLockPage>
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    final showPin = _pinEnabled;
+    // Show PIN pad when: PIN is enabled AND (biometric failed OR no biometric
+    // is available on this device). This ensures the user always has a way
+    // to unlock the app, even if biometric is broken or unavailable.
+    final showPin = _pinEnabled && (_biometricFailed || !_hasBiometric);
+    final showPassword = _passwordEnabled && (_biometricFailed || !_hasBiometric);
     return PopScope(
       canPop: false,
       child: Scaffold(
@@ -289,13 +317,13 @@ class _AppLockPageState extends ConsumerState<AppLockPage>
                       l.unlockApp,
                       style: const TextStyle(
                         fontSize: 24,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                         color: Colors.white,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      showPin ? l.enterPinToUnlock : l.useBiometricToUnlock,
+                      showPin || showPassword ? l.enterPinToUnlock : l.useBiometricToUnlock,
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.white.withValues(alpha: 0.7),
@@ -304,69 +332,41 @@ class _AppLockPageState extends ConsumerState<AppLockPage>
                     ),
                     const SizedBox(height: 36),
                     if (showPin) ...[
-                      PinDotDisplay(length: _pinBuffer.length, maxLength: 6),
-                      const SizedBox(height: 8),
-                      if (_pinError)
-                        Text(
-                          l.wrongPin,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      const SizedBox(height: 28),
-                      PinEntryPad(onDigit: _onPinDigit, onDelete: _onPinDelete),
-                      const SizedBox(height: 8),
-                      TextButton(
-                        onPressed: _forgotPin,
-                        child: Text(
-                          l.forgotPin,
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.8),
-                          ),
-                        ),
+                      PinUnlockPage(
+                        length: _pinBuffer.length,
+                        error: _pinError,
+                        onDigit: _onPinDigit,
+                        onDelete: _onPinDelete,
+                        onForgot: _forgotPin,
+                      ),
+                    ] else if (showPassword) ...[
+                      PasswordUnlockPage(
+                        controller: _passwordController,
+                        error: _passwordError,
+                        onSubmit: _verifyPassword,
                       ),
                     ] else if (_authenticating)
-                      const CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      BiometricUnlockPage(
+                        face: _faceEnabled,
+                        authenticating: true,
+                        onAuthenticate: _authenticateBiometric,
                       )
                     else
-                      SizedBox(
-                        width: 200,
-                        height: 48,
-                        child: ElevatedButton.icon(
-                          onPressed: _authenticateBiometric,
-                          icon: Icon(
-                            _faceEnabled
-                                ? Icons.screen_lock_portrait
-                                : Icons.fingerprint,
-                            color: AppColors.primaryDark,
-                          ),
-                          label: Text(
-                            _faceEnabled
-                                ? l.unlockWith.replaceFirst(
-                                    '%s',
-                                    l.appLockFaceId,
-                                  )
-                                : l.unlockWithFingerprint,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primaryDark,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                        ),
+                      BiometricUnlockPage(
+                        face: _faceEnabled,
+                        authenticating: false,
+                        onAuthenticate: _authenticateBiometric,
                       ),
-                    if (showPin && _hasBiometric) ...[
+                    // When PIN is shown after biometric failed, offer a retry button.
+                    if (showPin && _hasBiometric && _biometricFailed) ...[
                       const SizedBox(height: 24),
                       TextButton.icon(
-                        onPressed: _authenticateBiometric,
+                        onPressed: () {
+                          setState(() {
+                            _biometricFailed = false;
+                          });
+                          _authenticateBiometric();
+                        },
                         icon: Icon(
                           _faceEnabled
                               ? Icons.screen_lock_portrait

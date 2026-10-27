@@ -14,6 +14,7 @@ import '../../../../../core/widgets/app_snackbar/app_snackbar.dart';
 import '../../../../../core/widgets/guest_auth_prompt/guest_auth_prompt.dart';
 import '../../../../../core/widgets/two_factor_setup_flow/two_factor_setup_flow.dart';
 import '../../providers/auth_provider/auth_provider.dart';
+import '../../widgets/auth_modals/auth_modals.dart';
 
 /// **Two Factor Auth** -- setup 2FA di tengah alur auth.
 ///
@@ -73,6 +74,24 @@ class _TwoFactorSetupPageState extends ConsumerState<TwoFactorSetupPage> {
   void _goHome() {
     if (!mounted) return;
     context.go('/home');
+  }
+
+  /// Settasan alur Security Question: 2FA baru saja diaktifkan, jadi sesi
+  /// ini belum pernah melewati challenge. Paksa Sign In supaya 2FA benar-benar
+  /// diuji sekali sebelum Home -- kalau langsung `_goHome()`, 2FA terpasang
+  /// tapi belum pernah dipakai, dan Sign In berikutnya baru akan ditolaknya.
+  ///
+  /// Pakai `logoutForReauth()`, bukan `logout()`: yang kedua akan masuk ke akun
+  /// tersimpan lain kalau ada, sehingga orang yang baru saja menyiapkan 2FA
+  /// akun ini justru berakhir di akun berbeda.
+  ///
+  /// Sheet Sign In yang dibuka di sini akan otomatis menampilkan challenge 2FA
+  /// (tahap "OtpEmailOrTwoFactory"), jadi halaman ini tidak perlu memverifikasi
+  /// kode TOTP-nya sendiri untuk kedua kali.
+  Future<void> _finishAndSignIn() async {
+    await ref.read(authProvider.notifier).logoutForReauth();
+    if (!mounted) return;
+    await showSignInSheet(context);
   }
 
   Future<void> _fetchStatus() async {
@@ -150,7 +169,7 @@ class _TwoFactorSetupPageState extends ConsumerState<TwoFactorSetupPage> {
                     title: Text(
                       code,
                       style: const TextStyle(
-                        fontFamily: 'monospace',
+                        fontFamily: 'InstrumentSans',
                         letterSpacing: 2,
                       ),
                     ),
@@ -241,10 +260,11 @@ class _TwoFactorSetupPageState extends ConsumerState<TwoFactorSetupPage> {
                     const SizedBox(height: AppSizes.xl),
 
                     // Alurnya sama dengan Two Factor Setup; hanya
-                    // onFinished yang berbeda.
+                    // onFinished yang berbeda. Selesai di sini harus Sign In
+                    // lagi supaya 2FA benar-benar diuji sekali -- [_finishAndSignIn].
                     TwoFactorSetupFlow(
                       currentType: _currentType,
-                      onFinished: _goHome,
+                      onFinished: _finishAndSignIn,
                       onBackupCodes: _showBackupCodes,
                     ),
                   ],

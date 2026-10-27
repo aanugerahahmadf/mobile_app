@@ -355,7 +355,7 @@ class _FaceScannerPageState extends State<FaceScannerPage>
                   l.faceVerified,
                   textAlign: TextAlign.center,
                   style: AppTextStyles.titleLarge.copyWith(
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -675,7 +675,7 @@ class _FaceScannerPageState extends State<FaceScannerPage>
               l.faceVerified,
               style: AppTextStyles.headlineMedium.copyWith(
                 color: Colors.white,
-                fontWeight: FontWeight.w800,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 8),

@@ -24,6 +24,13 @@ class AppColors {
   static Color get shimmerBase => _isDark ? _darkShimmerBase : _shimmerBaseLight;
   static Color get shimmerHighlight => _isDark ? _darkShimmerHighlight : _shimmerHighlightLight;
 
+  // Frosted backdrop blur spec (see AppBlurBackdrop)
+  // Night: blur 15 + dark tint at 50% opacity (alpha 0x32)
+  // Light: blur 15 + light tint at 50% opacity (alpha 0x32)
+  static const double blurSigma = 15;
+  static const Color blurTintNight = Color(0x32000000);
+  static const Color blurTintLight = Color(0x32FFFFFF);
+
   // Light mode consts
   static const Color _textPrimaryLight = Color(0xFF1A1A2E);
   static const Color _textSecondaryLight = Color(0xFF8E8E9A);

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import '../../../../../core/constants/app_colors/app_colors.dart';
 import '../../../../../core/constants/app_sizes/app_sizes.dart';
@@ -71,17 +70,17 @@ class BankTransferDetail extends StatelessWidget {
             l.totalPayment.toUpperCase(),
             style: AppTextStyles.labelSmall.copyWith(
               color: Colors.white70,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               letterSpacing: 0.6,
             ),
           ),
           const SizedBox(height: 6),
           Text(
             Formatters.currency(amount),
-            style: GoogleFonts.inter(
+            style: TextStyle(fontFamily: 'InstrumentSans', 
               color: Colors.white,
               fontSize: 24,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
               letterSpacing: -0.3,
             ),
           ),
@@ -109,7 +108,7 @@ class BankTransferDetail extends StatelessWidget {
             l.bankAccount,
             style: AppTextStyles.labelSmall.copyWith(
               color: AppColors.textSecondary,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: AppSizes.sm),
@@ -140,10 +139,10 @@ class BankTransferDetail extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       accountNumber,
-                      style: GoogleFonts.inter(
+                      style: TextStyle(fontFamily: 'InstrumentSans', 
                         color: AppColors.textPrimary,
                         fontSize: 16,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
                         letterSpacing: 1.2,
                       ),
                     ),
@@ -187,7 +186,7 @@ class BankTransferDetail extends StatelessWidget {
           l.copy,
           style: AppTextStyles.labelMedium.copyWith(
             color: AppColors.primaryColor,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),
@@ -221,7 +220,7 @@ class BankTransferDetail extends StatelessWidget {
                     '${i + 1}',
                     style: AppTextStyles.labelSmall.copyWith(
                       color: Colors.white,
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),

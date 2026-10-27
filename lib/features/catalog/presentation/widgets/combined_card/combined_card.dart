@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../../core/constants/app_colors/app_colors.dart';
-import '../../../../../core/constants/app_shadows/app_shadows.dart';
+import '../../../../../core/widgets/app_blur_backdrop/app_blur_backdrop.dart';
 import '../../../../../core/widgets/app_shimmer/app_shimmer.dart';
 import '../../../../../core/utils/formatters/formatters.dart';
 import '../../../data/models/item_model/item_model.dart';
@@ -12,6 +12,9 @@ import '../../../../../core/widgets/guest_auth_prompt/guest_auth_prompt.dart';
 
 class CombinedCard extends ConsumerStatefulWidget {
   final ItemModel item;
+
+  /// Sumber daya wishlist yang dipakai saat toggle. Katalog kini satu
+  /// entitas dan API menggunakan field `catalog_id`.
   final String type;
   final double? similarity;
   final VoidCallback? onTap;
@@ -20,7 +23,7 @@ class CombinedCard extends ConsumerStatefulWidget {
   const CombinedCard({
     super.key,
     required this.item,
-    required this.type,
+    this.type = 'catalog',
     this.similarity,
     this.onTap,
     this.onLongPress,
@@ -43,23 +46,21 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
   @override
   Widget build(BuildContext context) {
     // ── Image URL resolution ─────────────────────────────────────────────
-    final media = widget.item.media ?? [];
-    // media[0]['url'] is already normalized by ItemModel.fromJson via Formatters.imageUrl()
-    // Fallback chain: media url -> imageUrl field -> empty string
-    final image = media.isNotEmpty && media[0] is Map
-        ? (media[0]['url'] as String? ?? '').isNotEmpty
-              ? (media[0]['url'] as String)
-              : Formatters.imageUrl(widget.item.imageUrl ?? '')
+    // `thumbnail_url` (WebP ~320px) dipakai untuk kartu grid 2 kolom;
+    // `image_url` (~1024px) hanya fallback supaya kartu tidak pernah kosong.
+    final image = widget.item.thumbnailUrl?.isNotEmpty == true
+        ? widget.item.thumbnailUrl!
         : Formatters.imageUrl(widget.item.imageUrl ?? '');
 
     // ── Data parsing ─────────────────────────────────────────────────────
     final name = widget.item.name;
-    final originalPrice = widget.item.price
-        .toInt(); // harga asli sebelum diskon
-    final discountPrice = widget.item.discountPrice
-        ?.toInt(); // harga setelah diskon (null jika tidak ada)
-    final price = widget.item.finalPrice
-        .toInt(); // harga final yang ditampilkan
+    // Packages are tiers of a catalog. Never display the catalog base price
+    // when tier packages are available; use the cheapest available tier.
+    final tier = widget.item.startingTier;
+    final originalPrice = (tier?.price ?? widget.item.price).toInt();
+    final discountPrice = (tier?.discountPrice ?? widget.item.discountPrice)
+        ?.toInt();
+    final price = (tier?.effectiveFinalPrice ?? widget.item.displayPrice).toInt();
 
     // ── Discount calculation ─────────────────────────────────────────────
     final hasDiscount =
@@ -77,11 +78,7 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
     final id = widget.item.id;
     final isFavorite =
         wishlistItems.any((w) {
-          if (widget.type == 'packages') {
-            return w['package_id']?.toString() == id.toString();
-          } else {
-            return w['product_id']?.toString() == id.toString();
-          }
+          return w['catalog_id']?.toString() == id.toString();
         }) ||
         widget.item.isWishlisted;
 
@@ -97,13 +94,8 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
         scale: _isPressed ? 0.97 : 1.0,
         duration: const Duration(milliseconds: 150),
         curve: Curves.easeOut,
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppColors.surfaceColor,
-            borderRadius: BorderRadius.circular(2),
-            boxShadow: AppShadows.card,
-          ),
-          clipBehavior: Clip.antiAlias,
+        child: AppBlurBackdrop(
+          borderRadius: 2,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -117,6 +109,10 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
                       width: double.infinity,
                       height: double.infinity,
                       fit: BoxFit.cover,
+                      // Kartu grid ~180px logical pada 2 kolom; decode
+                      // 2.5x supaya tetap tajam di layar retina tanpa
+                      // memuat gambar 1024px penuh ke memory.
+                      cacheWidth: 600,
                       loadingBuilder: (context, child, loadingProgress) {
                         if (loadingProgress == null) return child;
                         return const AppShimmer(height: 150);
@@ -177,7 +173,7 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 9,
-                              fontWeight: FontWeight.w800,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
@@ -201,7 +197,7 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
                             style: const TextStyle(
                               color: Colors.white,
                               fontSize: 10,
-                              fontWeight: FontWeight.w800,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
@@ -220,15 +216,9 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
                             );
                             return;
                           }
-                          if (widget.type == 'packages') {
-                            ref
-                                .read(wishlistProvider.notifier)
-                                .toggle(packageId: id.toString());
-                          } else {
-                            ref
-                                .read(wishlistProvider.notifier)
-                                .toggle(productId: id.toString());
-                          }
+                          ref
+                              .read(wishlistProvider.notifier)
+                              .toggle(catalogId: id.toString());
                         },
                         child: Container(
                           padding: const EdgeInsets.all(5),
@@ -285,7 +275,7 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
                             Formatters.currency(price),
                             style: TextStyle(
                               fontSize: 11,
-                              fontWeight: FontWeight.w700,
+                              fontWeight: FontWeight.w600,
                               color: AppColors.primaryTextColor,
                             ),
                             overflow: TextOverflow.ellipsis,
@@ -303,7 +293,6 @@ class _CombinedCardState extends ConsumerState<CombinedCard> {
                             ),
                         ],
                       ),
-                      // Vendor name
                       if (rating > 0)
                         Row(
                           mainAxisAlignment: MainAxisAlignment.end,

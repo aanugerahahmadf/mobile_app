@@ -11,7 +11,7 @@ import '../../../../../core/errors/app_error_codes/app_error_codes.dart';
 import '../../../../../core/widgets/app_button/app_button.dart';
 import '../../../../../core/widgets/app_snackbar/app_snackbar.dart';
 import '../../../../../core/widgets/app_country_picker_field/app_country_picker_field.dart';
-import '../../../../../core/widgets/app_region_picker_field/app_region_picker_field.dart';
+import '../../../../../core/widgets/app_map_address_picker/app_map_address_picker.dart';
 import '../../../../../core/widgets/app_text_field/app_text_field.dart';
 import '../../../../../core/widgets/app_options_picker_sheet/app_options_picker_sheet.dart';
 import '../../../../../core/widgets/app_date_time_picker/app_date_time_picker.dart';
@@ -34,7 +34,11 @@ class CheckoutPage extends ConsumerStatefulWidget {
   final String? type;
   final String? id;
 
-  const CheckoutPage({super.key, this.type, this.id});
+  /// Tier/varian katalog yang dipilih di halaman detail. Nil berarti
+  /// pengguna memesan entitas katalog tanpa memilih tier.
+  final int? tierId;
+
+  const CheckoutPage({super.key, this.type, this.id, this.tierId});
 
   @override
   ConsumerState<CheckoutPage> createState() => _CheckoutPageState();
@@ -61,11 +65,14 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   int? _cityId;
   int? _districtId;
   int? _villageId;
-  String _provinceName = '';
-  String _cityName = '';
-  String _districtName = '';
-  String _villageName = '';
-  String _postalCode = '';
+  final String _provinceName = '';
+  final String _cityName = '';
+  final String _districtName = '';
+  final String _villageName = '';
+  final String _postalCode = '';
+  double? _latitude;
+  double? _longitude;
+  String? _placeId;
 
   DateTime? _eventDate;
   TimeOfDay? _eventTime;
@@ -145,11 +152,19 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   Future<void> _fetchItem() async {
     setState(() => _loadingItem = true);
     try {
-      final endpoint = widget.type == 'packages'
-          ? ApiEndpoints.packageDetail(widget.id!)
-          : ApiEndpoints.productDetail(widget.id!);
-      final res = await DioClient.instance.get(endpoint);
-      final data = res.data['data'] as Map<String, dynamic>? ?? {};
+      final res = await DioClient.instance.get(
+        ApiEndpoints.catalogDetail(widget.id!),
+      );
+      final root = res.data is Map
+          ? Map<String, dynamic>.from(res.data as Map)
+          : <String, dynamic>{};
+      final envelope = root['data'] is Map
+          ? Map<String, dynamic>.from(root['data'] as Map)
+          : root;
+      final raw = envelope['catalog'] ?? root['catalog'] ?? envelope;
+      final data = raw is Map
+          ? Map<String, dynamic>.from(raw)
+          : <String, dynamic>{};
       setState(() => _itemData = data);
     } catch (e) {
       if (mounted) {
@@ -172,7 +187,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       if (items.isNotEmpty) {
         final first = items.first;
         final itemData =
-            (first['package'] ?? first['product']) as Map<String, dynamic>?;
+            (first['package'] ?? first['catalog']) as Map<String, dynamic>?;
         setState(() {
           _itemData = itemData;
           _quantity = (first['quantity'] as int?) ?? 1;
@@ -275,9 +290,34 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     return false;
   }
 
+  /// Tier katalog yang dipilih di halaman detail (jika ada). Dibaca dari
+  /// `tiers` pada respons `/api/catalog/{id}`.
+  Map<String, dynamic>? get _selectedTier {
+    final tierId = widget.tierId;
+    if (tierId == null) return null;
+    final tiers = _itemData?['tiers'];
+    if (tiers is! List) return null;
+    for (final t in tiers) {
+      if (t is Map && '${t['id']}' == '$tierId') {
+        return Map<String, dynamic>.from(t);
+      }
+    }
+    return null;
+  }
+
   int _getItemPrice() {
+    // Harga mengikuti tier terpilih kalau ada; selain itu harga katalog.
+    final tierPrice = _selectedTier?['final_price'] ??
+        _selectedTier?['finalPrice'] ??
+        _selectedTier?['discount_price'] ??
+        _selectedTier?['discountPrice'] ??
+        _selectedTier?['price'];
+    if (tierPrice is num && tierPrice > 0) return tierPrice.toInt();
     if (_itemData != null) {
-      final fp = _itemData!['final_price'] ?? _itemData!['discount_price'];
+      final fp = _itemData!['final_price'] ??
+          _itemData!['finalPrice'] ??
+          _itemData!['discount_price'] ??
+          _itemData!['discountPrice'];
       if (fp != null && fp is num && fp > 0) return fp.toInt();
       final priceRaw = _itemData!['price'];
       return priceRaw is num
@@ -300,6 +340,9 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   }
 
   String _getItemImage() {
+    // Thumbnail kecil (~320px WebP) cukup untuk kartu ringkasan 56px.
+    final thumb = _itemData?['thumbnail_url'] as String?;
+    if (thumb != null && thumb.isNotEmpty) return Formatters.imageUrl(thumb);
     final media = _itemData?['media'] as List? ?? [];
     final String rawImage;
     if (media.isNotEmpty && media[0] is Map) {
@@ -371,10 +414,10 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       }
       final itemId = widget.id ?? '${_itemData?['id'] ?? ''}';
       if (itemId.isEmpty) throw Exception(AppErrorCodes.failedGetOrderId);
-      final isPackage =
-          widget.type == 'packages' || _itemData?['type'] == 'package';
       final data = <String, dynamic>{
-        if (isPackage) 'package_id': itemId else 'product_id': itemId,
+        // A catalog is the parent product. A selected package is its tier,
+        // never a replacement for catalog_id.
+        'catalog_id': itemId,
         'event_date': _eventDate!.toIso8601String().split('T')[0],
         'event_time':
             '${_eventTime!.hour.toString().padLeft(2, '0')}:${_eventTime!.minute.toString().padLeft(2, '0')}',
@@ -389,7 +432,13 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
         'district_name': _districtName,
         'village_name': _villageName,
         'postal_code': _postalCode,
+        'latitude': _latitude,
+        'longitude': _longitude,
+        'place_id': _placeId,
       };
+      if (widget.tierId != null) {
+        data['package_id'] = widget.tierId;
+      }
       if (_provinceId != null) data['province_id'] = _provinceId;
       if (_cityId != null) data['city_id'] = _cityId;
       if (_districtId != null) data['district_id'] = _districtId;
@@ -761,17 +810,15 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
           onChanged: (_) => setState(() {}),
         ),
         SizedBox(height: AppSizes.sm),
-        AppRegionPickerField(
+        AppMapAddressPicker(
           country: _countryController.text,
-          onProvinceIdChanged: (v) => setState(() => _provinceId = v),
-          onCityIdChanged: (v) => setState(() => _cityId = v),
-          onDistrictIdChanged: (v) => setState(() => _districtId = v),
-          onVillageIdChanged: (v) => setState(() => _villageId = v),
-          onProvinceNameChanged: (v) => setState(() => _provinceName = v),
-          onCityNameChanged: (v) => setState(() => _cityName = v),
-          onDistrictNameChanged: (v) => setState(() => _districtName = v),
-          onVillageNameChanged: (v) => setState(() => _villageName = v),
-          onPostalCodeChanged: (v) => setState(() => _postalCode = v),
+          initialAddress: _addressController.text.isNotEmpty ? _addressController.text : null,
+          initialLatitude: _itemData?['latitude'] is double ? _itemData!['latitude'] as double : null,
+          initialLongitude: _itemData?['longitude'] is double ? _itemData!['longitude'] as double : null,
+          onAddressChanged: (v) => setState(() => _addressController.text = v),
+          onLatitudeChanged: (v) => setState(() => _latitude = v),
+          onLongitudeChanged: (v) => setState(() => _longitude = v),
+          onPlaceIdChanged: (v) => setState(() => _placeId = v),
         ),
         SizedBox(height: AppSizes.sm),
         AppTextField(
@@ -1197,7 +1244,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                 color: expired
                     ? AppColors.textTertiary
                     : (isSelected ? Colors.white : AppColors.primaryColor),
-                fontWeight: FontWeight.w700,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 2),
@@ -1236,6 +1283,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
               width: 56,
               height: 56,
               fit: BoxFit.cover,
+              cacheWidth: 160,
               errorBuilder: (_, _, _) => Container(
                 width: 56,
                 height: 56,
