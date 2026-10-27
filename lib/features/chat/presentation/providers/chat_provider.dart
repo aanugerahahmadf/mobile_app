@@ -15,10 +15,7 @@ class ChatLoading extends ChatState {
 class ChatConversationsLoaded extends ChatState {
   final List<Map<String, dynamic>> conversations;
   final int unreadCount;
-  const ChatConversationsLoaded(
-    this.conversations, {
-    this.unreadCount = 0,
-  });
+  const ChatConversationsLoaded(this.conversations, {this.unreadCount = 0});
 }
 
 class ChatMessagesLoaded extends ChatState {
@@ -52,10 +49,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
           (result['conversations'] as List<dynamic>?)
               ?.cast<Map<String, dynamic>>() ??
           [];
-      state = ChatConversationsLoaded(
-        conversations,
-        unreadCount: 0,
-      );
+      state = ChatConversationsLoaded(conversations, unreadCount: 0);
     } on DioException catch (e) {
       state = ChatError(
         e.error?.toString() ?? AppErrorCodes.failedLoadConversations,
@@ -283,10 +277,12 @@ class ChatNotifier extends StateNotifier<ChatState> {
   Future<int> startGuestConversation({
     required String guestId,
     String? csCategory,
+    String? name,
   }) async {
     final result = await _repository.startGuestConversation(
       guestId: guestId,
       csCategory: csCategory,
+      name: name,
     );
     return result['id'] as int;
   }
@@ -353,6 +349,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
     required String guestId,
     required String senderName,
     String? csCategory,
+    String? name,
   }) async {
     try {
       final sent = await _repository.sendGuestMessage(
@@ -360,6 +357,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
         message: message,
         guestId: guestId,
         csCategory: csCategory,
+        name: name,
       );
       final constructed = <String, dynamic>{
         'id': sent['id'],

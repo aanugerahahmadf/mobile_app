@@ -81,8 +81,10 @@ class ChatRepositoryImpl implements ChatRepository {
   Future<Map<String, dynamic>> startGuestConversation({
     required String guestId,
     String? csCategory,
+    String? name,
   }) async {
     final data = <String, dynamic>{'guest_id': guestId};
+    if (name != null && name.trim().isNotEmpty) data['name'] = name.trim();
     if (csCategory != null && csCategory.isNotEmpty) {
       data['cs_category'] = csCategory;
     }
@@ -113,12 +115,14 @@ class ChatRepositoryImpl implements ChatRepository {
     required String message,
     required String guestId,
     String? csCategory,
+    String? name,
   }) async {
     final data = <String, dynamic>{
       'guest_id': guestId,
       'inbox_id': inboxId,
       'message': message,
     };
+    if (name != null && name.trim().isNotEmpty) data['name'] = name.trim();
     if (csCategory != null && csCategory.isNotEmpty) {
       data['cs_category'] = csCategory;
     }

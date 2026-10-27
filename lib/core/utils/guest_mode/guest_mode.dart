@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Kunci penyimpanan flag mode tamu.
 const String kGuestModeKey = 'guest_mode';
+const String kGuestNameKey = 'guest_name';
 
 bool? _cachedGuestMode;
 Future<bool>? _guestModeRead;
@@ -82,3 +83,14 @@ Future<bool> isGuestModeEnabled() async {
 }
 
 Future<void> clearGuestMode() => setGuestMode(false);
+
+Future<String?> getGuestName() async {
+  final value = (await _sharedPreferences).getString(kGuestNameKey)?.trim();
+  return value == null || value.isEmpty ? null : value;
+}
+
+Future<void> setGuestName(String name) async {
+  final value = name.trim();
+  if (value.isEmpty) return;
+  await (await _sharedPreferences).setString(kGuestNameKey, value);
+}

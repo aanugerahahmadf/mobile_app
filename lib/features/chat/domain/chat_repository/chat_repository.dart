@@ -15,6 +15,7 @@ abstract class ChatRepository {
   Future<Map<String, dynamic>> startGuestConversation({
     required String guestId,
     String? csCategory,
+    String? name,
   });
   Future<Map<String, dynamic>> getGuestMessages(
     String inboxId, {
@@ -25,6 +26,7 @@ abstract class ChatRepository {
     required String message,
     required String guestId,
     String? csCategory,
+    String? name,
   });
   Future<void> deleteMessage(String messageId, {required String deleteType});
   Future<void> toggleStarMessage(String messageId);
