@@ -65,8 +65,11 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
     final l = AppLocalizations.of(context)!;
     final callUrl = otherUser?['call_url']?.toString();
     if (callUrl != null && callUrl.isNotEmpty) {
-      await launchUrl(Uri.parse(callUrl), mode: LaunchMode.externalApplication);
-      return;
+      final opened = await launchUrl(
+        Uri.parse(callUrl),
+        mode: LaunchMode.externalApplication,
+      );
+      if (opened) return;
     }
 
     final rawPhone = (otherUser?['phone'] ?? otherUser?['whatsapp'])?.toString();
