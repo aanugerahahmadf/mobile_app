@@ -68,7 +68,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
       builder: (dialogContext) => AlertDialog(
         title: Text(l.calls),
         content: Text(
-          l.calls,
+          'Panggilan internal aplikasi sedang disiapkan.',
           textAlign: TextAlign.center,
         ),
         actions: [
