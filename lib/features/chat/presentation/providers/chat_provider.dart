@@ -164,7 +164,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
           otherUser: current.otherUser,
         );
       }
-      setTyping(true);
+      setTyping(false);
     } on DioException catch (e) {
       setTyping(false);
       throw Exception(e.error?.toString() ?? AppErrorCodes.failedSendMessage);
@@ -381,7 +381,7 @@ class ChatNotifier extends StateNotifier<ChatState> {
           otherUser: current.otherUser,
         );
       }
-      setTyping(true);
+      setTyping(false);
     } on DioException catch (e) {
       setTyping(false);
       throw Exception(e.error?.toString() ?? AppErrorCodes.failedSendMessage);

@@ -167,9 +167,13 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
                     }
                     final response = await DioClient.instance.post(ApiEndpoints.reports, data: FormData.fromMap(fields));
                     final reportId = response.data['data']?['id']?.toString();
-                    if (reportId != null && sheetContext.mounted) Navigator.pop(sheetContext, reportId);
+                    if (reportId != null && sheetContext.mounted) {
+                      Navigator.pop(sheetContext, reportId);
+                    }
                   } catch (_) {
-                    if (sheetContext.mounted) ScaffoldMessenger.of(sheetContext).showSnackBar(const SnackBar(content: Text('Laporan gagal dikirim. Silakan coba lagi.')));
+                    if (sheetContext.mounted) {
+                      ScaffoldMessenger.of(sheetContext).showSnackBar(const SnackBar(content: Text('Laporan gagal dikirim. Silakan coba lagi.')));
+                    }
                   }
                 }, child: const Text('Kirim & Unduh PDF'),
               )),
@@ -286,7 +290,9 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
       ref.read(authProvider) is! AuthAuthenticated;
 
   void _startPolling() {
-    _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) {
+    // Bot replies are queued without an artificial delay; poll frequently so
+    // the user sees the answer almost immediately.
+    _pollTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       final notifier = ref.read(chatProvider.notifier);
       if (_guestId != null) {
         notifier.refreshGuestMessages(widget.id, guestId: _guestId!);
