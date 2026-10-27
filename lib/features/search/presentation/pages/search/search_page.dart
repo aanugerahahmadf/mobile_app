@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
+import '../../../../../core/widgets/app_breadcrumbs/app_breadcrumbs.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
@@ -191,12 +192,13 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                 AppSizes.md,
                 AppSizes.md,
               ),
-              child: Row(
+              child: Column(
                 children: [
-                  IconButton(
-                    icon: Icon(Icons.arrow_back, color: AppColors.primaryColor),
-                    onPressed: () => context.pop(),
-                  ),
+                  AppBreadcrumbs(items: [
+                    AppBreadcrumbItem(l.home, onTap: () => context.go('/home')),
+                    AppBreadcrumbItem(l.search),
+                  ]),
+                  Row(children: [
                   // showCamera: false — halaman ini sudah punya tombol kamera
                   // sendiri di sebelah kolom pencarian. Tanpa flag itu dua
                   // tombol identik dengan aksi sama tampil bersamaan.
@@ -207,6 +209,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                   _buildCameraButton(),
                   const SizedBox(width: 4),
                   _buildVoiceButton(),
+                  ]),
                 ],
               ),
             ),

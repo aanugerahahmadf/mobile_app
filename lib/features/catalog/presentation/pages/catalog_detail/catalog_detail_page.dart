@@ -13,6 +13,7 @@ import '../../../../../core/widgets/app_error_state/app_error_state.dart';
 import '../../../../../core/widgets/app_button/app_button.dart';
 import '../../../../../core/widgets/app_snackbar/app_snackbar.dart';
 import '../../../../../core/widgets/guest_auth_prompt/guest_auth_prompt.dart';
+import '../../../../../core/widgets/app_breadcrumbs/app_breadcrumbs.dart';
 import '../../../../../core/utils/formatters/formatters.dart';
 import '../../../../../core/api/dio_client/dio_client.dart';
 import '../../../../../core/api/api_endpoints/api_endpoints.dart';
@@ -292,9 +293,20 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+        automaticallyImplyLeading: false,
+        title: Text(l.catalog),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(36),
+          child: AppBreadcrumbs(
+            items: [
+              AppBreadcrumbItem(l.home, onTap: () => context.go('/home')),
+              AppBreadcrumbItem(l.catalog, onTap: () => context.go('/catalog')),
+              AppBreadcrumbItem(l.catalogDetail),
+              if (_data?['name'] is String &&
+                  (_data!['name'] as String).trim().isNotEmpty)
+                AppBreadcrumbItem((_data!['name'] as String).trim()),
+            ],
+          ),
         ),
         actions: [
           IconButton(icon: const Icon(Icons.share), onPressed: _shareItem),

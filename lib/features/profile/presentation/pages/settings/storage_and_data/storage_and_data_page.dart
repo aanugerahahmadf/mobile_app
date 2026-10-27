@@ -1,6 +1,8 @@
 ﻿import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
+import '../../../../../../core/widgets/app_breadcrumbs/app_breadcrumbs.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -74,7 +76,18 @@ class StorageAndDataPage extends ConsumerWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFF0A0A0A),
         title: Text(l.storageAndData),
-        leading: const BackButton(),
+        automaticallyImplyLeading: false,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(36),
+          child: AppBreadcrumbs(
+            items: [
+              AppBreadcrumbItem(l.home, onTap: () => context.go('/home')),
+              AppBreadcrumbItem(l.profile, onTap: () => context.go('/profile')),
+              AppBreadcrumbItem(l.settings, onTap: () => context.go('/settings')),
+              AppBreadcrumbItem(l.storageAndData),
+            ],
+          ),
+        ),
       ),
       body: ListView(padding: const EdgeInsets.fromLTRB(44, 8, 44, 28), children: [
         _section(l.storage),
@@ -123,13 +136,24 @@ Widget _switchRow(String title, bool value, ValueChanged<bool> onChanged) => Con
   decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: Color(0xFF303033), width: .6))),
   child: Row(children: [Expanded(child: Text(title, style: const TextStyle(fontSize: 17, color: Colors.white))), Switch.adaptive(value: value, onChanged: onChanged)]),
 );
+Widget _storageBreadcrumb(BuildContext context, String current) {
+  final l = AppLocalizations.of(context)!;
+  return AppBreadcrumbs(items: [
+    AppBreadcrumbItem(l.home, onTap: () => context.go('/home')),
+    AppBreadcrumbItem(l.profile, onTap: () => context.go('/profile')),
+    AppBreadcrumbItem(l.settings, onTap: () => context.go('/settings')),
+    AppBreadcrumbItem(l.storageAndData, onTap: () => context.go('/storage-and-data')),
+    AppBreadcrumbItem(current),
+  ]);
+}
+
 class StorageUsagePage extends ConsumerStatefulWidget { const StorageUsagePage({super.key}); @override ConsumerState<StorageUsagePage> createState() => _StorageUsageState(); }
 class _StorageUsageState extends ConsumerState<StorageUsagePage> {
   int total = 0; final selected = <String, bool>{}; final names = ['Aneka Ragam', 'Berkas', 'Avatar', 'Foto', 'Video', 'Audio', 'Lainnya'];
   @override void initState() { super.initState(); for (final n in names) { selected[n] = true; } _load(); }
   Future<void> _load() async { final value = await getAppCacheSize(); if (mounted) setState(() => total = value); }
   String get selectedSize => formatStorageBytes(selected.values.any((v) => v) ? total : 0);
-  @override Widget build(BuildContext context) { return Scaffold(appBar: AppBar(title: const Text('Pemakaian Penyimpanan'), leading: const BackButton()), body: ListView(padding: const EdgeInsets.all(16), children: [
+  @override Widget build(BuildContext context) { return Scaffold(appBar: AppBar(title: const Text('Pemakaian Penyimpanan'), automaticallyImplyLeading: false, bottom: PreferredSize(preferredSize: const Size.fromHeight(36), child: _storageBreadcrumb(context, AppLocalizations.of(context)!.storageAndData))), body: ListView(padding: const EdgeInsets.all(16), children: [
     Center(child: SizedBox(width: 190, height: 190, child: CustomPaint(painter: _DonutPainter(total), child: Center(child: Text(formatStorageBytes(total), style: AppTextStyles.headTitle))))),
     const SizedBox(height: 12), if (total == 0) const Center(child: Text('Tidak ada cache')) else ...names.map((name) => CheckboxListTile(value: selected[name], onChanged: (v) => setState(() => selected[name] = v ?? false), title: Text(name), subtitle: Text('${total == 0 ? 0 : 100 ~/ names.length}%  •  ${formatStorageBytes(total ~/ names.length)}'), secondary: CircleAvatar(radius: 7, backgroundColor: _color(names.indexOf(name))))),
     const SizedBox(height: 8), LinearProgressIndicator(value: total == 0 ? 0 : .12), const SizedBox(height: 8), Text('Aplikasi memakai ${formatStorageBytes(total)} dari ruang penyimpanan kosong'), const SizedBox(height: 16),
@@ -150,7 +174,7 @@ class NetworkUsagePage extends ConsumerWidget {
       'Total Bita': ['Dikirim', 'Diterima'],
     };
     return Scaffold(
-      appBar: AppBar(title: const Text('Penggunaan Jaringan'), leading: const BackButton()),
+      appBar: AppBar(title: const Text('Penggunaan Jaringan'), automaticallyImplyLeading: false, bottom: PreferredSize(preferredSize: const Size.fromHeight(36), child: _storageBreadcrumb(context, AppLocalizations.of(context)!.storageAndData))),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -192,7 +216,7 @@ class QualityPage extends ConsumerWidget {
     final controller = ref.watch(storageDataProvider);
     final active = upload ? controller.upload : controller.download;
     return Scaffold(
-      appBar: AppBar(title: Text(title), leading: const BackButton()),
+      appBar: AppBar(title: Text(title), automaticallyImplyLeading: false, bottom: PreferredSize(preferredSize: const Size.fromHeight(36), child: _storageBreadcrumb(context, AppLocalizations.of(context)!.storageAndData))),
       body: ListView(padding: const EdgeInsets.all(16), children: [
         const Text('Pilih kualitas foto dan video yang diunduh atau dikirim ke chat.'),
         const SizedBox(height: 12),
@@ -228,7 +252,7 @@ class AutoDownloadPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final current = ref.watch(storageDataProvider).auto[mediaType]!;
     return Scaffold(
-      appBar: AppBar(title: Text('Unduh otomatis $mediaType'), leading: const BackButton()),
+      appBar: AppBar(title: Text('Unduh otomatis $mediaType'), automaticallyImplyLeading: false, bottom: PreferredSize(preferredSize: const Size.fromHeight(36), child: _storageBreadcrumb(context, AppLocalizations.of(context)!.storageAndData))),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: AutoDownloadPolicy.values.map((policy) => Card(
@@ -246,7 +270,7 @@ class AutoDownloadPage extends ConsumerWidget {
   }
 }
 class ProxyPage extends StatefulWidget { const ProxyPage({super.key}); @override State<ProxyPage> createState() => _ProxyPageState(); }
-class _ProxyPageState extends State<ProxyPage> { bool enabled = false; String? host; final secure = const FlutterSecureStorage(); @override void initState() { super.initState(); _load(); } Future<void> _load() async { final p = await SharedPreferences.getInstance(); setState(() { enabled = p.getBool('proxy_enabled') ?? false; host = p.getString('proxy_host'); }); } @override Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('Proxy'), leading: const BackButton(), actions: [IconButton(onPressed: host == null ? null : () => Share.share('Proxy: $host'), icon: const Icon(Icons.share))]), body: ListView(padding: const EdgeInsets.all(16), children: [Card(child: SwitchListTile(title: const Text('Gunakan Proxy'), subtitle: const Text('Hanya gunakan proxy jika Anda tidak bisa terhubung. Alamat IP Anda mungkin terlihat oleh provider proxy.'), value: enabled, onChanged: host == null ? null : (v) async { final p = await SharedPreferences.getInstance(); await p.setBool('proxy_enabled', v); setState(() => enabled = v); })), ListTile(title: Text(host ?? 'Belum ada server proxy'), subtitle: Text(host == null ? 'Tambahkan server untuk mengaktifkan proxy' : 'Terputus'), trailing: IconButton(icon: const Icon(Icons.add), onPressed: _add)), if (host != null) ListTile(title: const Text('Hapus server'), textColor: Colors.red, onTap: () async { await secure.delete(key: 'proxy_password'); final p = await SharedPreferences.getInstance(); await p.remove('proxy_host'); setState(() { host = null; enabled = false; }); })])); Future<void> _add() async { final controller = TextEditingController(); final value = await showDialog<String>(context: context, builder: (_) => AlertDialog(title: const Text('Server proxy'), content: TextField(controller: controller, decoration: const InputDecoration(hintText: 'host:port')), actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')), FilledButton(onPressed: () => Navigator.pop(context, controller.text), child: const Text('Simpan'))])); if (value == null || value.isEmpty) return; final p = await SharedPreferences.getInstance(); await p.setString('proxy_host', value); setState(() => host = value); } }
+class _ProxyPageState extends State<ProxyPage> { bool enabled = false; String? host; final secure = const FlutterSecureStorage(); @override void initState() { super.initState(); _load(); } Future<void> _load() async { final p = await SharedPreferences.getInstance(); setState(() { enabled = p.getBool('proxy_enabled') ?? false; host = p.getString('proxy_host'); }); } @override Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('Proxy'), automaticallyImplyLeading: false, bottom: PreferredSize(preferredSize: const Size.fromHeight(36), child: _storageBreadcrumb(context, AppLocalizations.of(context)!.storageAndData)), actions: [IconButton(onPressed: host == null ? null : () => Share.share('Proxy: $host'), icon: const Icon(Icons.share))]), body: ListView(padding: const EdgeInsets.all(16), children: [Card(child: SwitchListTile(title: const Text('Gunakan Proxy'), subtitle: const Text('Hanya gunakan proxy jika Anda tidak bisa terhubung. Alamat IP Anda mungkin terlihat oleh provider proxy.'), value: enabled, onChanged: host == null ? null : (v) async { final p = await SharedPreferences.getInstance(); await p.setBool('proxy_enabled', v); setState(() => enabled = v); })), ListTile(title: Text(host ?? 'Belum ada server proxy'), subtitle: Text(host == null ? 'Tambahkan server untuk mengaktifkan proxy' : 'Terputus'), trailing: IconButton(icon: const Icon(Icons.add), onPressed: _add)), if (host != null) ListTile(title: const Text('Hapus server'), textColor: Colors.red, onTap: () async { await secure.delete(key: 'proxy_password'); final p = await SharedPreferences.getInstance(); await p.remove('proxy_host'); setState(() { host = null; enabled = false; }); })])); Future<void> _add() async { final controller = TextEditingController(); final value = await showDialog<String>(context: context, builder: (_) => AlertDialog(title: const Text('Server proxy'), content: TextField(controller: controller, decoration: const InputDecoration(hintText: 'host:port')), actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')), FilledButton(onPressed: () => Navigator.pop(context, controller.text), child: const Text('Simpan'))])); if (value == null || value.isEmpty) return; final p = await SharedPreferences.getInstance(); await p.setString('proxy_host', value); setState(() => host = value); } }
 
 Widget _autoDownloadPage(String key) {
   final page = switch (key) {
@@ -263,6 +287,8 @@ Future<bool> _confirm(BuildContext context, String text) async => await showDial
 String formatStorageBytes(int bytes) { if (bytes < 1024) return '$bytes B'; final units = ['KB', 'MB', 'GB']; var value = bytes.toDouble(); var i = -1; while (value >= 1024 && i < units.length - 1) { value /= 1024; i++; } return '${value.toStringAsFixed(value >= 10 ? 0 : 1).replaceAll('.', ',')} ${units[i]}'; }
 Color _color(int i) => [Colors.blue, Colors.orange, Colors.purple, Colors.green, Colors.red, Colors.teal, Colors.grey][i % 7];
 class _DonutPainter extends CustomPainter { final int total; _DonutPainter(this.total); @override void paint(Canvas canvas, Size size) { final rect = Offset.zero & size; final paint = Paint()..style = PaintingStyle.stroke..strokeWidth = 24..strokeCap = StrokeCap.butt; final colors = [Colors.blue, Colors.orange, Colors.purple, Colors.green, Colors.red, Colors.teal, Colors.grey]; for (var i = 0; i < colors.length; i++) { paint.color = colors[i]; canvas.drawArc(rect.deflate(24), -math.pi / 2 + i * math.pi * 2 / 7, math.pi * 2 / 7 - .04, false, paint); } } @override bool shouldRepaint(covariant _DonutPainter oldDelegate) => oldDelegate.total != total; }
+
+
 
 
 

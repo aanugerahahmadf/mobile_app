@@ -657,7 +657,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "ar": [
@@ -1318,7 +1319,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "az": [
@@ -1979,7 +1981,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "bg": [
@@ -2640,7 +2643,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "bn": [
@@ -3389,7 +3393,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "bs": [
@@ -4138,7 +4143,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "ca": [
@@ -4887,7 +4893,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "ckb": [
@@ -5636,7 +5643,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "cs": [
@@ -6385,7 +6393,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "cy": [
@@ -7134,7 +7143,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "da": [
@@ -7883,7 +7893,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "de": [
@@ -8632,7 +8643,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "el": [
@@ -9381,7 +9393,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "en_US": [
@@ -10130,7 +10143,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "es": [
@@ -10879,7 +10893,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "et": [
@@ -11628,7 +11643,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "eu": [
@@ -12377,7 +12393,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "fa": [
@@ -13126,7 +13143,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "fi": [
@@ -13875,7 +13893,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "fil": [
@@ -14624,7 +14643,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "fr": [
@@ -15373,7 +15393,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "he": [
@@ -16122,7 +16143,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "hi": [
@@ -16871,7 +16893,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "hr": [
@@ -17620,7 +17643,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "hu": [
@@ -18369,7 +18393,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "hy": [
@@ -19118,7 +19143,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "it": [
@@ -19867,7 +19893,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "ja": [
@@ -20616,7 +20643,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "ka": [
@@ -21365,7 +21393,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "kk": [
@@ -22114,7 +22143,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "km": [
@@ -22863,7 +22893,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "ko": [
@@ -23612,7 +23643,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "ku": [
@@ -24361,7 +24393,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "lt": [
@@ -25110,7 +25143,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "lv": [
@@ -25859,7 +25893,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "mn": [
@@ -26608,7 +26643,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "ms": [
@@ -27357,7 +27393,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "my": [
@@ -28106,7 +28143,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "ne": [
@@ -28855,7 +28893,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "nl": [
@@ -29604,7 +29643,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "no": [
@@ -30353,7 +30393,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "pl": [
@@ -31102,7 +31143,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "pt": [
@@ -31851,7 +31893,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "pt_BR": [
@@ -32600,7 +32643,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "pt_PT": [
@@ -33349,7 +33393,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "ro": [
@@ -34098,7 +34143,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "ru": [
@@ -34847,7 +34893,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "sk": [
@@ -35596,7 +35643,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "sl": [
@@ -36345,7 +36393,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "sq": [
@@ -37094,7 +37143,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "sr": [
@@ -37843,7 +37893,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "sv": [
@@ -38592,7 +38643,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "sw": [
@@ -39341,7 +39393,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "th": [
@@ -40090,7 +40143,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "tl": [
@@ -40839,7 +40893,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "tr": [
@@ -41588,7 +41643,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "uk": [
@@ -42337,7 +42393,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "ur": [
@@ -43086,7 +43143,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "uz": [
@@ -43835,7 +43893,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "vi": [
@@ -44584,7 +44643,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "zh": [
@@ -45333,7 +45393,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "zh_CN": [
@@ -46082,7 +46143,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "zh_TW": [
@@ -46831,7 +46893,8 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ],
 
   "zu": [
@@ -47580,6 +47643,7 @@
     "startupTitle",
     "startupPreparingData",
     "startupDownloadingData",
-    "startupReady"
+    "startupReady",
+    "catalogDetail"
   ]
 }

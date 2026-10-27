@@ -11,6 +11,7 @@ import '../../providers/chat_provider.dart';
 import '../../utils/chat_text_normalizer/chat_text_normalizer.dart';
 import '../../utils/cs_guest_chat/cs_guest_chat.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
+import '../../../../../core/widgets/app_breadcrumbs/app_breadcrumbs.dart';
 import '../../../../auth/presentation/providers/auth_provider/auth_provider.dart';
 
 class ChatListPage extends ConsumerStatefulWidget {
@@ -206,14 +207,19 @@ class _ChatListPageState extends ConsumerState<ChatListPage> {
     if (isGuest) {
       return Scaffold(
         appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.canPop() ? context.pop() : null,
-          ),
+          automaticallyImplyLeading: false,
           title: Text(l.csTitle),
           backgroundColor: Colors.transparent,
           elevation: 0,
           centerTitle: true,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(36),
+            child: AppBreadcrumbs(items: [
+              AppBreadcrumbItem(l.home, onTap: () => context.go('/home')),
+              AppBreadcrumbItem(l.navChat, onTap: () => context.go('/chat-list')),
+              AppBreadcrumbItem(l.csTitle),
+            ]),
+          ),
         ),
         body: _buildUserView(l, chatState),
       );
@@ -225,9 +231,14 @@ class _ChatListPageState extends ConsumerState<ChatListPage> {
           title: Text(l.csTitle),
           backgroundColor: Colors.transparent,
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.canPop() ? context.pop() : null,
+          automaticallyImplyLeading: false,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(36),
+            child: AppBreadcrumbs(items: [
+              AppBreadcrumbItem(l.home, onTap: () => context.go('/home')),
+              AppBreadcrumbItem(l.navChat, onTap: () => context.go('/chat-list')),
+              AppBreadcrumbItem(l.csTitle),
+            ]),
           ),
         ),
         body: const Center(child: CircularProgressIndicator()),
@@ -237,14 +248,19 @@ class _ChatListPageState extends ConsumerState<ChatListPage> {
     if (chatState is ChatError) {
       return Scaffold(
         appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.canPop() ? context.pop() : null,
-          ),
+          automaticallyImplyLeading: false,
           title: Text(l.csTitle),
           backgroundColor: Colors.transparent,
           elevation: 0,
           centerTitle: true,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(36),
+            child: AppBreadcrumbs(items: [
+              AppBreadcrumbItem(l.home, onTap: () => context.go('/home')),
+              AppBreadcrumbItem(l.navChat, onTap: () => context.go('/chat-list')),
+              AppBreadcrumbItem(l.csTitle),
+            ]),
+          ),
         ),
         body: Center(
           child: Padding(
@@ -279,14 +295,19 @@ class _ChatListPageState extends ConsumerState<ChatListPage> {
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.canPop() ? context.pop() : null,
-        ),
+        automaticallyImplyLeading: false,
         title: Text(l.csTitle),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(36),
+          child: AppBreadcrumbs(items: [
+            AppBreadcrumbItem(l.home, onTap: () => context.go('/home')),
+            AppBreadcrumbItem(l.navChat, onTap: () => context.go('/chat-list')),
+            AppBreadcrumbItem(l.csTitle),
+          ]),
+        ),
       ),
       body: _buildUserView(l, chatState),
     );

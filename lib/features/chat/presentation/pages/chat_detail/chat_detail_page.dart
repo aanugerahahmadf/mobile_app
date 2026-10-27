@@ -28,6 +28,7 @@ import '../../utils/cs_guest_chat/cs_guest_chat.dart';
 import '../../widgets/account_recovery_form_sheet/account_recovery_form_sheet.dart';
 import '../../widgets/structured_chat_text/structured_chat_text.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
+import '../../../../../core/widgets/app_breadcrumbs/app_breadcrumbs.dart';
 
 class ChatDetailPage extends ConsumerStatefulWidget {
   final String id;
@@ -1779,9 +1780,16 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/chat-list'),
+        automaticallyImplyLeading: false,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(36),
+          child: AppBreadcrumbs(
+            items: [
+              AppBreadcrumbItem(l.home, onTap: () => context.go('/home')),
+              AppBreadcrumbItem(l.navChat, onTap: () => context.go('/chat-list')),
+              AppBreadcrumbItem(otherName),
+            ],
+          ),
         ),
         title: Row(
           mainAxisSize: MainAxisSize.min,

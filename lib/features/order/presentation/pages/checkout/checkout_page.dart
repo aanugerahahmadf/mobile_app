@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
+import '../../../../../core/widgets/app_breadcrumbs/app_breadcrumbs.dart';
 import '../../../../../core/api/api_endpoints/api_endpoints.dart';
 import '../../../../../core/constants/app_colors/app_colors.dart';
 import '../../../../../core/constants/app_sizes/app_sizes.dart';
@@ -564,14 +565,19 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
     if (ref.watch(authProvider) is! AuthAuthenticated) {
-      final l = AppLocalizations.of(context)!;
       return Scaffold(
         appBar: AppBar(
           title: Text(l.checkout),
-          leading: IconButton(
-            icon: const Icon(Icons.close),
-            onPressed: () => context.pop(),
+          automaticallyImplyLeading: false,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(36),
+            child: AppBreadcrumbs(items: [
+              AppBreadcrumbItem(l.home, onTap: () => context.go('/home')),
+              AppBreadcrumbItem(l.cart, onTap: () => context.go('/cart')),
+              AppBreadcrumbItem(l.checkout),
+            ]),
           ),
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -583,9 +589,14 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Text(_getStepTitle()),
-        leading: IconButton(
-          icon: const Icon(Icons.close),
-          onPressed: () => context.pop(),
+        automaticallyImplyLeading: false,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(36),
+          child: AppBreadcrumbs(items: [
+            AppBreadcrumbItem(l.home, onTap: () => context.go('/home')),
+            AppBreadcrumbItem(l.cart, onTap: () => context.go('/cart')),
+            AppBreadcrumbItem(l.checkout),
+          ]),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,

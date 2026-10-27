@@ -10,6 +10,7 @@ import '../../../../../core/errors/app_error_codes/app_error_codes.dart';
 import '../../../../../core/errors/localized_error/localized_error.dart';
 import '../../../../../core/utils/cache_utils/cache_utils.dart';
 import '../../../../../core/widgets/guest_auth_prompt/guest_auth_prompt.dart';
+import '../../../../../core/widgets/app_breadcrumbs/app_breadcrumbs.dart';
 import '../../../../../core/providers/theme_provider/theme_provider.dart';
 import '../../../../auth/data/biometric_auth_service/biometric_auth_service.dart';
 import '../../../../auth/presentation/providers/auth_provider/auth_provider.dart';
@@ -281,13 +282,20 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
     final isDark = themeMode == ThemeMode.dark;
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
+        automaticallyImplyLeading: false,
         title: Text(l.settings),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(36),
+          child: AppBreadcrumbs(
+            items: [
+              AppBreadcrumbItem(l.home, onTap: () => context.go('/home')),
+              AppBreadcrumbItem(l.profile, onTap: () => context.go('/profile')),
+              AppBreadcrumbItem(l.settings),
+            ],
+          ),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(AppSizes.md),
