@@ -8,6 +8,7 @@ import '../../../../../core/constants/app_text_styles/app_text_styles.dart';
 import '../../../../auth/presentation/providers/auth_provider/auth_provider.dart';
 import '../../../../auth/presentation/widgets/auth_modals/auth_modals.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
+import '../../../../../core/widgets/app_breadcrumbs/app_breadcrumbs.dart';
 
 final bottomNavIndexProvider = StateProvider<int>((ref) => 0);
 
@@ -17,6 +18,7 @@ class MainShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context)!;
     final currentIndex = ref.watch(bottomNavIndexProvider);
     final authState = ref.watch(authProvider);
     final rawAvatar = authState is AuthAuthenticated
@@ -29,11 +31,18 @@ class MainShell extends ConsumerWidget {
     // Bottom bar HANYA tampil di halaman utama: Home, Orders, Cart, Profile.
     // Semua halaman lain (detail, chat, checkout, dll) tidak menampilkan bottom bar.
     final location = GoRouterState.of(context).uri.path;
-    const allowedPaths = {'/home', '/orders', '/cart', '/profile'};
-    final normalized = location.length > 1 && location.endsWith('/')
+    final normalizedLocation = location.length > 1 && location.endsWith('/')
         ? location.substring(0, location.length - 1)
         : location;
-    final showBar = allowedPaths.contains(normalized);
+    final origin = switch (normalizedLocation) {
+      '/orders' => (path: '/orders', label: l.navOrders),
+      '/cart' => (path: '/cart', label: l.navCart),
+      '/profile' => (path: '/profile', label: l.navProfile),
+      _ => (path: '/home', label: l.navHome),
+    };
+    AppNavigationTrail.instance.ensureOrigin(origin.path, origin.label);
+    const allowedPaths = {'/home', '/orders', '/cart', '/profile'};
+    final showBar = allowedPaths.contains(normalizedLocation);
 
     return PopScope(
       canPop: currentIndex == 0,
@@ -55,6 +64,13 @@ class MainShell extends ConsumerWidget {
                   avatarUrl: avatarUrl,
                   onTap: (index) {
                     ref.read(bottomNavIndexProvider.notifier).state = index;
+                    final tab = switch (index) {
+                      1 => (path: '/orders', label: l.navOrders),
+                      3 => (path: '/cart', label: l.navCart),
+                      4 => (path: '/profile', label: l.navProfile),
+                      _ => (path: '/home', label: l.navHome),
+                    };
+                    AppNavigationTrail.instance.startAt(tab.path, tab.label);
                     navigationShell.goBranch(index);
                   },
                 ),

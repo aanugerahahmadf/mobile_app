@@ -15,6 +15,7 @@ import '../../../../auth/presentation/providers/auth_provider/auth_provider.dart
 import '../../../../payment/presentation/widgets/upload_payment_proof/upload_payment_proof.dart';
 import '../../providers/order_provider/order_provider.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
+import '../../../../../core/widgets/app_breadcrumbs/app_breadcrumbs.dart';
 
 class OrderHistoryPage extends ConsumerStatefulWidget {
   const OrderHistoryPage({super.key});
@@ -143,6 +144,10 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryPage>
         title: Text(l.myOrders),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(38),
+          child: const AppBreadcrumbs.global(),
+        ),
       ),
       body: Column(
         children: [

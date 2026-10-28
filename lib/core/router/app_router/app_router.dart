@@ -61,6 +61,7 @@ import '../../../features/profile/presentation/pages/settings/storage_and_data/s
 
 import '../../../features/profile/presentation/pages/settings/language/language_page.dart';
 import '../../../features/profile/presentation/pages/settings/password_and_security/password_and_security_page.dart';
+import '../../widgets/app_breadcrumbs/app_breadcrumbs.dart';
 import '../../../features/auth/presentation/pages/app_lock/app_lock_page.dart';
 import '../../../features/auth/presentation/pages/security_question/security_question_page.dart';
 import '../../../features/auth/presentation/pages/two_factor_setup/two_factor_setup_page.dart';
@@ -72,6 +73,7 @@ class _RouteObserver extends NavigatorObserver {
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
     final path = route.settings.name;
     if (path != null && path.isNotEmpty && path != '/') {
+      AppNavigationTrail.instance.record(path);
       SharedPreferences.getInstance().then((prefs) {
         prefs.setString('last_route', path);
       });
@@ -82,10 +84,16 @@ class _RouteObserver extends NavigatorObserver {
   void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
     final path = newRoute?.settings.name;
     if (path != null && path.isNotEmpty && path != '/') {
+      AppNavigationTrail.instance.record(path);
       SharedPreferences.getInstance().then((prefs) {
         prefs.setString('last_route', path);
       });
     }
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    AppNavigationTrail.instance.pop(route.settings.name);
   }
 }
 

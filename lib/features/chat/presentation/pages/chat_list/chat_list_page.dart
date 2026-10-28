@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../../core/constants/app_text_styles/app_text_styles.dart';
@@ -11,8 +11,8 @@ import '../../providers/chat_provider.dart';
 import '../../utils/chat_text_normalizer/chat_text_normalizer.dart';
 import '../../utils/cs_guest_chat/cs_guest_chat.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
-import '../../../../../core/widgets/app_breadcrumbs/app_breadcrumbs.dart';
 import '../../../../auth/presentation/providers/auth_provider/auth_provider.dart';
+import '../../../../../core/widgets/app_breadcrumbs/app_breadcrumbs.dart';
 
 class ChatListPage extends ConsumerStatefulWidget {
   const ChatListPage({super.key, this.isGuestMode = false});
@@ -207,18 +207,14 @@ class _ChatListPageState extends ConsumerState<ChatListPage> {
     if (isGuest) {
       return Scaffold(
         appBar: AppBar(
-          automaticallyImplyLeading: false,
+          leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.canPop() ? context.pop() : null),
           title: Text(l.csTitle),
           backgroundColor: Colors.transparent,
           elevation: 0,
           centerTitle: true,
           bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(36),
-            child: AppBreadcrumbs(items: [
-              AppBreadcrumbItem(l.home, onTap: () => context.go('/home')),
-              AppBreadcrumbItem(l.navChat, onTap: () => context.go('/chat-list')),
-              AppBreadcrumbItem(l.csTitle),
-            ]),
+            preferredSize: const Size.fromHeight(38),
+            child: const AppBreadcrumbs.global(),
           ),
         ),
         body: _buildUserView(l, chatState),
@@ -231,14 +227,10 @@ class _ChatListPageState extends ConsumerState<ChatListPage> {
           title: Text(l.csTitle),
           backgroundColor: Colors.transparent,
           elevation: 0,
-          automaticallyImplyLeading: false,
+          leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.canPop() ? context.pop() : null),
           bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(36),
-            child: AppBreadcrumbs(items: [
-              AppBreadcrumbItem(l.home, onTap: () => context.go('/home')),
-              AppBreadcrumbItem(l.navChat, onTap: () => context.go('/chat-list')),
-              AppBreadcrumbItem(l.csTitle),
-            ]),
+            preferredSize: const Size.fromHeight(38),
+            child: const AppBreadcrumbs.global(),
           ),
         ),
         body: const Center(child: CircularProgressIndicator()),
@@ -248,18 +240,14 @@ class _ChatListPageState extends ConsumerState<ChatListPage> {
     if (chatState is ChatError) {
       return Scaffold(
         appBar: AppBar(
-          automaticallyImplyLeading: false,
+          leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.canPop() ? context.pop() : null),
           title: Text(l.csTitle),
           backgroundColor: Colors.transparent,
           elevation: 0,
           centerTitle: true,
           bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(36),
-            child: AppBreadcrumbs(items: [
-              AppBreadcrumbItem(l.home, onTap: () => context.go('/home')),
-              AppBreadcrumbItem(l.navChat, onTap: () => context.go('/chat-list')),
-              AppBreadcrumbItem(l.csTitle),
-            ]),
+            preferredSize: const Size.fromHeight(38),
+            child: const AppBreadcrumbs.global(),
           ),
         ),
         body: Center(
@@ -295,18 +283,14 @@ class _ChatListPageState extends ConsumerState<ChatListPage> {
 
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
+        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.canPop() ? context.pop() : null),
         title: Text(l.csTitle),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(36),
-          child: AppBreadcrumbs(items: [
-            AppBreadcrumbItem(l.home, onTap: () => context.go('/home')),
-            AppBreadcrumbItem(l.navChat, onTap: () => context.go('/chat-list')),
-            AppBreadcrumbItem(l.csTitle),
-          ]),
+          preferredSize: const Size.fromHeight(38),
+          child: const AppBreadcrumbs.global(),
         ),
       ),
       body: _buildUserView(l, chatState),
@@ -796,3 +780,5 @@ class _CsAction {
     required this.category,
   });
 }
+
+

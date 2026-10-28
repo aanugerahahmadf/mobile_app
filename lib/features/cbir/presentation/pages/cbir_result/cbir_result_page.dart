@@ -1,6 +1,8 @@
-import 'dart:io';
+﻿import 'dart:io';
 import '../../../../../core/widgets/app_blur_backdrop/app_blur_backdrop.dart';
 import 'package:flutter/material.dart';
+import '../../../../../core/constants/app_colors/app_colors.dart';
+import '../../../../../core/widgets/app_breadcrumbs/app_breadcrumbs.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
@@ -10,7 +12,6 @@ import '../../../../../core/errors/localized_error/localized_error.dart';
 import '../../../../../core/widgets/app_shimmer/app_shimmer.dart';
 import '../../../../../core/widgets/app_empty_state/app_empty_state.dart';
 import '../../../../../core/widgets/app_error_state/app_error_state.dart';
-import '../../../../../core/widgets/app_breadcrumbs/app_breadcrumbs.dart';
 import '../../../../../core/api/dio_client/dio_client.dart';
 import '../../../../../core/api/api_endpoints/api_endpoints.dart';
 import '../../../../search/presentation/widgets/global_search_bar/global_search_bar.dart';
@@ -79,16 +80,9 @@ class _CbirResultPageState extends ConsumerState<CbirResultPage> {
               ),
               child: Row(
                 children: [
-                  Expanded(
-                    child: AppBreadcrumbs(
-                      items: [
-                        AppBreadcrumbItem(l.home, onTap: () => context.go('/home')),
-                        AppBreadcrumbItem(l.search, onTap: () => context.go('/search')),
-                        AppBreadcrumbItem(l.searchResults),
-                      ],
-                    ),
-                  ),
-                  const Expanded(child: GlobalSearchBar(showChat: false)),
+                  const AppBreadcrumbs.global(),
+                  IconButton(icon: Icon(Icons.arrow_back, color: AppColors.primaryColor), onPressed: () { ref.read(cbirProvider.notifier).reset(); context.pop(); }),
+const Expanded(child: GlobalSearchBar(showChat: false)),
                 ],
               ),
             ),
@@ -211,3 +205,7 @@ class _CbirResultPageState extends ConsumerState<CbirResultPage> {
     );
   }
 }
+
+
+
+

@@ -1,3 +1,5 @@
+import '../../../../core/utils/formatters/formatters.dart';
+
 class PaymentMethodInfo {
   final int id;
   final String name;
@@ -14,6 +16,19 @@ class PaymentMethodInfo {
   final bool isActive;
   final bool gatewayEnabled;
 
+  /// URL gambar QRIS merchant.
+  ///
+  /// Backend mengirim `qris_image_url` (lihat
+  /// `App\Models\PaymentMethod\PaymentMethod::getQrisImageUrlAttribute()`),
+  /// yang menunjuk berkas statis `public/images/qris/qris.jpg`. Kalau server
+  /// lama belum mengirim field itu, [qrisImage] tetap menampilkan berkas yang
+  /// sama lewat [fallbackQrisPath] -- QRIS tidak boleh hilang hanya karena
+  /// respons API belum diperbarui.
+  final String? qrisImageUrl;
+
+  /// Path statis gambar QRIS di server (sumber yang sama dengan panel web).
+  static const String fallbackQrisPath = '/images/qris/qris.jpg';
+
   const PaymentMethodInfo({
     required this.id,
     required this.name,
@@ -29,6 +44,7 @@ class PaymentMethodInfo {
     this.sortOrder = 0,
     this.isActive = true,
     this.gatewayEnabled = false,
+    this.qrisImageUrl,
   });
 
   factory PaymentMethodInfo.fromJson(Map<String, dynamic> json) {
@@ -49,6 +65,18 @@ class PaymentMethodInfo {
       sortOrder: json['sort_order'] as int? ?? 0,
       isActive: json['is_active'] as bool? ?? true,
       gatewayEnabled: json['gateway_enabled'] as bool? ?? false,
+      qrisImageUrl: json['qris_image_url'] as String?,
     );
   }
+
+  /// Metode ini QRIS?
+  bool get isQris => type == 'qris';
+
+  /// URL gambar QRIS yang siap dipakai `Image.network`.
+  ///
+  /// Urutannya: `qris_image_url` dari server -> berkas statis `/images/qris/qris.jpg`.
+  /// [Formatters.imageUrl] mengubah path relatif menjadi absolut terhadap host
+  /// API, jadi gambarnya tetap tampil di perangkat fisik (bukan localhost).
+  String get qrisImage =>
+      Formatters.imageUrl(qrisImageUrl ?? fallbackQrisPath);
 }

@@ -1614,5 +1614,7 @@
   ,"startupPreparingData":"Menyiapkan data aplikasi..."
   ,"startupDownloadingData":"Mengunduh data terbaru..."
   ,"startupReady":"Mengoptimalkan data..."
+  ,"menu":"Menu"
   ,"catalogDetail":"Detail katalog"
+  ,"flowerDecorationsCatalog":"Katalog Dekorasi Bunga"
 }

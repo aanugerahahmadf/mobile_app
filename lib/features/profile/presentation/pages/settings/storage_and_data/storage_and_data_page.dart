@@ -79,14 +79,7 @@ class StorageAndDataPage extends ConsumerWidget {
         automaticallyImplyLeading: false,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(36),
-          child: AppBreadcrumbs(
-            items: [
-              AppBreadcrumbItem(l.home, onTap: () => context.go('/home')),
-              AppBreadcrumbItem(l.profile, onTap: () => context.go('/profile')),
-              AppBreadcrumbItem(l.settings, onTap: () => context.go('/settings')),
-              AppBreadcrumbItem(l.storageAndData),
-            ],
-          ),
+          child: const AppBreadcrumbs.global(),
         ),
       ),
       body: ListView(padding: const EdgeInsets.fromLTRB(44, 8, 44, 28), children: [

@@ -14,6 +14,7 @@ import '../../../../../core/widgets/app_shimmer/app_shimmer.dart';
 import '../../../data/models/item_model/item_model.dart';
 import '../../widgets/combined_card/combined_card.dart';
 import '../../providers/catalog_provider.dart';
+import '../../../../../core/widgets/app_breadcrumbs/app_breadcrumbs.dart';
 
 /// Halaman grid katalog. Paket dan produk kini satu entitas `catalog`,
 /// jadi tidak ada lagi pemisahan tipe saat menelusuri.
@@ -185,7 +186,10 @@ class _CatalogGridPageState extends ConsumerState<CatalogGridPage> {
           final item = _items[i];
           return CombinedCard(
             item: ItemModel.fromJson(item),
-            onTap: () => context.push('/catalog/${item['id']}'),
+            onTap: () {
+              AppNavigationTrail.instance.record('/catalog');
+              context.push('/catalog/${item['id']}');
+            },
           );
         },
       ),

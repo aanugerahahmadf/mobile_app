@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
-import '../../../../../core/widgets/app_breadcrumbs/app_breadcrumbs.dart';
 import '../../../../../core/api/api_endpoints/api_endpoints.dart';
 import '../../../../../core/constants/app_colors/app_colors.dart';
 import '../../../../../core/constants/app_sizes/app_sizes.dart';
@@ -30,6 +29,7 @@ import '../../../../voucher/data/models/voucher_model/voucher_model.dart';
 import '../../../../payment/domain/payment_method_info/payment_method_info.dart';
 import '../../../../payment/presentation/widgets/payment_method_selector/payment_method_selector.dart';
 import '../../../../payment/presentation/widgets/upload_payment_proof/upload_payment_proof.dart';
+import '../../../../../core/widgets/app_breadcrumbs/app_breadcrumbs.dart';
 
 class CheckoutPage extends ConsumerStatefulWidget {
   final String? type;
@@ -105,7 +105,12 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       return;
     }
     final user = authState.user;
-    _nameController.text = user.fullName;
+    final splitName = [user.firstName, user.midName, user.lastName]
+        .whereType<String>()
+        .map((part) => part.trim())
+        .where((part) => part.isNotEmpty)
+        .join(' ');
+    _nameController.text = splitName.isNotEmpty ? splitName : user.fullName;
     final rawWa = (user.whatsapp ?? '').trim().replaceAll(
       RegExp(r'[\s\-()]'),
       '',
@@ -570,17 +575,16 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       return Scaffold(
         appBar: AppBar(
           title: Text(l.checkout),
-          automaticallyImplyLeading: false,
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(36),
-            child: AppBreadcrumbs(items: [
-              AppBreadcrumbItem(l.home, onTap: () => context.go('/home')),
-              AppBreadcrumbItem(l.cart, onTap: () => context.go('/cart')),
-              AppBreadcrumbItem(l.checkout),
-            ]),
+          leading: IconButton(
+            icon: const Icon(Icons.close),
+            onPressed: () => context.pop(),
           ),
           backgroundColor: Colors.transparent,
           elevation: 0,
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(38),
+            child: const AppBreadcrumbs.global(),
+          ),
         ),
         body: const GuestAuthPrompt(icon: Icons.shopping_bag_outlined),
       );
@@ -589,17 +593,16 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Text(_getStepTitle()),
-        automaticallyImplyLeading: false,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(36),
-          child: AppBreadcrumbs(items: [
-            AppBreadcrumbItem(l.home, onTap: () => context.go('/home')),
-            AppBreadcrumbItem(l.cart, onTap: () => context.go('/cart')),
-            AppBreadcrumbItem(l.checkout),
-          ]),
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => context.pop(),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(38),
+          child: const AppBreadcrumbs.global(),
+        ),
       ),
       body: _loadingItem
           ? const Center(child: AppShimmer(height: 400))
@@ -1095,6 +1098,17 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
             .toList() ??
         [];
 
+    // Metode QRIS yang aktif, kalau ada. Gambar QRIS toko ditampilkan di
+    // halaman checkout ini supaya pembeli bisa langsung memindainya, tidak
+    // perlu membuka detail metode dulu.
+    PaymentMethodInfo? qrisMethod;
+    for (final m in paymentMethods) {
+      if (m.isQris) {
+        qrisMethod = m;
+        break;
+      }
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSizes.lg),
       child: Column(
@@ -1210,7 +1224,103 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                 color: AppColors.textSecondary,
               ),
             ),
+            if (qrisMethod != null) ...[
+              const SizedBox(height: AppSizes.lg),
+              _buildQrisPreviewCard(l, qrisMethod),
+            ],
           ],
+        ],
+      ),
+    );
+  }
+
+  /// Kartu gambar QRIS toko.
+  ///
+  /// Sumber gambarnya sama dengan panel web: `qris_image_url` dari server
+  /// (`public/images/qris/qris.jpg`). Kalau respons API lama belum memuat
+  /// field itu, [PaymentMethodInfo.qrisImage] tetap jatuh ke path statis,
+  /// jadi QRIS tidak pernah hilang dari halaman checkout.
+  Widget _buildQrisPreviewCard(AppLocalizations l, PaymentMethodInfo method) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSizes.md),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceColor,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.primaryColor.withAlpha(90)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.qr_code_2, color: AppColors.primaryColor, size: 20),
+              const SizedBox(width: AppSizes.sm),
+              Expanded(
+                child: Text(
+                  method.name.isNotEmpty ? method.name : l.qris,
+                  style: AppTextStyles.titleSmall,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSizes.sm),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.network(
+              method.qrisImage,
+              height: 300,
+              fit: BoxFit.contain,
+              loadingBuilder: (context, child, progress) {
+                if (progress == null) return child;
+                return Container(
+                  height: 300,
+                  alignment: Alignment.center,
+                  color: AppColors.surfaceColor,
+                  child: CircularProgressIndicator(
+                    value: progress.expectedTotalBytes != null
+                        ? progress.cumulativeBytesLoaded /
+                              progress.expectedTotalBytes!
+                        : null,
+                  ),
+                );
+              },
+              errorBuilder: (context, error, stackTrace) => Container(
+                height: 300,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceColor,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppColors.dividerColor),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.qr_code,
+                      size: 56,
+                      color: AppColors.primaryColor,
+                    ),
+                    const SizedBox(height: AppSizes.sm),
+                    Text(
+                      l.qrisImageNotAvailable,
+                      style: AppTextStyles.titleSmall.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSizes.sm),
+          Text(
+            l.qrScanInstruction,
+            style: AppTextStyles.bodySmall.copyWith(
+              color: AppColors.textSecondary,
+            ),
+            textAlign: TextAlign.center,
+          ),
         ],
       ),
     );

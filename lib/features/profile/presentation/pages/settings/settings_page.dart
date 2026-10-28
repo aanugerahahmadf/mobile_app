@@ -287,14 +287,8 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(36),
-          child: AppBreadcrumbs(
-            items: [
-              AppBreadcrumbItem(l.home, onTap: () => context.go('/home')),
-              AppBreadcrumbItem(l.profile, onTap: () => context.go('/profile')),
-              AppBreadcrumbItem(l.settings),
-            ],
-          ),
+          preferredSize: const Size.fromHeight(38),
+          child: const AppBreadcrumbs.global(),
         ),
       ),
       body: Padding(
