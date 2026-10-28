@@ -249,7 +249,8 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
         _data?['final_price'] ??
         _data?['finalPrice'] ??
         0;
-    final link = 'https://weddingflowerdecorations.app/catalog/${widget.id}';
+    final link =
+        'https://weddingflowerdecorations.app/flowerdecorationscatalog/${widget.id}';
     Share.share(
       '$name\n${Formatters.currency(price is num ? price.toInt() : 0)}\n$link',
     );
@@ -289,6 +290,10 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
+    final catalogName = _data?['name'];
+    if (catalogName is String && catalogName.trim().isNotEmpty) {
+      AppNavigationTrail.instance.setCurrentLabel('/catalog/${widget.id}', catalogName);
+    }
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.transparent,
@@ -296,17 +301,8 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailPage> {
         automaticallyImplyLeading: false,
         title: Text(l.catalog),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(36),
-          child: AppBreadcrumbs(
-            items: [
-              AppBreadcrumbItem(l.home, onTap: () => context.go('/home')),
-              AppBreadcrumbItem(l.catalog, onTap: () => context.go('/catalog')),
-              AppBreadcrumbItem(l.catalogDetail),
-              if (_data?['name'] is String &&
-                  (_data!['name'] as String).trim().isNotEmpty)
-                AppBreadcrumbItem((_data!['name'] as String).trim()),
-            ],
-          ),
+          preferredSize: const Size.fromHeight(38),
+          child: const AppBreadcrumbs.global(),
         ),
         actions: [
           IconButton(icon: const Icon(Icons.share), onPressed: _shareItem),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
+import '../../../../../core/widgets/app_breadcrumbs/app_breadcrumbs.dart';
 import '../../../../../core/constants/app_colors/app_colors.dart';
 import '../../../../../core/constants/app_sizes/app_sizes.dart';
 import '../../../../../core/constants/app_text_styles/app_text_styles.dart';
@@ -94,6 +95,10 @@ class _PaymentInstructionPageState
         title: Text(isPaid ? l.paymentSuccess : l.payment),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(38),
+          child: const AppBreadcrumbs.global(),
+        ),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())

@@ -19,6 +19,7 @@ import '../../../../chat/presentation/providers/chat_provider.dart';
 import '../../../../chat/presentation/utils/cs_chat_launcher/cs_chat_launcher.dart';
 import '../../../../payment/presentation/widgets/upload_payment_proof/upload_payment_proof.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
+import '../../../../../core/widgets/app_breadcrumbs/app_breadcrumbs.dart';
 
 class OrderDetailPage extends ConsumerStatefulWidget {
   final String id;
@@ -55,6 +56,10 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
           _order = order;
           _loading = false;
         });
+        AppNavigationTrail.instance.setCurrentLabel(
+          '/order/${widget.id}',
+          '${AppLocalizations.of(context)!.order} #${order['order_number'] ?? widget.id}',
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -282,6 +287,10 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailPage> {
         title: Text(l.orderDetail),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(38),
+          child: const AppBreadcrumbs.global(),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.flag_outlined),

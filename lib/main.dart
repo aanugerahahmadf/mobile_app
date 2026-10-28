@@ -12,6 +12,7 @@ import 'core/constants/app_colors/app_colors.dart';
 import 'core/providers/theme_provider/theme_provider.dart';
 import 'core/providers/locale_provider/locale_provider.dart';
 import 'core/router/app_router/app_router.dart';
+import 'core/widgets/app_breadcrumbs/app_breadcrumbs.dart';
 import 'core/services/notification_service/notification_service.dart';
 import 'core/theme/app_theme/app_theme.dart';
 import 'features/auth/presentation/providers/biometric_settings_provider/biometric_settings_provider.dart';
@@ -163,6 +164,13 @@ class _WeddingAppState extends ConsumerState<WeddingApp>
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
       routerConfig: appRouter,
+      builder: (context, child) {
+        final path = appRouter.routerDelegate.currentConfiguration.uri.path;
+        return AppBreadcrumbRouteView(
+          path: path,
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
 
       locale: locale,
       supportedLocales: AppLocalizations.supportedLocales,

@@ -1767,6 +1767,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
         ? chatState.otherUser
         : null;
     final otherName = otherUser?['name'] as String? ?? l.csHumanSenderName;
+    AppNavigationTrail.instance.setCurrentLabel('/chat/${widget.id}', otherName);
     final otherPhoto = otherUser?['profile_photo'] as String?;
     final isTyping = chatState is ChatMessagesLoaded && chatState.isTyping;
     final messages = chatState is ChatMessagesLoaded
@@ -1780,16 +1781,9 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        automaticallyImplyLeading: false,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(36),
-          child: AppBreadcrumbs(
-            items: [
-              AppBreadcrumbItem(l.home, onTap: () => context.go('/home')),
-              AppBreadcrumbItem(l.navChat, onTap: () => context.go('/chat-list')),
-              AppBreadcrumbItem(otherName),
-            ],
-          ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/chat-list'),
         ),
         title: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1855,6 +1849,10 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailPage> {
               ),
             ),
           ],
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(38),
+          child: const AppBreadcrumbs.global(),
         ),
         actions: [
           IconButton(

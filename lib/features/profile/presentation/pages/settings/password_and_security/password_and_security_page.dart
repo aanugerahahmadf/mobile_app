@@ -6,7 +6,6 @@ import '../../../../../../core/constants/app_colors/app_colors.dart';
 import '../../../../../../core/constants/app_text_styles/app_text_styles.dart';
 import '../../../../../../core/constants/app_sizes/app_sizes.dart';
 import '../../../../../../core/widgets/guest_auth_prompt/guest_auth_prompt.dart';
-import '../../../../../../core/widgets/app_breadcrumbs/app_breadcrumbs.dart';
 import '../../../../../auth/presentation/providers/auth_provider/auth_provider.dart';
 
 class PasswordAndSecurityPage extends ConsumerWidget {
@@ -20,19 +19,13 @@ class PasswordAndSecurityPage extends ConsumerWidget {
     if (!isAuthenticated) {
       return Scaffold(
         appBar: AppBar(
-          automaticallyImplyLeading: false,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.pop(),
+          ),
           title: Text(l.passwordAndSecurity),
           backgroundColor: Colors.transparent,
           elevation: 0,
-          bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(36),
-            child: AppBreadcrumbs(items: [
-              AppBreadcrumbItem(l.home, onTap: () => context.go('/home')),
-              AppBreadcrumbItem(l.profile, onTap: () => context.go('/profile')),
-              AppBreadcrumbItem(l.settings, onTap: () => context.go('/settings')),
-              AppBreadcrumbItem(l.passwordAndSecurity),
-            ]),
-          ),
         ),
         body: const GuestAuthPrompt(icon: Icons.security_outlined),
       );
@@ -40,19 +33,13 @@ class PasswordAndSecurityPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
         title: Text(l.passwordAndSecurity),
         backgroundColor: Colors.transparent,
         elevation: 0,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(36),
-          child: AppBreadcrumbs(items: [
-            AppBreadcrumbItem(l.home, onTap: () => context.go('/home')),
-            AppBreadcrumbItem(l.profile, onTap: () => context.go('/profile')),
-            AppBreadcrumbItem(l.settings, onTap: () => context.go('/settings')),
-            AppBreadcrumbItem(l.passwordAndSecurity),
-          ]),
-        ),
       ),
       body: ListView(
         children: [

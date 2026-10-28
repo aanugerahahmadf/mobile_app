@@ -1,10 +1,9 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
-import '../../../../../core/widgets/app_breadcrumbs/app_breadcrumbs.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
@@ -20,6 +19,7 @@ import '../../widgets/global_search_bar/global_search_bar.dart';
 import '../../../data/models/search_suggestion/search_suggestion.dart';
 import '../../providers/search_provider/search_provider.dart';
 import '../../../../cbir/presentation/providers/cbir_provider/cbir_provider.dart';
+import '../../../../../core/widgets/app_breadcrumbs/app_breadcrumbs.dart';
 
 class SearchPage extends ConsumerStatefulWidget {
   final String initialQuery;
@@ -194,12 +194,10 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               ),
               child: Column(
                 children: [
-                  AppBreadcrumbs(items: [
-                    AppBreadcrumbItem(l.home, onTap: () => context.go('/home')),
-                    AppBreadcrumbItem(l.search),
-                  ]),
-                  Row(children: [
-                  // showCamera: false — halaman ini sudah punya tombol kamera
+                  const AppBreadcrumbs.global(),
+                  IconButton(icon: Icon(Icons.arrow_back, color: AppColors.primaryColor), onPressed: () => context.pop()),
+Row(children: [
+                  // showCamera: false â€” halaman ini sudah punya tombol kamera
                   // sendiri di sebelah kolom pencarian. Tanpa flag itu dua
                   // tombol identik dengan aksi sama tampil bersamaan.
                   const Expanded(
@@ -535,3 +533,5 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     }
   }
 }
+
+

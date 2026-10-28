@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
+import '../../../../../core/widgets/app_breadcrumbs/app_breadcrumbs.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../../core/constants/app_colors/app_colors.dart';
 import '../../../../../core/constants/app_sizes/app_sizes.dart';
@@ -44,6 +46,7 @@ class _PaymentMethodDetailPageState
   bool _vaLoading = false;
   Map<String, dynamic>? _qris;
   bool _qrisLoading = false;
+  Timer? _paymentStatusTimer;
   final _cardFormKey = GlobalKey<CreditCardFormState>();
 
   @override
@@ -58,6 +61,28 @@ class _PaymentMethodDetailPageState
           _va == null) {
         _createVirtualAccount();
       }
+    });
+    _startPaymentStatusPolling();
+  }
+
+  @override
+  void dispose() {
+    _paymentStatusTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startPaymentStatusPolling() {
+    _paymentStatusTimer?.cancel();
+    _paymentStatusTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
+      if (!mounted || _loading || _submitting) return;
+      final previous = '${_order?['payment_status']}';
+      await _loadOrder();
+      if (!mounted) return;
+      final current = '${_order?['payment_status']}';
+      final isPaid = current == 'paid' ||
+          current == 'success' ||
+          current == 'completed';
+      if (isPaid && previous != current) _paymentStatusTimer?.cancel();
     });
   }
 
@@ -253,6 +278,10 @@ class _PaymentMethodDetailPageState
         title: Text(widget.method.name),
         backgroundColor: Colors.transparent,
         elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(38),
+          child: const AppBreadcrumbs.global(),
+        ),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -423,13 +452,19 @@ class _PaymentMethodDetailPageState
   }
 
   Widget _buildQrisContent(AppLocalizations l, int amount) {
+    // Gambar QRIS selalu ada: `qrisImage` memakai `qris_image_url` dari server
+    // atau berkas statis /images/qris/qris.jpg (sumber yang sama dengan panel
+    // web). Placeholder hanya muncul kalau keduanya benar-benar tidak bisa
+    // dimuat.
+    final qrisImage = widget.method.qrisImage;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildAmountCard(l, amount),
         const SizedBox(height: AppSizes.md),
-        if (widget.method.imageUrl != null)
-          _buildQrisImage(widget.method.imageUrl!)
+        if (qrisImage.isNotEmpty)
+          _buildQrisImage(qrisImage)
         else
           _buildQrisPlaceholder(l),
         const SizedBox(height: AppSizes.md),

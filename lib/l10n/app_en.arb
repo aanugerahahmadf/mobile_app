@@ -1615,5 +1615,7 @@
   ,"startupPreparingData":"Preparing app data..."
   ,"startupDownloadingData":"Downloading the latest data..."
   ,"startupReady":"Optimizing data..."
+  ,"menu":"Menu"
   ,"catalogDetail":"Catalog detail"
+  ,"flowerDecorationsCatalog":"Flower Decorations Catalog"
 }
