@@ -34,14 +34,17 @@ class AppNavigationTrail extends ChangeNotifier {
       // A detail route can be opened directly (for example from a
       // notification). It still needs a bottom-navigation root.
       _entries.add(const TrailEntry('/home', 'Home'));
-      if (normalized != '/home') {
-        _entries.add(TrailEntry(normalized, normalized));
-      }
-    } else if (_entries.last.path != normalized) {
+    }
+
+    if (_entries.last.path != normalized) {
       final existing = _entries.indexWhere((entry) => entry.path == normalized);
       if (existing >= 0) {
         _entries.removeRange(existing + 1, _entries.length);
       } else {
+        final parent = _parentFor(normalized);
+        if (parent != null && !_entries.any((entry) => entry.path == parent.path)) {
+          _entries.add(parent);
+        }
         _entries.add(TrailEntry(normalized, normalized));
       }
     }
@@ -126,6 +129,25 @@ class AppNavigationTrail extends ChangeNotifier {
     return fallback != null && fallback != normalized
         ? fallback
         : normalized.substring(1).replaceAll('-', ' ');
+  }
+
+  TrailEntry? _parentFor(String path) {
+    if (path.startsWith('/catalog/') && path != '/catalog') {
+      return const TrailEntry('/catalog', 'Flower Decorations Catalog');
+    }
+    if (path.startsWith('/order/') && path != '/orders') {
+      return const TrailEntry('/orders', 'Order History');
+    }
+    if (path.startsWith('/chat/') && path != '/chat-list') {
+      return const TrailEntry('/chat-list', 'Chat');
+    }
+    if (path.startsWith('/payment/') && path != '/payment-method') {
+      return const TrailEntry('/payment-method', 'Payment Method');
+    }
+    if (path == '/cbir-result') {
+      return const TrailEntry('/search', 'Search');
+    }
+    return null;
   }
 
   static String _normalize(String path) {
