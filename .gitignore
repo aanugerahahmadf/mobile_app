@@ -42,6 +42,7 @@ lib/dataconnect_generated/
 # Environment
 .env
 .env.*
+!.env.example
 
 # Symbolication related
 app.*.symbols

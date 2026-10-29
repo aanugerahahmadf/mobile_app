@@ -1,0 +1,49 @@
+name: Build iOS
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ios-build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  FLUTTER_VERSION: "3.47.5"
+  API_BASE_URL: "https://example.invalid/api"
+
+jobs:
+  build-ios:
+    name: Build iOS (no codesign)
+    runs-on: macos-14
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate localization
+        run: flutter gen-l10n
+
+      - name: Create environment file
+        run: |
+          printf 'API_BASE_URL=%s\n' "$API_BASE_URL" > .env
+          printf 'PUSHER_APP_KEY=ci-placeholder\nPUSHER_APP_CLUSTER=mt1\n' >> .env
+
+      - name: Build iOS without code signing
+        run: flutter build ios --release --no-codesign
