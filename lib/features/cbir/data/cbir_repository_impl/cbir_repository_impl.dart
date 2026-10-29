@@ -54,7 +54,10 @@ class CbirRepositoryImpl implements CbirRepository {
       'image': await MultipartFile.fromFile(imagePath, filename: filename),
     });
 
-    final endpoint = ApiEndpoints.searchImage;
+    // CBIR khusus mencari dekorasi yang visualnya paling mirip dengan gambar.
+    // Endpoint /search/image adalah pencarian katalog berbasis teks/gabungan,
+    // bukan kontrak content-based image retrieval di Laravel.
+    final endpoint = ApiEndpoints.cbirSearch;
     final response = await DioClient.instance.post(endpoint, data: formData);
 
     final raw = response.data;
