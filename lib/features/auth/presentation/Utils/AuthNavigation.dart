@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../../../../Core/Utils/GuestMode/GuestMode.dart';
-import '../../../../../Core/Widgets/AppNotification/AppNotification.dart';
+import '../../../../Core/Utils/GuestMode/GuestMode.dart';
+import '../../../../Core/Widgets/AppNotification/AppNotification.dart';
 import '../Providers/AuthProvider/AuthProvider.dart';
 import 'package:mobile_app/L10n/AppLocalizations.dart';
 

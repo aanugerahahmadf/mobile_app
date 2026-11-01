@@ -4,55 +4,55 @@ import 'package:firebase_data_connect/firebase_data_connect.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:convert';
 
-part 'InsertWedding.dart';
+part './InsertWedding.dart';
 
-part 'UpdateWedding.dart';
+part './UpdateWedding.dart';
 
-part 'DeleteWedding.dart';
+part './DeleteWedding.dart';
 
-part 'GetWedding.dart';
+part './GetWedding.dart';
 
-part 'ListWeddings.dart';
+part './ListWeddings.dart';
 
-part 'InsertArrangement.dart';
+part './InsertArrangement.dart';
 
-part 'UpdateArrangement.dart';
+part './UpdateArrangement.dart';
 
-part 'DeleteArrangement.dart';
+part './DeleteArrangement.dart';
 
-part 'GetArrangement.dart';
+part './GetArrangement.dart';
 
-part 'ListArrangements.dart';
+part './ListArrangements.dart';
 
-part 'InsertVenueArea.dart';
+part './InsertVenueArea.dart';
 
-part 'UpdateVenueArea.dart';
+part './UpdateVenueArea.dart';
 
-part 'DeleteVenueArea.dart';
+part './DeleteVenueArea.dart';
 
-part 'GetVenueArea.dart';
+part './GetVenueArea.dart';
 
-part 'ListVenueAreas.dart';
+part './ListVenueAreas.dart';
 
-part 'InsertFlowerItem.dart';
+part './InsertFlowerItem.dart';
 
-part 'UpdateFlowerItem.dart';
+part './UpdateFlowerItem.dart';
 
-part 'DeleteFlowerItem.dart';
+part './DeleteFlowerItem.dart';
 
-part 'GetFlowerItem.dart';
+part './GetFlowerItem.dart';
 
-part 'ListFlowerItems.dart';
+part './ListFlowerItems.dart';
 
-part 'InsertReferenceImage.dart';
+part './InsertReferenceImage.dart';
 
-part 'UpdateReferenceImage.dart';
+part './UpdateReferenceImage.dart';
 
-part 'DeleteReferenceImage.dart';
+part './DeleteReferenceImage.dart';
 
-part 'GetReferenceImage.dart';
+part './GetReferenceImage.dart';
 
-part 'ListReferenceImages.dart';
+part './ListReferenceImages.dart';
 
 class ExampleConnector {
   InsertWeddingVariablesBuilder insertWedding() {

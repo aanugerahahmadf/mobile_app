@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -13,7 +13,7 @@ import '../../../../Auth/Presentation/Utils/AuthNavigation.dart';
 import '../../../../Auth/Presentation/Widgets/SocialLoginButton/SocialLoginButton.dart';
 import '../../../../Auth/Presentation/Widgets/AuthModals/AuthModals.dart';
 import 'package:mobile_app/L10n/AppLocalizations.dart';
-import '../../../../../Core/Widgets/GlassSurface/GlassSurface.dart';
+import '../../../../../Core/Widgets/AppBlurBackdrop/AppBlurBackdrop.dart';
 import 'package:flutter/gestures.dart';
 import '../../../../../Core/Providers/LocaleProvider/LocaleProvider.dart';
 
@@ -38,7 +38,7 @@ class _LandingPageState extends ConsumerState<LandingScreen> {
   /// Flag `onboarding_seen` dibaca `redirect` global di `AppRouter.dart`.
   /// Selama flag ini belum true, semua navigasi dipaksa balik ke '/landing'.
   /// Karena itu flag wajib di-set di MOMEN pengguna melanjutkan (login berhasil
-  /// atau "continue as guest"), bukan hanya di layar onboarding — halaman itu
+  /// atau "continue as guest"), bukan hanya di layar onboarding â€” halaman itu
   /// tidak pernah di-route sehingga tidak pernah dieksekusi.
   Future<void> _markOnboardingSeen() async {
     final prefs = await SharedPreferences.getInstance();
@@ -93,7 +93,7 @@ class _LandingPageState extends ConsumerState<LandingScreen> {
     ref.listen<AuthState>(authProvider, (previous, next) {
       // Tombol Google di halaman ini memanggil `googleLogin()` LANGSUNG,
       // tanpa modal. Semua cabang (needsOtp, needsCompletion, 2FA) ditangani
-      // oleh handleAuthContinuation dari AuthNavigation — screen-based routing.
+      // oleh handleAuthContinuation dari AuthNavigation â€” screen-based routing.
       //
       // Cabang "langsung Home" (AuthAuthenticated tanpa needsOtp/needsCompletion)
       // TIDAK dinavigasi di sini secara sinkron: navigasi diserahkan ke
@@ -196,7 +196,7 @@ class _LandingPageState extends ConsumerState<LandingScreen> {
   Widget _buildButtons(AppLocalizations l) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
-      child: GlassSurface(
+      child: AppBlurBackdrop(
         padding: const EdgeInsets.all(AppSizes.lg),
         child: Column(
           children: [
@@ -283,3 +283,4 @@ class _LandingPageState extends ConsumerState<LandingScreen> {
     );
   }
 }
+

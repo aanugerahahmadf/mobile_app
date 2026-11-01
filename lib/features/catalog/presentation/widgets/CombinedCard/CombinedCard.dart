@@ -8,7 +8,7 @@ import '../../../../../Core/Widgets/AppShimmer/AppShimmer.dart';
 import '../../../../../Core/Utils/Formatters/Formatters.dart';
 import '../../../Data/Models/ItemModel/ItemModel.dart';
 import '../../../../Auth/Presentation/Providers/AuthProvider/AuthProvider.dart';
-import '../../../../Favorite/Presentation/Providers/favoriteProvider/favoriteProvider.dart';
+import '../../../../Favorite/Presentation/Providers/FavoriteProvider/FavoriteProvider.dart';
 import '../../../../../Core/Widgets/GuestAuthPrompt/GuestAuthPrompt.dart';
 
 class CombinedCard extends ConsumerStatefulWidget {

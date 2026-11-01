@@ -1,5 +1,5 @@
 import 'package:intl/intl.dart';
-import '../../config/app_config/app_config.dart';
+import '../../Config/AppConfig/AppConfig.dart';
 
 class Formatters {
   /// Parse price from dynamic (String or num) to int

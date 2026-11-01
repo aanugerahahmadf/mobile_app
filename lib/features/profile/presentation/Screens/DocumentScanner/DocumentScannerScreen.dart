@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:camera/camera.dart';
@@ -199,7 +199,7 @@ class _DocumentScannerPageState extends State<DocumentScannerScreen>
     try {
       final recognized = await _textRecognizer!.processImage(inputImage);
       final text = recognized.text.toUpperCase().replaceAll('\n', ' ');
-      final sCore = sCoreDocumentText(widget.docType, text);
+      final sCore = scoreDocumentText(widget.docType, text);
       if (mounted) {
         setState(() {
           _tooFar = sCore > 0 && sCore < 3 && text.trim().length < 25;
@@ -521,3 +521,4 @@ class _DocumentOverlayPainter extends CustomPainter {
         oldDelegate.frameRect != frameRect;
   }
 }
+

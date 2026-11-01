@@ -1,71 +1,71 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
-import 'AppLocalizationsAm.dart';
-import 'AppLocalizationsAr.dart';
-import 'AppLocalizationsAz.dart';
-import 'AppLocalizationsBg.dart';
-import 'AppLocalizationsBn.dart';
-import 'AppLocalizationsBs.dart';
-import 'AppLocalizationsCa.dart';
-import 'AppLocalizationsCkb.dart';
-import 'AppLocalizationsCs.dart';
-import 'AppLocalizationsCy.dart';
-import 'AppLocalizationsDa.dart';
-import 'AppLocalizationsDe.dart';
-import 'AppLocalizationsEl.dart';
-import 'AppLocalizationsEn.dart';
-import 'AppLocalizationsEs.dart';
-import 'AppLocalizationsEt.dart';
-import 'AppLocalizationsEu.dart';
-import 'AppLocalizationsFa.dart';
-import 'AppLocalizationsFi.dart';
-import 'AppLocalizationsFil.dart';
-import 'AppLocalizationsFr.dart';
-import 'AppLocalizationsHe.dart';
-import 'AppLocalizationsHi.dart';
-import 'AppLocalizationsHr.dart';
-import 'AppLocalizationsHu.dart';
-import 'AppLocalizationsHy.dart';
-import 'AppLocalizationsId.dart';
-import 'AppLocalizationsIt.dart';
-import 'AppLocalizationsJa.dart';
-import 'AppLocalizationsKa.dart';
-import 'AppLocalizationsKk.dart';
-import 'AppLocalizationsKm.dart';
-import 'AppLocalizationsKo.dart';
-import 'AppLocalizationsKu.dart';
-import 'AppLocalizationsLt.dart';
-import 'AppLocalizationsLv.dart';
-import 'AppLocalizationsMn.dart';
-import 'AppLocalizationsMs.dart';
-import 'AppLocalizationsMy.dart';
-import 'AppLocalizationsNe.dart';
-import 'AppLocalizationsNl.dart';
-import 'AppLocalizationsNo.dart';
-import 'AppLocalizationsPl.dart';
-import 'AppLocalizationsPt.dart';
-import 'AppLocalizationsRo.dart';
-import 'AppLocalizationsRu.dart';
-import 'AppLocalizationsSk.dart';
-import 'AppLocalizationsSl.dart';
-import 'AppLocalizationsSq.dart';
-import 'AppLocalizationsSr.dart';
-import 'AppLocalizationsSv.dart';
-import 'AppLocalizationsSw.dart';
-import 'AppLocalizationsTh.dart';
-import 'AppLocalizationsTl.dart';
-import 'AppLocalizationsTr.dart';
-import 'AppLocalizationsUk.dart';
-import 'AppLocalizationsUr.dart';
-import 'AppLocalizationsUz.dart';
-import 'AppLocalizationsVi.dart';
-import 'AppLocalizationsZh.dart';
-import 'AppLocalizationsZu.dart';
+import './AppLocalizationsAm.dart';
+import './AppLocalizationsAr.dart';
+import './AppLocalizationsAz.dart';
+import './AppLocalizationsBg.dart';
+import './AppLocalizationsBn.dart';
+import './AppLocalizationsBs.dart';
+import './AppLocalizationsCa.dart';
+import './AppLocalizationsCkb.dart';
+import './AppLocalizationsCs.dart';
+import './AppLocalizationsCy.dart';
+import './AppLocalizationsDa.dart';
+import './AppLocalizationsDe.dart';
+import './AppLocalizationsEl.dart';
+import './AppLocalizationsEn.dart';
+import './AppLocalizationsEs.dart';
+import './AppLocalizationsEt.dart';
+import './AppLocalizationsEu.dart';
+import './AppLocalizationsFa.dart';
+import './AppLocalizationsFi.dart';
+import './AppLocalizationsFil.dart';
+import './AppLocalizationsFr.dart';
+import './AppLocalizationsHe.dart';
+import './AppLocalizationsHi.dart';
+import './AppLocalizationsHr.dart';
+import './AppLocalizationsHu.dart';
+import './AppLocalizationsHy.dart';
+import './AppLocalizationsId.dart';
+import './AppLocalizationsIt.dart';
+import './AppLocalizationsJa.dart';
+import './AppLocalizationsKa.dart';
+import './AppLocalizationsKk.dart';
+import './AppLocalizationsKm.dart';
+import './AppLocalizationsKo.dart';
+import './AppLocalizationsKu.dart';
+import './AppLocalizationsLt.dart';
+import './AppLocalizationsLv.dart';
+import './AppLocalizationsMn.dart';
+import './AppLocalizationsMs.dart';
+import './AppLocalizationsMy.dart';
+import './AppLocalizationsNe.dart';
+import './AppLocalizationsNl.dart';
+import './AppLocalizationsNo.dart';
+import './AppLocalizationsPl.dart';
+import './AppLocalizationsPt.dart';
+import './AppLocalizationsRo.dart';
+import './AppLocalizationsRu.dart';
+import './AppLocalizationsSk.dart';
+import './AppLocalizationsSl.dart';
+import './AppLocalizationsSq.dart';
+import './AppLocalizationsSr.dart';
+import './AppLocalizationsSv.dart';
+import './AppLocalizationsSw.dart';
+import './AppLocalizationsTh.dart';
+import './AppLocalizationsTl.dart';
+import './AppLocalizationsTr.dart';
+import './AppLocalizationsUk.dart';
+import './AppLocalizationsUr.dart';
+import './AppLocalizationsUz.dart';
+import './AppLocalizationsVi.dart';
+import './AppLocalizationsZh.dart';
+import './AppLocalizationsZu.dart';
 
 // ignore_for_file: type=lint
 
@@ -105,12 +105,12 @@ import 'AppLocalizationsZu.dart';
 ///
 /// iOS applications define key application metadata, including supported
 /// locales, in an Info.plist file that is built into the application bundle.
-/// To configure the locales supported by your app, you’ll need to edit this
+/// To configure the locales supported by your app, youâ€™ll need to edit this
 /// file.
 ///
-/// First, open your project’s ios/Runner.xcworkspace Xcode workspace file.
+/// First, open your projectâ€™s ios/Runner.xcworkspace Xcode workspace file.
 /// Then, in the Project Navigator, open the Info.plist file under the Runner
-/// project’s Runner folder.
+/// projectâ€™s Runner folder.
 ///
 /// Next, select the Information Property List item, select Add Item from the
 /// Editor menu, then select Localizations from the pop-up menu.
@@ -698,7 +698,7 @@ abstract class AppLocalizations {
   /// No description provided for @arabic.
   ///
   /// In en, this message translates to:
-  /// **'Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â±Ã˜Â¨Ã™Å Ã˜Â©'**
+  /// **'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â±ÃƒËœÃ‚Â¨Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â©'**
   String get arabic;
 
   /// No description provided for @attachment.
@@ -998,7 +998,7 @@ abstract class AppLocalizations {
   /// No description provided for @chinese.
   ///
   /// In en, this message translates to:
-  /// **'Ã¤Â¸Â­Ã¦â€“â€¡'**
+  /// **'ÃƒÂ¤Ã‚Â¸Ã‚Â­ÃƒÂ¦Ã¢â‚¬â€œÃ¢â‚¬Â¡'**
   String get chinese;
 
   /// No description provided for @chooseCategory.
@@ -2564,13 +2564,13 @@ abstract class AppLocalizations {
   /// No description provided for @japanese.
   ///
   /// In en, this message translates to:
-  /// **'Ã¦—Â¥Ã¦Å“Â¬Ã¨ÂªÅ¾'**
+  /// **'ÃƒÂ¦â€”Ã‚Â¥ÃƒÂ¦Ã…â€œÃ‚Â¬ÃƒÂ¨Ã‚ÂªÃ…Â¾'**
   String get japanese;
 
   /// No description provided for @korean.
   ///
   /// In en, this message translates to:
-  /// **'Ã­â€¢Å“ÃªÂµÂ­Ã¬â€“Â´'**
+  /// **'ÃƒÂ­Ã¢â‚¬Â¢Ã…â€œÃƒÂªÃ‚ÂµÃ‚Â­ÃƒÂ¬Ã¢â‚¬â€œÃ‚Â´'**
   String get korean;
 
   /// No description provided for @ktp.
@@ -3620,13 +3620,13 @@ abstract class AppLocalizations {
   /// No description provided for @priceAsc.
   ///
   /// In en, this message translates to:
-  /// **'Price â†‘'**
+  /// **'Price Ã¢â€ â€˜'**
   String get priceAsc;
 
   /// No description provided for @priceDesc.
   ///
   /// In en, this message translates to:
-  /// **'Price â†“'**
+  /// **'Price Ã¢â€ â€œ'**
   String get priceDesc;
 
   /// No description provided for @privacyAndTerms.
@@ -4034,25 +4034,25 @@ abstract class AppLocalizations {
   /// No description provided for @scanIssueBlur.
   ///
   /// In en, this message translates to:
-  /// **'Image is blurry — retake for a sharper photo'**
+  /// **'Image is blurry â€” retake for a sharper photo'**
   String get scanIssueBlur;
 
   /// No description provided for @scanIssueDark.
   ///
   /// In en, this message translates to:
-  /// **'Image is too dark — retake in better light'**
+  /// **'Image is too dark â€” retake in better light'**
   String get scanIssueDark;
 
   /// No description provided for @scanIssueDocument.
   ///
   /// In en, this message translates to:
-  /// **'No valid identity document detected — retake'**
+  /// **'No valid identity document detected â€” retake'**
   String get scanIssueDocument;
 
   /// No description provided for @scanIssueFace.
   ///
   /// In en, this message translates to:
-  /// **'No single face detected — retake'**
+  /// **'No single face detected â€” retake'**
   String get scanIssueFace;
 
   /// No description provided for @scanNotDetected.
@@ -4073,11 +4073,11 @@ abstract class AppLocalizations {
   /// **'Scan Document'**
   String get scanDocument;
 
-  /// No description provided for @scanSCore.
+  /// No description provided for @scanScore.
   ///
   /// In en, this message translates to:
   /// **'SCore'**
-  String get scanSCore;
+  String get scanScore;
 
   /// No description provided for @scanQrCode.
   ///
@@ -4358,7 +4358,7 @@ abstract class AppLocalizations {
   /// No description provided for @selfieCardHoldCard.
   ///
   /// In en, this message translates to:
-  /// **'Face detected — now hold your ID card inside the bottom frame'**
+  /// **'Face detected â€” now hold your ID card inside the bottom frame'**
   String get selfieCardHoldCard;
 
   /// No description provided for @selfieCardValidationFailed.
@@ -4514,13 +4514,13 @@ abstract class AppLocalizations {
   /// No description provided for @priceLowToHigh.
   ///
   /// In en, this message translates to:
-  /// **'Price ↑'**
+  /// **'Price â†‘'**
   String get priceLowToHigh;
 
   /// No description provided for @priceHighToLow.
   ///
   /// In en, this message translates to:
-  /// **'Price ↓'**
+  /// **'Price â†“'**
   String get priceHighToLow;
 
   /// No description provided for @shippingCost.
@@ -4958,7 +4958,7 @@ abstract class AppLocalizations {
   /// No description provided for @thai.
   ///
   /// In en, this message translates to:
-  /// **'Ã Â¹â€žÃ Â¸—Ã Â¸Â¢'**
+  /// **'ÃƒÂ Ã‚Â¹Ã¢â‚¬Å¾ÃƒÂ Ã‚Â¸â€”ÃƒÂ Ã‚Â¸Ã‚Â¢'**
   String get thai;
 
   /// No description provided for @theme.
@@ -5438,7 +5438,7 @@ abstract class AppLocalizations {
   /// No description provided for @vietnamese.
   ///
   /// In en, this message translates to:
-  /// **'TiÃ¡ÂºÂ¿ng ViÃ¡Â»â€¡t'**
+  /// **'TiÃƒÂ¡Ã‚ÂºÃ‚Â¿ng ViÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¡t'**
   String get vietnamese;
 
   /// No description provided for @viewDetail.
@@ -7700,7 +7700,7 @@ abstract class AppLocalizations {
   /// No description provided for @newDeviceQuestion.
   ///
   /// In en, this message translates to:
-  /// **'New device — Is this you?'**
+  /// **'New device â€” Is this you?'**
   String get newDeviceQuestion;
 
   /// No description provided for @yesItWasMe.
@@ -9256,3 +9256,4 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
     'that was used.',
   );
 }
+

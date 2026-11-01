@@ -5,7 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../../Core/Errors/AppErrorCodes/AppErrorCodes.dart';
 import '../../../Data/CartRepositoryImpl/CartRepositoryImpl.dart';
 import '../../../Domain/CartRepository/CartRepository.dart';
-import '../../../../Favorite/Presentation/Providers/favoriteProvider/favoriteProvider.dart';
+import '../../../../Favorite/Presentation/Providers/FavoriteProvider/FavoriteProvider.dart';
 import '../../../../../Core/Providers/LocaleProvider/LocaleProvider.dart';
 import '../../../../../Core/Utils/GuestMode/GuestMode.dart';
 import '../../../../Auth/Presentation/Providers/AuthProvider/AuthProvider.dart';

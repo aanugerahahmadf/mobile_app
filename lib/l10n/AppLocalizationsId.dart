@@ -1,6 +1,6 @@
-// ignore: unused_import
+﻿// ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-import 'AppLocalizations.dart';
+import './AppLocalizations.dart';
 
 // ignore_for_file: type=lint
 
@@ -252,7 +252,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get appVersion => '1.0.0';
 
   @override
-  String get arabic => 'Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â±Ã˜Â¨Ã™Å Ã˜Â©';
+  String get arabic => 'ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â±ÃƒËœÃ‚Â¨Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â©';
 
   @override
   String get attachment => 'Lampiran';
@@ -408,7 +408,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get checkout => 'Checkout';
 
   @override
-  String get chinese => 'Ã¤Â¸Â­Ã¦â€“â€¡';
+  String get chinese => 'ÃƒÂ¤Ã‚Â¸Ã‚Â­ÃƒÂ¦Ã¢â‚¬â€œÃ¢â‚¬Â¡';
 
   @override
   String get chooseCategory => 'Pilih Kategori';
@@ -1216,10 +1216,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get itemRemoved => 'Item berhasil dihapus';
 
   @override
-  String get japanese => 'Ã¦—Â¥Ã¦Å“Â¬Ã¨ÂªÅ¾';
+  String get japanese => 'ÃƒÂ¦â€”Ã‚Â¥ÃƒÂ¦Ã…â€œÃ‚Â¬ÃƒÂ¨Ã‚ÂªÃ…Â¾';
 
   @override
-  String get korean => 'Ã­â€¢Å“ÃªÂµÂ­Ã¬â€“Â´';
+  String get korean => 'ÃƒÂ­Ã¢â‚¬Â¢Ã…â€œÃƒÂªÃ‚ÂµÃ‚Â­ÃƒÂ¬Ã¢â‚¬â€œÃ‚Â´';
 
   @override
   String get ktp => 'Kartu Tanda Penduduk (KTP)';
@@ -1763,10 +1763,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get price => 'Harga';
 
   @override
-  String get priceAsc => 'Harga â†‘';
+  String get priceAsc => 'Harga Ã¢â€ â€˜';
 
   @override
-  String get priceDesc => 'Harga â†“';
+  String get priceDesc => 'Harga Ã¢â€ â€œ';
 
   @override
   String get privacyAndTerms => 'Privasi & Ketentuan';
@@ -1978,18 +1978,18 @@ class AppLocalizationsId extends AppLocalizations {
   String get scanDetectedValuePrefix => 'Terbaca: ';
 
   @override
-  String get scanIssueBlur => 'Gambar buram — ambil ulang agar lebih tajam';
+  String get scanIssueBlur => 'Gambar buram â€” ambil ulang agar lebih tajam';
 
   @override
   String get scanIssueDark =>
-      'Gambar terlalu gelap — ambil ulang dengan pencahayaan lebih baik';
+      'Gambar terlalu gelap â€” ambil ulang dengan pencahayaan lebih baik';
 
   @override
   String get scanIssueDocument =>
-      'Tidak ada dokumen identitas valid terdeteksi — ambil ulang';
+      'Tidak ada dokumen identitas valid terdeteksi â€” ambil ulang';
 
   @override
-  String get scanIssueFace => 'Tidak ada satu wajah terdeteksi — ambil ulang';
+  String get scanIssueFace => 'Tidak ada satu wajah terdeteksi â€” ambil ulang';
 
   @override
   String get scanNotDetected => 'Deteksi gagal';
@@ -2001,7 +2001,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get scanDocument => 'Pindai Dokumen';
 
   @override
-  String get scanSCore => 'Skor';
+  String get scanScore => 'Skor';
 
   @override
   String get scanQrCode => 'Scan QR Code';
@@ -2148,7 +2148,7 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get selfieCardHoldCard =>
-      'Wajah terdeteksi — sekarang posisikan kartu identitas di bingkai bawah';
+      'Wajah terdeteksi â€” sekarang posisikan kartu identitas di bingkai bawah';
 
   @override
   String get selfieCardValidationFailed =>
@@ -2227,10 +2227,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get noMatchingItems => 'Tidak ada item yang cocok';
 
   @override
-  String get priceLowToHigh => 'Harga ↑';
+  String get priceLowToHigh => 'Harga â†‘';
 
   @override
-  String get priceHighToLow => 'Harga ↓';
+  String get priceHighToLow => 'Harga â†“';
 
   @override
   String get shippingCost => 'Ongkos Kirim';
@@ -2313,7 +2313,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get sourceOfFundsLabel => 'Sumber Dana';
 
   @override
-  String get spanish => 'EspaÃƒÂ±ol';
+  String get spanish => 'EspaÃƒÆ’Ã‚Â±ol';
 
   @override
   String get specialPromo => 'Promo Spesial';
@@ -2458,7 +2458,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get termsOfService => 'Ketentuan Layanan';
 
   @override
-  String get thai => 'Ã Â¹â€žÃ Â¸—Ã Â¸Â¢';
+  String get thai => 'ÃƒÂ Ã‚Â¹Ã¢â‚¬Å¾ÃƒÂ Ã‚Â¸â€”ÃƒÂ Ã‚Â¸Ã‚Â¢';
 
   @override
   String get theme => 'Tema';
@@ -2710,7 +2710,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get version => 'Versi';
 
   @override
-  String get vietnamese => 'TiÃ¡ÂºÂ¿ng ViÃ¡Â»â€¡t';
+  String get vietnamese => 'TiÃƒÂ¡Ã‚ÂºÃ‚Â¿ng ViÃƒÂ¡Ã‚Â»Ã¢â‚¬Â¡t';
 
   @override
   String get viewDetail => 'Lihat Detail';
@@ -3910,7 +3910,7 @@ class AppLocalizationsId extends AppLocalizations {
   String get deviceRemoved => 'Perangkat berhasil dihapus';
 
   @override
-  String get newDeviceQuestion => 'Perangkat Baru — Apakah Ini Anda?';
+  String get newDeviceQuestion => 'Perangkat Baru â€” Apakah Ini Anda?';
 
   @override
   String get yesItWasMe => 'Ya, Ini Saya';
@@ -4630,3 +4630,4 @@ class AppLocalizationsId extends AppLocalizations {
   @override
   String get flowerDecorationsCatalog => 'Katalog Dekorasi Bunga';
 }
+

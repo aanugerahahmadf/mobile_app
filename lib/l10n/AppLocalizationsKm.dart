@@ -1,6 +1,6 @@
-// ignore: unused_import
+﻿// ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-import 'AppLocalizations.dart';
+import './AppLocalizations.dart';
 
 // ignore_for_file: type=lint
 
@@ -241,7 +241,7 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get appName =>
-      'áž€áž¶ážšážáž»áž”ážáŸ‚áž„áž•áŸ’áž€áž¶áž¢áž¶áž–áž¶áž áŸáž–áž·áž–áž¶áž áŸ';
+      'Ã¡Å¾â‚¬Ã¡Å¾Â¶Ã¡Å¾Å¡Ã¡Å¾ÂÃ¡Å¾Â»Ã¡Å¾â€Ã¡Å¾ÂÃ¡Å¸â€šÃ¡Å¾â€žÃ¡Å¾â€¢Ã¡Å¸â€™Ã¡Å¾â‚¬Ã¡Å¾Â¶Ã¡Å¾Â¢Ã¡Å¾Â¶Ã¡Å¾â€“Ã¡Å¾Â¶Ã¡Å¾Â Ã¡Å¸ÂÃ¡Å¾â€“Ã¡Å¾Â·Ã¡Å¾â€“Ã¡Å¾Â¶Ã¡Å¾Â Ã¡Å¸Â';
 
   @override
   String get appPolicy => 'App Policy';
@@ -253,7 +253,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get appVersion => '1.0.0';
 
   @override
-  String get arabic => 'Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©';
+  String get arabic => 'Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â±Ã˜Â¨Ã™Å Ã˜Â©';
 
   @override
   String get attachment => 'Attachment';
@@ -291,7 +291,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get bookingTime => 'Booking Time';
 
   @override
-  String get buddha => 'áž–áŸ’ážšáŸ‡áž–áž»áž‘áŸ’áž’';
+  String get buddha => 'Ã¡Å¾â€“Ã¡Å¸â€™Ã¡Å¾Å¡Ã¡Å¸â€¡Ã¡Å¾â€“Ã¡Å¾Â»Ã¡Å¾â€˜Ã¡Å¸â€™Ã¡Å¾â€™';
 
   @override
   String get budgetLabel => 'Budget';
@@ -406,10 +406,10 @@ class AppLocalizationsKm extends AppLocalizations {
   String get check => 'Check';
 
   @override
-  String get checkout => 'áž–áž·áž“áž·ážáŸ’áž™áž…áŸáž‰';
+  String get checkout => 'Ã¡Å¾â€“Ã¡Å¾Â·Ã¡Å¾â€œÃ¡Å¾Â·Ã¡Å¾ÂÃ¡Å¸â€™Ã¡Å¾â„¢Ã¡Å¾â€¦Ã¡Å¸ÂÃ¡Å¾â€°';
 
   @override
-  String get chinese => 'ä¸­æ–‡';
+  String get chinese => 'Ã¤Â¸Â­Ã¦â€“â€¡';
 
   @override
   String get chooseCategory => 'Select Category';
@@ -532,7 +532,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get continuePayment => 'Continue Payment';
 
   @override
-  String get convenienceStore => 'áž áž¶áž„áž„áž¶áž™ážŸáŸ’ážšáž½áž›';
+  String get convenienceStore => 'Ã¡Å¾Â Ã¡Å¾Â¶Ã¡Å¾â€žÃ¡Å¾â€žÃ¡Å¾Â¶Ã¡Å¾â„¢Ã¡Å¾Å¸Ã¡Å¸â€™Ã¡Å¾Å¡Ã¡Å¾Â½Ã¡Å¾â€º';
 
   @override
   String get country => 'Country';
@@ -644,7 +644,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get easyQuickOrder => 'Easy & Quick Ordering';
 
   @override
-  String get edit => 'áž€áŸ‚ážŸáž˜áŸ’ážšáž½áž›';
+  String get edit => 'Ã¡Å¾â‚¬Ã¡Å¸â€šÃ¡Å¾Å¸Ã¡Å¾ËœÃ¡Å¸â€™Ã¡Å¾Å¡Ã¡Å¾Â½Ã¡Å¾â€º';
 
   @override
   String get enabled => 'Enabled';
@@ -688,7 +688,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get employee => 'Employee';
 
   @override
-  String get english => 'áž—áž¶ážŸáž¶áž¢áž„áŸ‹áž‚áŸ’áž›áŸážŸ';
+  String get english => 'Ã¡Å¾â€”Ã¡Å¾Â¶Ã¡Å¾Å¸Ã¡Å¾Â¶Ã¡Å¾Â¢Ã¡Å¾â€žÃ¡Å¸â€¹Ã¡Å¾â€šÃ¡Å¸â€™Ã¡Å¾â€ºÃ¡Å¸ÂÃ¡Å¾Å¸';
 
   @override
   String get enter6DigitOtp => 'Enter the 6-digit OTP code';
@@ -727,7 +727,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get entrepreneur => 'Entrepreneur';
 
   @override
-  String get error => 'áž€áŸ†áž áž»ážŸ';
+  String get error => 'Ã¡Å¾â‚¬Ã¡Å¸â€ Ã¡Å¾Â Ã¡Å¾Â»Ã¡Å¾Å¸';
 
   @override
   String get errorOccurred => 'An error occurred';
@@ -951,7 +951,7 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get fileManager =>
-      'áž€áž˜áŸ’áž˜ážœáž·áž’áž¸áž‚áŸ’ážšáž”áŸ‹áž‚áŸ’ážšáž„áž¯áž€ážŸáž¶ážš';
+      'Ã¡Å¾â‚¬Ã¡Å¾ËœÃ¡Å¸â€™Ã¡Å¾ËœÃ¡Å¾Å“Ã¡Å¾Â·Ã¡Å¾â€™Ã¡Å¾Â¸Ã¡Å¾â€šÃ¡Å¸â€™Ã¡Å¾Å¡Ã¡Å¾â€Ã¡Å¸â€¹Ã¡Å¾â€šÃ¡Å¸â€™Ã¡Å¾Å¡Ã¡Å¾â€žÃ¡Å¾Â¯Ã¡Å¾â‚¬Ã¡Å¾Å¸Ã¡Å¾Â¶Ã¡Å¾Å¡';
 
   @override
   String get fillDataCorrectly => 'Fill in your data correctly';
@@ -1042,7 +1042,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get gift => 'Gift/Inheritance';
 
   @override
-  String get googleDrive => 'ážáž¶ážŸ Google';
+  String get googleDrive => 'Ã¡Å¾ÂÃ¡Å¾Â¶Ã¡Å¾Å¸ Google';
 
   @override
   String get gopay => 'GoPay';
@@ -1057,7 +1057,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get highestRating => 'Highest Rating';
 
   @override
-  String get hindu => 'áž áž·ážŽáŸ’ážŒáž¼';
+  String get hindu => 'Ã¡Å¾Â Ã¡Å¾Â·Ã¡Å¾Å½Ã¡Å¸â€™Ã¡Å¾Å’Ã¡Å¾Â¼';
 
   @override
   String get history => 'History';
@@ -1204,22 +1204,22 @@ class AppLocalizationsKm extends AppLocalizations {
   String get isFeatured => 'Featured';
 
   @override
-  String get isGlobal => 'ážŸáž€áž›';
+  String get isGlobal => 'Ã¡Å¾Å¸Ã¡Å¾â‚¬Ã¡Å¾â€º';
 
   @override
-  String get islam => 'áž¥ážŸáŸ’áž›áž¶áž˜';
+  String get islam => 'Ã¡Å¾Â¥Ã¡Å¾Å¸Ã¡Å¸â€™Ã¡Å¾â€ºÃ¡Å¾Â¶Ã¡Å¾Ëœ';
 
   @override
-  String get itemCount => '1 áž’áž¶ážáž»';
+  String get itemCount => '1 Ã¡Å¾â€™Ã¡Å¾Â¶Ã¡Å¾ÂÃ¡Å¾Â»';
 
   @override
   String get itemRemoved => 'Item removed';
 
   @override
-  String get japanese => 'æ—¥æœ¬èªž';
+  String get japanese => 'Ã¦â€”Â¥Ã¦Å“Â¬Ã¨ÂªÅ¾';
 
   @override
-  String get korean => 'í•œêµ­ì–´';
+  String get korean => 'Ã­â€¢Å“ÃªÂµÂ­Ã¬â€“Â´';
 
   @override
   String get ktp => 'ID Card (KTP)';
@@ -1358,7 +1358,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get navCatalog => 'Catalog';
 
   @override
-  String get navChat => 'áž‡áž‡áŸ‚áž€';
+  String get navChat => 'Ã¡Å¾â€¡Ã¡Å¾â€¡Ã¡Å¸â€šÃ¡Å¾â‚¬';
 
   @override
   String get navHome => 'Home';
@@ -1553,7 +1553,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get partiallyPaid => 'Partially Paid';
 
   @override
-  String get passport => 'áž›áž·ážáž·ážáž†áŸ’áž›áž„ážŠáŸ‚áž“';
+  String get passport => 'Ã¡Å¾â€ºÃ¡Å¾Â·Ã¡Å¾ÂÃ¡Å¾Â·Ã¡Å¾ÂÃ¡Å¾â€ Ã¡Å¸â€™Ã¡Å¾â€ºÃ¡Å¾â€žÃ¡Å¾Å Ã¡Å¸â€šÃ¡Å¾â€œ';
 
   @override
   String get passportLabel => 'Passport Number';
@@ -1763,10 +1763,10 @@ class AppLocalizationsKm extends AppLocalizations {
   String get price => 'Price';
 
   @override
-  String get priceAsc => 'Price â†‘';
+  String get priceAsc => 'Price Ã¢â€ â€˜';
 
   @override
-  String get priceDesc => 'Price â†“';
+  String get priceDesc => 'Price Ã¢â€ â€œ';
 
   @override
   String get privacyAndTerms => 'Privacy & Terms';
@@ -1902,7 +1902,7 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get resetPassword =>
-      'áž€áŸ†ážŽážáŸ‹áž–áž¶áž€áŸ’áž™ážŸáž˜áŸ’áž„áž¶ážáŸ‹áž¡áž¾áž„ážœáž·áž‰';
+      'Ã¡Å¾â‚¬Ã¡Å¸â€ Ã¡Å¾Å½Ã¡Å¾ÂÃ¡Å¸â€¹Ã¡Å¾â€“Ã¡Å¾Â¶Ã¡Å¾â‚¬Ã¡Å¸â€™Ã¡Å¾â„¢Ã¡Å¾Å¸Ã¡Å¾ËœÃ¡Å¸â€™Ã¡Å¾â€žÃ¡Å¾Â¶Ã¡Å¾ÂÃ¡Å¸â€¹Ã¡Å¾Â¡Ã¡Å¾Â¾Ã¡Å¾â€žÃ¡Å¾Å“Ã¡Å¾Â·Ã¡Å¾â€°';
 
   @override
   String get reset => 'Reset';
@@ -1977,17 +1977,17 @@ class AppLocalizationsKm extends AppLocalizations {
   String get scanDetectedValuePrefix => 'Detected: ';
 
   @override
-  String get scanIssueBlur => 'Image is blurry — retake for a sharper photo';
+  String get scanIssueBlur => 'Image is blurry â€” retake for a sharper photo';
 
   @override
-  String get scanIssueDark => 'Image is too dark — retake in better light';
+  String get scanIssueDark => 'Image is too dark â€” retake in better light';
 
   @override
   String get scanIssueDocument =>
-      'No valid identity document detected — retake';
+      'No valid identity document detected â€” retake';
 
   @override
-  String get scanIssueFace => 'No single face detected — retake';
+  String get scanIssueFace => 'No single face detected â€” retake';
 
   @override
   String get scanNotDetected => 'Detection failed';
@@ -1999,10 +1999,10 @@ class AppLocalizationsKm extends AppLocalizations {
   String get scanDocument => 'Scan Document';
 
   @override
-  String get scanSCore => 'SCore';
+  String get scanScore => 'SCore';
 
   @override
-  String get scanQrCode => 'ážŸáŸ’áž€áŸáž“ QR áž€áž¼ážŠ';
+  String get scanQrCode => 'Ã¡Å¾Å¸Ã¡Å¸â€™Ã¡Å¾â‚¬Ã¡Å¸ÂÃ¡Å¾â€œ QR Ã¡Å¾â‚¬Ã¡Å¾Â¼Ã¡Å¾Å ';
 
   @override
   String get scanning => 'Scanning...';
@@ -2104,7 +2104,7 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get selectUsers =>
-      'áž‡áŸ’ážšáž¾ážŸážšáž¾ážŸáž¢áŸ’áž“áž€áž”áŸ’ážšáž¾áž”áŸ’ážšáž¶ážŸáŸ‹';
+      'Ã¡Å¾â€¡Ã¡Å¸â€™Ã¡Å¾Å¡Ã¡Å¾Â¾Ã¡Å¾Å¸Ã¡Å¾Å¡Ã¡Å¾Â¾Ã¡Å¾Å¸Ã¡Å¾Â¢Ã¡Å¸â€™Ã¡Å¾â€œÃ¡Å¾â‚¬Ã¡Å¾â€Ã¡Å¸â€™Ã¡Å¾Å¡Ã¡Å¾Â¾Ã¡Å¾â€Ã¡Å¸â€™Ã¡Å¾Å¡Ã¡Å¾Â¶Ã¡Å¾Å¸Ã¡Å¸â€¹';
 
   @override
   String get selectVillage => 'Select your village';
@@ -2146,7 +2146,7 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get selfieCardHoldCard =>
-      'Face detected — now hold your ID card inside the bottom frame';
+      'Face detected â€” now hold your ID card inside the bottom frame';
 
   @override
   String get selfieCardValidationFailed =>
@@ -2225,10 +2225,10 @@ class AppLocalizationsKm extends AppLocalizations {
   String get noMatchingItems => 'No matching items found';
 
   @override
-  String get priceLowToHigh => 'Price ↑';
+  String get priceLowToHigh => 'Price â†‘';
 
   @override
-  String get priceHighToLow => 'Price ↓';
+  String get priceHighToLow => 'Price â†“';
 
   @override
   String get shippingCost => 'Shipping Cost';
@@ -2317,7 +2317,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get specialPromo => 'Special Promo';
 
   @override
-  String get status => 'ážŸáŸ’ážáž¶áž“áž—áž¶áž–';
+  String get status => 'Ã¡Å¾Å¸Ã¡Å¸â€™Ã¡Å¾ÂÃ¡Å¾Â¶Ã¡Å¾â€œÃ¡Å¾â€”Ã¡Å¾Â¶Ã¡Å¾â€“';
 
   @override
   String get stock => 'Stock';
@@ -2457,7 +2457,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get termsOfService => 'Terms of Service';
 
   @override
-  String get thai => 'ážáŸƒ';
+  String get thai => 'Ã¡Å¾ÂÃ¡Å¸Æ’';
 
   @override
   String get theme => 'Theme';
@@ -2478,7 +2478,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get title => 'Title';
 
   @override
-  String get total => 'ážŸážšáž»áž”';
+  String get total => 'Ã¡Å¾Å¸Ã¡Å¾Å¡Ã¡Å¾Â»Ã¡Å¾â€';
 
   @override
   String get totalPayment => 'Total Payment';
@@ -2529,7 +2529,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get unlockWith => 'Unlock app with %s';
 
   @override
-  String get unlockWithFaceId => 'áž”áž¾áž€ážŠáŸ„áž™áž”áŸ’ážšáž¾ Face ID';
+  String get unlockWithFaceId => 'Ã¡Å¾â€Ã¡Å¾Â¾Ã¡Å¾â‚¬Ã¡Å¾Å Ã¡Å¸â€žÃ¡Å¾â„¢Ã¡Å¾â€Ã¡Å¸â€™Ã¡Å¾Å¡Ã¡Å¾Â¾ Face ID';
 
   @override
   String get unlockWithFingerprint => 'Unlock with Fingerprint';
@@ -2671,14 +2671,14 @@ class AppLocalizationsKm extends AppLocalizations {
 
   @override
   String get username =>
-      'ážˆáŸ’áž˜áŸ„áŸ‡áž¢áŸ’áž“áž€áž”áŸ’ážšáž¾áž”áŸ’ážšáž¶ážŸáŸ‹';
+      'Ã¡Å¾Ë†Ã¡Å¸â€™Ã¡Å¾ËœÃ¡Å¸â€žÃ¡Å¸â€¡Ã¡Å¾Â¢Ã¡Å¸â€™Ã¡Å¾â€œÃ¡Å¾â‚¬Ã¡Å¾â€Ã¡Å¸â€™Ã¡Å¾Å¡Ã¡Å¾Â¾Ã¡Å¾â€Ã¡Å¸â€™Ã¡Å¾Å¡Ã¡Å¾Â¶Ã¡Å¾Å¸Ã¡Å¸â€¹';
 
   @override
   String get usernameHint =>
       'Username can only contain letters, numbers, dots, and undersCores';
 
   @override
-  String get vaNumber => 'áž›áŸáž VA';
+  String get vaNumber => 'Ã¡Å¾â€ºÃ¡Å¸ÂÃ¡Å¾Â VA';
 
   @override
   String get validUntil => 'Valid Until';
@@ -2708,10 +2708,10 @@ class AppLocalizationsKm extends AppLocalizations {
   String get version => 'Version';
 
   @override
-  String get vietnamese => 'Tiáº¿ng Viá»‡t';
+  String get vietnamese => 'TiÃ¡ÂºÂ¿ng ViÃ¡Â»â€¡t';
 
   @override
-  String get viewDetail => 'áž˜áž¾áž›áž–áŸážáŸŒáž˜áž¶áž“áž›áž˜áŸ’áž¢áž·áž';
+  String get viewDetail => 'Ã¡Å¾ËœÃ¡Å¾Â¾Ã¡Å¾â€ºÃ¡Å¾â€“Ã¡Å¸ÂÃ¡Å¾ÂÃ¡Å¸Å’Ã¡Å¾ËœÃ¡Å¾Â¶Ã¡Å¾â€œÃ¡Å¾â€ºÃ¡Å¾ËœÃ¡Å¸â€™Ã¡Å¾Â¢Ã¡Å¾Â·Ã¡Å¾Â';
 
   @override
   String get viewOrder => 'View Order';
@@ -2762,7 +2762,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get welcome => 'Welcome';
 
   @override
-  String get whatsapp => 'áž€áž˜áŸ’áž˜ážœáž·áž’áž¸ WhatsApp';
+  String get whatsapp => 'Ã¡Å¾â‚¬Ã¡Å¾ËœÃ¡Å¸â€™Ã¡Å¾ËœÃ¡Å¾Å“Ã¡Å¾Â·Ã¡Å¾â€™Ã¡Å¾Â¸ WhatsApp';
 
   @override
   String get whatsappExample => 'Example: 8123456789 (without leading zero)';
@@ -3901,7 +3901,7 @@ class AppLocalizationsKm extends AppLocalizations {
   String get deviceRemoved => 'Device removed';
 
   @override
-  String get newDeviceQuestion => 'New device — Is this you?';
+  String get newDeviceQuestion => 'New device â€” Is this you?';
 
   @override
   String get yesItWasMe => 'Yes, it was me';
@@ -4404,31 +4404,31 @@ class AppLocalizationsKm extends AppLocalizations {
   }
 
   @override
-  String get calendarSelectDate => 'ជ្រើសរើសកាលបរិច្ឆេទ';
+  String get calendarSelectDate => 'áž‡áŸ’ážšáž¾ážŸážšáž¾ážŸáž€áž¶áž›áž”ážšáž·áž…áŸ’áž†áŸáž‘';
 
   @override
-  String get calendarSelectMonth => 'ជ្រើសរើសខែ';
+  String get calendarSelectMonth => 'áž‡áŸ’ážšáž¾ážŸážšáž¾ážŸážáŸ‚';
 
   @override
-  String get calendarSelectYear => 'ជ្រើសរើសឆ្នាំ';
+  String get calendarSelectYear => 'áž‡áŸ’ážšáž¾ážŸážšáž¾ážŸáž†áŸ’áž“áž¶áŸ†';
 
   @override
-  String get calendarSelectTime => 'ជ្រើសរើសម៉ោង';
+  String get calendarSelectTime => 'áž‡áŸ’ážšáž¾ážŸážšáž¾ážŸáž˜áŸ‰áŸ„áž„';
 
   @override
-  String get calendarHour => 'ម៉ោង';
+  String get calendarHour => 'áž˜áŸ‰áŸ„áž„';
 
   @override
-  String get calendarMinute => 'នាទី';
+  String get calendarMinute => 'áž“áž¶áž‘áž¸';
 
   @override
-  String get calendarHourMinute => 'ម៉ោង : នាទី';
+  String get calendarHourMinute => 'áž˜áŸ‰áŸ„áž„ : áž“áž¶áž‘áž¸';
 
   @override
-  String get calendarSearch => 'ស្វែងរក...';
+  String get calendarSearch => 'ážŸáŸ’ážœáŸ‚áž„ážšáž€...';
 
   @override
-  String get calendarNoResults => 'មិនមានលទ្ធផលទេ';
+  String get calendarNoResults => 'áž˜áž·áž“áž˜áž¶áž“áž›áž‘áŸ’áž’áž•áž›áž‘áŸ';
 
   @override
   String get mediaServerNote =>
@@ -4617,3 +4617,4 @@ class AppLocalizationsKm extends AppLocalizations {
   @override
   String get flowerDecorationsCatalog => 'Flower Decorations Catalog';
 }
+

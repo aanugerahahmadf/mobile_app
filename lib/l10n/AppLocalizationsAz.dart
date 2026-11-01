@@ -1,6 +1,6 @@
-// ignore: unused_import
+﻿// ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-import 'AppLocalizations.dart';
+import './AppLocalizations.dart';
 
 // ignore_for_file: type=lint
 
@@ -240,7 +240,7 @@ class AppLocalizationsAz extends AppLocalizations {
   String get appLock => 'App Lock';
 
   @override
-  String get appName => 'Toy Ã‡iÃ§É™k Dekoru';
+  String get appName => 'Toy Ãƒâ€¡iÃƒÂ§Ã‰â„¢k Dekoru';
 
   @override
   String get appPolicy => 'App Policy';
@@ -252,7 +252,7 @@ class AppLocalizationsAz extends AppLocalizations {
   String get appVersion => '1.0.0';
 
   @override
-  String get arabic => 'Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©';
+  String get arabic => 'Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â±Ã˜Â¨Ã™Å Ã˜Â©';
 
   @override
   String get attachment => 'Attachment';
@@ -350,7 +350,7 @@ class AppLocalizationsAz extends AppLocalizations {
       'Credit/Debit card payments are coming soon after BRI merchant activation. For now please use Virtual Account or QRIS above.';
 
   @override
-  String get copied => 'KopyalandÄ±!';
+  String get copied => 'KopyalandÃ„Â±!';
 
   @override
   String get creditCard => 'Credit/Debit Card';
@@ -408,7 +408,7 @@ class AppLocalizationsAz extends AppLocalizations {
   String get checkout => 'Yoxlama';
 
   @override
-  String get chinese => 'ä¸­æ–‡';
+  String get chinese => 'Ã¤Â¸Â­Ã¦â€“â€¡';
 
   @override
   String get chooseCategory => 'Select Category';
@@ -531,7 +531,7 @@ class AppLocalizationsAz extends AppLocalizations {
   String get continuePayment => 'Continue Payment';
 
   @override
-  String get convenienceStore => 'RahatlÄ±q MaÄŸazasÄ±';
+  String get convenienceStore => 'RahatlÃ„Â±q MaÃ„Å¸azasÃ„Â±';
 
   @override
   String get country => 'Country';
@@ -643,7 +643,7 @@ class AppLocalizationsAz extends AppLocalizations {
   String get easyQuickOrder => 'Easy & Quick Ordering';
 
   @override
-  String get edit => 'RedaktÉ™ et';
+  String get edit => 'RedaktÃ‰â„¢ et';
 
   @override
   String get enabled => 'Enabled';
@@ -687,7 +687,7 @@ class AppLocalizationsAz extends AppLocalizations {
   String get employee => 'Employee';
 
   @override
-  String get english => 'Ä°ngilis dili';
+  String get english => 'Ã„Â°ngilis dili';
 
   @override
   String get enter6DigitOtp => 'Enter the 6-digit OTP code';
@@ -726,7 +726,7 @@ class AppLocalizationsAz extends AppLocalizations {
   String get entrepreneur => 'Entrepreneur';
 
   @override
-  String get error => 'XÉ™ta';
+  String get error => 'XÃ‰â„¢ta';
 
   @override
   String get errorOccurred => 'An error occurred';
@@ -1205,16 +1205,16 @@ class AppLocalizationsAz extends AppLocalizations {
   String get isGlobal => 'Qlobal';
 
   @override
-  String get islam => 'Ä°slam';
+  String get islam => 'Ã„Â°slam';
 
   @override
-  String get itemCount => '1 maddÉ™';
+  String get itemCount => '1 maddÃ‰â„¢';
 
   @override
   String get itemRemoved => 'Item removed';
 
   @override
-  String get japanese => 'æ—¥æœ¬èªž';
+  String get japanese => 'Ã¦â€”Â¥Ã¦Å“Â¬Ã¨ÂªÅ¾';
 
   @override
   String get korean => 'yer';
@@ -1356,7 +1356,7 @@ class AppLocalizationsAz extends AppLocalizations {
   String get navCatalog => 'Catalog';
 
   @override
-  String get navChat => 'SÃ¶hbÉ™t';
+  String get navChat => 'SÃƒÂ¶hbÃ‰â„¢t';
 
   @override
   String get navHome => 'Home';
@@ -1505,10 +1505,10 @@ class AppLocalizationsAz extends AppLocalizations {
 
   @override
   String get orderCreatedDesc =>
-      'SifariÅŸiniz yaradÄ±ldÄ±. ZÉ™hmÉ™t olmasa Ã¶dÉ™niÅŸi tamamlayÄ±n.';
+      'SifariÃ…Å¸iniz yaradÃ„Â±ldÃ„Â±. ZÃ‰â„¢hmÃ‰â„¢t olmasa ÃƒÂ¶dÃ‰â„¢niÃ…Å¸i tamamlayÃ„Â±n.';
 
   @override
-  String get redirectingToPayment => 'Ã–dÉ™niÅŸÉ™ yÃ¶nlÉ™ndirilir...';
+  String get redirectingToPayment => 'Ãƒâ€“dÃ‰â„¢niÃ…Å¸Ã‰â„¢ yÃƒÂ¶nlÃ‰â„¢ndirilir...';
 
   @override
   String get orderDetail => 'Order Detail';
@@ -1740,7 +1740,7 @@ class AppLocalizationsAz extends AppLocalizations {
   String get placeOfBirthLabel => 'Place of Birth';
 
   @override
-  String get placeAndDateOfBirth => 'DoÄŸum Yeri vÉ™ Tarixi';
+  String get placeAndDateOfBirth => 'DoÃ„Å¸um Yeri vÃ‰â„¢ Tarixi';
 
   @override
   String get popularPackages => 'Popular Packages';
@@ -1761,10 +1761,10 @@ class AppLocalizationsAz extends AppLocalizations {
   String get price => 'Price';
 
   @override
-  String get priceAsc => 'Price â†‘';
+  String get priceAsc => 'Price Ã¢â€ â€˜';
 
   @override
-  String get priceDesc => 'Price â†“';
+  String get priceDesc => 'Price Ã¢â€ â€œ';
 
   @override
   String get privacyAndTerms => 'Privacy & Terms';
@@ -1890,7 +1890,7 @@ class AppLocalizationsAz extends AppLocalizations {
   }
 
   @override
-  String get verifying => 'DoÄŸrulanÄ±r...';
+  String get verifying => 'DoÃ„Å¸rulanÃ„Â±r...';
 
   @override
   String get resetCodeSent => 'Reset code has been sent';
@@ -1899,7 +1899,7 @@ class AppLocalizationsAz extends AppLocalizations {
   String get resetCodeSentToEmail => 'Reset code has been sent to your email';
 
   @override
-  String get resetPassword => 'ÅžifrÉ™ni sÄ±fÄ±rla';
+  String get resetPassword => 'Ã…Å¾ifrÃ‰â„¢ni sÃ„Â±fÃ„Â±rla';
 
   @override
   String get reset => 'Reset';
@@ -1974,17 +1974,17 @@ class AppLocalizationsAz extends AppLocalizations {
   String get scanDetectedValuePrefix => 'Detected: ';
 
   @override
-  String get scanIssueBlur => 'Image is blurry — retake for a sharper photo';
+  String get scanIssueBlur => 'Image is blurry â€” retake for a sharper photo';
 
   @override
-  String get scanIssueDark => 'Image is too dark — retake in better light';
+  String get scanIssueDark => 'Image is too dark â€” retake in better light';
 
   @override
   String get scanIssueDocument =>
-      'No valid identity document detected — retake';
+      'No valid identity document detected â€” retake';
 
   @override
-  String get scanIssueFace => 'No single face detected — retake';
+  String get scanIssueFace => 'No single face detected â€” retake';
 
   @override
   String get scanNotDetected => 'Detection failed';
@@ -1996,7 +1996,7 @@ class AppLocalizationsAz extends AppLocalizations {
   String get scanDocument => 'Scan Document';
 
   @override
-  String get scanSCore => 'SCore';
+  String get scanScore => 'SCore';
 
   @override
   String get scanQrCode => 'QR kodunu skan edin';
@@ -2100,7 +2100,7 @@ class AppLocalizationsAz extends AppLocalizations {
   String get selectSourceOfFunds => 'Select Source of Funds';
 
   @override
-  String get selectUsers => 'Ä°stifadÉ™Ã§i seÃ§in';
+  String get selectUsers => 'Ã„Â°stifadÃ‰â„¢ÃƒÂ§i seÃƒÂ§in';
 
   @override
   String get selectVillage => 'Select your village';
@@ -2142,7 +2142,7 @@ class AppLocalizationsAz extends AppLocalizations {
 
   @override
   String get selfieCardHoldCard =>
-      'Face detected — now hold your ID card inside the bottom frame';
+      'Face detected â€” now hold your ID card inside the bottom frame';
 
   @override
   String get selfieCardValidationFailed =>
@@ -2221,10 +2221,10 @@ class AppLocalizationsAz extends AppLocalizations {
   String get noMatchingItems => 'No matching items found';
 
   @override
-  String get priceLowToHigh => 'Price ↑';
+  String get priceLowToHigh => 'Price â†‘';
 
   @override
-  String get priceHighToLow => 'Price ↓';
+  String get priceHighToLow => 'Price â†“';
 
   @override
   String get shippingCost => 'Shipping Cost';
@@ -2313,7 +2313,7 @@ class AppLocalizationsAz extends AppLocalizations {
   String get specialPromo => 'Special Promo';
 
   @override
-  String get status => 'VÉ™ziyyÉ™t';
+  String get status => 'VÃ‰â„¢ziyyÃ‰â„¢t';
 
   @override
   String get stock => 'Stock';
@@ -2453,7 +2453,7 @@ class AppLocalizationsAz extends AppLocalizations {
   String get termsOfService => 'Terms of Service';
 
   @override
-  String get thai => 'à¹„à¸—à¸¢';
+  String get thai => 'Ã Â¹â€žÃ Â¸â€”Ã Â¸Â¢';
 
   @override
   String get theme => 'Theme';
@@ -2474,7 +2474,7 @@ class AppLocalizationsAz extends AppLocalizations {
   String get title => 'Title';
 
   @override
-  String get total => 'CÉ™mi';
+  String get total => 'CÃ‰â„¢mi';
 
   @override
   String get totalPayment => 'Total Payment';
@@ -2525,7 +2525,7 @@ class AppLocalizationsAz extends AppLocalizations {
   String get unlockWith => 'Unlock app with %s';
 
   @override
-  String get unlockWithFaceId => 'Face ID ilÉ™ aÃ§Ä±n';
+  String get unlockWithFaceId => 'Face ID ilÃ‰â„¢ aÃƒÂ§Ã„Â±n';
 
   @override
   String get unlockWithFingerprint => 'Unlock with Fingerprint';
@@ -2666,14 +2666,14 @@ class AppLocalizationsAz extends AppLocalizations {
   String get userLabel => 'User';
 
   @override
-  String get username => 'Ä°stifadÉ™Ã§i adÄ±';
+  String get username => 'Ã„Â°stifadÃ‰â„¢ÃƒÂ§i adÃ„Â±';
 
   @override
   String get usernameHint =>
       'Username can only contain letters, numbers, dots, and undersCores';
 
   @override
-  String get vaNumber => 'VA nÃ¶mrÉ™si';
+  String get vaNumber => 'VA nÃƒÂ¶mrÃ‰â„¢si';
 
   @override
   String get validUntil => 'Valid Until';
@@ -2703,10 +2703,10 @@ class AppLocalizationsAz extends AppLocalizations {
   String get version => 'Version';
 
   @override
-  String get vietnamese => 'Tiáº¿ng Viá»‡t';
+  String get vietnamese => 'TiÃ¡ÂºÂ¿ng ViÃ¡Â»â€¡t';
 
   @override
-  String get viewDetail => 'TÉ™fÉ™rrÃ¼atlara baxÄ±n';
+  String get viewDetail => 'TÃ‰â„¢fÃ‰â„¢rrÃƒÂ¼atlara baxÃ„Â±n';
 
   @override
   String get viewOrder => 'View Order';
@@ -2804,65 +2804,65 @@ class AppLocalizationsAz extends AppLocalizations {
   String get yourNameAppearsHere => 'Your name will appear here';
 
   @override
-  String get voucherName => 'Ã‡ekin adÄ±';
+  String get voucherName => 'Ãƒâ€¡ekin adÃ„Â±';
 
   @override
-  String get value => 'DÉ™yÉ™r';
+  String get value => 'DÃ‰â„¢yÃ‰â„¢r';
 
   @override
-  String get startDate => 'BaÅŸlama tarixi';
+  String get startDate => 'BaÃ…Å¸lama tarixi';
 
   @override
-  String get endDate => 'BitmÉ™ tarixi';
+  String get endDate => 'BitmÃ‰â„¢ tarixi';
 
   @override
   String get claim => 'iddia';
 
   @override
-  String get voucherClaimed => 'VauÃ§er uÄŸurla iddia edildi';
+  String get voucherClaimed => 'VauÃƒÂ§er uÃ„Å¸urla iddia edildi';
 
   @override
-  String get expired => 'Ä°stifadÉ™ mÃ¼ddÉ™ti bitdi';
+  String get expired => 'Ã„Â°stifadÃ‰â„¢ mÃƒÂ¼ddÃ‰â„¢ti bitdi';
 
   @override
-  String get invalidVoucherCode => 'EtibarsÄ±z Ã§ek kodu';
+  String get invalidVoucherCode => 'EtibarsÃ„Â±z ÃƒÂ§ek kodu';
 
   @override
-  String get period => 'DÃ¶vr';
+  String get period => 'DÃƒÂ¶vr';
 
   @override
-  String get selectItem => 'Element seÃ§in';
+  String get selectItem => 'Element seÃƒÂ§in';
 
   @override
-  String get itemType => 'Element nÃ¶vÃ¼';
+  String get itemType => 'Element nÃƒÂ¶vÃƒÂ¼';
 
   @override
-  String get itemName => 'Element AdÄ±';
+  String get itemName => 'Element AdÃ„Â±';
 
   @override
-  String get invalidValue => 'YanlÄ±ÅŸ dÉ™yÉ™r';
+  String get invalidValue => 'YanlÃ„Â±Ã…Å¸ dÃ‰â„¢yÃ‰â„¢r';
 
   @override
   String get selectItemFirst =>
-      'ZÉ™hmÉ™t olmasa É™vvÉ™lcÉ™ element nÃ¶vÃ¼nÃ¼ vÉ™ elementi seÃ§in';
+      'ZÃ‰â„¢hmÃ‰â„¢t olmasa Ã‰â„¢vvÃ‰â„¢lcÃ‰â„¢ element nÃƒÂ¶vÃƒÂ¼nÃƒÂ¼ vÃ‰â„¢ elementi seÃƒÂ§in';
 
   @override
-  String get selectAll => 'HamÄ±sÄ±nÄ± seÃ§in';
+  String get selectAll => 'HamÃ„Â±sÃ„Â±nÃ„Â± seÃƒÂ§in';
 
   @override
-  String get deselectAll => 'HamÄ±sÄ±nÄ±n seÃ§imini lÉ™ÄŸv edin';
+  String get deselectAll => 'HamÃ„Â±sÃ„Â±nÃ„Â±n seÃƒÂ§imini lÃ‰â„¢Ã„Å¸v edin';
 
   @override
   String get outOfStock => 'Stokda bitdi';
 
   @override
   String remainingStock(Object stock) {
-    return '$stock qaldÄ±';
+    return '$stock qaldÃ„Â±';
   }
 
   @override
   String get itemMovedToFavorite =>
-      'Element Ä°stÉ™k siyahÄ±sÄ±na kÃ¶Ã§Ã¼rÃ¼ldÃ¼';
+      'Element Ã„Â°stÃ‰â„¢k siyahÃ„Â±sÃ„Â±na kÃƒÂ¶ÃƒÂ§ÃƒÂ¼rÃƒÂ¼ldÃƒÂ¼';
 
   @override
   String get itemDeleted => 'Element silindi';
@@ -2871,49 +2871,49 @@ class AppLocalizationsAz extends AppLocalizations {
   String get undo => 'Geri al';
 
   @override
-  String get saveForLater => 'Sonra Ã¼Ã§Ã¼n saxla';
+  String get saveForLater => 'Sonra ÃƒÂ¼ÃƒÂ§ÃƒÂ¼n saxla';
 
   @override
   String itemsSelected(Object count) {
-    return '$count element (lÉ™r) seÃ§ildi';
+    return '$count element (lÃ‰â„¢r) seÃƒÂ§ildi';
   }
 
   @override
-  String get deleteAll => 'HamÄ±sÄ±nÄ± silin';
+  String get deleteAll => 'HamÃ„Â±sÃ„Â±nÃ„Â± silin';
 
   @override
-  String get selectType => 'NÃ¶vÃ¼ seÃ§in';
+  String get selectType => 'NÃƒÂ¶vÃƒÂ¼ seÃƒÂ§in';
 
   @override
-  String get whatToAdd => 'NÉ™ É™lavÉ™ etmÉ™k istÉ™rdiniz?';
+  String get whatToAdd => 'NÃ‰â„¢ Ã‰â„¢lavÃ‰â„¢ etmÃ‰â„¢k istÃ‰â„¢rdiniz?';
 
   @override
-  String get percentageValue => 'DÉ™yÉ™r (%)';
+  String get percentageValue => 'DÃ‰â„¢yÃ‰â„¢r (%)';
 
   @override
-  String get currencyValue => 'DÉ™yÉ™r (Rp)';
+  String get currencyValue => 'DÃ‰â„¢yÃ‰â„¢r (Rp)';
 
   @override
-  String get invoiceDownloaded => 'Faktura uÄŸurla endirildi';
+  String get invoiceDownloaded => 'Faktura uÃ„Å¸urla endirildi';
 
   @override
-  String get failedDownloadInvoice => 'FakturanÄ± endirmÉ™k alÄ±nmadÄ±';
+  String get failedDownloadInvoice => 'FakturanÃ„Â± endirmÃ‰â„¢k alÃ„Â±nmadÃ„Â±';
 
   @override
-  String get invoiceSentToEmail => 'Faktura e-poÃ§tunuza gÃ¶ndÉ™rildi';
+  String get invoiceSentToEmail => 'Faktura e-poÃƒÂ§tunuza gÃƒÂ¶ndÃ‰â„¢rildi';
 
   @override
-  String get failedSendEmail => 'E-poÃ§t gÃ¶ndÉ™rmÉ™k alÄ±nmadÄ±';
+  String get failedSendEmail => 'E-poÃƒÂ§t gÃƒÂ¶ndÃ‰â„¢rmÃ‰â„¢k alÃ„Â±nmadÃ„Â±';
 
   @override
-  String get failedOpenWhatsApp => 'WhatsApp-Ä± aÃ§maq alÄ±nmadÄ±';
+  String get failedOpenWhatsApp => 'WhatsApp-Ã„Â± aÃƒÂ§maq alÃ„Â±nmadÃ„Â±';
 
   @override
-  String get failedGetOrderId => 'SifariÅŸ ID-sini É™ldÉ™ etmÉ™k alÄ±nmadÄ±';
+  String get failedGetOrderId => 'SifariÃ…Å¸ ID-sini Ã‰â„¢ldÃ‰â„¢ etmÃ‰â„¢k alÃ„Â±nmadÃ„Â±';
 
   @override
   String get failedGetPaymentToken =>
-      'Ã–dÉ™niÅŸ niÅŸanÄ±nÄ± É™ldÉ™ etmÉ™k alÄ±nmadÄ±';
+      'Ãƒâ€“dÃ‰â„¢niÃ…Å¸ niÃ…Å¸anÃ„Â±nÃ„Â± Ã‰â„¢ldÃ‰â„¢ etmÃ‰â„¢k alÃ„Â±nmadÃ„Â±';
 
   @override
   String whatsappOrderTemplate(
@@ -2921,157 +2921,157 @@ class AppLocalizationsAz extends AppLocalizations {
     String status,
     String total,
   ) {
-    return 'Salam Admin, mÉ™n #$orderNumber sifariÅŸ haqqÄ±nda soruÅŸmaq istÉ™rdim. Status: $status. CÉ™mi: $total.';
+    return 'Salam Admin, mÃ‰â„¢n #$orderNumber sifariÃ…Å¸ haqqÃ„Â±nda soruÃ…Å¸maq istÃ‰â„¢rdim. Status: $status. CÃ‰â„¢mi: $total.';
   }
 
   @override
-  String get continueWithGoogle => 'Google ilÉ™ davam edin';
+  String get continueWithGoogle => 'Google ilÃ‰â„¢ davam edin';
 
   @override
-  String get continueWithFacebook => 'Facebook ilÉ™ davam edin';
+  String get continueWithFacebook => 'Facebook ilÃ‰â„¢ davam edin';
 
   @override
-  String get continueWithApple => 'Apple ilÉ™ davam edin';
+  String get continueWithApple => 'Apple ilÃ‰â„¢ davam edin';
 
   @override
-  String get catalogLabel => 'MÉ™hsul';
+  String get catalogLabel => 'MÃ‰â„¢hsul';
 
   @override
   String get packageLabel => 'Paket';
 
   @override
-  String get voucherSpecialOffer => 'SizÉ™ Ã¶zÉ™l endirim';
+  String get voucherSpecialOffer => 'SizÃ‰â„¢ ÃƒÂ¶zÃ‰â„¢l endirim';
 
   @override
-  String get searchUsersHint => 'Ä°stifadÉ™Ã§ilÉ™ri axtarÄ±n...';
+  String get searchUsersHint => 'Ã„Â°stifadÃ‰â„¢ÃƒÂ§ilÃ‰â„¢ri axtarÃ„Â±n...';
 
   @override
   String usersSelectedCount(int count) {
-    return '$count istifadÉ™Ã§i seÃ§ildi';
+    return '$count istifadÃ‰â„¢ÃƒÂ§i seÃƒÂ§ildi';
   }
 
   @override
   String get biometricFingerprint => 'Barmaq izi';
 
   @override
-  String get biometricLoginLabel => 'Biometrik GiriÅŸ';
+  String get biometricLoginLabel => 'Biometrik GiriÃ…Å¸';
 
   @override
-  String get sectionVouchers => 'Ã‡eklÉ™r';
+  String get sectionVouchers => 'Ãƒâ€¡eklÃ‰â„¢r';
 
   @override
-  String get sectionUsers => 'Ä°stifadÉ™Ã§ilÉ™r';
+  String get sectionUsers => 'Ã„Â°stifadÃ‰â„¢ÃƒÂ§ilÃ‰â„¢r';
 
   @override
-  String get sectionTransactions => 'ÆmÉ™liyyatlar';
+  String get sectionTransactions => 'Ã†ÂmÃ‰â„¢liyyatlar';
 
   @override
-  String get sectionPolicy => 'SiyasÉ™t';
+  String get sectionPolicy => 'SiyasÃ‰â„¢t';
 
   @override
-  String get vouchers => 'Ã‡eklÉ™r';
+  String get vouchers => 'Ãƒâ€¡eklÃ‰â„¢r';
 
   @override
-  String get users => 'Ä°stifadÉ™Ã§ilÉ™r';
+  String get users => 'Ã„Â°stifadÃ‰â„¢ÃƒÂ§ilÃ‰â„¢r';
 
   @override
-  String get transactions => 'ÆmÉ™liyyatlar';
+  String get transactions => 'Ã†ÂmÃ‰â„¢liyyatlar';
 
   @override
   String get searchFailedTryAgain =>
-      'AxtarÄ±ÅŸ alÄ±nmadÄ±. YenidÉ™n cÉ™hd edin.';
+      'AxtarÃ„Â±Ã…Å¸ alÃ„Â±nmadÃ„Â±. YenidÃ‰â„¢n cÃ‰â„¢hd edin.';
 
   @override
   String get selectTwoImagesArithmetic =>
-      '2 ÅŸÉ™kil vÉ™ arifmetik É™mÉ™liyyat seÃ§in';
+      '2 Ã…Å¸Ã‰â„¢kil vÃ‰â„¢ arifmetik Ã‰â„¢mÃ‰â„¢liyyat seÃƒÂ§in';
 
   @override
-  String get imageSearchFailed => 'ÅžÉ™kil axtarÄ±ÅŸÄ± alÄ±nmadÄ±';
+  String get imageSearchFailed => 'Ã…Å¾Ã‰â„¢kil axtarÃ„Â±Ã…Å¸Ã„Â± alÃ„Â±nmadÃ„Â±';
 
   @override
-  String get arithmeticSearchFailedMsg => 'Arifmetik axtarÄ±ÅŸ uÄŸursuz oldu';
+  String get arithmeticSearchFailedMsg => 'Arifmetik axtarÃ„Â±Ã…Å¸ uÃ„Å¸ursuz oldu';
 
   @override
-  String get failedLoadConversations => 'SÃ¶hbÉ™tlÉ™ri yÃ¼klÉ™mÉ™k alÄ±nmadÄ±';
+  String get failedLoadConversations => 'SÃƒÂ¶hbÃ‰â„¢tlÃ‰â„¢ri yÃƒÂ¼klÃ‰â„¢mÃ‰â„¢k alÃ„Â±nmadÃ„Â±';
 
   @override
-  String get failedLoadMessages => 'MesajlarÄ± yÃ¼klÉ™mÉ™k alÄ±nmadÄ±';
+  String get failedLoadMessages => 'MesajlarÃ„Â± yÃƒÂ¼klÃ‰â„¢mÃ‰â„¢k alÃ„Â±nmadÃ„Â±';
 
   @override
-  String get failedCreateOrder => 'SifariÅŸ yaratmaq alÄ±nmadÄ±';
+  String get failedCreateOrder => 'SifariÃ…Å¸ yaratmaq alÃ„Â±nmadÃ„Â±';
 
   @override
-  String get failedProcessPayment => 'Ã–dÉ™niÅŸi emal etmÉ™k alÄ±nmadÄ±';
+  String get failedProcessPayment => 'Ãƒâ€“dÃ‰â„¢niÃ…Å¸i emal etmÃ‰â„¢k alÃ„Â±nmadÃ„Â±';
 
   @override
-  String get failedLoadNotifications => 'BildiriÅŸlÉ™ri yÃ¼klÉ™mÉ™k alÄ±nmadÄ±';
+  String get failedLoadNotifications => 'BildiriÃ…Å¸lÃ‰â„¢ri yÃƒÂ¼klÃ‰â„¢mÃ‰â„¢k alÃ„Â±nmadÃ„Â±';
 
   @override
-  String get failedLoadProfile => 'Profili yÃ¼klÉ™mÉ™k alÄ±nmadÄ±';
+  String get failedLoadProfile => 'Profili yÃƒÂ¼klÃ‰â„¢mÃ‰â„¢k alÃ„Â±nmadÃ„Â±';
 
   @override
-  String get failedUpdateProfile => 'Profili yenilÉ™mÉ™k alÄ±nmadÄ±';
+  String get failedUpdateProfile => 'Profili yenilÃ‰â„¢mÃ‰â„¢k alÃ„Â±nmadÃ„Â±';
 
   @override
-  String get failedUploadAvatar => 'AvatarÄ± yÃ¼klÉ™mÉ™k alÄ±nmadÄ±';
+  String get failedUploadAvatar => 'AvatarÃ„Â± yÃƒÂ¼klÃ‰â„¢mÃ‰â„¢k alÃ„Â±nmadÃ„Â±';
 
   @override
-  String get failedUpdateKtpNumber => 'KTP-i yenilÉ™mÉ™k alÄ±nmadÄ±';
+  String get failedUpdateKtpNumber => 'KTP-i yenilÃ‰â„¢mÃ‰â„¢k alÃ„Â±nmadÃ„Â±';
 
   @override
-  String get failedUploadKtp => 'KTP yÃ¼klÉ™mÉ™k alÄ±nmadÄ±';
+  String get failedUploadKtp => 'KTP yÃƒÂ¼klÃ‰â„¢mÃ‰â„¢k alÃ„Â±nmadÃ„Â±';
 
   @override
-  String get failedUploadSelfie => 'Selfi yÃ¼klÉ™mÉ™k alÄ±nmadÄ±';
+  String get failedUploadSelfie => 'Selfi yÃƒÂ¼klÃ‰â„¢mÃ‰â„¢k alÃ„Â±nmadÃ„Â±';
 
   @override
-  String get failedUploadFaceScan => 'Ãœz skanÄ±nÄ± yÃ¼klÉ™mÉ™k alÄ±nmadÄ±';
+  String get failedUploadFaceScan => 'ÃƒÅ“z skanÃ„Â±nÃ„Â± yÃƒÂ¼klÃ‰â„¢mÃ‰â„¢k alÃ„Â±nmadÃ„Â±';
 
   @override
-  String get failedChangePassword => 'Parolu dÉ™yiÅŸmÉ™k alÄ±nmadÄ±';
+  String get failedChangePassword => 'Parolu dÃ‰â„¢yiÃ…Å¸mÃ‰â„¢k alÃ„Â±nmadÃ„Â±';
 
   @override
-  String get failedLoadCart => 'SÉ™bÉ™ti yÃ¼klÉ™mÉ™k alÄ±nmadÄ±';
+  String get failedLoadCart => 'SÃ‰â„¢bÃ‰â„¢ti yÃƒÂ¼klÃ‰â„¢mÃ‰â„¢k alÃ„Â±nmadÃ„Â±';
 
   @override
   String get faqs => 'FAQs';
 
   @override
-  String get loginFailed => 'GiriÅŸ uÄŸursuz oldu';
+  String get loginFailed => 'GiriÃ…Å¸ uÃ„Å¸ursuz oldu';
 
   @override
-  String get failedGetGoogleToken => 'Google tokenini É™ldÉ™ etmÉ™k alÄ±nmadÄ±';
+  String get failedGetGoogleToken => 'Google tokenini Ã‰â„¢ldÃ‰â„¢ etmÃ‰â„¢k alÃ„Â±nmadÃ„Â±';
 
   @override
-  String get googleLoginFailed => 'Google-a daxil olmaq alÄ±nmadÄ±';
+  String get googleLoginFailed => 'Google-a daxil olmaq alÃ„Â±nmadÃ„Â±';
 
   @override
-  String get registrationFailed => 'Qeydiyyat uÄŸursuz oldu';
+  String get registrationFailed => 'Qeydiyyat uÃ„Å¸ursuz oldu';
 
   @override
-  String get registrationSuccess => 'Qeydiyyat uÄŸurlu oldu';
+  String get registrationSuccess => 'Qeydiyyat uÃ„Å¸urlu oldu';
 
   @override
-  String get anErrorOccurred => 'XÉ™ta baÅŸ verdi';
+  String get anErrorOccurred => 'XÃ‰â„¢ta baÃ…Å¸ verdi';
 
   @override
-  String get failedLoadItemData => 'Element datasÄ±nÄ± yÃ¼klÉ™mÉ™k alÄ±nmadÄ±';
+  String get failedLoadItemData => 'Element datasÃ„Â±nÃ„Â± yÃƒÂ¼klÃ‰â„¢mÃ‰â„¢k alÃ„Â±nmadÃ„Â±';
 
   @override
-  String get dataNotFound => 'Data tapÄ±lmadÄ±';
+  String get dataNotFound => 'Data tapÃ„Â±lmadÃ„Â±';
 
   @override
   String get failedGetFacebookToken =>
-      'Facebook tokenini É™ldÉ™ etmÉ™k alÄ±nmadÄ±';
+      'Facebook tokenini Ã‰â„¢ldÃ‰â„¢ etmÃ‰â„¢k alÃ„Â±nmadÃ„Â±';
 
   @override
-  String get facebookLoginFailed => 'Facebooka giriÅŸ uÄŸursuz oldu';
+  String get facebookLoginFailed => 'Facebooka giriÃ…Å¸ uÃ„Å¸ursuz oldu';
 
   @override
-  String get failedGetAppleToken => 'Apple tokenini É™ldÉ™ etmÉ™k alÄ±nmadÄ±';
+  String get failedGetAppleToken => 'Apple tokenini Ã‰â„¢ldÃ‰â„¢ etmÃ‰â„¢k alÃ„Â±nmadÃ„Â±';
 
   @override
-  String get appleLoginFailed => 'Apple giriÅŸi uÄŸursuz oldu';
+  String get appleLoginFailed => 'Apple giriÃ…Å¸i uÃ„Å¸ursuz oldu';
 
   @override
   String get appLockNote =>
@@ -3901,7 +3901,7 @@ class AppLocalizationsAz extends AppLocalizations {
   String get deviceRemoved => 'Device removed';
 
   @override
-  String get newDeviceQuestion => 'New device — Is this you?';
+  String get newDeviceQuestion => 'New device â€” Is this you?';
 
   @override
   String get yesItWasMe => 'Yes, it was me';
@@ -4404,31 +4404,31 @@ class AppLocalizationsAz extends AppLocalizations {
   }
 
   @override
-  String get calendarSelectDate => 'Tarix seçin';
+  String get calendarSelectDate => 'Tarix seÃ§in';
 
   @override
-  String get calendarSelectMonth => 'Ay seçin';
+  String get calendarSelectMonth => 'Ay seÃ§in';
 
   @override
-  String get calendarSelectYear => 'İl seçin';
+  String get calendarSelectYear => 'Ä°l seÃ§in';
 
   @override
-  String get calendarSelectTime => 'Vaxt seçin';
+  String get calendarSelectTime => 'Vaxt seÃ§in';
 
   @override
   String get calendarHour => 'Saat';
 
   @override
-  String get calendarMinute => 'Dəqiqə';
+  String get calendarMinute => 'DÉ™qiqÉ™';
 
   @override
-  String get calendarHourMinute => 'Saat : Dəqiqə';
+  String get calendarHourMinute => 'Saat : DÉ™qiqÉ™';
 
   @override
-  String get calendarSearch => 'Axtarış...';
+  String get calendarSearch => 'AxtarÄ±ÅŸ...';
 
   @override
-  String get calendarNoResults => 'Nəticə tapılmadı';
+  String get calendarNoResults => 'NÉ™ticÉ™ tapÄ±lmadÄ±';
 
   @override
   String get mediaServerNote =>
@@ -4617,3 +4617,4 @@ class AppLocalizationsAz extends AppLocalizations {
   @override
   String get flowerDecorationsCatalog => 'Flower Decorations Catalog';
 }
+

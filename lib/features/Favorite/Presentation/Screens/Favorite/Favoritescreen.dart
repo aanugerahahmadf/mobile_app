@@ -98,3 +98,5 @@ class _FavoritePageState extends ConsumerState<Favoritescreen> {
     );
   }
 }
+
+typedef FavoriteScreen = Favoritescreen;

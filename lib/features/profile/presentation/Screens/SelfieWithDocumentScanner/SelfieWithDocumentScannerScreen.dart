@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:camera/camera.dart';
@@ -291,7 +291,7 @@ class _SelfieWithDocumentScannerPageState
     try {
       final recognized = await _textRecognizer!.processImage(inputImage);
       final text = recognized.text.toUpperCase().replaceAll('\n', ' ');
-      return sCoreDocumentText(widget.docType, text) >= 3;
+      return scoreDocumentText(widget.docType, text) >= 3;
     } catch (_) {
       return false;
     }
@@ -639,3 +639,4 @@ class _FaceDetection {
     frameSize: Size.zero,
   );
 }
+

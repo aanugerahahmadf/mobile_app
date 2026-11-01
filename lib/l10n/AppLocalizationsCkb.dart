@@ -1,6 +1,6 @@
-// ignore: unused_import
+﻿// ignore: unused_import
 import 'package:intl/intl.dart' as intl;
-import 'AppLocalizations.dart';
+import './AppLocalizations.dart';
 
 // ignore_for_file: type=lint
 
@@ -252,7 +252,7 @@ class AppLocalizationsCkb extends AppLocalizations {
   String get appVersion => '1.0.0';
 
   @override
-  String get arabic => 'Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©';
+  String get arabic => 'Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â±Ã˜Â¨Ã™Å Ã˜Â©';
 
   @override
   String get attachment => 'Attachment';
@@ -405,10 +405,10 @@ class AppLocalizationsCkb extends AppLocalizations {
   String get check => 'Check';
 
   @override
-  String get checkout => 'LÃªkolÃ®n';
+  String get checkout => 'LÃƒÂªkolÃƒÂ®n';
 
   @override
-  String get chinese => 'ä¸­æ–‡';
+  String get chinese => 'Ã¤Â¸Â­Ã¦â€“â€¡';
 
   @override
   String get chooseCategory => 'Select Category';
@@ -531,7 +531,7 @@ class AppLocalizationsCkb extends AppLocalizations {
   String get continuePayment => 'Continue Payment';
 
   @override
-  String get convenienceStore => 'Dikana RehetiyÃª';
+  String get convenienceStore => 'Dikana RehetiyÃƒÂª';
 
   @override
   String get country => 'Country';
@@ -643,7 +643,7 @@ class AppLocalizationsCkb extends AppLocalizations {
   String get easyQuickOrder => 'Easy & Quick Ordering';
 
   @override
-  String get edit => 'WeÅŸandin';
+  String get edit => 'WeÃ…Å¸andin';
 
   @override
   String get enabled => 'Enabled';
@@ -687,7 +687,7 @@ class AppLocalizationsCkb extends AppLocalizations {
   String get employee => 'Employee';
 
   @override
-  String get english => 'ÃŽngilÃ®zÃ®';
+  String get english => 'ÃƒÅ½ngilÃƒÂ®zÃƒÂ®';
 
   @override
   String get enter6DigitOtp => 'Enter the 6-digit OTP code';
@@ -726,7 +726,7 @@ class AppLocalizationsCkb extends AppLocalizations {
   String get entrepreneur => 'Entrepreneur';
 
   @override
-  String get error => 'ÅžaÅŸÃ®';
+  String get error => 'Ã…Å¾aÃ…Å¸ÃƒÂ®';
 
   @override
   String get errorOccurred => 'An error occurred';
@@ -949,7 +949,7 @@ class AppLocalizationsCkb extends AppLocalizations {
   String get file => 'Files';
 
   @override
-  String get fileManager => 'RÃªveberÃª PelÃª';
+  String get fileManager => 'RÃƒÂªveberÃƒÂª PelÃƒÂª';
 
   @override
   String get fillDataCorrectly => 'Fill in your data correctly';
@@ -1055,7 +1055,7 @@ class AppLocalizationsCkb extends AppLocalizations {
   String get highestRating => 'Highest Rating';
 
   @override
-  String get hindu => 'hÃ®ndÃ®';
+  String get hindu => 'hÃƒÂ®ndÃƒÂ®';
 
   @override
   String get history => 'History';
@@ -1202,10 +1202,10 @@ class AppLocalizationsCkb extends AppLocalizations {
   String get isFeatured => 'Featured';
 
   @override
-  String get isGlobal => 'CÃ®hane';
+  String get isGlobal => 'CÃƒÂ®hane';
 
   @override
-  String get islam => 'ÃŽslamiyet';
+  String get islam => 'ÃƒÅ½slamiyet';
 
   @override
   String get itemCount => '1 babete';
@@ -1214,10 +1214,10 @@ class AppLocalizationsCkb extends AppLocalizations {
   String get itemRemoved => 'Item removed';
 
   @override
-  String get japanese => 'æ—¥æœ¬èªž';
+  String get japanese => 'Ã¦â€”Â¥Ã¦Å“Â¬Ã¨ÂªÅ¾';
 
   @override
-  String get korean => 'í•œêµ­ì–´';
+  String get korean => 'Ã­â€¢Å“ÃªÂµÂ­Ã¬â€“Â´';
 
   @override
   String get ktp => 'ID Card (KTP)';
@@ -1761,10 +1761,10 @@ class AppLocalizationsCkb extends AppLocalizations {
   String get price => 'Price';
 
   @override
-  String get priceAsc => 'Price â†‘';
+  String get priceAsc => 'Price Ã¢â€ â€˜';
 
   @override
-  String get priceDesc => 'Price â†“';
+  String get priceDesc => 'Price Ã¢â€ â€œ';
 
   @override
   String get privacyAndTerms => 'Privacy & Terms';
@@ -1899,7 +1899,7 @@ class AppLocalizationsCkb extends AppLocalizations {
   String get resetCodeSentToEmail => 'Reset code has been sent to your email';
 
   @override
-  String get resetPassword => 'ÅžÃ®freyÃª VegerÃ®ne';
+  String get resetPassword => 'Ã…Å¾ÃƒÂ®freyÃƒÂª VegerÃƒÂ®ne';
 
   @override
   String get reset => 'Reset';
@@ -1974,17 +1974,17 @@ class AppLocalizationsCkb extends AppLocalizations {
   String get scanDetectedValuePrefix => 'Detected: ';
 
   @override
-  String get scanIssueBlur => 'Image is blurry — retake for a sharper photo';
+  String get scanIssueBlur => 'Image is blurry â€” retake for a sharper photo';
 
   @override
-  String get scanIssueDark => 'Image is too dark — retake in better light';
+  String get scanIssueDark => 'Image is too dark â€” retake in better light';
 
   @override
   String get scanIssueDocument =>
-      'No valid identity document detected — retake';
+      'No valid identity document detected â€” retake';
 
   @override
-  String get scanIssueFace => 'No single face detected — retake';
+  String get scanIssueFace => 'No single face detected â€” retake';
 
   @override
   String get scanNotDetected => 'Detection failed';
@@ -1996,10 +1996,10 @@ class AppLocalizationsCkb extends AppLocalizations {
   String get scanDocument => 'Scan Document';
 
   @override
-  String get scanSCore => 'SCore';
+  String get scanScore => 'SCore';
 
   @override
-  String get scanQrCode => 'Koda QR-Ãª biÅŸopÃ®nin';
+  String get scanQrCode => 'Koda QR-ÃƒÂª biÃ…Å¸opÃƒÂ®nin';
 
   @override
   String get scanning => 'Scanning...';
@@ -2100,7 +2100,7 @@ class AppLocalizationsCkb extends AppLocalizations {
   String get selectSourceOfFunds => 'Select Source of Funds';
 
   @override
-  String get selectUsers => 'BikarhÃªner hilbijÃªre';
+  String get selectUsers => 'BikarhÃƒÂªner hilbijÃƒÂªre';
 
   @override
   String get selectVillage => 'Select your village';
@@ -2142,7 +2142,7 @@ class AppLocalizationsCkb extends AppLocalizations {
 
   @override
   String get selfieCardHoldCard =>
-      'Face detected — now hold your ID card inside the bottom frame';
+      'Face detected â€” now hold your ID card inside the bottom frame';
 
   @override
   String get selfieCardValidationFailed =>
@@ -2221,10 +2221,10 @@ class AppLocalizationsCkb extends AppLocalizations {
   String get noMatchingItems => 'No matching items found';
 
   @override
-  String get priceLowToHigh => 'Price ↑';
+  String get priceLowToHigh => 'Price â†‘';
 
   @override
-  String get priceHighToLow => 'Price ↓';
+  String get priceHighToLow => 'Price â†“';
 
   @override
   String get shippingCost => 'Shipping Cost';
@@ -2313,7 +2313,7 @@ class AppLocalizationsCkb extends AppLocalizations {
   String get specialPromo => 'Special Promo';
 
   @override
-  String get status => 'CÃ®';
+  String get status => 'CÃƒÂ®';
 
   @override
   String get stock => 'Stock';
@@ -2453,7 +2453,7 @@ class AppLocalizationsCkb extends AppLocalizations {
   String get termsOfService => 'Terms of Service';
 
   @override
-  String get thai => 'à¹„à¸—à¸¢';
+  String get thai => 'Ã Â¹â€žÃ Â¸â€”Ã Â¸Â¢';
 
   @override
   String get theme => 'Theme';
@@ -2474,7 +2474,7 @@ class AppLocalizationsCkb extends AppLocalizations {
   String get title => 'Title';
 
   @override
-  String get total => 'HemÃ®';
+  String get total => 'HemÃƒÂ®';
 
   @override
   String get totalPayment => 'Total Payment';
@@ -2666,7 +2666,7 @@ class AppLocalizationsCkb extends AppLocalizations {
   String get userLabel => 'User';
 
   @override
-  String get username => 'NavÃª bikarhÃªner';
+  String get username => 'NavÃƒÂª bikarhÃƒÂªner';
 
   @override
   String get usernameHint =>
@@ -2703,10 +2703,10 @@ class AppLocalizationsCkb extends AppLocalizations {
   String get version => 'Version';
 
   @override
-  String get vietnamese => 'Tiáº¿ng Viá»‡t';
+  String get vietnamese => 'TiÃ¡ÂºÂ¿ng ViÃ¡Â»â€¡t';
 
   @override
-  String get viewDetail => 'BinÃªre Details';
+  String get viewDetail => 'BinÃƒÂªre Details';
 
   @override
   String get viewOrder => 'View Order';
@@ -3896,7 +3896,7 @@ class AppLocalizationsCkb extends AppLocalizations {
   String get deviceRemoved => 'Device removed';
 
   @override
-  String get newDeviceQuestion => 'New device — Is this you?';
+  String get newDeviceQuestion => 'New device â€” Is this you?';
 
   @override
   String get yesItWasMe => 'Yes, it was me';
@@ -4399,31 +4399,31 @@ class AppLocalizationsCkb extends AppLocalizations {
   }
 
   @override
-  String get calendarSelectDate => 'بەروار هەڵبژێرە';
+  String get calendarSelectDate => 'Ø¨Û•Ø±ÙˆØ§Ø± Ù‡Û•ÚµØ¨Ú˜ÛŽØ±Û•';
 
   @override
-  String get calendarSelectMonth => 'مانگ هەڵبژێرە';
+  String get calendarSelectMonth => 'Ù…Ø§Ù†Ú¯ Ù‡Û•ÚµØ¨Ú˜ÛŽØ±Û•';
 
   @override
-  String get calendarSelectYear => 'ساڵ هەڵبژێرە';
+  String get calendarSelectYear => 'Ø³Ø§Úµ Ù‡Û•ÚµØ¨Ú˜ÛŽØ±Û•';
 
   @override
-  String get calendarSelectTime => 'کات هەڵبژێرە';
+  String get calendarSelectTime => 'Ú©Ø§Øª Ù‡Û•ÚµØ¨Ú˜ÛŽØ±Û•';
 
   @override
-  String get calendarHour => 'کاتژمێر';
+  String get calendarHour => 'Ú©Ø§ØªÚ˜Ù…ÛŽØ±';
 
   @override
-  String get calendarMinute => 'خولەک';
+  String get calendarMinute => 'Ø®ÙˆÙ„Û•Ú©';
 
   @override
-  String get calendarHourMinute => 'کاتژمێر : خولەک';
+  String get calendarHourMinute => 'Ú©Ø§ØªÚ˜Ù…ÛŽØ± : Ø®ÙˆÙ„Û•Ú©';
 
   @override
-  String get calendarSearch => 'گەڕان...';
+  String get calendarSearch => 'Ú¯Û•Ú•Ø§Ù†...';
 
   @override
-  String get calendarNoResults => 'هیچ ئەنجامێک نەدۆزرایەوە';
+  String get calendarNoResults => 'Ù‡ÛŒÚ† Ø¦Û•Ù†Ø¬Ø§Ù…ÛŽÚ© Ù†Û•Ø¯Û†Ø²Ø±Ø§ÛŒÛ•ÙˆÛ•';
 
   @override
   String get mediaServerNote =>
@@ -4612,3 +4612,4 @@ class AppLocalizationsCkb extends AppLocalizations {
   @override
   String get flowerDecorationsCatalog => 'Flower Decorations Catalog';
 }
+
