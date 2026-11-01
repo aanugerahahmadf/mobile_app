@@ -1,0 +1,430 @@
+import '../../../../../Core/Widgets/AppBlurBackdrop/AppBlurBackdrop.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../../Core/Constants/AppColors/AppColors.dart';
+import '../../../../../Core/Constants/AppTextStyles/AppTextStyles.dart';
+import '../../../../../Core/Constants/AppSizes/AppSizes.dart';
+import '../../../../../Core/Widgets/AppButton/AppButton.dart';
+import '../../../../../Core/Widgets/AppEmptyState/AppEmptyState.dart';
+import '../../../../../Core/Errors/LocalizedError/LocalizedError.dart';
+import '../../../../../Core/Widgets/AppShimmer/AppShimmer.dart';
+import '../../../../../Core/Utils/Formatters/Formatters.dart';
+import '../../../../../Core/Widgets/GuestAuthPrompt/GuestAuthPrompt.dart';
+import '../../../../Auth/Presentation/Providers/AuthProvider/AuthProvider.dart';
+import '../../../../Payment/Presentation/Widgets/UploadPaymentProof/UploadPaymentProof.dart';
+import '../../Providers/OrderProvider/OrderProvider.dart';
+import 'package:mobile_app/L10n/AppLocalizations.dart';
+import '../../../../../Core/Widgets/AppBreadcrumbs/AppBreadcrumbs.dart';
+
+class OrderHistoryScreen extends ConsumerStatefulWidget {
+  const OrderHistoryScreen({super.key});
+
+  @override
+  ConsumerState<OrderHistoryScreen> createState() => _OrderHistoryPageState();
+}
+
+class _OrderHistoryPageState extends ConsumerState<OrderHistoryScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+  String? _activeStatus;
+
+  final _tabStatuses = [
+    null,
+    'pending',
+    'confirmed',
+    'preparing',
+    'completed',
+    'cancelled',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: _tabStatuses.length, vsync: this);
+    if (ref.read(authProvider) is AuthAuthenticated) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(orderProvider.notifier).fetchOrders(refresh: true);
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  String _statusLabel(String? status) {
+    final l = AppLocalizations.of(context)!;
+    switch (status) {
+      case 'pending':
+        return l.pending;
+      case 'confirmed':
+        return l.confirmed;
+      case 'preparing':
+        return l.processed;
+      case 'event_day':
+        return l.eventDay;
+      case 'completed':
+        return l.completed;
+      case 'cancelled':
+        return l.cancelled;
+      default:
+        return status ?? '-';
+    }
+  }
+
+  int _parsePrice(dynamic price) {
+    if (price == null) return 0;
+    if (price is num) return price.toInt();
+    if (price is String) return (double.tryParse(price) ?? 0).toInt();
+    return 0;
+  }
+
+  Color _statusColor(String? status) {
+    switch (status) {
+      case 'pending':
+        return AppColors.warningColor;
+      case 'confirmed':
+      case 'preparing':
+        return AppColors.primaryColor;
+      case 'event_day':
+        return AppColors.eventDayColor;
+      case 'completed':
+        return AppColors.successColor;
+      case 'cancelled':
+        return AppColors.errorColor;
+      default:
+        return AppColors.textSecondary;
+    }
+  }
+
+  Future<void> _uploadPaymentProof(String orderId) async {
+    if (ref.read(authProvider) is! AuthAuthenticated) return;
+    await uploadPaymentProof(
+      context,
+      ref,
+      orderId,
+      onUploaded: () {
+        ref
+            .read(orderProvider.notifier)
+            .fetchOrders(status: _activeStatus, refresh: true);
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final isAuthenticated = ref.watch(authProvider) is AuthAuthenticated;
+    if (!isAuthenticated) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(l.myOrders),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+        ),
+        body: const GuestAuthPrompt(icon: Icons.receipt_long_outlined),
+      );
+    }
+    final state = ref.watch(orderProvider);
+    final notifier = ref.read(orderProvider.notifier);
+
+    final tabLabels = [
+      l.all,
+      l.pending,
+      l.confirmed,
+      l.processed,
+      l.completed,
+      l.cancelled,
+    ];
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l.myOrders),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(38),
+          child: const AppBreadcrumbs.global(),
+        ),
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSizes.md,
+              AppSizes.sm,
+              AppSizes.md,
+              0,
+            ),
+            child: AppBlurBackdrop(
+              child: Container(
+                height: 48,
+                alignment: Alignment.centerLeft,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: AppSizes.sm),
+                  itemCount: tabLabels.length,
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(width: AppSizes.xs),
+                  itemBuilder: (_, i) {
+                    final isSelected = _tabController.index == i;
+                    return Center(
+                      child: FilterChip(
+                        label: Text(
+                          tabLabels[i],
+                          style: TextStyle(
+                            color: isSelected
+                                ? AppColors.primaryColor
+                                : AppColors.textSecondary,
+                          ),
+                        ),
+                        selected: isSelected,
+                        onSelected: (_) {
+                          setState(() => _activeStatus = _tabStatuses[i]);
+                          _tabController.animateTo(i);
+                          ref
+                              .read(orderProvider.notifier)
+                              .fetchOrders(
+                                status: _activeStatus,
+                                refresh: true,
+                              );
+                        },
+                        selectedColor: AppColors.secondaryColor,
+                        checkmarkColor: AppColors.primaryColor,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: state.loading
+                ? ListView.builder(
+                    padding: const EdgeInsets.all(AppSizes.md),
+                    itemCount: 3,
+                    itemBuilder: (_, _) => Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: AppShimmer(height: 140),
+                    ),
+                  )
+                : state.error != null
+                ? Center(
+                    child: Text(
+                      LocalizedError.of(l, state.error ?? ''),
+                      style: AppTextStyles.bodyMedium,
+                    ),
+                  )
+                : state.orders.isEmpty
+                ? AppEmptyState(
+                    title: l.noOrders,
+                    subtitle: l.noOrdersDesc,
+                    icon: Icons.receipt_long_outlined,
+                  )
+                : RefreshIndicator(
+                    onRefresh: () => notifier.fetchOrders(
+                      status: _activeStatus,
+                      refresh: true,
+                    ),
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(AppSizes.md),
+                      itemCount: state.orders.length + (state.hasMore ? 1 : 0),
+                      itemBuilder: (context, index) {
+                        if (index == state.orders.length) {
+                          notifier.loadMore(status: _activeStatus);
+                          return const Padding(
+                            padding: EdgeInsets.all(16),
+                            child: Center(child: CircularProgressIndicator()),
+                          );
+                        }
+
+                        final order = state.orders[index];
+                        final status = order['status'] as String?;
+                        final firstItem =
+                            order['item'] as Map<String, dynamic>?;
+
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: InkWell(
+                            onTap: () => context.push('/order/${order['id']}'),
+                            borderRadius: BorderRadius.circular(12),
+                            child: Padding(
+                              padding: const EdgeInsets.all(AppSizes.md),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          '${l.order} #${order['order_number'] ?? order['id']}',
+                                          style: AppTextStyles.bodySmall,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: _statusColor(
+                                            status,
+                                          ).withValues(alpha: 0.1),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          _statusLabel(status),
+                                          style: AppTextStyles.labelSmall
+                                              .copyWith(
+                                                color: _statusColor(status),
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    children: [
+                                      if (firstItem != null)
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          child: Container(
+                                            width: 60,
+                                            height: 60,
+                                            color: AppColors.secondaryColor,
+                                            child: Icon(
+                                              Icons.image,
+                                              color: AppColors.textTertiary,
+                                            ),
+                                          ),
+                                        ),
+                                      if (firstItem != null)
+                                        const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              firstItem?['name'] as String? ??
+                                                  l.order,
+                                              style: AppTextStyles.bodyMedium,
+                                            ),
+                                            Text(
+                                              l.itemCount,
+                                              style: AppTextStyles.bodySmall,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        children: [
+                                          Text(
+                                            Formatters.currency(
+                                              _parsePrice(
+                                                order['total_price'] ??
+                                                    order['total'],
+                                              ),
+                                            ),
+                                            style: AppTextStyles.titleMedium
+                                                .copyWith(
+                                                  color: AppColors.primaryColor,
+                                                ),
+                                          ),
+                                          Text(
+                                            Formatters.date(
+                                              order['created_at'] as String? ??
+                                                  '',
+                                            ),
+                                            style: AppTextStyles.bodySmall,
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  if (status == 'pending' ||
+                                      order['payment_status'] == 'unpaid') ...[
+                                    const SizedBox(height: 12),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: AppButton(
+                                            label: l.pay,
+                                            onPressed: () => context.push(
+                                              '/payment/${order['id']}',
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: AppButton(
+                                            label: l.cancel,
+                                            onPressed: () => notifier
+                                                .cancelOrder('${order['id']}'),
+                                            type: ButtonType.outline,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                  if (order['payment_status'] == 'pending') ...[
+                                    const SizedBox(height: 12),
+                                    AppButton(
+                                      label: l.uploadProof,
+                                      onPressed: () =>
+                                          _uploadPaymentProof('${order['id']}'),
+                                      type: ButtonType.outline,
+                                    ),
+                                  ],
+                                  if (status == 'completed') ...[
+                                    const SizedBox(height: 12),
+                                    AppButton(
+                                      label: l.writeReview,
+                                      icon: Icons.rate_review_outlined,
+                                      onPressed: () => context.push(
+                                        '/write-review',
+                                        extra: {
+                                          'package_id':
+                                              '${order['package_id'] ?? ''}',
+                                          'catalog_id':
+                                              '${order['catalog_id'] ?? ''}',
+                                          'name':
+                                              (order['item']
+                                                  as Map<
+                                                    String,
+                                                    dynamic
+                                                  >?)?['name'] ??
+                                              '',
+                                        },
+                                      ),
+                                      type: ButtonType.outline,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}

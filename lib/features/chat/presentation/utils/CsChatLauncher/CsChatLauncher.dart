@@ -1,0 +1,139 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:mobile_app/L10n/AppLocalizations.dart';
+import '../CsGuestChat/CsGuestChat.dart';
+import 'package:mobile_app/Core/Utils/GuestMode/GuestMode.dart';
+
+import '../../../../Auth/Presentation/Providers/AuthProvider/AuthProvider.dart';
+import '../../Providers/ChatProvider.dart';
+
+String reportCsCategory(String category) {
+  switch (category) {
+    case 'order':
+    case 'payment':
+      return 'order_help';
+    case 'catalog':
+    case 'package':
+    case 'review':
+    default:
+      return 'bug_report';
+  }
+}
+
+String reportCategoryLabel(AppLocalizations l, String category) {
+  switch (category) {
+    case 'catalog':
+      return l.reportCatalog;
+    case 'package':
+      return l.reportPackage;
+    case 'order':
+      return l.reportOrder;
+    case 'review':
+      return l.reportReview;
+    default:
+      return l.reportGeneral;
+  }
+}
+
+/// Membuka halaman chat customer service dan otomatis mengirim pesan bawaan
+/// berisi laporan yang lengkap terhadap [itemName] (kategori [category]).
+///
+/// [itemContext] diteruskan agar tampil kartu konteks item yang dilaporkan,
+/// dan [details] ditambahkan sebagai keterangan tambahan pada pesan.
+Future<void> openReportChat(
+  BuildContext context,
+  WidgetRef ref, {
+  required String category,
+  required String itemName,
+  Map<String, dynamic>? itemContext,
+  String? details,
+}) async {
+  final l = AppLocalizations.of(context)!;
+  final auth = ref.read(authProvider);
+  final isGuest = auth is! AuthAuthenticated;
+  final guestName = isGuest ? await getGuestName() : null;
+  final senderName = auth is AuthAuthenticated
+      ? (auth.user.fullName.isNotEmpty
+            ? auth.user.fullName
+            : auth.user.username)
+      : (guestName ?? l.guestName);
+
+  final csCategory = reportCsCategory(category);
+  final subject = itemName.trim().isNotEmpty
+      ? itemName.trim()
+      : reportCategoryLabel(l, category);
+  final catLabel = reportCategoryLabel(l, category);
+
+  var message = l.reportChatIntro(catLabel, subject);
+  if (details != null && details.trim().isNotEmpty) {
+    message = '$message\n\n$details';
+  }
+  message = '$message${l.reportChatPrompt}';
+
+  final notifier = ref.read(chatProvider.notifier);
+  String inboxId;
+  String? guestId;
+  try {
+    if (!isGuest) {
+      await notifier.loadConversations();
+      final chatState = ref.read(chatProvider);
+      if (chatState is ChatConversationsLoaded &&
+          chatState.conversations.isNotEmpty) {
+        inboxId = chatState.conversations.first['id'].toString();
+      } else {
+        inboxId = (await notifier.startConversation()).toString();
+      }
+    } else {
+      guestId = await getOrCreateGuestId();
+      inboxId = (await notifier.startGuestConversation(
+        guestId: guestId,
+        csCategory: csCategory,
+        name: guestName,
+      )).toString();
+    }
+  } catch (_) {
+    if (!context.mounted) return;
+    try {
+      if (!isGuest) {
+        inboxId = (await notifier.startConversation()).toString();
+      } else {
+        guestId = await getOrCreateGuestId();
+        inboxId = (await notifier.startGuestConversation(
+          guestId: guestId,
+          csCategory: csCategory,
+        )).toString();
+      }
+    } catch (_) {
+      return;
+    }
+  }
+
+  try {
+    if (!isGuest) {
+      await notifier.sendMessage(
+        inboxId: int.parse(inboxId),
+        message: message,
+        senderName: senderName,
+        csCategory: csCategory,
+        itemContext: itemContext,
+      );
+    } else {
+      await notifier.sendGuestMessage(
+        inboxId: int.parse(inboxId),
+        message: message,
+        guestId: guestId!,
+        senderName: senderName,
+        csCategory: csCategory,
+        name: guestName,
+      );
+    }
+  } catch (_) {}
+
+  if (context.mounted) {
+    final extra = isGuest
+        ? {'cs_category': csCategory, 'guestId': guestId}
+        : {'cs_category': csCategory};
+    context.push('/chat/$inboxId', extra: extra);
+  }
+}
