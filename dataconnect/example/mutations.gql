@@ -1,0 +1,349 @@
+# ============================================================
+# WEDDING MUTATIONS - Comprehensive CRUD Operations
+# ============================================================
+
+# --- Wedding Mutations ---
+
+mutation CreateWedding(
+  $title: String!,
+  $weddingDate: Date!,
+  $budgetLimit: Float,
+  $themeColorPalette: String
+) @auth(level: USER) {
+  wedding_insert(
+    data: {
+      title: $title,
+      weddingDate: $weddingDate,
+      budgetLimit: $budgetLimit,
+      themeColorPalette: $themeColorPalette
+    }
+  ) {
+    id
+    title
+    weddingDate
+    budgetLimit
+    themeColorPalette
+  }
+}
+
+mutation UpdateWedding(
+  $id: UUID!,
+  $title: String,
+  $weddingDate: Date,
+  $budgetLimit: Float,
+  $themeColorPalette: String
+) @auth(level: USER) {
+  wedding_update(
+    key: { id: $id },
+    data: {
+      title: $title,
+      weddingDate: $weddingDate,
+      budgetLimit: $budgetLimit,
+      themeColorPalette: $themeColorPalette
+    }
+  ) {
+    id
+    title
+    weddingDate
+    budgetLimit
+    themeColorPalette
+  }
+}
+
+mutation DeleteWedding($id: UUID!) @auth(level: USER) {
+  wedding_delete(key: { id: $id }) {
+    keys
+  }
+}
+
+mutation UpsertWedding(
+  $id: UUID!,
+  $title: String!,
+  $weddingDate: Date!,
+  $budgetLimit: Float,
+  $themeColorPalette: String
+) @auth(level: USER) {
+  wedding_upsert(
+    key: { id: $id },
+    object: {
+      title: $title,
+      weddingDate: $weddingDate,
+      budgetLimit: $budgetLimit,
+      themeColorPalette: $themeColorPalette
+    }
+  ) {
+    id
+    title
+    weddingDate
+    budgetLimit
+    themeColorPalette
+  }
+}
+
+# --- Arrangement Mutations ---
+
+mutation CreateArrangement(
+  $name: String!,
+  $type: String!,
+  $status: String!,
+  $weddingId: UUID!,
+  $estimatedCost: Float,
+  $actualCost: Float,
+  $notes: String,
+  $venueAreaId: UUID
+) @auth(level: USER) {
+  arrangement_insert(
+    data: {
+      name: $name,
+      type: $type,
+      status: $status,
+      weddingId: $weddingId,
+      estimatedCost: $estimatedCost,
+      actualCost: $actualCost,
+      notes: $notes,
+      venueAreaId: $venueAreaId
+    }
+  ) {
+    id
+    name
+    type
+    status
+    estimatedCost
+    actualCost
+    notes
+  }
+}
+
+mutation UpdateArrangement(
+  $id: UUID!,
+  $name: String,
+  $type: String,
+  $status: String,
+  $estimatedCost: Float,
+  $actualCost: Float,
+  $notes: String,
+  $venueAreaId: UUID
+) @auth(level: USER) {
+  arrangement_update(
+    key: { id: $id },
+    data: {
+      name: $name,
+      type: $type,
+      status: $status,
+      estimatedCost: $estimatedCost,
+      actualCost: $actualCost,
+      notes: $notes,
+      venueAreaId: $venueAreaId
+    }
+  ) {
+    id
+    name
+    type
+    status
+    estimatedCost
+    actualCost
+    notes
+  }
+}
+
+mutation DeleteArrangement($id: UUID!) @auth(level: USER) {
+  arrangement_delete(key: { id: $id }) {
+    keys
+  }
+}
+
+mutation UpdateArrangementStatus($id: UUID!, $status: String!) @auth(level: USER) {
+  arrangement_update(key: { id: $id }, data: { status: $status }) {
+    id
+    name
+    status
+  }
+}
+
+# --- VenueArea Mutations ---
+
+mutation CreateVenueArea($name: String!, $weddingId: UUID!) @auth(level: USER) {
+  venueArea_insert(data: { name: $name, weddingId: $weddingId }) {
+    id
+    name
+  }
+}
+
+mutation UpdateVenueArea($id: UUID!, $name: String) @auth(level: USER) {
+  venueArea_update(key: { id: $id }, data: { name: $name }) {
+    id
+    name
+  }
+}
+
+mutation DeleteVenueArea($id: UUID!) @auth(level: USER) {
+  venueArea_delete(key: { id: $id }) {
+    keys
+  }
+}
+
+# --- FlowerItem Mutations ---
+
+mutation CreateFlowerItem(
+  $name: String!,
+  $color: String!,
+  $arrangementId: UUID!,
+  $seasonAvailability: String,
+  $costPerStem: Float
+) @auth(level: USER) {
+  flowerItem_insert(
+    data: {
+      name: $name,
+      color: $color,
+      arrangementId: $arrangementId,
+      seasonAvailability: $seasonAvailability,
+      costPerStem: $costPerStem
+    }
+  ) {
+    id
+    name
+    color
+    seasonAvailability
+    costPerStem
+  }
+}
+
+mutation UpdateFlowerItem(
+  $id: UUID!,
+  $name: String,
+  $color: String,
+  $seasonAvailability: String,
+  $costPerStem: Float
+) @auth(level: USER) {
+  flowerItem_update(
+    key: { id: $id },
+    data: {
+      name: $name,
+      color: $color,
+      seasonAvailability: $seasonAvailability,
+      costPerStem: $costPerStem
+    }
+  ) {
+    id
+    name
+    color
+    seasonAvailability
+    costPerStem
+  }
+}
+
+mutation DeleteFlowerItem($id: UUID!) @auth(level: USER) {
+  flowerItem_delete(key: { id: $id }) {
+    keys
+  }
+}
+
+mutation BulkCreateFlowerItems(
+  $items: [FlowerItemInsertInput!]!
+) @auth(level: USER) {
+  flowerItem_insertMany(data: $items) {
+    count
+  }
+}
+
+# --- ReferenceImage Mutations ---
+
+mutation CreateReferenceImage(
+  $imageUrl: String!,
+  $description: String!,
+  $weddingId: UUID!
+) @auth(level: USER) {
+  referenceImage_insert(
+    data: {
+      imageUrl: $imageUrl,
+      description: $description,
+      weddingId: $weddingId
+    }
+  ) {
+    id
+    imageUrl
+    description
+  }
+}
+
+mutation UpdateReferenceImage(
+  $id: UUID!,
+  $imageUrl: String,
+  $description: String
+) @auth(level: USER) {
+  referenceImage_update(
+    key: { id: $id },
+    data: { imageUrl: $imageUrl, description: $description }
+  ) {
+    id
+    imageUrl
+    description
+  }
+}
+
+mutation DeleteReferenceImage($id: UUID!) @auth(level: USER) {
+  referenceImage_delete(key: { id: $id }) {
+    keys
+  }
+}
+
+# ============================================================
+# COMPLEX TRANSACTION MUTATIONS
+# ============================================================
+
+mutation CreateWeddingWithVenue(
+  $weddingTitle: String!,
+  $weddingDate: Date!,
+  $budgetLimit: Float,
+  $themeColorPalette: String,
+  $venueName: String!
+) @auth(level: USER) @transaction {
+  createdWedding: wedding_insert(
+    data: {
+      title: $weddingTitle,
+      weddingDate: $weddingDate,
+      budgetLimit: $budgetLimit,
+      themeColorPalette: $themeColorPalette
+    }
+  ) {
+    id
+    title
+    weddingDate
+  }
+  createdVenue: venueArea_insert(
+    data: {
+      name: $venueName,
+      weddingId: _expr: "response.createdWedding.id"
+    }
+  ) {
+    id
+    name
+  }
+}
+
+mutation CreateArrangementWithFlowers(
+  $arrangementName: String!,
+  $arrangementType: String!,
+  $status: String!,
+  $weddingId: UUID!,
+  $flowers: [FlowerItemInsertInput!]!
+) @auth(level: USER) @transaction {
+  createdArrangement: arrangement_insert(
+    data: {
+      name: $arrangementName,
+      type: $arrangementType,
+      status: $status,
+      weddingId: $weddingId
+    }
+  ) {
+    id
+    name
+    type
+    status
+  }
+  createdFlowers: flowerItem_insertMany(
+    data: _expr: "response.createdArrangement.id"
+  ) {
+    count
+  }
+}
