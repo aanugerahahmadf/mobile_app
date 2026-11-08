@@ -1,0 +1,1703 @@
+{
+ "login": {
+  "client_path": "/login",
+  "rows": [
+   {
+    "method": "ANY",
+    "path": "/login",
+    "controller": "-",
+    "auth": "Tidak ada"
+   }
+  ]
+ },
+ "register": {
+  "client_path": "/register",
+  "rows": [
+   {
+    "method": "ANY",
+    "path": "/register",
+    "controller": "-",
+    "auth": "Tidak ada"
+   }
+  ]
+ },
+ "logout": {
+  "client_path": "/logout",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/logout",
+    "controller": "AuthController@logout",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "forgotPassword": {
+  "client_path": "/forgot-password",
+  "rows": [
+   {
+    "method": "ANY",
+    "path": "/forgot-password",
+    "controller": "-",
+    "auth": "Tidak ada"
+   }
+  ]
+ },
+ "resetPassword": {
+  "client_path": "/reset-password",
+  "rows": [
+   {
+    "method": "ANY",
+    "path": "/reset-password",
+    "controller": "-",
+    "auth": "Tidak ada"
+   }
+  ]
+ },
+ "sendOtp": {
+  "client_path": "/auth/send-otp",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/auth/send-otp",
+    "controller": "AuthController@sendOtp",
+    "auth": "Publik"
+   }
+  ]
+ },
+ "verifyOtp": {
+  "client_path": "/auth/verify-otp",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/auth/verify-otp",
+    "controller": "AuthController@verifyOtp",
+    "auth": "Publik"
+   }
+  ]
+ },
+ "twoFactorVerify": {
+  "client_path": "/auth/two-factor/verify",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/auth/two-factor/verify",
+    "controller": "AuthController@verifyTwoFactor",
+    "auth": "Publik"
+   }
+  ]
+ },
+ "twoFactorResend": {
+  "client_path": "/auth/two-factor/resend",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/auth/two-factor/resend",
+    "controller": "AuthController@resendTwoFactorCode",
+    "auth": "Publik"
+   }
+  ]
+ },
+ "googleLogin": {
+  "client_path": "/auth/google",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/auth/google",
+    "controller": "AuthController@googleLogin",
+    "auth": "Publik"
+   }
+  ]
+ },
+ "facebookLogin": {
+  "client_path": "/auth/facebook",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/auth/facebook",
+    "controller": "AuthController@facebookLogin",
+    "auth": "Publik"
+   }
+  ]
+ },
+ "appleLogin": {
+  "client_path": "/auth/apple",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/auth/apple",
+    "controller": "AuthController@appleLogin",
+    "auth": "Publik"
+   }
+  ]
+ },
+ "user": {
+  "client_path": "/user",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/user",
+    "controller": "Closure",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "deleteAccount": {
+  "client_path": "/user/account",
+  "rows": [
+   {
+    "method": "DELETE",
+    "path": "/user/account",
+    "controller": "AuthController@deleteAccount",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "profile": {
+  "client_path": "/profile",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/profile",
+    "controller": "ProfileController@show",
+    "auth": "Sanctum"
+   },
+   {
+    "method": "POST",
+    "path": "/profile",
+    "controller": "AuthController@updateProfile",
+    "auth": "Sanctum"
+   },
+   {
+    "method": "PUT",
+    "path": "/profile",
+    "controller": "ProfileController@update",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "profileAvatar": {
+  "client_path": "/profile/avatar",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/profile/avatar",
+    "controller": "ProfileController@updateAvatar",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "changePassword": {
+  "client_path": "/profile/change-password",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/profile/change-password",
+    "controller": "ProfileController@changePassword",
+    "auth": "Sanctum"
+   },
+   {
+    "method": "PUT",
+    "path": "/profile/change-password",
+    "controller": "ProfileController@changePassword",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "dashboard": {
+  "client_path": "/profile/dashboard",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/profile/dashboard",
+    "controller": "ProfileController@dashboard",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "profileKtpNumber": {
+  "client_path": "/profile/ktp",
+  "rows": [
+   {
+    "method": "PUT",
+    "path": "/profile/ktp",
+    "controller": "ProfileController@updateDocument",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "profileKtp": {
+  "client_path": "/profile/ktp-photo",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/profile/ktp-photo",
+    "controller": "ProfileController@uploadDocument",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "profileSelfie": {
+  "client_path": "/profile/selfie",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/profile/selfie",
+    "controller": "ProfileController@uploadSelfie",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "profileFaceScan": {
+  "client_path": "/profile/face-scan",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/profile/face-scan",
+    "controller": "ProfileController@uploadFaceScan",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "profileCompletion": {
+  "client_path": "/profile/completion",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/profile/completion",
+    "controller": "ProfileController@completion",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "home": {
+  "client_path": "/home",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/home",
+    "controller": "HomeController@index",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "categories": {
+  "client_path": "/categories",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/categories",
+    "controller": "CategoryController@index",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "categoriesWithPackages": {
+  "client_path": "/categories-with-packages",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/categories-with-packages",
+    "controller": "CategoryController@withTopPackages",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "catalog": {
+  "client_path": "/catalog",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/catalog",
+    "controller": "CatalogController@index",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "catalogFeatured": {
+  "client_path": "/catalog/featured",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/catalog/featured",
+    "controller": "CatalogController@featured",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "catalogOnSale": {
+  "client_path": "/catalog/on-sale",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/catalog/on-sale",
+    "controller": "CatalogController@onSale",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "catalogPublic": {
+  "client_path": "/catalog/public",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/catalog/public",
+    "controller": "CatalogController@index",
+    "auth": "Publik"
+   }
+  ]
+ },
+ "cart": {
+  "client_path": "/cart",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/cart",
+    "controller": "CartController@index",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "cartAdd": {
+  "client_path": "/cart/add",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/cart/add",
+    "controller": "CartController@store",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "favorite": {
+  "client_path": "/favorite",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/Favorite",
+    "controller": "FavoriteController@index",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "favoriteToggle": {
+  "client_path": "/favorite/toggle",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/Favorite/toggle",
+    "controller": "FavoriteController@toggle",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "bookings": {
+  "client_path": "/bookings",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/bookings",
+    "controller": "OrderController@getOrders",
+    "auth": "Sanctum"
+   },
+   {
+    "method": "POST",
+    "path": "/bookings",
+    "controller": "OrderController@createOrder",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "search": {
+  "client_path": "/search",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/search",
+    "controller": "SearchController@byText",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "searchImage": {
+  "client_path": "/search/image",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/search/image",
+    "controller": "SearchController@byImage",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "cbirSearch": {
+  "client_path": "/cbir/search",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/cbir/search",
+    "controller": "CBIRController@searchSimilar",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "cbirArithmetic": {
+  "client_path": "/cbir/arithmetic",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/cbir/arithmetic",
+    "controller": "CBIRController@arithmeticSearch",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "cbirArithmeticOps": {
+  "client_path": "/cbir/arithmetic/ops",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/cbir/arithmetic/ops",
+    "controller": "CBIRController@arithmeticOps",
+    "auth": "Publik"
+   }
+  ]
+ },
+ "cbirStats": {
+  "client_path": "/cbir/stats",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/cbir/stats",
+    "controller": "CBIRController@getStats",
+    "auth": "Publik"
+   }
+  ]
+ },
+ "cbirEvaluate": {
+  "client_path": "/cbir/evaluate",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/cbir/evaluate",
+    "controller": "CBIRController@evaluate",
+    "auth": "Publik"
+   }
+  ]
+ },
+ "cbirHealth": {
+  "client_path": "/cbir/health",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/cbir/health",
+    "controller": "CBIRController@healthCheck",
+    "auth": "Publik"
+   }
+  ]
+ },
+ "vouchers": {
+  "client_path": "/vouchers",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/vouchers",
+    "controller": "VoucherController@index",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "voucherValidate": {
+  "client_path": "/vouchers/validate",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/vouchers/validate",
+    "controller": "VoucherController@validateVoucher",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "notifications": {
+  "client_path": "/notifications",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/notifications",
+    "controller": "NotificationController@index",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "notificationReadAll": {
+  "client_path": "/notifications/read-all",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/notifications/read-all",
+    "controller": "NotificationController@markAllAsRead",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "notificationUnreadCount": {
+  "client_path": "/notifications/unread-count",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/notifications/unread-count",
+    "controller": "NotificationController@unreadCount",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "registerFcmToken": {
+  "client_path": "/notifications/fcm-token",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/notifications/fcm-token",
+    "controller": "NotificationController@registerFcmToken",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "reviews": {
+  "client_path": "/reviews",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/reviews",
+    "controller": "ReviewController@getAllReviews",
+    "auth": "Sanctum"
+   },
+   {
+    "method": "POST",
+    "path": "/reviews",
+    "controller": "ReviewController@store",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "myReviews": {
+  "client_path": "/reviews/user",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/reviews/user",
+    "controller": "ReviewController@getUserReviews",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "reports": {
+  "client_path": "/reports",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/reports",
+    "controller": "ReportController@index",
+    "auth": "Sanctum"
+   },
+   {
+    "method": "POST",
+    "path": "/reports",
+    "controller": "ReportController@store",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "myReports": {
+  "client_path": "/reports",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/reports",
+    "controller": "ReportController@index",
+    "auth": "Sanctum"
+   },
+   {
+    "method": "POST",
+    "path": "/reports",
+    "controller": "ReportController@store",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "conversations": {
+  "client_path": "/messages/conversations",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/messages/conversations",
+    "controller": "ChatController@getConversations",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "messagesSend": {
+  "client_path": "/messages/send",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/messages/send",
+    "controller": "ChatController@sendMessage",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "messagesStart": {
+  "client_path": "/messages/start",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/messages/start",
+    "controller": "ChatController@startConversation",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "unreadCount": {
+  "client_path": "/messages/unread-count",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/messages/unread-count",
+    "controller": "ChatController@getUnreadCount",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "legalTerms": {
+  "client_path": "/legal/terms",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/legal/terms",
+    "controller": "LegalController@getTerms",
+    "auth": "Publik"
+   }
+  ]
+ },
+ "legalPrivacy": {
+  "client_path": "/legal/privacy",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/legal/privacy",
+    "controller": "LegalController@getPrivacy",
+    "auth": "Publik"
+   }
+  ]
+ },
+ "legalWeddingPolicy": {
+  "client_path": "/legal/wedding-decoration-policy",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/legal/wedding-decoration-policy",
+    "controller": "LegalController@getWeddingDecorationPolicy",
+    "auth": "Publik"
+   }
+  ]
+ },
+ "legalHelp": {
+  "client_path": "/legal/help",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/legal/help",
+    "controller": "LegalController@getHelp",
+    "auth": "Publik"
+   }
+  ]
+ },
+ "legalAbout": {
+  "client_path": "/legal/about",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/legal/about",
+    "controller": "LegalController@getAbout",
+    "auth": "Publik"
+   }
+  ]
+ },
+ "wallet": {
+  "client_path": "/wallet",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/wallet",
+    "controller": "WalletController@getWalletData",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "walletHistory": {
+  "client_path": "/wallet/history",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/wallet/history",
+    "controller": "WalletController@getHistory",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "guestChatStart": {
+  "client_path": "/messages/guest/start",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/messages/guest/start",
+    "controller": "ChatController@guestStart",
+    "auth": "Publik (guest-chat)"
+   }
+  ]
+ },
+ "guestChatSend": {
+  "client_path": "/messages/guest/send",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/messages/guest/send",
+    "controller": "ChatController@guestSend",
+    "auth": "Publik (guest-chat)"
+   }
+  ]
+ },
+ "chatCalls": {
+  "client_path": "/messages/calls",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/messages/calls",
+    "controller": "ChatCallController@start",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "guestChatCalls": {
+  "client_path": "/messages/guest/calls",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/messages/guest/calls",
+    "controller": "ChatCallController@start",
+    "auth": "Publik (guest-chat)"
+   }
+  ]
+ },
+ "securityCheckup": {
+  "client_path": "/security/checkup",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/security/checkup",
+    "controller": "SecurityController@checkup",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "securityRecentEmails": {
+  "client_path": "/security/recent-emails",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/security/recent-emails",
+    "controller": "SecurityController@recentEmails",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "securityTwoFactorStatus": {
+  "client_path": "/security/two-factor/status",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/security/two-factor/status",
+    "controller": "SecurityController@twoFactorStatus",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "securityTwoFactorToggle": {
+  "client_path": "/security/two-factor/toggle",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/security/two-factor/toggle",
+    "controller": "SecurityController@twoFactorToggle",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "securityBackupCodes": {
+  "client_path": "/security/two-factor/backup-codes",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/security/two-factor/backup-codes",
+    "controller": "SecurityController@generateBackupCodes",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "securityTwoFactorSetup": {
+  "client_path": "/security/two-factor/setup",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/security/two-factor/setup",
+    "controller": "SecurityController@setupTwoFactor",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "securityTwoFactorSetupVerify": {
+  "client_path": "/security/two-factor/setup/verify",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/security/two-factor/setup/verify",
+    "controller": "SecurityController@verifyTwoFactorSetup",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "securityTwoFactorSetupResend": {
+  "client_path": "/security/two-factor/setup/resend",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/security/two-factor/setup/resend",
+    "controller": "SecurityController@resendTwoFactorSetupOtp",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "securityTrustedDevices": {
+  "client_path": "/security/trusted-devices",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/security/trusted-devices",
+    "controller": "SecurityController@trustedDevices",
+    "auth": "Sanctum"
+   },
+   {
+    "method": "DELETE",
+    "path": "/security/trusted-devices",
+    "controller": "SecurityController@removeAllTrustedDevices",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "securityRemoveAllTrustedDevices": {
+  "client_path": "/security/trusted-devices",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/security/trusted-devices",
+    "controller": "SecurityController@trustedDevices",
+    "auth": "Sanctum"
+   },
+   {
+    "method": "DELETE",
+    "path": "/security/trusted-devices",
+    "controller": "SecurityController@removeAllTrustedDevices",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "securityRemoveAllOtherSessions": {
+  "client_path": "/security/sessions/remove-all",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/security/sessions/remove-all",
+    "controller": "SecurityController@removeAllOtherSessions",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "securityChangeEmailSendOtp": {
+  "client_path": "/security/change-email/send-otp",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/security/change-email/send-otp",
+    "controller": "SecurityController@sendEmailChangeOtp",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "securityChangeEmailVerifyOtp": {
+  "client_path": "/security/change-email/verify-otp",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/security/change-email/verify-otp",
+    "controller": "SecurityController@verifyEmailChangeOtp",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "securitySavedLogin": {
+  "client_path": "/security/saved-login",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/security/saved-login",
+    "controller": "SecurityController@savedLoginStatus",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "securitySavedLoginToggle": {
+  "client_path": "/security/saved-login/toggle",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/security/saved-login/toggle",
+    "controller": "SecurityController@savedLoginToggle",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "securityLoginActivity": {
+  "client_path": "/security/login-activity",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/security/login-activity",
+    "controller": "LoginActivityController@index",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "dropdownOptions": {
+  "client_path": "/dropdown-options",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/dropdown-options",
+    "controller": "DropdownOptionController@index",
+    "auth": "Publik"
+   }
+  ]
+ },
+ "regionProvinces": {
+  "client_path": "/regions/provinces",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/regions/provinces",
+    "controller": "RegionController@provinces",
+    "auth": "Publik"
+   }
+  ]
+ },
+ "appLock": {
+  "client_path": "/profile/app-lock",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/profile/app-lock",
+    "controller": "AppLockController@show",
+    "auth": "Sanctum"
+   },
+   {
+    "method": "PUT",
+    "path": "/profile/app-lock",
+    "controller": "AppLockController@update",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "appLockPin": {
+  "client_path": "/profile/app-lock/pin",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/profile/app-lock/pin",
+    "controller": "AppLockController@setPin",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "appLockPinVerify": {
+  "client_path": "/profile/app-lock/pin/verify",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/profile/app-lock/pin/verify",
+    "controller": "AppLockController@verifyPin",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "appLockFaceEnroll": {
+  "client_path": "/profile/app-lock/face-enroll",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/profile/app-lock/face-enroll",
+    "controller": "AppLockController@faceEnroll",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "appLockFaceVerify": {
+  "client_path": "/profile/app-lock/face-verify",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/profile/app-lock/face-verify",
+    "controller": "AppLockController@faceVerify",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "worldCountries": {
+  "client_path": "/world-regions/countries",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/world-regions/countries",
+    "controller": "WorldRegionController@countries",
+    "auth": "Publik"
+   }
+  ]
+ },
+ "worldStates": {
+  "client_path": "/world-regions/states",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/world-regions/states",
+    "controller": "WorldRegionController@states",
+    "auth": "Publik"
+   }
+  ]
+ },
+ "worldCities": {
+  "client_path": "/world-regions/cities",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/world-regions/cities",
+    "controller": "WorldRegionController@cities",
+    "auth": "Publik"
+   }
+  ]
+ },
+ "geoDistricts": {
+  "client_path": "/geo/admin2",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/geo/admin2",
+    "controller": "GeoController@admin2",
+    "auth": "Publik"
+   }
+  ]
+ },
+ "geoVillages": {
+  "client_path": "/geo/admin3",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/geo/admin3",
+    "controller": "GeoController@admin3",
+    "auth": "Publik"
+   }
+  ]
+ },
+ "geoPostalCodes": {
+  "client_path": "/geo/postal-codes",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/geo/postal-codes",
+    "controller": "GeoController@postalCodes",
+    "auth": "Publik"
+   }
+  ]
+ },
+ "profileDocumentNumber": {
+  "client_path": "/profile/{documentType}",
+  "rows": [
+   {
+    "method": "PUT",
+    "path": "/profile/{documentType}",
+    "controller": "ProfileController@updateDocument",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "profileDocumentPhoto": {
+  "client_path": "/profile/{documentType}-photo",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/profile/{documentType}-photo",
+    "controller": "ProfileController@uploadDocument",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "notificationDelete": {
+  "client_path": "/notifications/{id}",
+  "rows": [
+   {
+    "method": "DELETE",
+    "path": "/notifications/{id}",
+    "controller": "NotificationController@destroy",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "userReviews": {
+  "client_path": "/reviews/user/{userId}",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/reviews/user/{userId}",
+    "controller": "ReviewController@getUserPublicReviews",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "review": {
+  "client_path": "/reviews/{id}",
+  "rows": [
+   {
+    "method": "PUT",
+    "path": "/reviews/{id}",
+    "controller": "ReviewController@update",
+    "auth": "Sanctum"
+   },
+   {
+    "method": "DELETE",
+    "path": "/reviews/{id}",
+    "controller": "ReviewController@destroy",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "reportPdf": {
+  "client_path": "/reports/{id}/pdf",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/reports/{report}/pdf",
+    "controller": "ReportController@downloadPdf",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "catalogDetail": {
+  "client_path": "/catalog/{id}",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/catalog/{id}",
+    "controller": "CatalogController@show",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "catalogTiers": {
+  "client_path": "/catalog/{id}/tiers",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/catalog/{id}/tiers",
+    "controller": "CatalogController@tiers",
+    "auth": "Publik"
+   }
+  ]
+ },
+ "cartItem": {
+  "client_path": "/cart/{id}",
+  "rows": [
+   {
+    "method": "PUT",
+    "path": "/cart/{cart}",
+    "controller": "CartController@update",
+    "auth": "Sanctum"
+   },
+   {
+    "method": "DELETE",
+    "path": "/cart/{cart}",
+    "controller": "CartController@destroy",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "bookingDetail": {
+  "client_path": "/bookings/{id}",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/bookings/{id}",
+    "controller": "OrderController@show",
+    "auth": "Sanctum"
+   },
+   {
+    "method": "PUT",
+    "path": "/bookings/{id}",
+    "controller": "OrderController@updateOrder",
+    "auth": "Sanctum"
+   },
+   {
+    "method": "DELETE",
+    "path": "/bookings/{id}",
+    "controller": "OrderController@deleteOrder",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "bookingPay": {
+  "client_path": "/bookings/{id}/pay",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/bookings/{id}/pay",
+    "controller": "OrderController@initiatePayment",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "bookingCancel": {
+  "client_path": "/bookings/{id}/cancel",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/bookings/{id}/cancel",
+    "controller": "OrderController@cancelOrder",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "favoriteItem": {
+  "client_path": "/favorite/{packageId}",
+  "rows": [
+   {
+    "method": "DELETE",
+    "path": "/Favorite/{packageId}",
+    "controller": "FavoriteController@removeFromFavorite",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "conversationMessages": {
+  "client_path": "/messages/conversations/{id}",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/messages/conversations/{inboxId}",
+    "controller": "ChatController@getMessages",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "messageDelete": {
+  "client_path": "/messages/{id}/delete",
+  "rows": [
+   {
+    "method": "DELETE",
+    "path": "/messages/{id}/delete",
+    "controller": "ChatController@deleteMessage",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "messageStar": {
+  "client_path": "/messages/{id}/star",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/messages/{id}/star",
+    "controller": "ChatController@starMessage",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "messageForward": {
+  "client_path": "/messages/{id}/forward",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/messages/{id}/forward",
+    "controller": "ChatController@forwardMessage",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "messageReact": {
+  "client_path": "/messages/{id}/react",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/messages/{id}/react",
+    "controller": "ChatController@addReaction",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "messageRead": {
+  "client_path": "/messages/{inboxId}/read",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/messages/{inboxId}/read",
+    "controller": "ChatController@markInboxAsRead",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "messageRate": {
+  "client_path": "/messages/{inboxId}/rate",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/messages/{inboxId}/rate",
+    "controller": "ChatController@rateInbox",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "guestChatMessages": {
+  "client_path": "/messages/guest/{inboxId}",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/messages/guest/{inboxId}",
+    "controller": "ChatController@guestMessages",
+    "auth": "Publik (guest-chat)"
+   }
+  ]
+ },
+ "guestChatCallState": {
+  "client_path": "/messages/guest/calls/{token}",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/messages/guest/calls/{token}",
+    "controller": "ChatCallController@state",
+    "auth": "Publik (guest-chat)"
+   }
+  ]
+ },
+ "guestChatCallSignal": {
+  "client_path": "/messages/guest/calls/{token}/signal",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/messages/guest/calls/{token}/signal",
+    "controller": "ChatCallController@signal",
+    "auth": "Publik (guest-chat)"
+   }
+  ]
+ },
+ "guestChatCallEnd": {
+  "client_path": "/messages/guest/calls/{token}/end",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/messages/guest/calls/{token}/end",
+    "controller": "ChatCallController@end",
+    "auth": "Publik (guest-chat)"
+   }
+  ]
+ },
+ "chatCallState": {
+  "client_path": "/messages/calls/{token}",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/messages/calls/{token}",
+    "controller": "ChatCallController@state",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "chatCallSignal": {
+  "client_path": "/messages/calls/{token}/signal",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/messages/calls/{token}/signal",
+    "controller": "ChatCallController@signal",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "chatCallAccept": {
+  "client_path": "/messages/calls/{token}/accept",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/messages/calls/{token}/accept",
+    "controller": "ChatCallController@accept",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "chatCallEnd": {
+  "client_path": "/messages/calls/{token}/end",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/messages/calls/{token}/end",
+    "controller": "ChatCallController@end",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "chatCallActive": {
+  "client_path": "/messages/{inboxId}/calls/active",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/messages/{inboxId}/calls/active",
+    "controller": "ChatCallController@active",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "guestChatCallActive": {
+  "client_path": "/messages/guest/{inboxId}/calls/active",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/messages/guest/{inboxId}/calls/active",
+    "controller": "ChatCallController@active",
+    "auth": "Publik (guest-chat)"
+   }
+  ]
+ },
+ "voucherClaim": {
+  "client_path": "/vouchers/{id}/claim",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/vouchers/{voucher}/claim",
+    "controller": "VoucherController@claim",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "notificationRead": {
+  "client_path": "/notifications/{id}/read",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/notifications/{id}/read",
+    "controller": "NotificationController@markAsRead",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "catalogReviews": {
+  "client_path": "/reviews/catalog/{id}",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/reviews/catalog/{catalogId}",
+    "controller": "ReviewController@getCatalogReviews",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "catalogReviewSummary": {
+  "client_path": "/reviews/catalog/{id}/summary",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/reviews/catalog/{id}/summary",
+    "controller": "ReviewController@getCatalogRatingSummary",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "reviewVote": {
+  "client_path": "/reviews/{id}/vote",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/reviews/{id}/vote",
+    "controller": "ReviewController@voteHelpful",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "reviewReply": {
+  "client_path": "/reviews/{id}/reply",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/reviews/{id}/reply",
+    "controller": "ReviewController@reply",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "reviewDeleteReply": {
+  "client_path": "/reviews/{reviewId}/reply/{replyId}",
+  "rows": [
+   {
+    "method": "DELETE",
+    "path": "/reviews/{id}/reply/{replyId}",
+    "controller": "ReviewController@deleteReply",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "orderConfirmPayment": {
+  "client_path": "/bookings/{id}/confirm-payment",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/bookings/{id}/confirm-payment",
+    "controller": "OrderController@confirmPayment",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "orderVirtualAccount": {
+  "client_path": "/bookings/{id}/virtual-account",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/bookings/{id}/virtual-account",
+    "controller": "OrderController@createVirtualAccount",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "orderQris": {
+  "client_path": "/bookings/{id}/qris",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/bookings/{id}/qris",
+    "controller": "OrderController@createQris",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "bookingUploadProof": {
+  "client_path": "/bookings/{id}/upload-proof",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/bookings/{id}/upload-proof",
+    "controller": "OrderController@uploadProof",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "invoiceDownload": {
+  "client_path": "/bookings/{id}/invoice",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/bookings/{id}/invoice",
+    "controller": "OrderController@downloadInvoice",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "invoiceEmail": {
+  "client_path": "/bookings/{id}/invoice/email",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/bookings/{id}/invoice/email",
+    "controller": "OrderController@sendInvoiceEmail",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "securityRemoveTrustedDevice": {
+  "client_path": "/security/trusted-devices/{id}",
+  "rows": [
+   {
+    "method": "DELETE",
+    "path": "/security/trusted-devices/{deviceId}",
+    "controller": "SecurityController@removeTrustedDevice",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "securityVerifyTrustedDevice": {
+  "client_path": "/security/trusted-devices/{id}/verify",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/security/trusted-devices/{deviceId}/verify",
+    "controller": "SecurityController@verifyTrustedDevice",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "securityRejectTrustedDevice": {
+  "client_path": "/security/trusted-devices/{id}/reject",
+  "rows": [
+   {
+    "method": "POST",
+    "path": "/security/trusted-devices/{deviceId}/reject",
+    "controller": "SecurityController@rejectTrustedDevice",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "securityRemoveSession": {
+  "client_path": "/security/login-activity/{id}",
+  "rows": [
+   {
+    "method": "DELETE",
+    "path": "/security/login-activity/{id}",
+    "controller": "LoginActivityController@destroy",
+    "auth": "Sanctum"
+   }
+  ]
+ },
+ "regionCities": {
+  "client_path": "/regions/cities/{provinceCode}",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/regions/cities/{provinceCode}",
+    "controller": "RegionController@cities",
+    "auth": "Publik"
+   }
+  ]
+ },
+ "regionDistricts": {
+  "client_path": "/regions/districts/{cityCode}",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/regions/districts/{cityCode}",
+    "controller": "RegionController@districts",
+    "auth": "Publik"
+   }
+  ]
+ },
+ "regionVillages": {
+  "client_path": "/regions/villages/{districtCode}",
+  "rows": [
+   {
+    "method": "GET",
+    "path": "/regions/villages/{districtCode}",
+    "controller": "RegionController@villages",
+    "auth": "Publik"
+   }
+  ]
+ }
+}

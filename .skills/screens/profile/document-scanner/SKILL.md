@@ -1,0 +1,239 @@
+---
+name: profile-document-scanner
+description: Implementasi layar Scanner Dokumen (DocumentScannerScreen) pada fitur Profil & Pengaturan; route /document-scanner, 0 endpoint, 0 tabel, state, guardrail, dan definition of done.
+---
+
+# Skill: Scanner Dokumen
+
+> **Tipe:** Scanner kamera / media · **Route:** `/document-scanner` · **Akses:** Sanctum · **State:** State lokal (`setState`)
+
+## 0. Prompt siap pakai
+
+Tempel blok berikut ke agen implementasi. Ganti bagian dalam `<...>` bila perlu.
+
+```text
+Anda bekerja pada layar Scanner Dokumen (DocumentScannerScreen) di fitur Profil & Pengaturan.
+File utama: lib/Features/Profile/Presentation/Screens/DocumentScanner/DocumentScannerScreen.dart. Route: /document-scanner (Sanctum).
+Tujuan: Memindai dokumen identitas dengan kamera, mendeteksi tepi, dan menghasilkan file untuk diunggah.
+
+Konteks wajib:
+- Baca PRD lengkap: .docs/screens/profile/document-scanner.md
+- State management: State lokal (`setState`); pola data: kamera real-time.
+- Endpoint: tidak ada endpoint jaringan.
+- Tabel: tidak ada tabel langsung.
+- Parameter/extra: `extra: {docType}` default `ktp`.
+
+Wajib dipertahankan:
+- File yang dikembalikan dapat dipakai upload dokumen.
+- Layar membersihkan controller saat dispose.
+- Tangani loading, empty, error, offline, unauthorized, dan double-submit.
+- Gunakan AppColors/AppTextStyles/AppSizes/AppLocalizations; jangan hardcode.
+- Jangan mengarang endpoint/kolom. Verifikasi ke backend sebelum menulis kode.
+- Jangan memanggil Dio baru dari widget; gunakan repository/DioClient yang ada.
+
+Selesai jika: gunakan foto bekerja, semua state di atas tertangani, flutter analyze bersih, dan test happy path + minimal satu error path lulus.
+```
+
+## 1. Kapan dipakai / tidak
+
+**Dipakai** saat mengubah, menguji, me-refactor, atau mendokumentasikan `DocumentScannerScreen`.
+
+**Tidak dipakai** untuk:
+- Mengubah kontrak backend tanpa juga memperbarui PRD dan peta endpoint.
+- Mendesain ulang seluruh design system; muat `shared/flutter-screen` dan `shared/security-auth`.
+
+## 2. Input & prasyarat
+
+| Prasyarat | Nilai |
+|---|---|
+| File layar | `lib/Features/Profile/Presentation/Screens/DocumentScanner/DocumentScannerScreen.dart` |
+| Route | `/document-scanner` |
+| Akses | Sanctum |
+| Parameter | `extra: {docType}` default `ktp`. |
+| Masuk dari | Dari `CompleteProfileScreen` atau alur verifikasi identitas. |
+| Provider | Tidak terdeteksi |
+| Model | Tidak terdeteksi |
+| Endpoint | 0 |
+| Tabel | 0 |
+
+- Izin kamera dan lifecycle controller wajib diuji di perangkat fisik/emulator dengan kamera.
+
+- Timer/polling harus diuji saat app background/resume dan saat dispose.
+
+## 3. Sumber kebenaran
+
+| Aspek | Sumber |
+|---|---|
+| Layar & route | `lib/Core/Router/AppRouter/AppRouter.dart` |
+| Endpoint client | `lib/Core/Api/ApiEndpoints/ApiEndpoints.dart` |
+| HTTP client | `lib/Core/Api/DioClient/DioClient.dart` |
+| Desain | `lib/Core/Constants/` dan `lib/Core/Theme/` |
+| Backend | `../Mobile-And-Backend/routes/api` dan `app/Http/Controllers/Api/User` |
+| Database | PostgreSQL `wedding_florals_decorations` |
+| PRD | `.docs/screens/profile/document-scanner.md` |
+
+## 4. Peta file yang akan disentuh
+
+| Layer | File | Perubahan yang diharapkan |
+|---|---|---|
+| Screen | `lib/Features/Profile/Presentation/Screens/DocumentScanner/DocumentScannerScreen.dart` | UI, state, interaksi |
+| Test | `test/Features/Profil/` | Test happy path + error path |
+| PRD | `.docs/screens/profile/document-scanner.md` | Perbarui bila route/API/tabel berubah |
+| Prompt | `.skills/screens/profile/document-scanner/SKILL.md` | Skill ini |
+
+## 5. Spesifikasi yang harus dipertahankan
+
+### 5.1 Tujuan & alur
+
+Memindai dokumen identitas dengan kamera, mendeteksi tepi, dan menghasilkan file untuk diunggah.
+
+1. Minta izin kamera.
+2. Tampilkan preview dan panduan.
+3. Deteksi dokumen/validasi kualitas.
+4. Ambil foto dan kembalikan path.
+
+### 5.2 Elemen UI wajib
+
+- Preview kamera
+- Overlay bingkai
+- Panduan TTS
+- Tombol ambil/retake
+
+### 5.3 State wajib
+
+| State | UI | Pemulihan |
+|---|---|---|
+| `initial` | Kerangka/placeholder awal | Muat data |
+| `loading` | Skeleton/spinner; aksi utama disabled | Tunggu atau retry saat timeout |
+| `content` | Render konten utama | — |
+| `error` | Pesan ramah + tombol coba lagi | Retry |
+| `unauthorized` | Sesi berakhir; arahkan login/Landing | Login ulang |
+| `offline` | Banner/empty offline | Coba lagi saat online |
+| `permission` | Penjelasan + tombol buka pengaturan | Izin diberikan |
+| `izin ditolak` | Tampilkan penjelasan izin dan tombol buka pengaturan. | Ikuti aksi pemulihan pada pesan |
+| `kamera tidak tersedia` | Jelaskan izin/ketersediaan kamera dan beri alternatif. | Ikuti aksi pemulihan pada pesan |
+| `dokumen tidak terdeteksi` | Tampilkan status yang jelas dan aksi pemulihan. | Ikuti aksi pemulihan pada pesan |
+| `terlalu gelap` | Tampilkan status yang jelas dan aksi pemulihan. | Ikuti aksi pemulihan pada pesan |
+
+### 5.4 Aturan bisnis
+
+- File yang dikembalikan dapat dipakai upload dokumen.
+- Layar membersihkan controller saat dispose.
+- Scanner hanya menghasilkan file; unggah dan verifikasi dilakukan alur terpisah.
+- Jangan menyimpan frame kamera setelah layar ditutup.
+- Sediakan alternatif unggah bila kamera tidak tersedia.
+
+## 6. Langkah implementasi
+
+### Fase 0 — Recon (wajib)
+
+1. Baca PRD `.docs/screens/profile/document-scanner.md` dan skill ini sampai selesai.
+2. Buka `lib/Features/Profile/Presentation/Screens/DocumentScanner/DocumentScannerScreen.dart`; catat widget, state, dan panggilan API yang sudah ada.
+3. Verifikasi route di `AppRouter`: `/document-scanner`.
+4. Verifikasi endpoint ke backend: tidak ada endpoint jaringan.
+5. Cek tabel/kolom di `DATABASE.md`; jangan mengarang kolom.
+
+### Fase 1 — Navigasi & guard
+
+1. Pastikan route dan parameter/extra sesuai. Jangan menambah route baru tanpa mendaftarkannya di `AppRouter`.
+2. Terapkan guard: Butuh Bearer token valid. 401 harus membersihkan token dan mengarahkan pengguna ke Landing/login.
+3. Pastikan back tidak mengulang submit dan tidak kehilangan input tanpa konfirmasi.
+
+### Fase 2 — UI scaffold
+
+1. Susun layout sesuai blueprint PRD §5; gunakan widget yang sudah ada bila cocok.
+2. Gunakan `AppColors`, `AppTextStyles`, `AppSizes`, `AppLocalizations`.
+3. Pastikan layout tidak overflow di 320 px dan aman terhadap keyboard/safe area.
+
+### Fase 3 — State & data
+
+1. Implementasikan state: `initial`, `loading`, `content`, `error`, `unauthorized`, `offline`, `permission`, `izin ditolak`, `kamera tidak tersedia`, `dokumen tidak terdeteksi`.
+2. Panggil API lewat repository/DioClient; jangan dari `build()`.
+3. Simpan state minimal yang diperlukan; jangan menduplikasi sumber kebenaran.
+4. Kelola timer/polling: mulai setelah layar siap, hentikan di `dispose`/background.
+5. Kelola lifecycle kamera dan dispose controller; tangani izin ditolak.
+
+### Fase 4 — Interaksi & feedback
+
+1. Hubungkan aksi utama: Gunakan Foto.
+2. Disable aksi saat proses; tampilkan progress/SnackBar sukses.
+3. Petakan 422 per field; 401 logout; 403/404/5xx pesan yang sesuai.
+
+### Fase 5 — Kualitas
+
+1. Tambahkan semantics/label untuk ikon dan kontrol non-teks.
+2. Uji text scale 200%, mode gelap, dan landscape.
+3. Tambahkan widget/unit test sesuai PRD §19.
+
+## 7. Kontrak API (jangan diubah tanpa update dokumen)
+
+Tidak ada API jaringan. Gunakan penyimpanan lokal atau data `extra`.
+
+## 8. Data & model
+
+Tidak ada tabel yang dipakai langsung.
+
+## 9. State minimum
+
+| State | Harus ada |
+|---|---|
+| `initial` | Ya |
+| `loading` | Ya |
+| `content` | Ya |
+| `error` | Ya |
+| `unauthorized` | Ya |
+| `offline` | Ya |
+| `permission` | Ya |
+| `izin ditolak` | Ya |
+| `kamera tidak tersedia` | Ya |
+| `dokumen tidak terdeteksi` | Ya |
+| `terlalu gelap` | Ya |
+
+## 10. Guardrail
+
+- Jangan mengarang endpoint, parameter, atau kolom database.
+- Jangan membuat instance `Dio` baru di widget; gunakan `DioClient`/repository.
+- Jangan memanggil API di `build()` atau setiap rebuild.
+- Jangan menyimpan token/password/PIN di `SharedPreferences` atau log.
+- Jangan menampilkan stack trace/pesan database ke pengguna.
+- Jangan menambah dependensi baru tanpa alasan dan persetujuan.
+- Jangan mengubah route/parameter tanpa memperbarui `AppRouter` dan dokumen.
+- Jangan menghapus test yang ada untuk membuat build lulus.
+- Jangan menyimpan/mengunggah frame kamera otomatis.
+
+## 11. Definition of Done
+
+- [ ] Semua elemen UI di §5.2 tampil dan berfungsi.
+- [ ] Semua state di §5.3/§9 tertangani, termasuk error dan offline.
+- [ ] Kontrak endpoint dan tabel tidak berubah tanpa update PRD/peta endpoint.
+- [ ] Tidak ada panggilan API langsung dari `build()` atau instance Dio baru.
+- [ ] Nominal/stok/status berasal dari backend.
+- [ ] 401 membersihkan token dan mengarahkan ke Landing/login.
+- [ ] Tidak ada overflow di 320 px, landscape, dan text scale 200%.
+- [ ] Mode terang/gelap terbaca dan target sentuh ≥48 dp.
+- [ ] `flutter analyze` bersih.
+- [ ] Test happy path + minimal satu error path lulus.
+- [ ] PRD dan SKILL diperbarui bila ada perubahan.
+
+## 12. Verifikasi
+
+```powershell
+# dari root mobile_app
+rg "DocumentScannerScreen" lib
+flutter analyze
+flutter test test/Features/Profil
+```
+
+Uji manual minimum: happy path, loading, empty, error jaringan, 401, 422, double-tap submit, 320 px, mode gelap, dan text scale 200%.
+
+## 13. Jebakan & gap
+
+- Tidak memiliki route sendiri untuk `AutoCaptureScanner`/`ScannedImageReview`.
+- Jangan mengubah nama endpoint/konstanta tanpa memperbarui PRD dan peta endpoint.
+
+## 14. Handoff
+
+- **Status awal:** Kontrak terdokumentasi; ada gap yang harus ditangani
+- **Perubahan terakhir:** regenerasi detail 6 November 2026.
+- **Pemilik berikutnya:** baca PRD §20 untuk gap dan §19 untuk test plan.
+- **Jangan menutup pekerjaan** tanpa menjalankan §12 dan memenuhi §11.
