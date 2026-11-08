@@ -1,3 +1,5 @@
+import '../../Errors/LocalizedError/LocalizedError.dart';
+import '../../Errors/AppErrorCodes/AppErrorCodes.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -137,7 +139,7 @@ class _TwoFactorSetupFlowState extends State<TwoFactorSetupFlow> {
       if (!mounted) return;
       AppSnackBar.show(
         context,
-        _message(e) ?? l.failed,
+        LocalizedError.of(l, _message(e) ?? AppErrorCodes.anErrorOccurred),
         type: SnackBarType.error,
       );
     } finally {
@@ -210,7 +212,7 @@ class _TwoFactorSetupFlowState extends State<TwoFactorSetupFlow> {
       if (!mounted) return;
       AppSnackBar.show(
         context,
-        _message(e) ?? l.failed,
+        LocalizedError.of(l, _message(e) ?? AppErrorCodes.anErrorOccurred),
         type: SnackBarType.error,
       );
     } finally {

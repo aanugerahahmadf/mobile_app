@@ -1,3 +1,5 @@
+import '../../../../../../../../Core/Errors/LocalizedError/LocalizedError.dart';
+import '../../../../../../../../Core/Errors/AppErrorCodes/AppErrorCodes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
@@ -51,7 +53,7 @@ class _TrustedDevicesPageState extends ConsumerState<TrustedDevicesScreen> {
         });
       } else {
         setState(() {
-          _error = 'Unexpected response';
+          _error = AppErrorCodes.anErrorOccurred;
           _loading = false;
         });
       }
@@ -251,7 +253,7 @@ class _TrustedDevicesPageState extends ConsumerState<TrustedDevicesScreen> {
                     color: AppColors.textSecondary,
                   ),
                   const SizedBox(height: AppSizes.sm),
-                  Text(_error!, style: AppTextStyles.bodyMedium),
+                  Text(LocalizedError.of(l, _error!), style: AppTextStyles.bodyMedium),
                   const SizedBox(height: AppSizes.md),
                   TextButton(onPressed: _fetchDevices, child: Text(l.retry)),
                 ],

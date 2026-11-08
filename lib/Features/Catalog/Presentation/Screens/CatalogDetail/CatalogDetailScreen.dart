@@ -422,7 +422,7 @@ class _CatalogDetailPageState extends ConsumerState<CatalogDetailScreen> {
                 if (features.isNotEmpty) ...[
                   SizedBox(height: AppSizes.md),
                   const Divider(),
-                  Text('Fitur', style: AppTextStyles.titleMedium),
+                  Text(l.features, style: AppTextStyles.titleMedium),
                   SizedBox(height: AppSizes.sm),
                   ...features.map(
                     (f) => Padding(

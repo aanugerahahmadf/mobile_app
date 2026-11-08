@@ -4,6 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../Config/AppConfig/AppConfig.dart';
+import '../../Errors/AppErrorCodes/AppErrorCodes.dart';
 import '../../Errors/Failures/Failures.dart';
 
 class AuthInterceptor extends Interceptor {
@@ -80,7 +81,7 @@ class ErrorInterceptor extends Interceptor {
         break;
       default:
         failure = UnknownFailure(
-          err.response?.data?['message'] ?? 'Unknown error',
+          err.response?.data?['message'] ?? AppErrorCodes.anErrorOccurred,
         );
     }
     handler.reject(

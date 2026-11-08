@@ -3,9 +3,28 @@ import '../AppErrorCodes/AppErrorCodes.dart';
 
 abstract final class LocalizedError {
   static String of(AppLocalizations l, String errorCode) {
-    final code = errorCode.startsWith('Exception: ')
-        ? errorCode.substring(11)
-        : errorCode;
+    var code = errorCode.trim();
+    if (code.startsWith('Exception: ')) {
+      code = code.substring(11).trim();
+    }
+    if (code.startsWith('StateError: ')) {
+      code = code.substring(12).trim();
+    }
+    if (code.isEmpty ||
+        code == 'Failed' ||
+        code == 'failed' ||
+        code == 'Error' ||
+        code == 'error' ||
+        code == 'Unexpected response') {
+      return l.anErrorOccurred;
+    }
+    if (code.contains('SocketException') ||
+        code.contains('connectionTimeout') ||
+        code.contains('sendTimeout') ||
+        code.contains('receiveTimeout')) {
+      return l.networkError;
+    }
+
     switch (code) {
       case AppErrorCodes.anErrorOccurred:
         return l.anErrorOccurred;
@@ -85,6 +104,38 @@ abstract final class LocalizedError {
         return l.googleAccountAlreadyRegistered;
       case AppErrorCodes.facebookAccountAlreadyRegistered:
         return l.facebookAccountAlreadyRegistered;
+      case AppErrorCodes.networkError:
+        return l.networkError;
+      case AppErrorCodes.serverError:
+        return l.serverError;
+      case AppErrorCodes.sessionExpired:
+        return l.sessionExpired;
+      case AppErrorCodes.validationFailed:
+        return l.validationFailed;
+      case AppErrorCodes.dataNotFound:
+        return l.dataNotFound;
+      case AppErrorCodes.accessDenied:
+        return l.accessDenied;
+      case AppErrorCodes.graphqlSchemaError:
+        return l.graphqlSchemaError;
+      case AppErrorCodes.reviewFailed:
+        return l.reviewFailed;
+      case AppErrorCodes.failedUpdateReview:
+        return l.failedUpdateReview;
+      case AppErrorCodes.failedDeleteReview:
+        return l.failedDeleteReview;
+      case AppErrorCodes.failedLoadReviews:
+        return l.failedLoadReviews;
+      case AppErrorCodes.failedProcessVote:
+        return l.failedProcessVote;
+      case AppErrorCodes.locationPermissionDenied:
+        return l.locationPermissionDenied;
+      case AppErrorCodes.locationPermissionPermanentlyDenied:
+        return l.locationPermissionPermanentlyDenied;
+      case AppErrorCodes.failedGetLocation:
+        return l.failedGetLocation;
+      case AppErrorCodes.enterAddressDetails:
+        return l.enterAddressDetails;
       default:
         return code;
     }
