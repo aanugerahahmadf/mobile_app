@@ -37,7 +37,11 @@ class AppConfig {
       return _emulatorFallback;
     }
     final lower = trimmed.toLowerCase();
-    if (kReleaseMode && !lower.startsWith('https://')) {
+    if (kReleaseMode &&
+        !lower.startsWith('https://') &&
+        !lower.contains('127.0.0.1') &&
+        !lower.contains('10.0.2.2') &&
+        !lower.contains('localhost')) {
       throw StateError(
         'Aplikasi release hanya boleh memakai API_BASE_URL HTTPS.',
       );

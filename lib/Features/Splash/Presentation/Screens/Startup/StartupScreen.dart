@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mobile_app/Core/Providers/LocaleProvider/LocaleProvider.dart';
 import 'package:mobile_app/L10n/AppLocalizations.dart';
 import '../../../../../Core/Constants/AppColors/AppColors.dart';
 import '../../../Data/StartupDataService/StartupDataService.dart';
@@ -13,32 +14,37 @@ class StartupScreen extends ConsumerStatefulWidget {
 }
 
 class _StartupPageState extends ConsumerState<StartupScreen> {
-  double _progress = 0;
-  String? _status;
+  double _progress = 0.0;
+  StartupPhase _phase = StartupPhase.preparing;
 
   @override
   void initState() {
     super.initState();
-    _prepareApp();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _prepareApp();
+    });
   }
 
   Future<void> _prepareApp() async {
-    final l = AppLocalizations.of(context);
-    if (mounted && l != null) setState(() => _status = l.startupPreparingData);
-
     await StartupDataService().prepare(
-      onProgress: (progress) {
+      onProgress: (progress, phase) {
         if (!mounted) return;
         setState(() {
           _progress = progress;
-          _status = progress < 1
-              ? AppLocalizations.of(context)?.startupDownloadingData
-              : AppLocalizations.of(context)?.startupReady;
+          _phase = phase;
         });
       },
     );
 
     if (!mounted) return;
+    setState(() {
+      _progress = 1.0;
+      _phase = StartupPhase.ready;
+    });
+
+    await Future.delayed(const Duration(milliseconds: 500));
+    if (!mounted) return;
+
     // Always pass through LandingScreen after startup. It is responsible for
     // restoring auth state and routing an authenticated user through App Lock.
     // This prevents a warm-start optimization screen from accidentally
@@ -48,7 +54,22 @@ class _StartupPageState extends ConsumerState<StartupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(localeProvider);
     final l = AppLocalizations.of(context)!;
+
+    final String statusText;
+    switch (_phase) {
+      case StartupPhase.preparing:
+        statusText = l.startupPreparingData;
+        break;
+      case StartupPhase.downloading:
+        statusText = l.startupDownloadingData;
+        break;
+      case StartupPhase.ready:
+        statusText = l.startupReady;
+        break;
+    }
+
     return Scaffold(
       backgroundColor: AppColors.primaryDark,
       body: Center(
@@ -57,32 +78,39 @@ class _StartupPageState extends ConsumerState<StartupScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 96,
-                height: 96,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: .12),
-                  shape: BoxShape.circle,
+              ClipRRect(
+                borderRadius: BorderRadius.circular(24),
+                child: Image.asset(
+                  'assets/images/logo.png',
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.contain,
                 ),
-                child: const Icon(Icons.cloud_download_outlined, size: 48, color: Colors.white),
               ),
               const SizedBox(height: 28),
               Text(
                 l.startupTitle,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
               const SizedBox(height: 10),
               Text(
-                _status ?? l.startupPreparingData,
+                statusText,
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white.withValues(alpha: .78), fontSize: 15),
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: .78),
+                  fontSize: 15,
+                ),
               ),
               const SizedBox(height: 28),
               SizedBox(
                 width: 240,
                 child: LinearProgressIndicator(
-                  value: _progress == 0 ? null : _progress,
+                  value: _progress,
                   minHeight: 6,
                   borderRadius: BorderRadius.circular(8),
                   backgroundColor: Colors.white24,
