@@ -1564,8 +1564,7 @@
   "forgotPin": "Lupa PIN?",
   "forgotPinConfirm": "Kode OTP akan dikirim ke email terdaftar Anda untuk memverifikasi identitas sebelum mengatur ulang kunci aplikasi. Lanjutkan?",
   "emailNotFound": "Tidak ada email terdaftar di perangkat ini.",
-  "appLockReset": "Kunci aplikasi telah diatur ulang"
-,
+  "appLockReset": "Kunci aplikasi telah diatur ulang",
   "mediaServerNote": "Semua media akan tetap ada di server dan dapat diunduh ulang jika diperlukan.",
   "outgoing": "Keluar",
   "network": "Jaringan",
@@ -1613,19 +1612,19 @@
   "quality": "Kualitas",
   "resetStatistics": "Atur ulang statistik",
   "useProxy": "Gunakan Proxy",
-  "totalBytes": "Total Bita"
-  ,"appLockPassword":"Kata sandi kunci aplikasi"
-  ,"disablePassword":"Nonaktifkan kata sandi"
-  ,"wrongPassword":"Kata sandi salah"
-  ,"passwordRequired":"Kata sandi wajib diisi"
-  ,"usePasswordToUnlock":"Gunakan kata sandi untuk membuka aplikasi"
-  ,"startupTitle":"Harap tunggu"
-  ,"startupPreparingData":"Menyiapkan data aplikasi..."
-  ,"startupDownloadingData":"Mengunduh data terbaru..."
-  ,"startupReady":"Mengoptimalkan data..."
-  ,"menu":"Menu"
-  ,"catalogDetail":"Detail katalog"
-  ,"flowerDecorationsCatalog":"Katalog Dekorasi Bunga",
+  "totalBytes": "Total Bita",
+  "appLockPassword": "Kata sandi kunci aplikasi",
+  "disablePassword": "Nonaktifkan kata sandi",
+  "wrongPassword": "Kata sandi salah",
+  "passwordRequired": "Kata sandi wajib diisi",
+  "usePasswordToUnlock": "Gunakan kata sandi untuk membuka aplikasi",
+  "startupTitle": "Harap tunggu",
+  "startupPreparingData": "Menyiapkan data aplikasi...",
+  "startupDownloadingData": "Mengunduh data terbaru...",
+  "startupReady": "Mengoptimalkan data...",
+  "menu": "Menu",
+  "catalogDetail": "Detail katalog",
+  "flowerDecorationsCatalog": "Katalog Dekorasi Bunga",
   "editOrder": "Ubah Pesanan",
   "orderUpdated": "Pesanan diperbarui",
   "failedUpdateOrder": "Gagal memperbarui pesanan",
@@ -1634,5 +1633,17 @@
   "failedDeleteOrder": "Gagal menghapus pesanan",
   "virtualAccount": "Virtual Account",
   "customerName": "Nama Pelanggan",
-  "editPaymentWarning": "Mengubah metode pembayaran akan membuat nomor Virtual Account atau kode QRIS baru."
+  "editPaymentWarning": "Mengubah metode pembayaran akan membuat nomor Virtual Account atau kode QRIS baru.",
+  "networkError": "Tidak ada koneksi internet",
+  "serverError": "Terjadi kesalahan server",
+  "sessionExpired": "Sesi telah berakhir, silakan login kembali",
+  "validationFailed": "Validasi gagal",
+  "accessDenied": "Anda tidak memiliki akses",
+  "graphqlSchemaError": "Layanan sedang tidak tersedia",
+  "failedLoadReviews": "Gagal memuat ulasan",
+  "failedProcessVote": "Gagal memproses vote",
+  "locationPermissionDenied": "Izin lokasi ditolak",
+  "locationPermissionPermanentlyDenied": "Izin lokasi ditolak permanen",
+  "failedGetLocation": "Gagal mendapatkan lokasi",
+  "enterAddressDetails": "Silakan masukkan detail alamat"
 }

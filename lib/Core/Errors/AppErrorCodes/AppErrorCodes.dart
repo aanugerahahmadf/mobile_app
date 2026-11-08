@@ -42,4 +42,21 @@ abstract final class AppErrorCodes {
       'google_account_already_registered';
   static const String facebookAccountAlreadyRegistered =
       'facebook_account_already_registered';
+  static const String networkError = 'network_error';
+  static const String serverError = 'server_error';
+  static const String sessionExpired = 'session_expired';
+  static const String validationFailed = 'validation_failed';
+  static const String dataNotFound = 'data_not_found';
+  static const String accessDenied = 'access_denied';
+  static const String graphqlSchemaError = 'graphql_schema_error';
+  static const String failedLoadReviews = 'failed_load_reviews';
+  static const String failedProcessVote = 'failed_process_vote';
+  static const String locationPermissionDenied = 'location_permission_denied';
+  static const String locationPermissionPermanentlyDenied =
+      'location_permission_permanently_denied';
+  static const String failedGetLocation = 'failed_get_location';
+  static const String enterAddressDetails = 'enter_address_details';
+  static const String reviewFailed = 'review_failed';
+  static const String failedUpdateReview = 'failed_update_review';
+  static const String failedDeleteReview = 'failed_delete_review';
 }

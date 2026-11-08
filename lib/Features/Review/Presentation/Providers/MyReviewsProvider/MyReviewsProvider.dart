@@ -1,3 +1,4 @@
+import '../../../../../Core/Errors/AppErrorCodes/AppErrorCodes.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../Data/Models/MyReviewModel/MyReviewModel.dart';
@@ -95,7 +96,7 @@ class MyReviewsNotifier extends StateNotifier<MyReviewsState> {
       state = state.copyWith(
         loading: false,
         loadingMore: false,
-        error: e.error?.toString() ?? e.message ?? 'Gagal memuat ulasan',
+        error: e.error?.toString() ?? e.message ?? AppErrorCodes.failedLoadReviews,
       );
     } catch (e) {
       state = state.copyWith(
@@ -126,7 +127,7 @@ class MyReviewsNotifier extends StateNotifier<MyReviewsState> {
     } on DioException catch (e) {
       state = state.copyWith(
         loadingMore: false,
-        error: e.error?.toString() ?? e.message ?? 'Gagal memuat ulasan',
+        error: e.error?.toString() ?? e.message ?? AppErrorCodes.failedLoadReviews,
       );
     } catch (e) {
       state = state.copyWith(loadingMore: false, error: e.toString());

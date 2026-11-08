@@ -1,3 +1,5 @@
+import '../../../../../../../../Core/Errors/LocalizedError/LocalizedError.dart';
+import '../../../../../../../../Core/Errors/AppErrorCodes/AppErrorCodes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
@@ -79,7 +81,7 @@ class _TwoFactorSettingsPageState extends ConsumerState<TwoFactorSettingsScreen>
         });
       } else {
         setState(() {
-          _error = 'Unexpected response';
+          _error = AppErrorCodes.anErrorOccurred;
           _loading = false;
         });
       }
@@ -509,7 +511,7 @@ ListTile(
                     color: AppColors.textSecondary,
                   ),
                   const SizedBox(height: AppSizes.sm),
-                  Text(_error!, style: AppTextStyles.bodyMedium),
+                  Text(LocalizedError.of(l, _error!), style: AppTextStyles.bodyMedium),
                   const SizedBox(height: AppSizes.md),
                   TextButton(onPressed: _fetchStatus, child: Text(l.retry)),
                 ],

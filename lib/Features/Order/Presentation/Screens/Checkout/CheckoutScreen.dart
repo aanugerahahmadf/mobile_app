@@ -431,7 +431,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutScreen> {
       final itemId = widget.id ?? '${_itemData?['id'] ?? ''}';
       if (itemId.isEmpty) throw Exception(AppErrorCodes.failedGetOrderId);
       if (widget.tierId == null) {
-        throw Exception('Pilih Package/Tier terlebih dahulu');
+        throw Exception(l.choosePackageFirst);
       }
       final data = <String, dynamic>{
         // A catalog is the parent product. A selected package is its tier,
