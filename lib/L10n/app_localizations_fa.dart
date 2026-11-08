@@ -63,8 +63,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get aiComputerVision => 'AI & Computer Vision';
 
   @override
-  String get aiUnavailable =>
-      'AI service unavailable. Photo saved, but not AI-verified.';
+  String get aiUnavailable => 'AI service unavailable. Photo saved, but not AI-verified.';
 
   @override
   String get aiVerified => 'AI Verified';
@@ -91,8 +90,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get addressDetail => 'Address Detail';
 
   @override
-  String get addressDetailHint =>
-      'Enter detailed address (street, building, number)';
+  String get addressDetailHint => 'Enter detailed address (street, building, number)';
 
   @override
   String get additionalDetail => 'Additional Details';
@@ -131,8 +129,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get allUsers => 'All Users';
 
   @override
-  String get autoScanHint =>
-      'The camera will detect the document and capture it automatically';
+  String get autoScanHint => 'The camera will detect the document and capture it automatically';
 
   @override
   String get selectUser => 'Select User';
@@ -198,8 +195,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get agreeComma => ',';
 
   @override
-  String get agreeJoinText =>
-      'By checking Agree & Join or Continue, you agree to ';
+  String get agreeJoinText => 'By checking Agree & Join or Continue, you agree to ';
 
   @override
   String get agreeSuffix => 'Wedding Floral Decorations.';
@@ -211,8 +207,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get agreeToTerms => 'I have read and agree to the';
 
   @override
-  String get agreementPrefix =>
-      'By checking Agree & Join or Continue, you agree to the ';
+  String get agreementPrefix => 'By checking Agree & Join or Continue, you agree to the ';
 
   @override
   String get agreementSuffix => 'Wedding Floral Decorations.';
@@ -233,8 +228,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get andWord => ' and ';
 
   @override
-  String get appDescription =>
-      'WeddingApp helps you find the perfect Wedding Flower Decorations. Explore packages, search by image, and order easily.';
+  String get appDescription => 'WeddingApp helps you find the perfect Wedding Flower Decorations. Explore packages, search by image, and order easily.';
 
   @override
   String get appLock => 'App Lock';
@@ -276,12 +270,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get biometricLock => 'Fingerprint / Face Unlock';
 
   @override
-  String get biometricNotAvailable =>
-      'Biometric authentication is not available on this device';
+  String get biometricNotAvailable => 'Biometric authentication is not available on this device';
 
   @override
-  String get biometricNotEnrolled =>
-      'No fingerprint or face is registered yet. Add one in your device\'s Settings, then try again.';
+  String get biometricNotEnrolled => 'No fingerprint or face is registered yet. Add one in your device\'s Settings, then try again.';
 
   @override
   String get bookingDate => 'Booking Date';
@@ -326,8 +318,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get copy => 'Copy';
 
   @override
-  String get vaDescription =>
-      'Pay easily via your own BRI Virtual Account (BRIVA) number. Payment is confirmed automatically.';
+  String get vaDescription => 'Pay easily via your own BRI Virtual Account (BRIVA) number. Payment is confirmed automatically.';
 
   @override
   String get createVirtualAccount => 'Create Virtual Account';
@@ -339,15 +330,13 @@ class AppLocalizationsFa extends AppLocalizations {
   String get virtualAccountNo => 'Virtual Account No.';
 
   @override
-  String get qrisDynamicDescription =>
-      'Generate one dynamic QR for this order. It can be scanned from any bank or e-wallet app. Money is credited to our BRI account automatically.';
+  String get qrisDynamicDescription => 'Generate one dynamic QR for this order. It can be scanned from any bank or e-wallet app. Money is credited to our BRI account automatically.';
 
   @override
   String get createQris => 'Create QRIS';
 
   @override
-  String get creditCardNote =>
-      'Credit/Debit card payments are coming soon after BRI merchant activation. For now please use Virtual Account or QRIS above.';
+  String get creditCardNote => 'Credit/Debit card payments are coming soon after BRI merchant activation. For now please use Virtual Account or QRIS above.';
 
   @override
   String get copied => 'Copied!';
@@ -395,8 +384,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get chatWithAdmin => 'Chat with Admin';
 
   @override
-  String get chatWithAdminDesc =>
-      'Contact admin for consultation and questions';
+  String get chatWithAdminDesc => 'Contact admin for consultation and questions';
 
   @override
   String get cheapest => 'Cheapest';
@@ -456,8 +444,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get comma => ',';
 
   @override
-  String get completeAllDataForVerification =>
-      'Complete all data for account verification';
+  String get completeAllDataForVerification => 'Complete all data for account verification';
 
   @override
   String get completeProfile => 'Complete Profile';
@@ -475,15 +462,13 @@ class AppLocalizationsFa extends AppLocalizations {
   String get confirmAndPay => 'Confirm & Pay';
 
   @override
-  String get confirmCancelOrder =>
-      'Are you sure you want to cancel this order?';
+  String get confirmCancelOrder => 'Are you sure you want to cancel this order?';
 
   @override
   String get confirmDelete => 'Are you sure you want to delete this item?';
 
   @override
-  String get confirmLeavePayment =>
-      'Are you sure you want to leave the payment page?';
+  String get confirmLeavePayment => 'Are you sure you want to leave the payment page?';
 
   @override
   String get confirmNewPassword => 'Confirm New Password';
@@ -579,8 +564,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get deleteAccountConfirm => 'Type your email to confirm';
 
   @override
-  String get deleteAccountWarning =>
-      'This action is permanent. Your account, profile, and all related data will be deleted. This cannot be undone.';
+  String get deleteAccountWarning => 'This action is permanent. Your account, profile, and all related data will be deleted. This cannot be undone.';
 
   @override
   String get deleteChatConfirm => 'Delete this conversation?';
@@ -589,8 +573,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get deleteNotification => 'Delete Notification';
 
   @override
-  String get deleteNotificationConfirm =>
-      'Are you sure you want to delete this notification?';
+  String get deleteNotificationConfirm => 'Are you sure you want to delete this notification?';
 
   @override
   String get deletePrompt => 'Are you sure you want to remove %s?';
@@ -623,15 +606,13 @@ class AppLocalizationsFa extends AppLocalizations {
   String get dontHaveAccount => 'Don\'t have an account?';
 
   @override
-  String get documentScanInstruction =>
-      'Position the document inside the frame';
+  String get documentScanInstruction => 'Position the document inside the frame';
 
   @override
   String get documentTooFar => 'Move the document closer to the camera';
 
   @override
-  String get documentValidationFailed =>
-      'No identity document detected in this photo. Please retake with the camera.';
+  String get documentValidationFailed => 'No identity document detected in this photo. Please retake with the camera.';
 
   @override
   String get downloadPdf => 'Download PDF';
@@ -667,12 +648,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get emailOrUsername => 'Email / Username';
 
   @override
-  String get emailChangeRequiresOtp =>
-      'If email is changed, you need OTP verification';
+  String get emailChangeRequiresOtp => 'If email is changed, you need OTP verification';
 
   @override
-  String get emailForVerification =>
-      'Email will be used for account verification and important notifications';
+  String get emailForVerification => 'Email will be used for account verification and important notifications';
 
   @override
   String get emailMismatch => 'Emails do not match';
@@ -693,8 +672,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get enter6DigitOtp => 'Enter the 6-digit OTP code';
 
   @override
-  String get enterEmailForResetPassword =>
-      'Enter your email to receive a password reset code';
+  String get enterEmailForResetPassword => 'Enter your email to receive a password reset code';
 
   @override
   String get enterOtpCode => 'Enter OTP code';
@@ -706,8 +684,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get verifyOtpTitle => 'Verify OTP Code';
 
   @override
-  String get verifyOtpSubtitle =>
-      'Enter the 6-digit code we sent to your email.';
+  String get verifyOtpSubtitle => 'Enter the 6-digit code we sent to your email.';
 
   @override
   String get verifyOtpAction => 'Verify Code';
@@ -716,8 +693,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get verifyEmailTitle => 'Verify Your Email';
 
   @override
-  String get verifyEmailSubtitle =>
-      'Please enter the 6-digit verification code we sent to your email address.';
+  String get verifyEmailSubtitle => 'Please enter the 6-digit verification code we sent to your email address.';
 
   @override
   String get enterVoucherCode => 'Enter voucher code to get discount';
@@ -747,8 +723,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get eventTime => 'Event Time';
 
   @override
-  String get existingPhotoHint =>
-      'A saved photo already exists. Choose a new photo if you want to replace it.';
+  String get existingPhotoHint => 'A saved photo already exists. Choose a new photo if you want to replace it.';
 
   @override
   String get expiresAt => 'Expires At';
@@ -766,8 +741,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get faceMismatch => 'Face does not match';
 
   @override
-  String get faceMismatchMessage =>
-      'The scanned face does not match the identity document. Please retry in a well-lit area.';
+  String get faceMismatchMessage => 'The scanned face does not match the identity document. Please retry in a well-lit area.';
 
   @override
   String get faceOpenEyesLabel => 'Open your eyes to complete verification';
@@ -979,8 +953,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get filterByRating => 'Filter by Rating';
 
   @override
-  String get findBeautifulFlowers =>
-      'Find the most beautiful wedding flower arrangements for your special day';
+  String get findBeautifulFlowers => 'Find the most beautiful wedding flower arrangements for your special day';
 
   @override
   String get firstName => 'First Name';
@@ -1007,8 +980,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get forgotPin => 'Forgot PIN?';
 
   @override
-  String get forgotPinConfirm =>
-      'An OTP will be sent to your registered email to verify your identity before resetting the app lock. Continue?';
+  String get forgotPinConfirm => 'An OTP will be sent to your registered email to verify your identity before resetting the app lock. Continue?';
 
   @override
   String get emailNotFound => 'No registered email found on this device.';
@@ -1180,8 +1152,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get invalidOtp => 'Invalid OTP';
 
   @override
-  String get invalidPassportFormat =>
-      'Invalid passport format (6-9 letters/numbers)';
+  String get invalidPassportFormat => 'Invalid passport format (6-9 letters/numbers)';
 
   @override
   String get invalidSimNumber => 'Invalid SIM number (6-12 digits)';
@@ -1371,8 +1342,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get newPassword => 'New Password';
 
   @override
-  String get newPasswordLeaveBlank =>
-      'New Password (leave blank if not changing)';
+  String get newPasswordLeaveBlank => 'New Password (leave blank if not changing)';
 
   @override
   String get newest => 'Newest';
@@ -1504,8 +1474,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get orderCreated => 'Order created successfully';
 
   @override
-  String get orderCreatedDesc =>
-      'Your order has been created. Please complete the payment.';
+  String get orderCreatedDesc => 'Your order has been created. Please complete the payment.';
 
   @override
   String get redirectingToPayment => 'Redirecting to payment...';
@@ -1517,8 +1486,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get orderFailed => 'Failed to create order';
 
   @override
-  String get orderFavoritePackages =>
-      'Order your favorite flower packages in minutes';
+  String get orderFavoritePackages => 'Order your favorite flower packages in minutes';
 
   @override
   String get orderHistory => 'Order History';
@@ -1566,8 +1534,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get password => 'Password';
 
   @override
-  String get passwordAndConfirmMismatch =>
-      'Password and confirmation do not match';
+  String get passwordAndConfirmMismatch => 'Password and confirmation do not match';
 
   @override
   String get passwordMin8Chars => 'Password must be at least 8 characters';
@@ -1609,15 +1576,13 @@ class AppLocalizationsFa extends AppLocalizations {
   String get paymentCancelled => 'Payment Cancelled';
 
   @override
-  String get paymentCancelledDesc =>
-      'You cancelled the payment. You can make the payment at any time.';
+  String get paymentCancelledDesc => 'You cancelled the payment. You can make the payment at any time.';
 
   @override
   String get paymentFailed => 'Payment Failed';
 
   @override
-  String get paymentFailedDesc =>
-      'An error occurred while processing payment. Please try again.';
+  String get paymentFailedDesc => 'An error occurred while processing payment. Please try again.';
 
   @override
   String get paymentMethod => 'Payment Method';
@@ -1626,8 +1591,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get paymentPending => 'Payment Not Completed';
 
   @override
-  String get paymentPendingDesc =>
-      'Your payment is still awaiting confirmation. Please contact admin if you need assistance.';
+  String get paymentPendingDesc => 'Your payment is still awaiting confirmation. Please contact admin if you need assistance.';
 
   @override
   String get paymentStatus => 'Payment Status';
@@ -1636,12 +1600,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get paymentSuccess => 'Payment Successful';
 
   @override
-  String get paymentSubmitted =>
-      'Payment confirmed. Please upload your payment proof.';
+  String get paymentSubmitted => 'Payment confirmed. Please upload your payment proof.';
 
   @override
-  String get paymentSuccessDesc =>
-      'Thank you! Your payment has been received. Your order is being processed.';
+  String get paymentSuccessDesc => 'Thank you! Your payment has been received. Your order is being processed.';
 
   @override
   String get paymentTime => 'Payment Time';
@@ -1662,8 +1624,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get iHaveTransferred => 'I\'ve Transferred';
 
   @override
-  String get confirmAfterTransferHint =>
-      'Complete the transfer first according to the instructions above, then tap \"I\'ve Transferred\" so our admin can verify your payment.';
+  String get confirmAfterTransferHint => 'Complete the transfer first according to the instructions above, then tap \"I\'ve Transferred\" so our admin can verify your payment.';
 
   @override
   String get uploadProof => 'Upload Payment Proof';
@@ -1672,8 +1633,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get sendProof => 'Send Payment Proof';
 
   @override
-  String get proofSent =>
-      'Payment proof sent successfully. Waiting for admin verification.';
+  String get proofSent => 'Payment proof sent successfully. Waiting for admin verification.';
 
   @override
   String get paymentProof => 'Payment Proof';
@@ -1682,12 +1642,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get waitingVerification => 'Waiting for Verification';
 
   @override
-  String get waitingVerificationDesc =>
-      'Payment proof is being verified by admin. This process usually takes 1x24 hours.';
+  String get waitingVerificationDesc => 'Payment proof is being verified by admin. This process usually takes 1x24 hours.';
 
   @override
-  String get uploadProofDesc =>
-      'Transfer the exact amount and upload the payment proof for verification.';
+  String get uploadProofDesc => 'Transfer the exact amount and upload the payment proof for verification.';
 
   @override
   String get tapToUpload => 'Tap to upload payment proof photo';
@@ -1794,8 +1752,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get profilePhoto => 'Profile Photo';
 
   @override
-  String get profileSavedFailedSendOtp =>
-      'Profile saved. Failed to send email verification OTP.';
+  String get profileSavedFailedSendOtp => 'Profile saved. Failed to send email verification OTP.';
 
   @override
   String get profileSavedVerifyEmail => 'Profile saved. Verify your new email.';
@@ -1943,8 +1900,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get editReview => 'Edit Review';
 
   @override
-  String get deleteReviewConfirm =>
-      'Are you sure you want to delete this review?';
+  String get deleteReviewConfirm => 'Are you sure you want to delete this review?';
 
   @override
   String get salary => 'Salary';
@@ -1980,8 +1936,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get scanIssueDark => 'Image is too dark — retake in better light';
 
   @override
-  String get scanIssueDocument =>
-      'No valid identity document detected — retake';
+  String get scanIssueDocument => 'No valid identity document detected — retake';
 
   @override
   String get scanIssueFace => 'No single face detected — retake';
@@ -2130,23 +2085,19 @@ class AppLocalizationsFa extends AppLocalizations {
   String get selfieSim => 'Selfie + SIM Photo';
 
   @override
-  String get selfieTips =>
-      'Tips: Make sure your face and the text on the identity document are clearly visible. The photo should be bright and not blurry.';
+  String get selfieTips => 'Tips: Make sure your face and the text on the identity document are clearly visible. The photo should be bright and not blurry.';
 
   @override
   String get selfieWithCard => 'Selfie + ID Card';
 
   @override
-  String get selfieCardInstruction =>
-      'Align your face inside the top frame and your ID card inside the bottom frame';
+  String get selfieCardInstruction => 'Align your face inside the top frame and your ID card inside the bottom frame';
 
   @override
-  String get selfieCardHoldCard =>
-      'Face detected — now hold your ID card inside the bottom frame';
+  String get selfieCardHoldCard => 'Face detected — now hold your ID card inside the bottom frame';
 
   @override
-  String get selfieCardValidationFailed =>
-      'Couldn\'t detect your face and ID card together. Please retake.';
+  String get selfieCardValidationFailed => 'Couldn\'t detect your face and ID card together. Please retake.';
 
   @override
   String get send => 'Send';
@@ -2242,15 +2193,13 @@ class AppLocalizationsFa extends AppLocalizations {
   String get signIn => 'Sign In';
 
   @override
-  String get loginRequired =>
-      'Please sign in or create an account to continue checkout';
+  String get loginRequired => 'Please sign in or create an account to continue checkout';
 
   @override
   String get guestAccessTitle => 'Sign in to access this feature';
 
   @override
-  String get guestAccessDescription =>
-      'Please sign in or create an account to use this account feature.';
+  String get guestAccessDescription => 'Please sign in or create an account to use this account feature.';
 
   @override
   String get signInSubtitle => 'Sign in to your account';
@@ -2340,15 +2289,13 @@ class AppLocalizationsFa extends AppLocalizations {
   String get subtitleBirth => 'Your place and date of birth';
 
   @override
-  String get subtitleCompleteData =>
-      'Complete this information to improve account security';
+  String get subtitleCompleteData => 'Complete this information to improve account security';
 
   @override
   String get subtitleCountry => 'Your current country of residence';
 
   @override
-  String get subtitleEmail =>
-      'Active email for account verification and notifications';
+  String get subtitleEmail => 'Active email for account verification and notifications';
 
   @override
   String get subtitleFullName => 'Name according to your identity document';
@@ -2360,19 +2307,16 @@ class AppLocalizationsFa extends AppLocalizations {
   String get subtitleIncomeRange => 'Monthly income range';
 
   @override
-  String get subtitleKtpPhoto =>
-      'Clear photo of ID Card / Passport / SIM / NPWP';
+  String get subtitleKtpPhoto => 'Clear photo of ID Card / Passport / SIM / NPWP';
 
   @override
   String get subtitleMaritalStatus => 'Current marital status';
 
   @override
-  String get subtitleMotherName =>
-      'Mother\'s maiden name for security verification';
+  String get subtitleMotherName => 'Mother\'s maiden name for security verification';
 
   @override
-  String get subtitleKtpNumber =>
-      'Identity number (ID Card / Passport / SIM / NPWP)';
+  String get subtitleKtpNumber => 'Identity number (ID Card / Passport / SIM / NPWP)';
 
   @override
   String get subtitleOccupation => 'Your current main occupation';
@@ -2381,8 +2325,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get subtitlePostalCode => 'Postal code of your area';
 
   @override
-  String get subtitleRegion =>
-      'Province, city, district, sub-district, and postal code';
+  String get subtitleRegion => 'Province, city, district, sub-district, and postal code';
 
   @override
   String get subtitleReligion => 'Your religion';
@@ -2557,8 +2500,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get uploadIdSelfie => 'Upload Selfie + ID Document photo';
 
   @override
-  String get uploadImageToSearch =>
-      'Upload an image to search for similar catalogs';
+  String get uploadImageToSearch => 'Upload an image to search for similar catalogs';
 
   @override
   String get uploadPhoto => 'Upload Photo';
@@ -2581,15 +2523,13 @@ class AppLocalizationsFa extends AppLocalizations {
   String get useBiometricToUnlock => 'Use fingerprint or Face ID to unlock';
 
   @override
-  String get useDeviceFaceId =>
-      'Unlock app by scanning your face with the camera';
+  String get useDeviceFaceId => 'Unlock app by scanning your face with the camera';
 
   @override
   String get identityVerificationSection => 'Identity Verification';
 
   @override
-  String get faceVerificationDescription =>
-      'Scan your face with the AI camera to verify your identity';
+  String get faceVerificationDescription => 'Scan your face with the AI camera to verify your identity';
 
   @override
   String get usePinToUnlock => 'Use PIN to unlock';
@@ -2616,8 +2556,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get enterCurrentPin => 'Enter current PIN';
 
   @override
-  String get enterCurrentPinToDisable =>
-      'Enter your current PIN to turn off PIN lock';
+  String get enterCurrentPinToDisable => 'Enter your current PIN to turn off PIN lock';
 
   @override
   String get enterNewPin => 'Enter new PIN';
@@ -2632,8 +2571,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get disablePin => 'Turn off PIN lock';
 
   @override
-  String get useCbirFeature =>
-      'Use the CBIR feature to find decorations just with a photo';
+  String get useCbirFeature => 'Use the CBIR feature to find decorations just with a photo';
 
   @override
   String get useDarkTheme => 'Use dark theme';
@@ -2669,8 +2607,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get username => 'Ù†Ø§Ù… Ú©Ø§Ø±Ø¨Ø±ÛŒ';
 
   @override
-  String get usernameHint =>
-      'Username can only contain letters, numbers, dots, and undersCores';
+  String get usernameHint => 'Username can only contain letters, numbers, dots, and undersCores';
 
   @override
   String get vaNumber => 'Ø´Ù…Ø§Ø±Ù‡ VA';
@@ -2766,8 +2703,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get whatsappNumber => 'WhatsApp Number';
 
   @override
-  String get whatsappUsedForNotification =>
-      'WhatsApp number will be used for order notifications';
+  String get whatsappUsedForNotification => 'WhatsApp number will be used for order notifications';
 
   @override
   String get whatsappVerified => 'WhatsApp verified';
@@ -2776,8 +2712,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get whatsappOtpSentTo => 'Enter the WhatsApp OTP code sent to';
 
   @override
-  String get whatsappVerifyRequired =>
-      'Please verify your WhatsApp number first';
+  String get whatsappVerifyRequired => 'Please verify your WhatsApp number first';
 
   @override
   String get favoriteNotifications => 'Favorite Notifications';
@@ -2913,11 +2848,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get failedGetPaymentToken => 'Failed to get payment token';
 
   @override
-  String whatsappOrderTemplate(
-    String orderNumber,
-    String status,
-    String total,
-  ) {
+  String whatsappOrderTemplate(String orderNumber, String status, String total) {
     return 'Hi Admin, I would like to ask about order #$orderNumber. Status: $status. Total: $total.';
   }
 
@@ -2978,8 +2909,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get searchFailedTryAgain => 'Search failed. Please try again.';
 
   @override
-  String get selectTwoImagesArithmetic =>
-      'Select 2 images and arithmetic operation';
+  String get selectTwoImagesArithmetic => 'Select 2 images and arithmetic operation';
 
   @override
   String get imageSearchFailed => 'Image search failed';
@@ -3069,20 +2999,16 @@ class AppLocalizationsFa extends AppLocalizations {
   String get appleLoginFailed => 'Apple login failed';
 
   @override
-  String get appLockNote =>
-      'App Lock uses the device biometrics (Face ID / Fingerprint / PIN) to unlock the app. This is different from the Profile Face Verification (KYC) that scans your face with the camera.';
+  String get appLockNote => 'App Lock uses the device biometrics (Face ID / Fingerprint / PIN) to unlock the app. This is different from the Profile Face Verification (KYC) that scans your face with the camera.';
 
   @override
-  String get identityNumberAlreadyRegistered =>
-      'This identity number is already registered by another user';
+  String get identityNumberAlreadyRegistered => 'This identity number is already registered by another user';
 
   @override
-  String get googleAccountAlreadyRegistered =>
-      'Your Google account is already registered. Please sign in with email and password.';
+  String get googleAccountAlreadyRegistered => 'Your Google account is already registered. Please sign in with email and password.';
 
   @override
-  String get facebookAccountAlreadyRegistered =>
-      'Your Facebook account is already registered. Please sign in with email and password.';
+  String get facebookAccountAlreadyRegistered => 'Your Facebook account is already registered. Please sign in with email and password.';
 
   @override
   String get csTitle => 'Customer Service';
@@ -3094,8 +3020,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get csWelcomeTitle => 'Welcome to Customer Service!';
 
   @override
-  String get csWelcomeDesc =>
-      'Choose a topic below or send a message directly. Our team will help you as soon as possible.';
+  String get csWelcomeDesc => 'Choose a topic below or send a message directly. Our team will help you as soon as possible.';
 
   @override
   String get csQuickBugReport => 'Report Bug';
@@ -3149,8 +3074,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get guestName => 'Guest';
 
   @override
-  String get csGuestNoAttachments =>
-      'Attachments are not available in guest mode.';
+  String get csGuestNoAttachments => 'Attachments are not available in guest mode.';
 
   @override
   String get csTicketStatus => 'Status';
@@ -3192,8 +3116,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get csHumanAgentJoined => 'A human agent has joined the conversation';
 
   @override
-  String get csOfflineMessage =>
-      'Our team is currently offline. Leave a message and we will reply as soon as possible.';
+  String get csOfflineMessage => 'Our team is currently offline. Leave a message and we will reply as soon as possible.';
 
   @override
   String get csQuickFaq => 'FAQ';
@@ -3232,15 +3155,13 @@ class AppLocalizationsFa extends AppLocalizations {
   String get csNewChat => 'New Chat';
 
   @override
-  String get csAccountDataForm =>
-      '**Account Verification Form**\n\nPlease complete the data below for verification:\n\n1. **Email**\n2. **Username**\n3. **Full Name:**\n   - First Name\n   - Middle Name\n   - Last Name\n4. **Place of Birth**\n5. **Date of Birth**\n6. **Mother\'s Maiden Name**\n7. **WhatsApp Number**\n8. **Full Address**\n9. **Postal Code**\n\nPlease reply with the completed data above. If necessary, attach an identity document (ID card) for further verification.';
+  String get csAccountDataForm => '**Account Verification Form**\n\nPlease complete the data below for verification:\n\n1. **Email**\n2. **Username**\n3. **Full Name:**\n   - First Name\n   - Middle Name\n   - Last Name\n4. **Place of Birth**\n5. **Date of Birth**\n6. **Mother\'s Maiden Name**\n7. **WhatsApp Number**\n8. **Full Address**\n9. **Postal Code**\n\nPlease reply with the completed data above. If necessary, attach an identity document (ID card) for further verification.';
 
   @override
   String get csAccountFormTitle => 'Account Verification Form';
 
   @override
-  String get csAccountFormSubtitle =>
-      'Please complete all required fields below. Your data will be used only for account verification.';
+  String get csAccountFormSubtitle => 'Please complete all required fields below. Your data will be used only for account verification.';
 
   @override
   String get dateOfBirthRequired => 'Date of Birth is required';
@@ -3298,8 +3219,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get confirmDeleteMessage => 'Delete this message?';
 
   @override
-  String get confirmDeleteForEveryone =>
-      'Delete for everyone? This cannot be undone.';
+  String get confirmDeleteForEveryone => 'Delete for everyone? This cannot be undone.';
 
   @override
   String get searchInChat => 'Search in chat';
@@ -3443,8 +3363,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get voiceToggleMute => 'Toggle voice';
 
   @override
-  String get voiceDocumentGreeting =>
-      'Position your ID document inside the frame';
+  String get voiceDocumentGreeting => 'Position your ID document inside the frame';
 
   @override
   String get voiceDocumentDetected => 'Document detected, hold still';
@@ -3456,16 +3375,13 @@ class AppLocalizationsFa extends AppLocalizations {
   String get voiceDocumentCaptured => 'Document captured successfully';
 
   @override
-  String get voiceDocumentValidationFailed =>
-      'Document not detected, please try again';
+  String get voiceDocumentValidationFailed => 'Document not detected, please try again';
 
   @override
-  String get voiceSelfieDocGreeting =>
-      'Position your face above and show your ID document below';
+  String get voiceSelfieDocGreeting => 'Position your face above and show your ID document below';
 
   @override
-  String get voiceSelfieDocFaceDetected =>
-      'Face detected, now show your document';
+  String get voiceSelfieDocFaceDetected => 'Face detected, now show your document';
 
   @override
   String get voiceSelfieDocCardDetected => 'Document detected, hold still';
@@ -3474,15 +3390,13 @@ class AppLocalizationsFa extends AppLocalizations {
   String get voiceSelfieDocCaptured => 'Photo captured successfully';
 
   @override
-  String get voiceAutoCaptureGreeting =>
-      'Position the object you want to photograph inside the frame';
+  String get voiceAutoCaptureGreeting => 'Position the object you want to photograph inside the frame';
 
   @override
   String get voiceAutoCaptureTooDark => 'Find a brighter location';
 
   @override
-  String get voiceAutoCaptureBlurry =>
-      'Steady the camera to avoid blurry photos';
+  String get voiceAutoCaptureBlurry => 'Steady the camera to avoid blurry photos';
 
   @override
   String get voiceAutoCaptureDetected => 'Ready to capture';
@@ -3494,36 +3408,31 @@ class AppLocalizationsFa extends AppLocalizations {
   String get catalogNotifications => 'Catalog Notifications';
 
   @override
-  String get catalogNotificationsDesc =>
-      'Receive updates on new and featured catalogs';
+  String get catalogNotificationsDesc => 'Receive updates on new and featured catalogs';
 
   @override
   String get packageNotifications => 'Package Notifications';
 
   @override
-  String get packageNotificationsDesc =>
-      'Receive updates on available wedding packages';
+  String get packageNotificationsDesc => 'Receive updates on available wedding packages';
 
   @override
   String get voucherNotifications => 'Voucher & Promo Notifications';
 
   @override
-  String get voucherNotificationsDesc =>
-      'Receive voucher, promo and discount notifications';
+  String get voucherNotificationsDesc => 'Receive voucher, promo and discount notifications';
 
   @override
   String get reviewNotifications => 'Review Notifications';
 
   @override
-  String get reviewNotificationsDesc =>
-      'Receive notifications about reviews and ratings';
+  String get reviewNotificationsDesc => 'Receive notifications about reviews and ratings';
 
   @override
   String get securityNotifications => 'Security Notifications';
 
   @override
-  String get securityNotificationsDesc =>
-      'Receive login alerts and account security notifications';
+  String get securityNotificationsDesc => 'Receive login alerts and account security notifications';
 
   @override
   String get enableAllNotifications => 'Enable All';
@@ -3535,8 +3444,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get notificationSoundEnabled => 'Notification Sound';
 
   @override
-  String get notificationSoundEnabledDesc =>
-      'Play a sound when a notification arrives';
+  String get notificationSoundEnabledDesc => 'Play a sound when a notification arrives';
 
   @override
   String get appearance => 'Appearance';
@@ -3548,12 +3456,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get changePassword => 'Change Password';
 
   @override
-  String get changePasswordDesc =>
-      'Update your password and protect your account.';
+  String get changePasswordDesc => 'Update your password and protect your account.';
 
   @override
-  String get changePasswordInfo =>
-      'For security, enter your current password before changing it.';
+  String get changePasswordInfo => 'For security, enter your current password before changing it.';
 
   @override
   String get currentPassword => 'Current Password';
@@ -3565,8 +3471,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get passwordMin12Chars => 'Password must be at least 12 characters';
 
   @override
-  String get newPasswordSameAsOld =>
-      'New password must not be the same as the old one';
+  String get newPasswordSameAsOld => 'New password must not be the same as the old one';
 
   @override
   String get passwordChanged => 'Password changed successfully';
@@ -3608,15 +3513,13 @@ class AppLocalizationsFa extends AppLocalizations {
   String get loginRequests => 'Login/Sign Requests';
 
   @override
-  String get loginRequestsDesc =>
-      'Approve sign-in requests from another device';
+  String get loginRequestsDesc => 'Approve sign-in requests from another device';
 
   @override
   String get authenticatorApp => 'Authenticator App';
 
   @override
-  String get authenticatorAppDesc =>
-      'Get codes from apps like Duo Mobile or Google Authenticator';
+  String get authenticatorAppDesc => 'Get codes from apps like Duo Mobile or Google Authenticator';
 
   @override
   String get trustedDevices => 'Trusted Devices';
@@ -3700,15 +3603,13 @@ class AppLocalizationsFa extends AppLocalizations {
   String get securityEmailPasswordChange => 'Account Password Changed';
 
   @override
-  String get securityEmailPasswordChangeBody =>
-      'Your account password was changed on';
+  String get securityEmailPasswordChangeBody => 'Your account password was changed on';
 
   @override
   String get securityEmailEmailChange => 'Account Email Changed';
 
   @override
-  String get securityEmailEmailChangeBody =>
-      'Your account email was changed on';
+  String get securityEmailEmailChangeBody => 'Your account email was changed on';
 
   @override
   String get securityEmailLoginAlert => 'Account Login Alert';
@@ -3720,8 +3621,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get securityEmailWhatsappChange => 'WhatsApp Number Changed';
 
   @override
-  String get securityEmailWhatsappChangeBody =>
-      'Your WhatsApp number was changed on';
+  String get securityEmailWhatsappChangeBody => 'Your WhatsApp number was changed on';
 
   @override
   String get securityEmailAccountUpdate => 'Account Updated';
@@ -3745,15 +3645,13 @@ class AppLocalizationsFa extends AppLocalizations {
   String get savedLoginInfoDesc => 'Enable saving login on this device';
 
   @override
-  String get savedLoginInfoDescShort =>
-      'Manage sign-in info saved on this device.';
+  String get savedLoginInfoDescShort => 'Manage sign-in info saved on this device.';
 
   @override
   String get savedLoginDevices => 'Devices Saving Sign-In Info';
 
   @override
-  String get savedLoginDevicesDesc =>
-      'View and remove devices that store your account\'s sign-in info.';
+  String get savedLoginDevicesDesc => 'View and remove devices that store your account\'s sign-in info.';
 
   @override
   String get securityCheck => 'Security Check';
@@ -3768,22 +3666,19 @@ class AppLocalizationsFa extends AppLocalizations {
   String get recentEmails => 'Change Email';
 
   @override
-  String get recentEmailsDesc =>
-      'Change your account email with OTP verification.';
+  String get recentEmailsDesc => 'Change your account email with OTP verification.';
 
   @override
   String get securityCheckup => 'Security Checkup';
 
   @override
-  String get securityCheckupDesc =>
-      'Review important protections for your account.';
+  String get securityCheckupDesc => 'Review important protections for your account.';
 
   @override
   String get logoutOtherDevices => 'Log out from other devices';
 
   @override
-  String get logoutOtherDevicesDesc =>
-      'Select this if someone else is using your account';
+  String get logoutOtherDevicesDesc => 'Select this if someone else is using your account';
 
   @override
   String get otherDevicesLoggedOut => 'other devices logged out.';
@@ -3831,8 +3726,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get twoFactorEnabledDesc => 'Additional security layer is active';
 
   @override
-  String get twoFactorDisabledDesc =>
-      'Add an extra layer of security to your account';
+  String get twoFactorDisabledDesc => 'Add an extra layer of security to your account';
 
   @override
   String get twoFactorEnabled => 'Two-factor authentication enabled';
@@ -3855,8 +3749,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get noBackupCodes => 'No backup codes generated';
 
   @override
-  String get generateBackupCodesConfirm =>
-      'Generate new backup codes? Previous codes will be invalidated.';
+  String get generateBackupCodesConfirm => 'Generate new backup codes? Previous codes will be invalidated.';
 
   @override
   String get generate => 'Generate';
@@ -3871,8 +3764,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get copyAllCodes => 'Copy All Codes';
 
   @override
-  String get backupCodesWarning =>
-      'Save these codes in a safe place. Each code can only be used once.';
+  String get backupCodesWarning => 'Save these codes in a safe place. Each code can only be used once.';
 
   @override
   String trustedDevicesCount(Object count) {
@@ -3889,8 +3781,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get removeTrustedDevice => 'Remove Trusted Device';
 
   @override
-  String get removeTrustedDeviceConfirm =>
-      'This device will no longer be trusted for login verification.';
+  String get removeTrustedDeviceConfirm => 'This device will no longer be trusted for login verification.';
 
   @override
   String get deviceRemoved => 'Device removed';
@@ -3908,19 +3799,16 @@ class AppLocalizationsFa extends AppLocalizations {
   String get firstUsed => 'First used:';
 
   @override
-  String get deviceTrustedMsg =>
-      'Device confirmed. It won\'t be flagged again.';
+  String get deviceTrustedMsg => 'Device confirmed. It won\'t be flagged again.';
 
   @override
-  String get deviceRejectedMsg =>
-      'Signed out from all other sessions. Change your password now.';
+  String get deviceRejectedMsg => 'Signed out from all other sessions. Change your password now.';
 
   @override
   String get removeDevice => 'Remove Device';
 
   @override
-  String get removeDeviceConfirm =>
-      'This device will be logged out and removed from your account.';
+  String get removeDeviceConfirm => 'This device will be logged out and removed from your account.';
 
   @override
   String get sessionRemoved => 'Session removed';
@@ -3950,31 +3838,25 @@ class AppLocalizationsFa extends AppLocalizations {
   String get saveLoginInfo => 'Save Login Info';
 
   @override
-  String get twoFactorAuthDesc =>
-      'Manage WhatsApp, backup codes, and trusted devices.';
+  String get twoFactorAuthDesc => 'Manage WhatsApp, backup codes, and trusted devices.';
 
   @override
-  String get twoFactorPageSubtitle =>
-      'Manage additional verification methods, the authenticator app, and trusted devices in one place.';
+  String get twoFactorPageSubtitle => 'Manage additional verification methods, the authenticator app, and trusted devices in one place.';
 
   @override
-  String get savedLoginPageSubtitle =>
-      'Manage devices that store your account sign-in info.';
+  String get savedLoginPageSubtitle => 'Manage devices that store your account sign-in info.';
 
   @override
-  String get signInActivityPageSubtitle =>
-      'Review and end active device sessions.';
+  String get signInActivityPageSubtitle => 'Review and end active device sessions.';
 
   @override
-  String get changePasswordPageSubtitle =>
-      'Use a strong password to keep your account secure.';
+  String get changePasswordPageSubtitle => 'Use a strong password to keep your account secure.';
 
   @override
   String get changeEmail => 'Change Email';
 
   @override
-  String get changeEmailDesc =>
-      'Enter your new email, then verify the OTP code sent to it.';
+  String get changeEmailDesc => 'Enter your new email, then verify the OTP code sent to it.';
 
   @override
   String get currentEmail => 'Current Email';
@@ -3989,8 +3871,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get confirmNewEmail => 'Confirm New Email';
 
   @override
-  String get confirmNewEmailDesc =>
-      'Re-enter your new email to make sure there are no typos.';
+  String get confirmNewEmailDesc => 'Re-enter your new email to make sure there are no typos.';
 
   @override
   String get sendEmailOtp => 'Send OTP Code';
@@ -4011,8 +3892,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get emailChangedVerified => 'Email successfully changed and verified.';
 
   @override
-  String get emailOtpFailed =>
-      'Failed to send the OTP code. Check your email settings and try again.';
+  String get emailOtpFailed => 'Failed to send the OTP code. Check your email settings and try again.';
 
   @override
   String get otpCode => 'OTP Code';
@@ -4024,8 +3904,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get removeAllTrustedDevices => 'Remove All Devices';
 
   @override
-  String get removeAllTrustedDevicesConfirm =>
-      'All trusted devices will be removed and must be verified again.';
+  String get removeAllTrustedDevicesConfirm => 'All trusted devices will be removed and must be verified again.';
 
   @override
   String get allDevicesRemoved => 'All trusted devices removed';
@@ -4034,12 +3913,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get logoutAllOtherSessions => 'Sign Out All Other Sessions';
 
   @override
-  String get logoutAllOtherSessionsConfirm =>
-      'All other device sessions will be signed out. Those devices must sign in again.';
+  String get logoutAllOtherSessionsConfirm => 'All other device sessions will be signed out. Those devices must sign in again.';
 
   @override
-  String get logoutAllOtherSessionsPasswordConfirm =>
-      'Please enter your password to confirm that you want to sign out of other browser sessions on all your devices.';
+  String get logoutAllOtherSessionsPasswordConfirm => 'Please enter your password to confirm that you want to sign out of other browser sessions on all your devices.';
 
   @override
   String get allSessionsRemoved => 'All other device sessions signed out';
@@ -4048,8 +3925,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get recentEmailsListTitle => 'Recent Emails';
 
   @override
-  String get recentEmailsListDesc =>
-      'Showing emails from the last 30 days only.';
+  String get recentEmailsListDesc => 'Showing emails from the last 30 days only.';
 
   @override
   String get emailCategorySecurity => 'Security';
@@ -4067,27 +3943,22 @@ class AppLocalizationsFa extends AppLocalizations {
   String get twoFactorSetupOtpResent => 'A new OTP code has been sent.';
 
   @override
-  String get twoFactorSetupEmailDesc =>
-      'A 6-digit code is emailed to you on every sign-in.';
+  String get twoFactorSetupEmailDesc => 'A 6-digit code is emailed to you on every sign-in.';
 
   @override
-  String get twoFactorSetupAuthenticatorDesc =>
-      'A 6-digit code from an app like Google Authenticator or Duo Mobile.';
+  String get twoFactorSetupAuthenticatorDesc => 'A 6-digit code from an app like Google Authenticator or Duo Mobile.';
 
   @override
   String get twoFactorSetupNone => 'Don\'t use 2FA';
 
   @override
-  String get twoFactorSetupNoneDesc =>
-      'Turn off two-step verification for this account.';
+  String get twoFactorSetupNoneDesc => 'Turn off two-step verification for this account.';
 
   @override
-  String get twoFactorSetupAlreadyUsed =>
-      'Already used by this account -- can\'t be selected again.';
+  String get twoFactorSetupAlreadyUsed => 'Already used by this account -- can\'t be selected again.';
 
   @override
-  String get twoFactorSetupManualSecret =>
-      'Manual code (if the QR can\'t be scanned)';
+  String get twoFactorSetupManualSecret => 'Manual code (if the QR can\'t be scanned)';
 
   @override
   String get copySecret => 'Copy code';
@@ -4099,8 +3970,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get twoFactorAuthHeading => 'Enable Authenticator App';
 
   @override
-  String get twoFactorAuthSubheading =>
-      'Scan the QR code with an app like Google Authenticator or Duo Mobile, then enter the 6-digit code to make sure everything is correct.';
+  String get twoFactorAuthSubheading => 'Scan the QR code with an app like Google Authenticator or Duo Mobile, then enter the 6-digit code to make sure everything is correct.';
 
   @override
   String get twoFactorSetupTitle => 'Activate Two-Factor Authentication';
@@ -4109,8 +3979,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get twoFactorSetupHeading => 'Add Two-Factor Authentication';
 
   @override
-  String get twoFactorSetupSubtitle =>
-      'Add a second step when you sign in. Your login code is sent to your WhatsApp number, and you can also create one-time backup codes.';
+  String get twoFactorSetupSubtitle => 'Add a second step when you sign in. Your login code is sent to your WhatsApp number, and you can also create one-time backup codes.';
 
   @override
   String get twoFactorNeedCode => 'Enter a code to continue';
@@ -4125,8 +3994,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get strengthenAccount => 'Strengthen Your Account';
 
   @override
-  String get strengthenAccountSubtitle =>
-      'With two-step verification, your account stays protected even if your password leaks.';
+  String get strengthenAccountSubtitle => 'With two-step verification, your account stays protected even if your password leaks.';
 
   @override
   String get strengthenAccountSkip => 'Not Now';
@@ -4144,16 +4012,13 @@ class AppLocalizationsFa extends AppLocalizations {
   String get twoFactorRecoveryTitle => 'Two-Factor Recovery';
 
   @override
-  String get twoFactorAuthenticatorHint =>
-      'Enter the code from your authenticator app below.';
+  String get twoFactorAuthenticatorHint => 'Enter the code from your authenticator app below.';
 
   @override
-  String get twoFactorEmailHint =>
-      'We sent a 6-digit code to your email. Enter it below.';
+  String get twoFactorEmailHint => 'We sent a 6-digit code to your email. Enter it below.';
 
   @override
-  String get twoFactorRecoveryHint =>
-      'If you cannot access your device or receive an authentication code, enter one of your recovery codes to verify your identity.';
+  String get twoFactorRecoveryHint => 'If you cannot access your device or receive an authentication code, enter one of your recovery codes to verify your identity.';
 
   @override
   String get twoFactorCodeLabel => 'OTP Code';
@@ -4183,34 +4048,28 @@ class AppLocalizationsFa extends AppLocalizations {
   String get addAuthenticatorApp => 'Add Authenticator App';
 
   @override
-  String get authenticatorAppActiveDesc =>
-      'Authenticator app is active. A 6-digit code will be requested on every sign-in.';
+  String get authenticatorAppActiveDesc => 'Authenticator app is active. A 6-digit code will be requested on every sign-in.';
 
   @override
-  String get authenticatorAppInactiveDesc =>
-      'Not active yet. Once enabled, a 6-digit code will be requested on every sign-in.';
+  String get authenticatorAppInactiveDesc => 'Not active yet. Once enabled, a 6-digit code will be requested on every sign-in.';
 
   @override
   String get twoFactorWrongCode => 'Wrong code';
 
   @override
-  String get twoFactorWrongCodeBody =>
-      'The code you entered does not match or has expired.';
+  String get twoFactorWrongCodeBody => 'The code you entered does not match or has expired.';
 
   @override
-  String get twoFactorSessionExpired =>
-      'The verification session has expired. Please sign in again.';
+  String get twoFactorSessionExpired => 'The verification session has expired. Please sign in again.';
 
   @override
-  String get twoFactorRequiredDesc =>
-      'Enter your verification code to continue.';
+  String get twoFactorRequiredDesc => 'Enter your verification code to continue.';
 
   @override
   String get twoFactorSetupDone => 'Continue';
 
   @override
-  String get twoFactorAlreadySetUp =>
-      'Two-factor authentication is already active on this account.';
+  String get twoFactorAlreadySetUp => 'Two-factor authentication is already active on this account.';
 
   @override
   String get reviewStar1 => 'Terrible';
@@ -4234,8 +4093,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get catalogRatingComments => 'Catalog Ratings & Comments';
 
   @override
-  String get ratingWithoutComment =>
-      'This customer rated the product but left no comment';
+  String get ratingWithoutComment => 'This customer rated the product but left no comment';
 
   @override
   String get verifiedPurchase => 'Verified Purchase';
@@ -4269,8 +4127,7 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String get reportChatPrompt =>
-      '\n\nPlease help me with this report, thank you.';
+  String get reportChatPrompt => '\n\nPlease help me with this report, thank you.';
 
   @override
   String get reportCategory => 'Category';
@@ -4291,8 +4148,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get reportSubmit => 'Submit Report';
 
   @override
-  String get reportSuccess =>
-      'Report submitted successfully. Our team will review it.';
+  String get reportSuccess => 'Report submitted successfully. Our team will review it.';
 
   @override
   String get reportFailed => 'Failed to submit report';
@@ -4337,12 +4193,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get reportContentTitle => 'Reported Content';
 
   @override
-  String get csRecoveryDetected =>
-      'It looks like you need account help. Please fill in the verification form below so we can assist you:';
+  String get csRecoveryDetected => 'It looks like you need account help. Please fill in the verification form below so we can assist you:';
 
   @override
-  String get csFormDetected =>
-      'Thank you! We detected your verification form. Sending OTP to your email...';
+  String get csFormDetected => 'Thank you! We detected your verification form. Sending OTP to your email...';
 
   @override
   String csOtpSentToEmailChat(String email) {
@@ -4350,12 +4204,10 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String get csPasswordChangedSuccess =>
-      'Password has been changed successfully! Please login with your new password.';
+  String get csPasswordChangedSuccess => 'Password has been changed successfully! Please login with your new password.';
 
   @override
-  String get csPasswordChangeFailed =>
-      'Failed to change password. Please try again.';
+  String get csPasswordChangeFailed => 'Failed to change password. Please try again.';
 
   @override
   String get csPasswordMinLength => 'Password must be at least 12 characters';
@@ -4386,8 +4238,7 @@ class AppLocalizationsFa extends AppLocalizations {
   }
 
   @override
-  String get csEnterOtpToReset =>
-      'Enter the 6-digit code sent to your email to reset your password';
+  String get csEnterOtpToReset => 'Enter the 6-digit code sent to your email to reset your password';
 
   @override
   String get csResettingPassword => 'Resetting password...';
@@ -4402,12 +4253,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get cacheSize => 'Cache size';
 
   @override
-  String get clearCacheDesc =>
-      'Remove temporary files and cached images to free up storage';
+  String get clearCacheDesc => 'Remove temporary files and cached images to free up storage';
 
   @override
-  String get clearCacheConfirm =>
-      'Are you sure you want to clear the app cache?';
+  String get clearCacheConfirm => 'Are you sure you want to clear the app cache?';
 
   @override
   String get cacheCleared => 'Cache cleared successfully';
@@ -4445,8 +4294,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get calendarNoResults => 'نتیجهای یافت نشد';
 
   @override
-  String get mediaServerNote =>
-      'All media will remain on the server and can be downloaded again if needed.';
+  String get mediaServerNote => 'All media will remain on the server and can be downloaded again if needed.';
 
   @override
   String get outgoing => 'Outgoing';
@@ -4455,8 +4303,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get network => 'Network';
 
   @override
-  String get proxyWarning =>
-      'Only use a proxy if you cannot connect. Your IP address may be visible to the proxy provider.';
+  String get proxyWarning => 'Only use a proxy if you cannot connect. Your IP address may be visible to the proxy provider.';
 
   @override
   String get addProxyServer => 'Add a server to enable proxy';
@@ -4468,12 +4315,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get uploadQuality => 'Upload quality';
 
   @override
-  String get chooseMediaQuality =>
-      'Choose the quality of photos and videos sent to or automatically downloaded in chats.';
+  String get chooseMediaQuality => 'Choose the quality of photos and videos sent to or automatically downloaded in chats.';
 
   @override
-  String get voiceMessagesAuto =>
-      'Voice messages are always downloaded automatically.';
+  String get voiceMessagesAuto => 'Voice messages are always downloaded automatically.';
 
   @override
   String get reduceCallData => 'Use less data for calls';
@@ -4518,8 +4363,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get receivedBytes => 'Bytes received';
 
   @override
-  String get hdQualityDescription =>
-      'Slower to send, file may be up to 6 times larger';
+  String get hdQualityDescription => 'Slower to send, file may be up to 6 times larger';
 
   @override
   String resetLast(Object date) {
@@ -4641,8 +4485,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get failedUpdateOrder => 'Failed to update order';
 
   @override
-  String get confirmDeleteOrder =>
-      'Delete this order? It will be removed from your history.';
+  String get confirmDeleteOrder => 'Delete this order? It will be removed from your history.';
 
   @override
   String get orderDeleted => 'Order deleted';
@@ -4657,6 +4500,5 @@ class AppLocalizationsFa extends AppLocalizations {
   String get customerName => 'Customer Name';
 
   @override
-  String get editPaymentWarning =>
-      'Changing the payment method creates a new Virtual Account number or QRIS code.';
+  String get editPaymentWarning => 'Changing the payment method creates a new Virtual Account number or QRIS code.';
 }
