@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile_app/core/api/AppsScriptClient/AppsScriptClient.dart';
-import 'package:mobile_app/core/api/AppsScriptClient/AppsScriptSignature.dart';
+import 'package:mobile_app/Core/Api/AppsScriptClient/AppsScriptClient.dart';
+import 'package:mobile_app/Core/Api/AppsScriptClient/AppsScriptSignature.dart';
 
 /// Kontrak Flutter <-> Google Apps Script.
 ///

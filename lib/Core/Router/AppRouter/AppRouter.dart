@@ -39,7 +39,7 @@ import '../../../Features/Profile/Presentation/Screens/FaceScanner/FaceScannerSc
 import '../../../Features/Profile/Presentation/Screens/DocumentScanner/DocumentScannerScreen.dart';
 import '../../../Features/Payment/Presentation/Screens/PaymentInstruction/PaymentInstructionScreen.dart';
 import '../../../Features/Payment/Presentation/Screens/PaymentMethodDetail/PaymentMethodDetailScreen.dart';
-import '../../../Features/Payment/Presentation/Screens/PaymentWebview/PaymentWebViewScreen.dart';
+import '../../../Features/Payment/Presentation/Screens/PaymentWebview/PaymentWebviewScreen.dart';
 import '../../../Features/Payment/Domain/PaymentMethodInfo/PaymentMethodInfo.dart';
 import '../../../Features/Review/Presentation/Screens/MyReviews/MyReviewsScreen.dart';
 import '../../../Features/Review/Presentation/Screens/ReviewList/ReviewListScreen.dart';

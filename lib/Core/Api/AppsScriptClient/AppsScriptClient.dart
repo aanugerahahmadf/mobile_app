@@ -5,8 +5,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart'
     show debugPrint, kDebugMode, visibleForTesting;
 
-import 'package:mobile_app/core/api/AppsScriptClient/AppsScriptSignature.dart';
-import 'package:mobile_app/core/config/AppConfig/AppConfig.dart';
+import 'package:mobile_app/Core/Api/AppsScriptClient/AppsScriptSignature.dart';
+import 'package:mobile_app/Core/Config/AppConfig/AppConfig.dart';
 
 /// Hasil panggilan Apps Script.
 ///
