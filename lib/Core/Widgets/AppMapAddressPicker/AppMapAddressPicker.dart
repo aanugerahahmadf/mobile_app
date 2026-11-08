@@ -1,3 +1,5 @@
+import 'package:mobile_app/Core/Errors/AppErrorCodes/AppErrorCodes.dart';
+import 'package:mobile_app/Core/Errors/LocalizedError/LocalizedError.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -89,7 +91,7 @@ class _AppMapAddressPickerState extends ConsumerState<AppMapAddressPicker> {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
           setState(() {
-            _error = 'Location permission denied';
+            _error = AppErrorCodes.locationPermissionDenied;
             _loading = false;
           });
           return;
@@ -97,7 +99,7 @@ class _AppMapAddressPickerState extends ConsumerState<AppMapAddressPicker> {
       }
       if (permission == LocationPermission.deniedForever) {
         setState(() {
-          _error = 'Location permissions are permanently denied';
+          _error = AppErrorCodes.locationPermissionPermanentlyDenied;
           _loading = false;
         });
         return;
@@ -117,7 +119,7 @@ class _AppMapAddressPickerState extends ConsumerState<AppMapAddressPicker> {
       await _reverseGeocode(newCenter);
     } catch (e) {
       setState(() {
-        _error = 'Failed to get location: $e';
+        _error = AppErrorCodes.failedGetLocation;
         _loading = false;
       });
     }
@@ -234,7 +236,7 @@ class _AppMapAddressPickerState extends ConsumerState<AppMapAddressPicker> {
   void _saveAddress() {
     final address = _addressController.text.trim();
     if (address.isEmpty) {
-      setState(() => _error = 'Please enter address details');
+      setState(() => _error = AppErrorCodes.enterAddressDetails);
       return;
     }
     widget.onAddressChanged(address);
@@ -242,8 +244,9 @@ class _AppMapAddressPickerState extends ConsumerState<AppMapAddressPicker> {
       widget.onLatitudeChanged(_markerPosition!.latitude);
       widget.onLongitudeChanged(_markerPosition!.longitude);
     }
+    final l = AppLocalizations.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Address saved successfully')),
+      SnackBar(content: Text(l?.dataSavedSuccess ?? 'Address saved successfully')),
     );
   }
 
@@ -265,7 +268,9 @@ class _AppMapAddressPickerState extends ConsumerState<AppMapAddressPicker> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  _error!,
+                  AppLocalizations.of(context) != null
+                      ? LocalizedError.of(AppLocalizations.of(context)!, _error!)
+                      : _error!,
                   style: AppTextStyles.bodySmall.copyWith(color: AppColors.errorColor),
                 ),
               ),
