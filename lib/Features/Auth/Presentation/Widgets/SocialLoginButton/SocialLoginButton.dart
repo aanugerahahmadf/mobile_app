@@ -20,43 +20,49 @@ class SocialLoginButton extends StatelessWidget {
     final l = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSizes.sm),
-      child: SizedBox(
-        width: double.infinity,
-        height: 52,
-        child: ElevatedButton(
-          onPressed: enabled ? onPressed : null,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.surfaceColor,
-            foregroundColor: AppColors.textPrimary,
-            elevation: 2,
-            shadowColor: Colors.black.withValues(alpha: 0.15),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-              side: BorderSide(color: AppColors.dividerColor, width: 1),
+      child: Material(
+        elevation: 3,
+        shadowColor: Colors.black.withValues(alpha: 0.2),
+        borderRadius: BorderRadius.circular(12),
+        child: SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: OutlinedButton(
+            onPressed: enabled ? onPressed : null,
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: AppColors.dividerColor),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              backgroundColor: AppColors.surfaceColor,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              _buildIcon(),
-              const SizedBox(width: 12),
-              Flexible(
-                child: Text(
-                  _label(l),
-                  maxLines: 1,
-                  softWrap: false,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: 'InstrumentSans',
-                    color: AppColors.textPrimary,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildIcon(),
+                const Padding(
+                  padding: EdgeInsets.only(left: 12),
+                ),
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      _label(l),
+                      maxLines: 1,
+                      softWrap: false,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'InstrumentSans',
+                        color: AppColors.textPrimary,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
