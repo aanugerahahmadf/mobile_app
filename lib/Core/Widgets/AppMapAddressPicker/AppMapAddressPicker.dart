@@ -4,6 +4,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:mobile_app/L10n/AppLocalizations.dart';
 import '../../Constants/AppColors/AppColors.dart';
 import '../../Constants/AppTextStyles/AppTextStyles.dart';
 import '../AppButton/AppButton.dart';
@@ -154,11 +155,11 @@ class _AppMapAddressPickerState extends ConsumerState<AppMapAddressPicker> {
       place.postalCode,
       place.country,
     ].where((part) => part != null && part.isNotEmpty).join(', ');
-    return parts;
+    return parts.isNotEmpty ? parts : 'Selected Location';
   }
 
   Future<void> _searchAddress(String query) async {
-    if (query.isEmpty) {
+    if (query.trim().isEmpty) {
       setState(() {
         _searchResults = [];
         _showSearchResults = false;
@@ -168,61 +169,88 @@ class _AppMapAddressPickerState extends ConsumerState<AppMapAddressPicker> {
 
     setState(() => _searching = true);
     try {
-      final results = await locationFromAddress(query);
+      final locations = await locationFromAddress(query);
+      final results = <_SearchResult>[];
+
+      for (final loc in locations.take(5)) {
+        final placemarks = await placemarkFromCoordinates(
+          loc.latitude,
+          loc.longitude,
+        );
+        final address = placemarks.isNotEmpty
+            ? _formatAddress(placemarks.first)
+            : query;
+        results.add(_SearchResult(
+          address: address,
+          latitude: loc.latitude,
+          longitude: loc.longitude,
+        ));
+      }
+
       if (mounted) {
         setState(() {
-          _searchResults = results.map((loc) => _SearchResult(
-            address: '${loc.latitude}, ${loc.longitude}',
-            latitude: loc.latitude,
-            longitude: loc.longitude,
-          )).toList();
-          _showSearchResults = true;
+          _searchResults = results;
+          _showSearchResults = results.isNotEmpty;
           _searching = false;
         });
       }
     } catch (e) {
-      setState(() {
-        _searching = false;
-        _error = 'Search failed: $e';
-      });
+      if (mounted) {
+        setState(() {
+          _searchResults = [];
+          _showSearchResults = false;
+          _searching = false;
+        });
+      }
     }
   }
 
-  void _onSearchResultTap(_SearchResult result) {
-    final position = LatLng(result.latitude, result.longitude);
+  void _onMapTap(LatLng position) {
+    if (widget.readOnly) return;
     setState(() {
-      _center = position;
       _markerPosition = position;
-      _showSearchResults = false;
-      _searchController.clear();
     });
-    _mapController.move(position, 15);
+    widget.onLatitudeChanged(position.latitude);
+    widget.onLongitudeChanged(position.longitude);
     _reverseGeocode(position);
   }
 
-  void _onMapTap(LatLng position) {
+  void _onSearchResultTap(_SearchResult result) {
+    final pos = LatLng(result.latitude, result.longitude);
     setState(() {
-      _markerPosition = position;
-      _center = position;
+      _center = pos;
+      _markerPosition = pos;
+      _addressController.text = result.address;
+      _showSearchResults = false;
+      _searchController.text = result.address;
     });
-    _reverseGeocode(position);
+    _mapController.move(pos, 15);
+    widget.onAddressChanged(result.address);
+    widget.onLatitudeChanged(result.latitude);
+    widget.onLongitudeChanged(result.longitude);
+    widget.onPlaceIdChanged('');
   }
 
   void _saveAddress() {
+    final l = AppLocalizations.of(context);
+    final isId = l?.localeName.startsWith('id') ?? true;
     final address = _addressController.text.trim();
-    if (address.isEmpty) return;
-
+    if (address.isEmpty) {
+      setState(() => _error = isId ? 'Harap masukkan detail alamat' : 'Please enter address details');
+      return;
+    }
     widget.onAddressChanged(address);
     if (_markerPosition != null) {
       widget.onLatitudeChanged(_markerPosition!.latitude);
       widget.onLongitudeChanged(_markerPosition!.longitude);
     }
-    widget.onPlaceIdChanged('');
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(isId ? 'Alamat berhasil disimpan' : 'Address saved successfully')),
+    );
   }
 
   Widget _buildErrorWidget() {
     if (_error == null) return const SizedBox.shrink();
-
     return Column(
       children: [
         const SizedBox(height: 12),
@@ -252,16 +280,19 @@ class _AppMapAddressPickerState extends ConsumerState<AppMapAddressPicker> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final isIndonesian = l?.localeName.startsWith('id') ?? true;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Search Address', style: AppTextStyles.titleSmall),
+        Text(l?.searchAddress ?? 'Search Address', style: AppTextStyles.titleSmall),
         const SizedBox(height: 8),
         TextFormField(
           controller: _searchController,
           readOnly: widget.readOnly,
           decoration: InputDecoration(
-            hintText: 'Type to search for a location...',
+            hintText: l?.searchAddressHint ?? 'Type to search for a location...',
             prefixIcon: const Icon(Icons.search),
             suffixIcon: _searching
                 ? const Padding(
@@ -336,14 +367,14 @@ class _AppMapAddressPickerState extends ConsumerState<AppMapAddressPicker> {
 
         const SizedBox(height: 16),
 
-        Text('Address Detail', style: AppTextStyles.titleSmall),
+        Text(l?.addressDetail ?? 'Address Detail', style: AppTextStyles.titleSmall),
         const SizedBox(height: 8),
         TextFormField(
           controller: _addressController,
           readOnly: widget.readOnly,
           maxLines: 3,
           decoration: InputDecoration(
-            hintText: 'Enter detailed address (street, building, number)',
+            hintText: l?.addressDetailHint ?? 'Enter detailed address (street, building, number)',
             border: const OutlineInputBorder(),
           ),
           onChanged: (value) {
@@ -353,27 +384,27 @@ class _AppMapAddressPickerState extends ConsumerState<AppMapAddressPicker> {
 
         const SizedBox(height: 16),
 
-        Text('Additional Details', style: AppTextStyles.titleSmall),
+        Text(l?.notes ?? 'Additional Details', style: AppTextStyles.titleSmall),
         const SizedBox(height: 8),
         TextFormField(
           controller: _detailController,
           readOnly: widget.readOnly,
           maxLines: 2,
           decoration: InputDecoration(
-            hintText: 'e.g. house number 16, near mosque',
+            hintText: l?.addressHint ?? 'e.g. house number 16, near mosque',
             border: const OutlineInputBorder(),
           ),
         ),
 
         const SizedBox(height: 16),
 
-        Text('Label Address', style: AppTextStyles.titleSmall),
+        Text(l?.labelAddress ?? 'Label Address', style: AppTextStyles.titleSmall),
         const SizedBox(height: 8),
         Row(
           children: [
-            _buildLabelChip('home', Icons.home, 'Home'),
+            _buildLabelChip('home', Icons.home, l?.labelHome ?? 'Home'),
             const SizedBox(width: 12),
-            _buildLabelChip('office', Icons.work, 'Office'),
+            _buildLabelChip('office', Icons.work, l?.labelOffice ?? 'Office'),
           ],
         ),
 
@@ -447,7 +478,7 @@ class _AppMapAddressPickerState extends ConsumerState<AppMapAddressPicker> {
           children: [
             Expanded(
               child: AppButton(
-                label: 'Gunakan Lokasi Saya',
+                label: isIndonesian ? 'Gunakan Lokasi Saya' : 'Use My Location',
                 icon: Icons.my_location,
                 onPressed: widget.readOnly ? null : _getCurrentLocation,
                 type: ButtonType.outline,
@@ -456,7 +487,7 @@ class _AppMapAddressPickerState extends ConsumerState<AppMapAddressPicker> {
             const SizedBox(width: 12),
             Expanded(
               child: AppButton(
-                label: 'Simpan Alamat',
+                label: l != null ? '${l.save} ${l.address}' : 'Simpan Alamat',
                 icon: Icons.save,
                 onPressed: widget.readOnly ? null : _saveAddress,
                 type: ButtonType.primary,
