@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -198,33 +197,30 @@ class _LandingPageState extends ConsumerState<LandingScreen> {
 
   Widget _buildButtons(AppLocalizations l) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSizes.lg),
+      padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
       child: AppBlurBackdrop(
-        padding: const EdgeInsets.all(AppSizes.lg),
+        padding: const EdgeInsets.all(AppSizes.md),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             SocialLoginButton(
-                provider: SocialProvider.google,
-                onPressed: () async {
-                  // Tandai onboarding sudah dilihat SEBELUM memulai autentikasi,
-                  // supaya route perantara (OTP, Complete Profile, Security
-                  // Question, Two-Factor Setup) tidak diblokir redirect global
-                  // yang memaksa balik ke '/landing' selama flag ini false.
-                  // _routeAfterAuth juga men-set flag ini, jadi pemanggilan di
-                  // sini aman (idempotent).
-                  await _markOnboardingSeen();
-                  if (!mounted) return;
-                  ref.read(authProvider.notifier).googleLogin();
-                },
-              )
-              .animate()
-              .fadeIn(duration: 500.ms, delay: 200.ms)
-              .slideY(begin: 0.2, duration: 500.ms),
-
-        ],
+              provider: SocialProvider.google,
+              onPressed: () async {
+                // Tandai onboarding sudah dilihat SEBELUM memulai autentikasi,
+                // supaya route perantara (OTP, Complete Profile, Security
+                // Question, Two-Factor Setup) tidak diblokir redirect global
+                // yang memaksa balik ke '/landing' selama flag ini false.
+                // _routeAfterAuth juga men-set flag ini, jadi pemanggilan di
+                // sini aman (idempotent).
+                await _markOnboardingSeen();
+                if (!mounted) return;
+                ref.read(authProvider.notifier).googleLogin();
+              },
+            ),
+          ],
+        ),
       ),
-    ),
-  );
+    );
   }
 
   Widget _buildFooter(AppLocalizations l) {
