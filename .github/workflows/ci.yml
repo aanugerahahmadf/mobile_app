@@ -2,9 +2,17 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches:
+      - main
+      - develop
+      - chore/complete-mobile-tests-and-chat
+      - dependabot/npm_and_yarn/functions/npm_and_yarn-a18cab04ac
+      - v0/mobile-fullstack-ci
   pull_request:
-    branches: [main]
+    branches:
+      - main
+      - chore/complete-mobile-tests-and-chat
+      - v0/mobile-fullstack-ci
 
 concurrency:
   group: ci
