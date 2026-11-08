@@ -20,27 +20,43 @@ class SocialLoginButton extends StatelessWidget {
     final l = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSizes.sm),
-      child: Material(
-        elevation: 3,
-        shadowColor: Colors.black.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(12),
-        child: SizedBox(
-          width: double.infinity,
-          height: 50,
-          child: OutlinedButton.icon(
-            onPressed: enabled ? onPressed : null,
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: AppColors.dividerColor),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+      child: SizedBox(
+        width: double.infinity,
+        height: 52,
+        child: ElevatedButton(
+          onPressed: enabled ? onPressed : null,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.surfaceColor,
+            foregroundColor: AppColors.textPrimary,
+            elevation: 2,
+            shadowColor: Colors.black.withValues(alpha: 0.15),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+              side: BorderSide(color: AppColors.dividerColor, width: 1),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.max,
+            children: [
+              _buildIcon(),
+              const SizedBox(width: 12),
+              Flexible(
+                child: Text(
+                  _label(l),
+                  maxLines: 1,
+                  softWrap: false,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontFamily: 'InstrumentSans',
+                    color: AppColors.textPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
-              backgroundColor: AppColors.surfaceColor,
-            ),
-            icon: _buildIcon(),
-            label: Text(
-              _label(l),
-              style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
-            ),
+            ],
           ),
         ),
       ),
@@ -54,6 +70,7 @@ class SocialLoginButton extends StatelessWidget {
           'assets/images/Google/google.png',
           width: 22,
           height: 22,
+          fit: BoxFit.contain,
         );
       case SocialProvider.facebook:
         return const Icon(Icons.facebook, color: Color(0xFF1877F2), size: 22);
@@ -61,11 +78,11 @@ class SocialLoginButton extends StatelessWidget {
         return Container(
           width: 22,
           height: 22,
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             shape: BoxShape.circle,
             color: Colors.black,
           ),
-          child: Center(
+          child: const Center(
             child: Text(
               '\uF8FF',
               style: TextStyle(
