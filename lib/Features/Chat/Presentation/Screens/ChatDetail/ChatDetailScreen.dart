@@ -272,7 +272,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailScreen> {
                       if (reasonController.text.trim().isEmpty ||
                           descriptionController.text.trim().isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
+                          SnackBar(
                             content: Text(isId ? 'Judul dan deskripsi wajib diisi.' : 'Title and description are required.'),
                           ),
                         );
@@ -303,7 +303,7 @@ class _ChatDetailPageState extends ConsumerState<ChatDetailScreen> {
                       } catch (_) {
                         if (sheetContext.mounted) {
                           ScaffoldMessenger.of(sheetContext).showSnackBar(
-                            const SnackBar(
+                            SnackBar(
                               content: Text(l.reportFailed),
                             ),
                           );

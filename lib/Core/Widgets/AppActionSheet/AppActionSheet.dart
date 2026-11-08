@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:mobile_app/L10n/AppLocalizations.dart';
 import '../../Constants/AppColors/AppColors.dart';
 import '../../Constants/AppTextStyles/AppTextStyles.dart';
 import '../AppBlurBackdrop/AppBlurBackdrop.dart';
@@ -48,7 +49,7 @@ Future<T?> showAppActionSheet<T>(
         ],
         cancelButton: CupertinoActionSheetAction(
           onPressed: () => Navigator.of(sheetContext).pop(),
-          child: const Text('Batal'),
+          child: Text(AppLocalizations.of(context)?.cancel ?? 'Cancel'),
         ),
       ),
     );

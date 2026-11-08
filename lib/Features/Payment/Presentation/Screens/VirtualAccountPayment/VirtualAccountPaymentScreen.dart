@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_app/L10n/AppLocalizations.dart';
 import '../../../../../Core/Constants/AppSizes/AppSizes.dart';
 import '../../../../../Core/Constants/AppTextStyles/AppTextStyles.dart';
 import '../../../../../Core/Widgets/AppBreadcrumbs/AppBreadcrumbs.dart';
+import 'package:mobile_app/L10n/AppLocalizations.dart';
 
 class VirtualAccountPaymentScreen extends ConsumerStatefulWidget {
   final String orderId;
 
-  const VirtualAccountPaymentScreen({super.key, required this.orderId});
+  const VirtualAccountPaymentScreen({
+    super.key,
+    required this.orderId,
+  });
 
   @override
   ConsumerState<VirtualAccountPaymentScreen> createState() =>
@@ -20,10 +23,11 @@ class _VirtualAccountPaymentPageState
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
+    final title = '${l.payment} ${l.virtualAccount}';
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text('Payment Virtual Account'),
+        title: Text(title),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(38),
           child: const AppBreadcrumbs.global(),
@@ -34,7 +38,7 @@ class _VirtualAccountPaymentPageState
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Payment Virtual Account', style: AppTextStyles.headTitle),
+            Text(title, style: AppTextStyles.headTitle),
             const SizedBox(height: AppSizes.md),
             Text('${l.order} #${widget.orderId}'),
           ],
@@ -43,5 +47,3 @@ class _VirtualAccountPaymentPageState
     );
   }
 }
-
-
