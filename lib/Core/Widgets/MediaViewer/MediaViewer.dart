@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:mobile_app/L10n/AppLocalizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:video_player/video_player.dart';
 import '../../Constants/AppColors/AppColors.dart';
@@ -110,6 +111,9 @@ class _InlineVideoPlayerState extends State<_InlineVideoPlayer> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final openLabel = l?.openLink ?? 'Open';
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -122,7 +126,7 @@ class _InlineVideoPlayerState extends State<_InlineVideoPlayer> {
         ),
         actions: [
           IconButton(
-            tooltip: 'Open externally',
+            tooltip: openLabel,
             icon: const Icon(Icons.open_in_new),
             onPressed: _openExternal,
           ),
@@ -140,7 +144,7 @@ class _InlineVideoPlayerState extends State<_InlineVideoPlayer> {
                   TextButton.icon(
                     onPressed: _openExternal,
                     icon: const Icon(Icons.open_in_new),
-                    label: const Text('Open externally'),
+                    label: Text(openLabel),
                   ),
                 ],
               )

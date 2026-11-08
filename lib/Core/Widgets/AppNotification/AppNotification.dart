@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_app/L10n/AppLocalizations.dart';
 import '../../Constants/AppColors/AppColors.dart';
 import '../AppButton/AppButton.dart';
 
@@ -15,7 +16,6 @@ class AppNotification {
     bool barrierDismissible = true,
   }) {
     final config = _configs[type]!;
-    final effectiveTitle = title ?? config.defaultTitle;
 
     showDialog(
       context: context,
@@ -23,7 +23,8 @@ class AppNotification {
       barrierColor: AppColors.overlayColor,
       builder: (ctx) => _AppNotificationDialog(
         message: message,
-        title: effectiveTitle,
+        title: title,
+        type: type,
         icon: config.icon,
         color: config.color,
         actionLabel: actionLabel,
@@ -37,12 +38,10 @@ class AppNotification {
 class _NotificationConfig {
   final IconData icon;
   final Color color;
-  final String defaultTitle;
 
   const _NotificationConfig({
     required this.icon,
     required this.color,
-    required this.defaultTitle,
   });
 }
 
@@ -50,28 +49,25 @@ const _configs = {
   NotificationType.success: _NotificationConfig(
     icon: Icons.check_circle_rounded,
     color: AppColors.successColor,
-    defaultTitle: 'Berhasil',
   ),
   NotificationType.error: _NotificationConfig(
     icon: Icons.error_rounded,
     color: AppColors.errorColor,
-    defaultTitle: 'Gagal',
   ),
   NotificationType.warning: _NotificationConfig(
     icon: Icons.warning_amber_rounded,
     color: AppColors.warningColor,
-    defaultTitle: 'Perhatian',
   ),
   NotificationType.info: _NotificationConfig(
     icon: Icons.info_rounded,
     color: AppColors.infoColor,
-    defaultTitle: 'Informasi',
   ),
 };
 
 class _AppNotificationDialog extends StatelessWidget {
   final String message;
-  final String title;
+  final String? title;
+  final NotificationType type;
   final IconData icon;
   final Color color;
   final String? actionLabel;
@@ -80,7 +76,8 @@ class _AppNotificationDialog extends StatelessWidget {
 
   const _AppNotificationDialog({
     required this.message,
-    required this.title,
+    this.title,
+    required this.type,
     required this.icon,
     required this.color,
     this.actionLabel,
@@ -90,6 +87,17 @@ class _AppNotificationDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final isIndonesian = l?.localeName.startsWith('id') ?? true;
+
+    final resolvedTitle = title ??
+        switch (type) {
+          NotificationType.success => l?.success ?? (isIndonesian ? 'Berhasil' : 'Success'),
+          NotificationType.error => l?.error ?? (isIndonesian ? 'Gagal' : 'Error'),
+          NotificationType.warning => isIndonesian ? 'Perhatian' : 'Warning',
+          NotificationType.info => isIndonesian ? 'Informasi' : 'Information',
+        };
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       backgroundColor: AppColors.surfaceColor,
@@ -109,7 +117,7 @@ class _AppNotificationDialog extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              title,
+              resolvedTitle,
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -143,7 +151,7 @@ class _AppNotificationDialog extends StatelessWidget {
               SizedBox(
                 width: double.infinity,
                 child: AppButton(
-                  label: 'Tutup',
+                  label: l?.close ?? (isIndonesian ? 'Tutup' : 'Close'),
                   type: ButtonType.outline,
                   onPressed: () => Navigator.of(context).pop(),
                 ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_app/L10n/AppLocalizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import '../../../../../Core/Widgets/AppBreadcrumbs/AppBreadcrumbs.dart';
@@ -52,8 +53,10 @@ class _PaymentWebViewPageState extends State<PaymentWebViewScreen> {
 
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!ok && mounted) {
+      final l = AppLocalizations.of(context);
+      final msg = l != null ? '${l.eWallet}: ${l.errorOccurred}' : 'Tidak dapat membuka aplikasi e-wallet';
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tidak dapat membuka aplikasi e-wallet')),
+        SnackBar(content: Text(msg)),
       );
     }
   }
