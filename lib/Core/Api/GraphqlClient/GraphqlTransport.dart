@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 
+import '../../Errors/AppErrorCodes/AppErrorCodes.dart';
 import '../../Errors/Failures/Failures.dart';
 import 'GraphqlClient.dart';
 
@@ -186,19 +187,19 @@ class GraphqlTransport {
         return const AuthFailure();
       case 403:
         return UnknownFailure(
-          messages.isNotEmpty ? joined : 'Tidak memiliki akses.',
+          messages.isNotEmpty ? joined : AppErrorCodes.accessDenied,
         );
       case 404:
-        return const NotFoundFailure('Endpoint GraphQL tidak tersedia');
+        return const NotFoundFailure(AppErrorCodes.graphqlSchemaError);
       case 415:
-        return const GraphqlSchemaFailure('Content-Type GraphQL ditolak');
+        return const GraphqlSchemaFailure(AppErrorCodes.graphqlSchemaError);
       case 422:
         return ValidationFailure(_validationErrors(error));
       case 500:
       case 502:
       case 503:
         return ServerFailure(
-          messages.isNotEmpty ? joined : 'Terjadi kesalahan server',
+          messages.isNotEmpty ? joined : AppErrorCodes.serverError,
         );
     }
 
@@ -262,6 +263,6 @@ class GraphqlTransport {
 /// baru daripada `graphql/schema.graphql`.
 class GraphqlSchemaFailure extends Failure {
   const GraphqlSchemaFailure([
-    super.message = 'Operasi GraphQL tidak dikenali server',
+    super.message = AppErrorCodes.graphqlSchemaError,
   ]);
 }

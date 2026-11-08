@@ -1,3 +1,5 @@
+import '../../Errors/LocalizedError/LocalizedError.dart';
+import '../../Errors/AppErrorCodes/AppErrorCodes.dart';
 import 'dart:async';
 
 import 'package:dio/dio.dart';
@@ -187,7 +189,7 @@ class _WhatsappOtpVerifierState extends State<WhatsappOtpVerifier> {
       setState(() => _status = _OtpStatus.sent);
       _startExpiryTimer();
     } on DioException catch (e) {
-      final msg = e.response?.data?['message'] as String? ?? l.failedSendVerificationCode;
+      final msg = LocalizedError.of(l, e.response?.data?['message'] as String? ?? AppErrorCodes.anErrorOccurred);
       if (!mounted) return;
       setState(() {
         _status = _OtpStatus.error;
@@ -251,7 +253,7 @@ class _WhatsappOtpVerifierState extends State<WhatsappOtpVerifier> {
         SnackBar(content: Text(l.whatsappVerified), backgroundColor: AppColors.successColor),
       );
     } on DioException catch (e) {
-      final msg = e.response?.data?['message'] as String? ?? l.failedVerifyOtp;
+      final msg = LocalizedError.of(l, e.response?.data?['message'] as String? ?? AppErrorCodes.anErrorOccurred);
       if (!mounted) return;
       setState(() {
         _status = _OtpStatus.error;

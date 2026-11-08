@@ -37,28 +37,35 @@ class Formatters {
     }
   }
 
-  static String timeAgo(String dateStr) {
+  static String timeAgo(String dateStr, [String? locale]) {
     try {
       final date = DateTime.parse(dateStr);
       final now = DateTime.now();
       final diff = now.difference(date);
+      final isEn = locale == 'en';
 
-      if (diff.inMinutes < 1) return 'Baru saja';
-      if (diff.inMinutes < 60) return '${diff.inMinutes} menit lalu';
-      if (diff.inHours < 24) return '${diff.inHours} jam lalu';
-      if (diff.inDays < 7) return '${diff.inDays} hari lalu';
-      // Tanpa cabang ini, chat/activity yang lebih dari 7 hari langsung
-      // difallback ke tanggal absolut, jadi pengguna kehilangan konteks
-      // "berapa lama lalu".
+      if (diff.inMinutes < 1) return isEn ? 'Just now' : 'Baru saja';
+      if (diff.inMinutes < 60) {
+        return isEn ? '${diff.inMinutes}m ago' : '${diff.inMinutes} menit lalu';
+      }
+      if (diff.inHours < 24) {
+        return isEn ? '${diff.inHours}h ago' : '${diff.inHours} jam lalu';
+      }
+      if (diff.inDays < 7) {
+        return isEn ? '${diff.inDays}d ago' : '${diff.inDays} hari lalu';
+      }
       if (diff.inDays < 30) {
         final weeks = diff.inDays ~/ 7;
+        if (isEn) return weeks == 1 ? '1w ago' : '${weeks}w ago';
         return weeks == 1 ? '1 minggu lalu' : '$weeks minggu lalu';
       }
       if (diff.inDays < 365) {
         final months = diff.inDays ~/ 30;
+        if (isEn) return months == 1 ? '1mo ago' : '${months}mo ago';
         return months == 1 ? '1 bulan lalu' : '$months bulan lalu';
       }
       final years = diff.inDays ~/ 365;
+      if (isEn) return years == 1 ? '1y ago' : '${years}y ago';
       return years == 1 ? '1 tahun lalu' : '$years tahun lalu';
     } catch (_) {
       return dateStr;

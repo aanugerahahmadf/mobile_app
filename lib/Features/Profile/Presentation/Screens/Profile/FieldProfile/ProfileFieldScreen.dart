@@ -1,3 +1,5 @@
+import 'package:mobile_app/Core/Errors/AppErrorCodes/AppErrorCodes.dart';
+import 'package:mobile_app/Core/Errors/LocalizedError/LocalizedError.dart';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -581,7 +583,8 @@ class _ProfileFieldPageState extends ConsumerState<ProfileFieldScreen> {
       }
     } catch (e) {
       if (mounted) {
-        final msg = _extractError(e) ?? l.failedSaveData;
+        final rawMsg = _extractError(e) ?? AppErrorCodes.failedUpdateProfile;
+        final msg = LocalizedError.of(l, rawMsg);
         AppSnackBar.show(context, msg, type: SnackBarType.error);
       }
     } finally {

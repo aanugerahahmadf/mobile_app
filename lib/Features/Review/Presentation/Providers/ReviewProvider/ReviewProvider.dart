@@ -1,3 +1,4 @@
+import '../../../../../Core/Errors/AppErrorCodes/AppErrorCodes.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../Data/ReviewRepositoryImpl/ReviewRepositoryImpl.dart';
@@ -107,7 +108,7 @@ class ReviewNotifier extends StateNotifier<ReviewState> {
     } on DioException catch (e) {
       state = state.copyWith(
         loading: false,
-        error: e.error?.toString() ?? 'Gagal memuat ulasan',
+        error: e.error?.toString() ?? AppErrorCodes.failedLoadReviews,
       );
     } catch (e) {
       state = state.copyWith(loading: false, error: e.toString());
@@ -147,7 +148,7 @@ class ReviewNotifier extends StateNotifier<ReviewState> {
     } on DioException catch (e) {
       state = state.copyWith(
         loadingMore: false,
-        error: e.error?.toString() ?? 'Gagal memuat ulasan',
+        error: e.error?.toString() ?? AppErrorCodes.failedLoadReviews,
       );
     } catch (e) {
       state = state.copyWith(loadingMore: false, error: e.toString());
@@ -272,7 +273,7 @@ class ReviewNotifier extends StateNotifier<ReviewState> {
     } on DioException catch (e) {
       state = state.copyWith(
         submitting: false,
-        error: e.error?.toString() ?? 'Gagal mengirim ulasan',
+        error: e.error?.toString() ?? AppErrorCodes.reviewFailed,
       );
       rethrow;
     } catch (e) {
@@ -303,7 +304,7 @@ class ReviewNotifier extends StateNotifier<ReviewState> {
     } on DioException catch (e) {
       state = state.copyWith(
         submitting: false,
-        error: e.error?.toString() ?? 'Gagal memperbarui ulasan',
+        error: e.error?.toString() ?? AppErrorCodes.failedUpdateReview,
       );
       rethrow;
     } catch (e) {
@@ -326,7 +327,7 @@ class ReviewNotifier extends StateNotifier<ReviewState> {
     } on DioException catch (e) {
       state = state.copyWith(
         submitting: false,
-        error: e.error?.toString() ?? 'Gagal menghapus ulasan',
+        error: e.error?.toString() ?? AppErrorCodes.failedDeleteReview,
       );
       rethrow;
     } catch (e) {

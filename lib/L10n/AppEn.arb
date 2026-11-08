@@ -105,7 +105,6 @@
   "labelAddress": "Label Address",
   "labelHome": "Home",
   "labelOffice": "Office",
-  "searchAddress": "Search Address",
   "accountNumber": "Account Number",
   "accountHolder": "Account Holder",
   "accountDeleted": "Your account has been deleted",
@@ -1565,8 +1564,7 @@
   "calendarMinute": "Minute",
   "calendarHourMinute": "Hour : Minute",
   "calendarSearch": "Search...",
-  "calendarNoResults": "No results found"
-,
+  "calendarNoResults": "No results found",
   "mediaServerNote": "All media will remain on the server and can be downloaded again if needed.",
   "outgoing": "Outgoing",
   "network": "Network",
@@ -1614,19 +1612,19 @@
   "quality": "Quality",
   "resetStatistics": "Reset statistics",
   "useProxy": "Use proxy",
-  "totalBytes": "Total bytes"
-  ,"appLockPassword":"App lock password"
-  ,"disablePassword":"Disable password"
-  ,"wrongPassword":"Wrong password"
-  ,"passwordRequired":"Password is required"
-  ,"usePasswordToUnlock":"Use a password to unlock the app"
-  ,"startupTitle":"Please wait"
-  ,"startupPreparingData":"Preparing app data..."
-  ,"startupDownloadingData":"Downloading the latest data..."
-  ,"startupReady":"Optimizing data..."
-  ,"menu":"Menu"
-  ,"catalogDetail":"Catalog detail"
-  ,"flowerDecorationsCatalog":"Flower Decorations Catalog",
+  "totalBytes": "Total bytes",
+  "appLockPassword": "App lock password",
+  "disablePassword": "Disable password",
+  "wrongPassword": "Wrong password",
+  "passwordRequired": "Password is required",
+  "usePasswordToUnlock": "Use a password to unlock the app",
+  "startupTitle": "Please wait",
+  "startupPreparingData": "Preparing app data...",
+  "startupDownloadingData": "Downloading the latest data...",
+  "startupReady": "Optimizing data...",
+  "menu": "Menu",
+  "catalogDetail": "Catalog detail",
+  "flowerDecorationsCatalog": "Flower Decorations Catalog",
   "editOrder": "Edit Order",
   "orderUpdated": "Order updated",
   "failedUpdateOrder": "Failed to update order",
@@ -1635,5 +1633,17 @@
   "failedDeleteOrder": "Failed to delete order",
   "virtualAccount": "Virtual Account",
   "customerName": "Customer Name",
-  "editPaymentWarning": "Changing the payment method creates a new Virtual Account number or QRIS code."
+  "editPaymentWarning": "Changing the payment method creates a new Virtual Account number or QRIS code.",
+  "networkError": "No internet connection",
+  "serverError": "A server error occurred",
+  "sessionExpired": "Session has expired, please sign in again",
+  "validationFailed": "Validation failed",
+  "accessDenied": "You do not have access",
+  "graphqlSchemaError": "Service temporarily unavailable",
+  "failedLoadReviews": "Failed to load reviews",
+  "failedProcessVote": "Failed to process vote",
+  "locationPermissionDenied": "Location permission denied",
+  "locationPermissionPermanentlyDenied": "Location permissions are permanently denied",
+  "failedGetLocation": "Failed to get location",
+  "enterAddressDetails": "Please enter address details"
 }

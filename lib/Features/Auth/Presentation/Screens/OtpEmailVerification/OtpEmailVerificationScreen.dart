@@ -1,3 +1,5 @@
+import '../../../../../Core/Errors/LocalizedError/LocalizedError.dart';
+import '../../../../../Core/Errors/AppErrorCodes/AppErrorCodes.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -112,7 +114,8 @@ class _OtpEmailVerificationPageState extends ConsumerState<OtpEmailVerificationS
         }
       }
     } on DioException catch (e) {
-      final msg = e.response?.data?['message'] as String? ?? l.failedVerifyOtp;
+      final rawMsg = e.response?.data?['message'] as String? ?? AppErrorCodes.anErrorOccurred;
+      final msg = LocalizedError.of(l, rawMsg);
       if (mounted) {
         AppSnackBar.show(context, msg, type: SnackBarType.error);
       }
@@ -142,9 +145,8 @@ class _OtpEmailVerificationPageState extends ConsumerState<OtpEmailVerificationS
         _startResendTimer();
       }
     } on DioException catch (e) {
-      final msg =
-          e.response?.data?['message'] as String? ??
-          l.failedSendVerificationCode;
+      final rawMsg = e.response?.data?['message'] as String? ?? AppErrorCodes.anErrorOccurred;
+      final msg = LocalizedError.of(l, rawMsg);
       if (mounted) {
         AppSnackBar.show(context, msg, type: SnackBarType.error);
       }
