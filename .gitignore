@@ -33,12 +33,6 @@ migrate_working_dir/
 /build/
 /coverage/
 
-# Generated localization
-lib/l10n/app_localizations*.dart
-
-# Generated Firebase Data Connect (not wired into app; no SDK installed)
-lib/dataconnect_generated/
-
 # Environment
 .env
 .env.*
@@ -49,6 +43,8 @@ app.*.symbols
 
 # Obfuscation related
 app.*.map.json
+
+build_debug.txt
 
 # Android Studio will place build artifacts here
 /android/app/debug

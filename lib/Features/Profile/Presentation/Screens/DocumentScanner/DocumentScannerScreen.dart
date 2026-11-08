@@ -1,0 +1,570 @@
+import 'dart:async';
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:camera/camera.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
+import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'package:mobile_app/L10n/AppLocalizations.dart';
+import '../../../../../Core/Constants/AppColors/AppColors.dart';
+import '../../../../../Core/Constants/AppTextStyles/AppTextStyles.dart';
+import '../../../../../Core/Constants/AppSizes/AppSizes.dart';
+import '../../../../../Core/Widgets/AppBreadcrumbs/AppBreadcrumbs.dart';
+import '../../../../../Core/Widgets/CameraCoverPreview/CameraCoverPreview.dart';
+import '../../../../../Core/Utils/KtpUtils/KtpUtils.dart';
+import '../../../../../Core/Utils/NpwpUtils/NpwpUtils.dart';
+import '../../../../../Core/Utils/PassportUtils/PassportUtils.dart';
+import '../../../../../Core/Utils/SimUtils/SimUtils.dart';
+import '../../../../../Core/Utils/IdentityDocumentUtils/IdentityDocumentUtils.dart';
+
+/// Scanner kamera otomatis untuk dokumen identitas.
+///
+/// Menjalankan text recognition (OCR) pada frame kamera, mendeteksi dokumen
+/// (KTP/SIM/NPWP/Paspor) secara otomatis, lalu mengambil foto ketika dokumen
+/// terdeteksi stabil. Hasil diformat ulang sebagai `File` yang dikembalikan
+/// ke pemanggil ketika pengguna menekan "Gunakan".
+class DocumentScannerScreen extends StatefulWidget {
+  /// Jenis dokumen: 'ktp' | 'sim' | 'npwp' | 'passport'
+  final String docType;
+
+  const DocumentScannerScreen({super.key, required this.docType});
+
+  @override
+  State<DocumentScannerScreen> createState() => _DocumentScannerPageState();
+}
+
+class _DocumentScannerPageState extends State<DocumentScannerScreen>
+    with WidgetsBindingObserver {
+  CameraController? _cameraController;
+  TextRecognizer? _textRecognizer;
+  final FlutterTts _tts = FlutterTts();
+  bool _isProcessing = false;
+  bool _detected = false;
+  bool _captured = false;
+  bool _cameraReady = false;
+  bool _tooFar = false;
+  bool _validationFailed = false;
+  bool _isMuted = false;
+  File? _capturedImage;
+  int _stableCounter = 0;
+  DateTime _lastProcessAt = DateTime.fromMillisecondsSinceEpoch(0);
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _initializeCamera();
+    _textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
+    _initTts();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _cameraController?.dispose();
+    _textRecognizer?.close();
+    _tts.stop();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed &&
+        _cameraController != null &&
+        !_cameraController!.value.isInitialized) {
+      _initCamera();
+    }
+  }
+
+  Future<void> _initializeCamera() async {
+    final cameras = await availableCameras();
+    if (cameras.isEmpty) return;
+    final back = cameras.firstWhere(
+      (c) => c.lensDirection == CameraLensDirection.back,
+      orElse: () => cameras.first,
+    );
+    _cameraController = CameraController(
+      back,
+      ResolutionPreset.high,
+      enableAudio: false,
+    );
+    await _initCamera();
+  }
+
+  Future<void> _initTts() async {
+    final locale = Platform.localeName;
+    final langCode = locale.split('_').first;
+    if (langCode == 'id') {
+      await _tts.setLanguage('id-ID');
+    } else {
+      await _tts.setLanguage('en-US');
+    }
+    await _tts.setSpeechRate(0.5);
+    await _tts.setVolume(1.0);
+    await _tts.setPitch(1.0);
+  }
+
+  Future<void> _speak(String text) async {
+    if (_isMuted) return;
+    await _tts.stop();
+    await _tts.speak(text);
+  }
+
+  Future<void> _initCamera() async {
+    try {
+      await _cameraController!.initialize();
+      if (mounted) {
+        setState(() => _cameraReady = true);
+        _cameraController!.startImageStream(_processImage);
+        final l = AppLocalizations.of(context);
+        if (l != null) _speak(l.voiceDocumentGreeting);
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _cameraReady = false);
+      }
+    }
+  }
+
+  void _processImage(CameraImage image) {
+    if (_isProcessing || _captured) return;
+    final now = DateTime.now();
+    if (now.difference(_lastProcessAt).inMilliseconds < 200) return;
+    _lastProcessAt = now;
+    _isProcessing = true;
+
+    _detectDocument(image).then((sCore) {
+      if (!mounted) return;
+      if (!_captured) {
+        if (sCore >= 3) {
+          _stableCounter++;
+          setState(() => _detected = true);
+          if (_stableCounter == 1) {
+            final l = AppLocalizations.of(context);
+            if (l != null) _speak(l.voiceDocumentDetected);
+          }
+          if (_stableCounter >= 6) {
+            _capturePhoto();
+          }
+        } else {
+          _stableCounter = 0;
+          setState(() => _detected = false);
+        }
+      }
+      _isProcessing = false;
+    });
+  }
+
+  InputImage? _inputImageFromCamera(CameraImage image) {
+    final camera = _cameraController?.description;
+    if (camera == null) return null;
+
+    final sensorOrientation = camera.sensorOrientation;
+
+    InputImageRotation? rotation;
+    if (Platform.isAndroid) {
+      rotation = InputImageRotation.values.firstWhere(
+        (r) => r.rawValue == sensorOrientation,
+        orElse: () => InputImageRotation.rotation0deg,
+      );
+    } else {
+      rotation = InputImageRotation.rotation0deg;
+    }
+
+    final format = InputImageFormat.values.firstWhere(
+      (f) => f.rawValue == image.format.raw,
+      orElse: () => InputImageFormat.nv21,
+    );
+
+    final allBytes = BytesBuilder();
+    for (final plane in image.planes) {
+      allBytes.add(plane.bytes);
+    }
+    final bytes = allBytes.toBytes();
+
+    return InputImage.fromBytes(
+      bytes: bytes,
+      metadata: InputImageMetadata(
+        size: Size(image.width.toDouble(), image.height.toDouble()),
+        rotation: rotation,
+        format: format,
+        bytesPerRow: image.planes.first.bytesPerRow,
+      ),
+    );
+  }
+
+  /// Skor deteksi dokumen berdasarkan teks yang dikenali. Semakin tinggi skor,
+  /// semakin yakin dokumen identitas yang dimaksud ada di dalam frame.
+  Future<int> _detectDocument(CameraImage image) async {
+    final inputImage = _inputImageFromCamera(image);
+    if (inputImage == null) return 0;
+    try {
+      final recognized = await _textRecognizer!.processImage(inputImage);
+      final text = recognized.text.toUpperCase().replaceAll('\n', ' ');
+      final sCore = scoreDocumentText(widget.docType, text);
+      if (mounted) {
+        setState(() {
+          _tooFar = sCore > 0 && sCore < 3 && text.trim().length < 25;
+          if (_tooFar) {
+            final l = AppLocalizations.of(context);
+            if (l != null) _speak(l.voiceDocumentTooFar);
+          }
+        });
+      }
+      return sCore;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  Future<void> _capturePhoto() async {
+    try {
+      final photo = await _cameraController!.takePicture();
+      if (!mounted) return;
+      final file = File(photo.path);
+
+      final valid = await _validateDocument(file);
+      if (!mounted) return;
+      if (valid) {
+        setState(() {
+          _captured = true;
+          _capturedImage = file;
+          _cameraController!.stopImageStream();
+        });
+        final l = AppLocalizations.of(context);
+        if (l != null) _speak(l.voiceDocumentCaptured);
+      } else {
+        _stableCounter = 0;
+        setState(() {
+          _detected = false;
+          _validationFailed = true;
+        });
+        final l = AppLocalizations.of(context);
+        if (l != null) _speak(l.voiceDocumentValidationFailed);
+        Timer(const Duration(seconds: 2), () {
+          if (mounted) setState(() => _validationFailed = false);
+        });
+      }
+    } catch (_) {
+      _stableCounter = 0;
+      if (mounted) setState(() => _detected = false);
+    }
+  }
+
+  Future<bool> _validateDocument(File file) async {
+    switch (widget.docType) {
+      case 'ktp':
+        return await extractKtpNumberFromKtp(file) != '' ||
+            await extractNameFromKtp(file) != '';
+      case 'sim':
+        return await extractSimNumber(file) != '';
+      case 'npwp':
+        return await extractNpwpNumber(file) != '';
+      case 'passport':
+        return await extractPassportNumber(file) != '';
+    }
+    return false;
+  }
+
+  void _retry() {
+    setState(() {
+      _captured = false;
+      _capturedImage = null;
+      _detected = false;
+      _stableCounter = 0;
+      _validationFailed = false;
+    });
+    _cameraController!.startImageStream(_processImage);
+  }
+
+  void _accept() {
+    if (_capturedImage != null) {
+      Navigator.pop(context, _capturedImage!.path);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: Text(_captured ? l.confirmDocument : l.scanDocument),
+        centerTitle: true,
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(38),
+          child: AppBreadcrumbs.global(),
+        ),
+      ),
+      body: _cameraReady
+          ? _captured && _capturedImage != null
+                ? _buildConfirmation()
+                : _buildScanner()
+          : const Center(child: CircularProgressIndicator(color: Colors.white)),
+    );
+  }
+
+  Widget _buildScanner() {
+    final l = AppLocalizations.of(context)!;
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    return Stack(
+      children: [
+        CameraCoverPreview(_cameraController!),
+        _buildOverlay(),
+        Positioned(
+          top: MediaQuery.of(context).padding.top + 8,
+          right: 16,
+          child: _buildMuteButton(),
+        ),
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: bottomPadding + 120,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                key: const ValueKey<String>('document-scan-instruction'),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: _validationFailed
+                      ? AppColors.errorColor.withAlpha(200)
+                      : Colors.black54,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  _validationFailed
+                      ? l.documentValidationFailed
+                      : _detected
+                      ? l.readyToCapture
+                      : _tooFar
+                      ? l.documentTooFar
+                      : l.documentScanInstruction,
+                  style: AppTextStyles.bodySmall.copyWith(color: Colors.white),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+        ),
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: bottomPadding + 30,
+          child: Center(
+            child: GestureDetector(
+              key: const ValueKey<String>('document-capture-button'),
+              onTap: _isProcessing ? null : _capturePhoto,
+              child: Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 4),
+                  color: Colors.white.withValues(alpha: 0.3),
+                ),
+                child: Container(
+                  margin: const EdgeInsets.all(6),
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMuteButton() {
+    return GestureDetector(
+      onTap: () {
+        setState(() => _isMuted = !_isMuted);
+        if (_isMuted) {
+          _tts.stop();
+        } else {
+          final l = AppLocalizations.of(context);
+          if (l != null) {
+            _speak(l.voiceDocumentGreeting);
+          }
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.5),
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white24),
+        ),
+        child: Icon(
+          _isMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
+          color: Colors.white,
+          size: 22,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOverlay() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final size = constraints.biggest;
+        const sideMargin = 24.0;
+        const topMargin = 24.0;
+        // Sisakan area untuk pill instruksi dan tombol rana agar bingkai
+        // dokumen tidak pernah tertimpa / menabrak kontrol kamera.
+        final bottomReserve = MediaQuery.of(context).padding.bottom + 170;
+        final availableW = (size.width - sideMargin * 2).clamp(1.0, size.width);
+        final availableH = (size.height - topMargin - bottomReserve).clamp(
+          1.0,
+          size.height,
+        );
+
+        // Rasio bingkai mengikuti bentuk fisik dokumen: paspor adalah booklet
+        // portrait, sedangkan KTP/SIM/NPWP berbentuk kartu landscape.
+        final isPassport = widget.docType == 'passport';
+        var frameW = availableW * (isPassport ? 0.62 : 0.96);
+        var frameH = frameW * (isPassport ? 1.42 : 0.63);
+        final scale = [
+          1.0,
+          availableW / frameW,
+          availableH / frameH,
+        ].reduce((a, b) => a < b ? a : b);
+        frameW *= scale;
+        frameH *= scale;
+
+        final left = (size.width - frameW) / 2;
+        final top = topMargin + (availableH - frameH) / 2;
+
+        return IgnorePointer(
+          child: CustomPaint(
+            size: size,
+            painter: _DocumentOverlayPainter(
+              frameRect: Rect.fromLTWH(left, top, frameW, frameH),
+              detected: _detected,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildConfirmation() {
+    final l = AppLocalizations.of(context)!;
+    return Column(
+      children: [
+        Expanded(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.file(_capturedImage!, fit: BoxFit.contain),
+              ),
+            ),
+          ),
+        ),
+        Container(
+          padding: EdgeInsets.fromLTRB(
+            24,
+            0,
+            24,
+            MediaQuery.of(context).padding.bottom + 32,
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _retry,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: Colors.white38),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(Icons.refresh),
+                  label: Text(l.retake),
+                ),
+              ),
+              SizedBox(width: AppSizes.md),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _accept,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(Icons.check),
+                  label: Text(l.use),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DocumentOverlayPainter extends CustomPainter {
+  final Rect frameRect;
+  final bool detected;
+
+  _DocumentOverlayPainter({required this.frameRect, required this.detected});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = _clampRect(frameRect, size);
+    if (rect.width <= 1 || rect.height <= 1) return;
+
+    final full = Path()..addRect(Offset.zero & size);
+    final hole = Path()
+      ..addRRect(RRect.fromRectAndRadius(rect, const Radius.circular(12)));
+    final mask = Path.combine(PathOperation.difference, full, hole);
+
+    canvas.drawPath(
+      mask,
+      Paint()..color = Colors.black.withValues(alpha: 0.55),
+    );
+
+    final borderPaint = Paint()
+      ..color = detected ? AppColors.successColor : Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, const Radius.circular(12)),
+      borderPaint,
+    );
+  }
+
+  Rect _clampRect(Rect rect, Size size) {
+    final left = rect.left.clamp(0.0, size.width).toDouble();
+    final top = rect.top.clamp(0.0, size.height).toDouble();
+    // Batas kanan/bawah tidak boleh lebih kecil dari kiri/atas supaya painter
+    // tidak menggambar garis terbalik saat layar mengecil di tengah animasi.
+    final right = rect.right.clamp(left, size.width).toDouble();
+    final bottom = rect.bottom.clamp(top, size.height).toDouble();
+    return Rect.fromLTRB(left, top, right, bottom);
+  }
+
+  @override
+  bool shouldRepaint(_DocumentOverlayPainter oldDelegate) {
+    return oldDelegate.detected != detected ||
+        oldDelegate.frameRect != frameRect;
+  }
+}
