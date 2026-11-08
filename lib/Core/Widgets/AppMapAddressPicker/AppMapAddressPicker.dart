@@ -232,11 +232,9 @@ class _AppMapAddressPickerState extends ConsumerState<AppMapAddressPicker> {
   }
 
   void _saveAddress() {
-    final l = AppLocalizations.of(context);
-    final isId = l?.localeName.startsWith('id') ?? true;
     final address = _addressController.text.trim();
     if (address.isEmpty) {
-      setState(() => _error = isId ? 'Harap masukkan detail alamat' : 'Please enter address details');
+      setState(() => _error = 'Please enter address details');
       return;
     }
     widget.onAddressChanged(address);
@@ -245,7 +243,7 @@ class _AppMapAddressPickerState extends ConsumerState<AppMapAddressPicker> {
       widget.onLongitudeChanged(_markerPosition!.longitude);
     }
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(isId ? 'Alamat berhasil disimpan' : 'Address saved successfully')),
+      const SnackBar(content: Text('Address saved successfully')),
     );
   }
 
