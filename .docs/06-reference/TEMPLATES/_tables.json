@@ -1,0 +1,4583 @@
+{
+ "activity_log": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "log_name",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "description",
+   "type": "text",
+   "null": false
+  },
+  {
+   "name": "subject_type",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "subject_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "causer_type",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "causer_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "properties",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "admin_password_reset_tokens": [
+  {
+   "name": "email",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "token",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "admins": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "full_name",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "first_name",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "mid_name",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "last_name",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "username",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "email",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "email_verified_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "password",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "remember_token",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "avatar_url",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "avatar",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "phone",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "whatsapp",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "position",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "department",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "notes",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "active_status",
+   "type": "boolean",
+   "null": false
+  },
+  {
+   "name": "last_login_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "last_login_ip",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "last_login_user_agent",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "deleted_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "backup_codes": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "code",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "used",
+   "type": "boolean",
+   "null": false
+  },
+  {
+   "name": "used_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "banks": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "name",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "code",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "type",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "account_number",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "account_holder",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "logo",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "qris_payload",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "qris_image",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "is_active",
+   "type": "boolean",
+   "null": false
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "breezy_sessions": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "authenticatable_type",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "authenticatable_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "panel_id",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "guard",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "ip_address",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "user_agent",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "expires_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "two_factor_secret",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "two_factor_recovery_codes",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "two_factor_confirmed_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "cache": [
+  {
+   "name": "key",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "value",
+   "type": "text",
+   "null": false
+  },
+  {
+   "name": "expiration",
+   "type": "integer",
+   "null": false
+  }
+ ],
+ "cache_locks": [
+  {
+   "name": "key",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "owner",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "expiration",
+   "type": "integer",
+   "null": false
+  }
+ ],
+ "carts": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "catalog_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "package_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "quantity",
+   "type": "integer",
+   "null": false
+  },
+  {
+   "name": "meta",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "catalogs": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "category_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "name",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "slug",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "description",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "price",
+   "type": "numeric",
+   "null": true
+  },
+  {
+   "name": "discount_price",
+   "type": "numeric",
+   "null": true
+  },
+  {
+   "name": "stock",
+   "type": "integer",
+   "null": false
+  },
+  {
+   "name": "is_active",
+   "type": "boolean",
+   "null": false
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "is_featured",
+   "type": "boolean",
+   "null": false
+  },
+  {
+   "name": "features",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "theme",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "color",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "min_capacity",
+   "type": "integer",
+   "null": true
+  },
+  {
+   "name": "max_capacity",
+   "type": "integer",
+   "null": true
+  },
+  {
+   "name": "name_translations",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "description_translations",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "vendor_id",
+   "type": "bigint",
+   "null": true
+  }
+ ],
+ "categories": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "name",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "slug",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "icon",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "color",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "description",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "name_translations",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "description_translations",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "type",
+   "type": "character varying",
+   "null": false
+  }
+ ],
+ "cbir_feedback": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "search_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "item_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "item_type",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "is_relevant",
+   "type": "boolean",
+   "null": false
+  },
+  {
+   "name": "feedback",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "cbir_search_results": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "search_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "type",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "item_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "similarity",
+   "type": "real",
+   "null": false
+  },
+  {
+   "name": "score",
+   "type": "real",
+   "null": false
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "cbir_searches": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "query_image_url",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "results_count",
+   "type": "integer",
+   "null": false
+  },
+  {
+   "name": "top_similarity",
+   "type": "real",
+   "null": false
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "chat_calls": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "token",
+   "type": "uuid",
+   "null": false
+  },
+  {
+   "name": "inbox_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "caller_user_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "callee_user_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "status",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "offer",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "answer",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "ice_candidates",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "expires_at",
+   "type": "timestamp without time zone",
+   "null": false
+  },
+  {
+   "name": "ended_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "developer_studio_endpoints": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "type",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "method",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "uri",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "name",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "action",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "controller_class",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "middleware",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "domain",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "file_path",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "description",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "status",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "device_tokens": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "token",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "type",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "discounts": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "description",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "discountable_type",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "discountable_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "type",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "value",
+   "type": "numeric",
+   "null": false
+  },
+  {
+   "name": "start_date",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "end_date",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "is_active",
+   "type": "boolean",
+   "null": false
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "min_purchase",
+   "type": "numeric",
+   "null": false
+  }
+ ],
+ "exports": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "completed_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "file_disk",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "file_name",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "exporter",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "processed_rows",
+   "type": "integer",
+   "null": false
+  },
+  {
+   "name": "total_rows",
+   "type": "integer",
+   "null": false
+  },
+  {
+   "name": "successful_rows",
+   "type": "integer",
+   "null": false
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "user_type",
+   "type": "character varying",
+   "null": true
+  }
+ ],
+ "failed_import_rows": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "data",
+   "type": "json",
+   "null": false
+  },
+  {
+   "name": "import_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "validation_error",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "failed_jobs": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "uuid",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "connection",
+   "type": "text",
+   "null": false
+  },
+  {
+   "name": "queue",
+   "type": "text",
+   "null": false
+  },
+  {
+   "name": "payload",
+   "type": "text",
+   "null": false
+  },
+  {
+   "name": "exception",
+   "type": "text",
+   "null": false
+  },
+  {
+   "name": "failed_at",
+   "type": "timestamp without time zone",
+   "null": false
+  }
+ ],
+ "favorites": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "package_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "catalog_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "fm_app_settings": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "key",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "value",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "fm_inboxes": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "title",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "user_ids",
+   "type": "json",
+   "null": false
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "deleted_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "meta",
+   "type": "json",
+   "null": true
+  }
+ ],
+ "fm_messages": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "inbox_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "message",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "read_by",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "read_at",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "notified",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "deleted_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "meta",
+   "type": "json",
+   "null": true
+  }
+ ],
+ "health_check_result_history_items": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "check_name",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "check_label",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "status",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "notification_message",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "short_summary",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "meta",
+   "type": "json",
+   "null": false
+  },
+  {
+   "name": "ended_at",
+   "type": "timestamp without time zone",
+   "null": false
+  },
+  {
+   "name": "batch",
+   "type": "uuid",
+   "null": false
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "helps": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "title",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "subtitle",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "faqs",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "contact_options",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "title_translations",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "subtitle_translations",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "faqs_translations",
+   "type": "json",
+   "null": true
+  }
+ ],
+ "hero_banners": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "title",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "subtitle",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "image_url",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "link_url",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "link_type",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "link_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "position",
+   "type": "integer",
+   "null": false
+  },
+  {
+   "name": "is_active",
+   "type": "boolean",
+   "null": false
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "histories": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "type",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "transaction_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "reference_number",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "amount",
+   "type": "numeric",
+   "null": false
+  },
+  {
+   "name": "info",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "status",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "notes",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "deleted_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "identity_documents": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "document_type",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "document_number",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "photo_path",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "ai_document_type",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "ai_document_number",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "ai_reason",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "ai_reason_code",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "ai_blocking_issue",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "ai_score",
+   "type": "numeric",
+   "null": true
+  },
+  {
+   "name": "ai_verified",
+   "type": "boolean",
+   "null": true
+  },
+  {
+   "name": "ai_number_matches_profile",
+   "type": "boolean",
+   "null": true
+  },
+  {
+   "name": "ai_verified_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "imports": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "completed_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "file_name",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "file_path",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "importer",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "processed_rows",
+   "type": "integer",
+   "null": false
+  },
+  {
+   "name": "total_rows",
+   "type": "integer",
+   "null": false
+  },
+  {
+   "name": "successful_rows",
+   "type": "integer",
+   "null": false
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "user_type",
+   "type": "character varying",
+   "null": true
+  }
+ ],
+ "indonesia_cities": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "code",
+   "type": "character",
+   "null": false
+  },
+  {
+   "name": "province_code",
+   "type": "character",
+   "null": false
+  },
+  {
+   "name": "name",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "meta",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "indonesia_districts": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "code",
+   "type": "character",
+   "null": false
+  },
+  {
+   "name": "city_code",
+   "type": "character",
+   "null": false
+  },
+  {
+   "name": "name",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "meta",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "indonesia_provinces": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "code",
+   "type": "character",
+   "null": false
+  },
+  {
+   "name": "name",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "meta",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "indonesia_villages": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "code",
+   "type": "character",
+   "null": false
+  },
+  {
+   "name": "district_code",
+   "type": "character",
+   "null": false
+  },
+  {
+   "name": "name",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "meta",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "job_batches": [
+  {
+   "name": "id",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "name",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "total_jobs",
+   "type": "integer",
+   "null": false
+  },
+  {
+   "name": "pending_jobs",
+   "type": "integer",
+   "null": false
+  },
+  {
+   "name": "failed_jobs",
+   "type": "integer",
+   "null": false
+  },
+  {
+   "name": "failed_job_ids",
+   "type": "text",
+   "null": false
+  },
+  {
+   "name": "options",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "cancelled_at",
+   "type": "integer",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "integer",
+   "null": false
+  },
+  {
+   "name": "finished_at",
+   "type": "integer",
+   "null": true
+  }
+ ],
+ "jobs": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "queue",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "payload",
+   "type": "text",
+   "null": false
+  },
+  {
+   "name": "attempts",
+   "type": "integer",
+   "null": false
+  },
+  {
+   "name": "reserved_at",
+   "type": "integer",
+   "null": true
+  },
+  {
+   "name": "available_at",
+   "type": "integer",
+   "null": false
+  },
+  {
+   "name": "created_at",
+   "type": "integer",
+   "null": false
+  }
+ ],
+ "legal_pages": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "slug",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "title",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "content",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "title_translations",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "content_translations",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "media": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "model_type",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "model_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "uuid",
+   "type": "uuid",
+   "null": true
+  },
+  {
+   "name": "collection_name",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "name",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "file_name",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "mime_type",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "disk",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "conversions_disk",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "size",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "manipulations",
+   "type": "json",
+   "null": false
+  },
+  {
+   "name": "custom_properties",
+   "type": "json",
+   "null": false
+  },
+  {
+   "name": "generated_conversions",
+   "type": "json",
+   "null": false
+  },
+  {
+   "name": "responsive_images",
+   "type": "json",
+   "null": false
+  },
+  {
+   "name": "order_column",
+   "type": "integer",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "migrations": [
+  {
+   "name": "id",
+   "type": "integer",
+   "null": false
+  },
+  {
+   "name": "migration",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "batch",
+   "type": "integer",
+   "null": false
+  }
+ ],
+ "model_has_permissions": [
+  {
+   "name": "permission_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "model_type",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "model_id",
+   "type": "bigint",
+   "null": false
+  }
+ ],
+ "model_has_roles": [
+  {
+   "name": "role_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "model_type",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "model_id",
+   "type": "bigint",
+   "null": false
+  }
+ ],
+ "notifications": [
+  {
+   "name": "id",
+   "type": "uuid",
+   "null": false
+  },
+  {
+   "name": "type",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "notifiable_type",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "notifiable_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "data",
+   "type": "jsonb",
+   "null": false
+  },
+  {
+   "name": "read_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "order_payments": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "order_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "method",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "status",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "amount",
+   "type": "numeric",
+   "null": false
+  },
+  {
+   "name": "paid_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "transaction_id",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "proof_url",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "order_timelines": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "order_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "status",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "description",
+   "type": "text",
+   "null": false
+  },
+  {
+   "name": "metadata",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "created_by",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "orders": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "package_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "catalog_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "order_number",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "total_price",
+   "type": "numeric",
+   "null": false
+  },
+  {
+   "name": "status",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "payment_status",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "booking_date",
+   "type": "date",
+   "null": false
+  },
+  {
+   "name": "notes",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "booking_time",
+   "type": "time without time zone",
+   "null": true
+  },
+  {
+   "name": "quantity",
+   "type": "integer",
+   "null": false
+  },
+  {
+   "name": "cancelled_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "deleted_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "packages": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "category_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "name",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "slug",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "description",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "price",
+   "type": "numeric",
+   "null": false
+  },
+  {
+   "name": "stock",
+   "type": "integer",
+   "null": false
+  },
+  {
+   "name": "discount_price",
+   "type": "numeric",
+   "null": true
+  },
+  {
+   "name": "is_featured",
+   "type": "boolean",
+   "null": false
+  },
+  {
+   "name": "features",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "theme",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "color",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "min_capacity",
+   "type": "integer",
+   "null": true
+  },
+  {
+   "name": "max_capacity",
+   "type": "integer",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "is_active",
+   "type": "boolean",
+   "null": false
+  },
+  {
+   "name": "name_translations",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "description_translations",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "vendor_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "catalog_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "sort_order",
+   "type": "smallint",
+   "null": true
+  }
+ ],
+ "password_reset_tokens": [
+  {
+   "name": "email",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "token",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "payment_gateways": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "name",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "code",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "description",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "config",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "is_active",
+   "type": "boolean",
+   "null": false
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "payment_methods": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "name",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "type",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "code",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "account_number",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "account_holder",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "bank_name",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "image_url",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "instructions",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "fee",
+   "type": "numeric",
+   "null": false
+  },
+  {
+   "name": "sort_order",
+   "type": "integer",
+   "null": false
+  },
+  {
+   "name": "is_active",
+   "type": "boolean",
+   "null": false
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "deeplink",
+   "type": "character varying",
+   "null": true
+  }
+ ],
+ "payment_qris": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "order_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "transaction_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "qr_content",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "qr_expiry",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "amount",
+   "type": "numeric",
+   "null": false
+  },
+  {
+   "name": "status",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "metadata",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "payment_virtual_accounts": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "order_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "transaction_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "virtual_account_no",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "virtual_account_name",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "virtual_account_expiry",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "amount",
+   "type": "numeric",
+   "null": false
+  },
+  {
+   "name": "status",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "metadata",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "permissions": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "name",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "guard_name",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "personal_access_tokens": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "tokenable_type",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "tokenable_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "name",
+   "type": "text",
+   "null": false
+  },
+  {
+   "name": "token",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "abilities",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "last_used_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "expires_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "privacy_policies": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "title",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "content",
+   "type": "json",
+   "null": false
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "title_translations",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "content_translations",
+   "type": "json",
+   "null": true
+  }
+ ],
+ "promotions": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "title",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "description",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "image_url",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "discount_percent",
+   "type": "integer",
+   "null": true
+  },
+  {
+   "name": "code",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "valid_from",
+   "type": "timestamp without time zone",
+   "null": false
+  },
+  {
+   "name": "valid_until",
+   "type": "timestamp without time zone",
+   "null": false
+  },
+  {
+   "name": "is_active",
+   "type": "boolean",
+   "null": false
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "reference_options": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "type",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "key",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "label",
+   "type": "json",
+   "null": false
+  },
+  {
+   "name": "sort_order",
+   "type": "integer",
+   "null": false
+  },
+  {
+   "name": "is_active",
+   "type": "boolean",
+   "null": false
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "refund_requests": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "order_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "reason",
+   "type": "text",
+   "null": false
+  },
+  {
+   "name": "amount",
+   "type": "numeric",
+   "null": false
+  },
+  {
+   "name": "evidence_photos",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "status",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "processed_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "reports": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "reportable_type",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "reportable_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "category",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "reason",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "description",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "status",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "resolved_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "resolved_by",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "attachments",
+   "type": "json",
+   "null": true
+  }
+ ],
+ "review_replies": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "review_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "comment",
+   "type": "text",
+   "null": false
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "review_reports": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "review_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "reporter_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "reason",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "description",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "status",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "reviewed_by",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "reviewed_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "review_votes": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "review_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "reviews": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "package_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "catalog_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "rating",
+   "type": "integer",
+   "null": false
+  },
+  {
+   "name": "comment",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "title",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "photo",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "photos",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "helpful_count",
+   "type": "integer",
+   "null": false
+  },
+  {
+   "name": "order_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "variation",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "specifications",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "is_anonymous",
+   "type": "boolean",
+   "null": false
+  }
+ ],
+ "role_has_permissions": [
+  {
+   "name": "permission_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "role_id",
+   "type": "bigint",
+   "null": false
+  }
+ ],
+ "roles": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "name",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "guard_name",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "search_logs": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "query",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "ip_address",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "user_agent",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "security_emails": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "subject",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "type",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "body",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "sent_at",
+   "type": "timestamp without time zone",
+   "null": false
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "security_events": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "event",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "method",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "path",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "status",
+   "type": "smallint",
+   "null": true
+  },
+  {
+   "name": "ip_address",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "user_agent",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "admin_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "metadata",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "sessions": [
+  {
+   "name": "id",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "ip_address",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "user_agent",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "label",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "payload",
+   "type": "text",
+   "null": false
+  },
+  {
+   "name": "last_activity",
+   "type": "integer",
+   "null": false
+  }
+ ],
+ "terms_of_service": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "title",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "content",
+   "type": "json",
+   "null": false
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "title_translations",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "content_translations",
+   "type": "json",
+   "null": true
+  }
+ ],
+ "transactions": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "order_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "type",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "reference_number",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "amount",
+   "type": "numeric",
+   "null": false
+  },
+  {
+   "name": "admin_fee",
+   "type": "numeric",
+   "null": false
+  },
+  {
+   "name": "total_amount",
+   "type": "numeric",
+   "null": false
+  },
+  {
+   "name": "payment_gateway",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "payment_method",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "payment_url",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "status",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "paid_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "notes",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "metadata",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "payment_method_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "virtual_account_no",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "virtual_account_expiry",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "checkout_payment_type",
+   "type": "character varying",
+   "null": true
+  }
+ ],
+ "translations": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "source_text",
+   "type": "text",
+   "null": false
+  },
+  {
+   "name": "source_hash",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "target_locale",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "translated_text",
+   "type": "text",
+   "null": false
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "trust_devices": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "device_name",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "device_signature",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "expires_at",
+   "type": "timestamp without time zone",
+   "null": false
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "trusted_devices": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "device_name",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "device_fingerprint",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "platform",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "trusted_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "first_seen_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "last_seen_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "last_ip",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "last_city",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "last_region",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "last_country",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "denied_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "last_notified_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "user_addresses": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "name",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "phone",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "address",
+   "type": "text",
+   "null": false
+  },
+  {
+   "name": "city",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "province",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "postal_code",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "type",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "is_default",
+   "type": "boolean",
+   "null": false
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "user_languages": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "model_id",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "model_type",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "lang",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "user_sessions": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "device_name",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "device_type",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "ip_address",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "user_agent",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "platform",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "is_current",
+   "type": "boolean",
+   "null": false
+  },
+  {
+   "name": "last_active_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "expired_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "user_vouchers": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "voucher_id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "claimed_at",
+   "type": "timestamp without time zone",
+   "null": false
+  },
+  {
+   "name": "used_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "order_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ],
+ "users": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "full_name",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "first_name",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "mid_name",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "last_name",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "username",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "email",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "balance",
+   "type": "numeric",
+   "null": false
+  },
+  {
+   "name": "email_verified_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "password",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "social_id",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "social_type",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "avatar",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "avatar_url",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "gender",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "phone",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "address",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "latitude",
+   "type": "numeric",
+   "null": true
+  },
+  {
+   "name": "longitude",
+   "type": "numeric",
+   "null": true
+  },
+  {
+   "name": "budget",
+   "type": "numeric",
+   "null": true
+  },
+  {
+   "name": "wedding_date",
+   "type": "date",
+   "null": true
+  },
+  {
+   "name": "theme_preference",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "color_preference",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "event_concept",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "dream_venue",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "custom_fields",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "active_status",
+   "type": "boolean",
+   "null": false
+  },
+  {
+   "name": "dark_mode",
+   "type": "boolean",
+   "null": false
+  },
+  {
+   "name": "messenger_color",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "remember_token",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "whatsapp",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "ip_address",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "clerk_id",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "ktp_number",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "ktp_photo",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "selfie_photo",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "identity_verified_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "birth_place",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "birth_date",
+   "type": "date",
+   "null": true
+  },
+  {
+   "name": "country",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "province_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "city_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "district_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "village_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "postal_code",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "province_name",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "city_name",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "district_name",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "village_name",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "identity_type",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "passport_number",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "fcm_token",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "sim_number",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "npwp_number",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "otp_code",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "otp_expires_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "otp_purpose",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "religion",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "marital_status",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "mother_name",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "occupation",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "income_range",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "source_of_funds",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "face_scan_photo",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "kyc_status",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "face_similarity",
+   "type": "numeric",
+   "null": true
+  },
+  {
+   "name": "face_deep_similarity",
+   "type": "numeric",
+   "null": true
+  },
+  {
+   "name": "face_reason",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "face_liveness",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "liveness_completed",
+   "type": "boolean",
+   "null": false
+  },
+  {
+   "name": "face_verified_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "kyc_reviewed_by",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "kyc_reviewed_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "kyc_notes",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "whatsapp_verified_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "app_lock_fingerprint_enabled",
+   "type": "boolean",
+   "null": false
+  },
+  {
+   "name": "app_lock_face_enabled",
+   "type": "boolean",
+   "null": false
+  },
+  {
+   "name": "app_lock_pin_enabled",
+   "type": "boolean",
+   "null": false
+  },
+  {
+   "name": "app_lock_pin_hash",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "app_lock_face_enrolled",
+   "type": "boolean",
+   "null": false
+  },
+  {
+   "name": "app_lock_face_reference",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "app_lock_face_enrolled_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "app_lock_last_unlock_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "email_verification_token",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "two_factor_enabled",
+   "type": "boolean",
+   "null": false
+  },
+  {
+   "name": "two_factor_secret",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "saved_login_enabled",
+   "type": "boolean",
+   "null": false
+  },
+  {
+   "name": "notification_preferences",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "two_factor_type",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "two_factor_recovery_codes",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "two_factor_sent_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "two_factor_expires_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "two_factor_confirmed_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "doc_ai_document_type",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "doc_ai_document_number",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "doc_ai_reason",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "doc_ai_reason_code",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "doc_ai_blocking_issue",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "doc_ai_score",
+   "type": "numeric",
+   "null": true
+  },
+  {
+   "name": "doc_ai_verified_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "doc_ai_number_matches_profile",
+   "type": "boolean",
+   "null": true
+  },
+  {
+   "name": "font_preference",
+   "type": "character varying",
+   "null": true
+  }
+ ],
+ "vendors": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "store_name",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "contact_person",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "no_telp",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "store_description",
+   "type": "text",
+   "null": true
+  },
+  {
+   "name": "logo",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "is_active",
+   "type": "boolean",
+   "null": false
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "user_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "is_partner",
+   "type": "boolean",
+   "null": false
+  }
+ ],
+ "vouchers": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "code",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "description",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "expires_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "is_active",
+   "type": "boolean",
+   "null": false
+  },
+  {
+   "name": "is_global",
+   "type": "boolean",
+   "null": false
+  },
+  {
+   "name": "max_uses",
+   "type": "integer",
+   "null": true
+  },
+  {
+   "name": "uses_count",
+   "type": "integer",
+   "null": false
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "description_translations",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "discount_id",
+   "type": "bigint",
+   "null": true
+  },
+  {
+   "name": "name",
+   "type": "character varying",
+   "null": true
+  },
+  {
+   "name": "name_translations",
+   "type": "json",
+   "null": true
+  }
+ ],
+ "wedding_decoration_policies": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "title",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "content",
+   "type": "json",
+   "null": false
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "title_translations",
+   "type": "json",
+   "null": true
+  },
+  {
+   "name": "content_translations",
+   "type": "json",
+   "null": true
+  }
+ ],
+ "whatsapp_otps": [
+  {
+   "name": "id",
+   "type": "bigint",
+   "null": false
+  },
+  {
+   "name": "whatsapp",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "otp_code",
+   "type": "character varying",
+   "null": false
+  },
+  {
+   "name": "expires_at",
+   "type": "timestamp without time zone",
+   "null": false
+  },
+  {
+   "name": "verified_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "created_at",
+   "type": "timestamp without time zone",
+   "null": true
+  },
+  {
+   "name": "updated_at",
+   "type": "timestamp without time zone",
+   "null": true
+  }
+ ]
+}

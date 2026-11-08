@@ -197,17 +197,28 @@ class _SearchPageState extends ConsumerState<SearchScreen> {
                   const AppBreadcrumbs.global(),
                   Row(
                     children: [
-                  // showCamera: false â€” halaman ini sudah punya tombol kamera
-                  // sendiri di sebelah kolom pencarian. Tanpa flag itu dua
-                  // tombol identik dengan aksi sama tampil bersamaan.
-                  const Expanded(
-                    child: GlobalSearchBar(showChat: false, showCamera: false),
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back, color: AppColors.primaryColor),
+                        onPressed: () {
+                          if (context.canPop()) {
+                            context.pop();
+                          } else {
+                            context.go('/');
+                          }
+                        },
+                      ),
+                      // showCamera: false — halaman ini sudah punya tombol kamera
+                      // sendiri di sebelah kolom pencarian. Tanpa flag itu dua
+                      // tombol identik dengan aksi sama tampil bersamaan.
+                      const Expanded(
+                        child: GlobalSearchBar(showChat: false, showCamera: false),
+                      ),
+                      const SizedBox(width: 8),
+                      _buildCameraButton(),
+                      const SizedBox(width: 4),
+                      _buildVoiceButton(),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  _buildCameraButton(),
-                  const SizedBox(width: 4),
-                  _buildVoiceButton(),
-                  ]),
                 ],
               ),
             ),

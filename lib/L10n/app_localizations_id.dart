@@ -63,7 +63,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get aiComputerVision => 'AI & Computer Vision';
 
   @override
-  String get aiUnavailable => 'Layanan AI tidak tersedia. Foto tersimpan, tetapi belum diverifikasi AI.';
+  String get aiUnavailable =>
+      'Layanan AI tidak tersedia. Foto tersimpan, tetapi belum diverifikasi AI.';
 
   @override
   String get aiVerified => 'Terverifikasi AI';
@@ -90,7 +91,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get addressDetail => 'Detail Alamat';
 
   @override
-  String get addressDetailHint => 'Masukkan detail alamat (jalan, gedung, nomor)';
+  String get addressDetailHint =>
+      'Masukkan detail alamat (jalan, gedung, nomor)';
 
   @override
   String get additionalDetail => 'Detail Tambahan';
@@ -129,7 +131,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get allUsers => 'Semua Pengguna';
 
   @override
-  String get autoScanHint => 'Kamera akan mendeteksi dokumen dan mengambil fotonya secara otomatis';
+  String get autoScanHint =>
+      'Kamera akan mendeteksi dokumen dan mengambil fotonya secara otomatis';
 
   @override
   String get selectUser => 'Pilih Pengguna';
@@ -195,7 +198,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get agreeComma => ', ';
 
   @override
-  String get agreeJoinText => 'Dengan mencentang Setuju & Bergabung atau Lanjutkan, Anda menyetujui ';
+  String get agreeJoinText =>
+      'Dengan mencentang Setuju & Bergabung atau Lanjutkan, Anda menyetujui ';
 
   @override
   String get agreeSuffix => ' Wedding Floral Decorations.';
@@ -207,7 +211,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get agreeToTerms => 'Saya telah membaca dan menyetujui';
 
   @override
-  String get agreementPrefix => 'Dengan mencentang Setuju & Bergabung atau Lanjutkan, Anda menyetujui ';
+  String get agreementPrefix =>
+      'Dengan mencentang Setuju & Bergabung atau Lanjutkan, Anda menyetujui ';
 
   @override
   String get agreementSuffix => ' Wedding Floral Decorations.';
@@ -228,7 +233,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get andWord => ' dan ';
 
   @override
-  String get appDescription => 'WeddingApp membantu Anda menemukan Wedding Flower Decorations yang sempurna. Jelajahi paket, cari dengan gambar, dan pesan dengan mudah.';
+  String get appDescription =>
+      'WeddingApp membantu Anda menemukan Wedding Flower Decorations yang sempurna. Jelajahi paket, cari dengan gambar, dan pesan dengan mudah.';
 
   @override
   String get appLock => 'Kunci Aplikasi';
@@ -270,10 +276,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get biometricLock => 'Buka Kunci Sidik Jari / Wajah';
 
   @override
-  String get biometricNotAvailable => 'Autentikasi biometrik tidak tersedia di perangkat ini';
+  String get biometricNotAvailable =>
+      'Autentikasi biometrik tidak tersedia di perangkat ini';
 
   @override
-  String get biometricNotEnrolled => 'Belum ada sidik jari atau wajah yang didaftarkan. Daftarkan di Pengaturan perangkat Anda, lalu coba lagi.';
+  String get biometricNotEnrolled =>
+      'Belum ada sidik jari atau wajah yang didaftarkan. Daftarkan di Pengaturan perangkat Anda, lalu coba lagi.';
 
   @override
   String get bookingDate => 'Tanggal Booking';
@@ -318,7 +326,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get copy => 'Salin';
 
   @override
-  String get vaDescription => 'Bayar mudah dengan nomor Virtual Account BRI (BRIVA) Anda sendiri. Pembayaran terkonfirmasi otomatis.';
+  String get vaDescription =>
+      'Bayar mudah dengan nomor Virtual Account BRI (BRIVA) Anda sendiri. Pembayaran terkonfirmasi otomatis.';
 
   @override
   String get createVirtualAccount => 'Buat Nomor Virtual Account';
@@ -330,13 +339,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get virtualAccountNo => 'Nomor Virtual Account';
 
   @override
-  String get qrisDynamicDescription => 'Buat 1 kode QR dinamis untuk pesanan ini. Bisa discan dari aplikasi bank atau e-wallet mana pun. Uang masuk otomatis ke rekening BRI kami.';
+  String get qrisDynamicDescription =>
+      'Buat 1 kode QR dinamis untuk pesanan ini. Bisa discan dari aplikasi bank atau e-wallet mana pun. Uang masuk otomatis ke rekening BRI kami.';
 
   @override
   String get createQris => 'Buat QRIS';
 
   @override
-  String get creditCardNote => 'Pembayaran kartu kredit/debit akan segera hadir setelah aktivasi merchant BRI. Untuk saat ini silakan gunakan Virtual Account atau QRIS di atas.';
+  String get creditCardNote =>
+      'Pembayaran kartu kredit/debit akan segera hadir setelah aktivasi merchant BRI. Untuk saat ini silakan gunakan Virtual Account atau QRIS di atas.';
 
   @override
   String get copied => 'Disalin!';
@@ -384,7 +395,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get chatWithAdmin => 'Chat dengan Admin';
 
   @override
-  String get chatWithAdminDesc => 'Hubungi admin untuk konsultasi dan pertanyaan';
+  String get chatWithAdminDesc =>
+      'Hubungi admin untuk konsultasi dan pertanyaan';
 
   @override
   String get cheapest => 'Termurah';
@@ -444,7 +456,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get comma => ', ';
 
   @override
-  String get completeAllDataForVerification => 'Lengkapi semua data untuk verifikasi akun';
+  String get completeAllDataForVerification =>
+      'Lengkapi semua data untuk verifikasi akun';
 
   @override
   String get completeProfile => 'Lengkapi Profil';
@@ -468,7 +481,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get confirmDelete => 'Yakin ingin menghapus item ini?';
 
   @override
-  String get confirmLeavePayment => 'Apakah Anda yakin ingin meninggalkan halaman pembayaran?';
+  String get confirmLeavePayment =>
+      'Apakah Anda yakin ingin meninggalkan halaman pembayaran?';
 
   @override
   String get confirmNewPassword => 'Konfirmasi Kata Sandi Baru';
@@ -528,7 +542,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get createAccount => 'Daftar Akun';
 
   @override
-  String get createNewPassword => 'Silakan buat kata sandi baru untuk akun Anda.';
+  String get createNewPassword =>
+      'Silakan buat kata sandi baru untuk akun Anda.';
 
   @override
   String get createOrder => 'Buat Pesanan';
@@ -564,7 +579,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get deleteAccountConfirm => 'Ketik email Anda untuk konfirmasi';
 
   @override
-  String get deleteAccountWarning => 'Tindakan ini bersifat permanen. Akun, profil, dan semua data terkait akan dihapus. Tindakan ini tidak dapat dibatalkan.';
+  String get deleteAccountWarning =>
+      'Tindakan ini bersifat permanen. Akun, profil, dan semua data terkait akan dihapus. Tindakan ini tidak dapat dibatalkan.';
 
   @override
   String get deleteChatConfirm => 'Hapus percakapan ini?';
@@ -573,7 +589,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get deleteNotification => 'Hapus Notifikasi';
 
   @override
-  String get deleteNotificationConfirm => 'Anda yakin ingin menghapus notifikasi ini?';
+  String get deleteNotificationConfirm =>
+      'Anda yakin ingin menghapus notifikasi ini?';
 
   @override
   String get deletePrompt => 'Anda yakin ingin menghapus %s?';
@@ -612,7 +629,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get documentTooFar => 'Dekatkan dokumen ke kamera';
 
   @override
-  String get documentValidationFailed => 'Tidak ada dokumen identitas terdeteksi di foto ini. Silakan ambil ulang dengan kamera.';
+  String get documentValidationFailed =>
+      'Tidak ada dokumen identitas terdeteksi di foto ini. Silakan ambil ulang dengan kamera.';
 
   @override
   String get downloadPdf => 'Unduh PDF';
@@ -648,10 +666,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get emailOrUsername => 'Email / Username';
 
   @override
-  String get emailChangeRequiresOtp => 'Jika email diubah, Anda perlu verifikasi OTP';
+  String get emailChangeRequiresOtp =>
+      'Jika email diubah, Anda perlu verifikasi OTP';
 
   @override
-  String get emailForVerification => 'Email akan digunakan untuk verifikasi akun dan notifikasi penting';
+  String get emailForVerification =>
+      'Email akan digunakan untuk verifikasi akun dan notifikasi penting';
 
   @override
   String get emailMismatch => 'Email tidak cocok';
@@ -672,7 +692,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get enter6DigitOtp => 'Masukkan 6 digit kode OTP';
 
   @override
-  String get enterEmailForResetPassword => 'Masukkan alamat email Anda untuk menerima kode verifikasi OTP.';
+  String get enterEmailForResetPassword =>
+      'Masukkan alamat email Anda untuk menerima kode verifikasi OTP.';
 
   @override
   String get enterOtpCode => 'Masukkan kode OTP';
@@ -684,7 +705,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get verifyOtpTitle => 'Verifikasi Kode OTP';
 
   @override
-  String get verifyOtpSubtitle => 'Masukkan 6 digit kode yang kami kirim ke email Anda.';
+  String get verifyOtpSubtitle =>
+      'Masukkan 6 digit kode yang kami kirim ke email Anda.';
 
   @override
   String get verifyOtpAction => 'Verifikasi Kode';
@@ -693,10 +715,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get verifyEmailTitle => 'Verifikasi Email Anda';
 
   @override
-  String get verifyEmailSubtitle => 'Silakan masukkan 6 digit kode verifikasi yang telah kami kirimkan ke alamat email Anda.';
+  String get verifyEmailSubtitle =>
+      'Silakan masukkan 6 digit kode verifikasi yang telah kami kirimkan ke alamat email Anda.';
 
   @override
-  String get enterVoucherCode => 'Masukkan kode voucher untuk mendapatkan diskon';
+  String get enterVoucherCode =>
+      'Masukkan kode voucher untuk mendapatkan diskon';
 
   @override
   String get entrepreneur => 'Wiraswasta';
@@ -723,7 +747,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get eventTime => 'Jam Acara';
 
   @override
-  String get existingPhotoHint => 'Sudah ada foto tersimpan. Pilih foto baru jika ingin mengganti.';
+  String get existingPhotoHint =>
+      'Sudah ada foto tersimpan. Pilih foto baru jika ingin mengganti.';
 
   @override
   String get expiresAt => 'Berakhir Pada';
@@ -741,10 +766,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get faceMismatch => 'Wajah tidak cocok';
 
   @override
-  String get faceMismatchMessage => 'Wajah yang dipindai tidak cocok dengan dokumen identitas. Silakan ulangi di tempat yang cukup cahaya.';
+  String get faceMismatchMessage =>
+      'Wajah yang dipindai tidak cocok dengan dokumen identitas. Silakan ulangi di tempat yang cukup cahaya.';
 
   @override
-  String get faceOpenEyesLabel => 'Buka mata Anda untuk menyelesaikan verifikasi';
+  String get faceOpenEyesLabel =>
+      'Buka mata Anda untuk menyelesaikan verifikasi';
 
   @override
   String get faceMultipleFacesLabel => 'Hanya satu wajah di dalam bingkai';
@@ -953,7 +980,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get filterByRating => 'Filter Berdasarkan Rating';
 
   @override
-  String get findBeautifulFlowers => 'Temukan rangkaian bunga pernikahan terindah untuk hari spesial Anda';
+  String get findBeautifulFlowers =>
+      'Temukan rangkaian bunga pernikahan terindah untuk hari spesial Anda';
 
   @override
   String get firstName => 'Nama Depan';
@@ -980,7 +1008,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get forgotPin => 'Lupa PIN?';
 
   @override
-  String get forgotPinConfirm => 'Kode OTP akan dikirim ke email terdaftar Anda untuk memverifikasi identitas sebelum mengatur ulang kunci aplikasi. Lanjutkan?';
+  String get forgotPinConfirm =>
+      'Kode OTP akan dikirim ke email terdaftar Anda untuk memverifikasi identitas sebelum mengatur ulang kunci aplikasi. Lanjutkan?';
 
   @override
   String get emailNotFound => 'Tidak ada email terdaftar di perangkat ini.';
@@ -1042,7 +1071,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get home => 'Beranda';
 
   @override
-  String get needMoreLight => 'Pindah ke area yang lebih terang atau nyalakan lampu';
+  String get needMoreLight =>
+      'Pindah ke area yang lebih terang atau nyalakan lampu';
 
   @override
   String get housewife => 'Ibu Rumah Tangga';
@@ -1152,7 +1182,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get invalidOtp => 'OTP tidak valid';
 
   @override
-  String get invalidPassportFormat => 'Format Passport tidak valid (6-9 digit huruf/angka)';
+  String get invalidPassportFormat =>
+      'Format Passport tidak valid (6-9 digit huruf/angka)';
 
   @override
   String get invalidSimNumber => 'Nomor SIM tidak valid (6-12 digit angka)';
@@ -1342,7 +1373,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get newPassword => 'Kata Sandi Baru';
 
   @override
-  String get newPasswordLeaveBlank => 'Kata Sandi Baru (kosongkan jika tidak diubah)';
+  String get newPasswordLeaveBlank =>
+      'Kata Sandi Baru (kosongkan jika tidak diubah)';
 
   @override
   String get newest => 'Terbaru';
@@ -1474,7 +1506,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get orderCreated => 'Pesanan berhasil dibuat';
 
   @override
-  String get orderCreatedDesc => 'Pesanan Anda telah dibuat. Silakan selesaikan pembayaran.';
+  String get orderCreatedDesc =>
+      'Pesanan Anda telah dibuat. Silakan selesaikan pembayaran.';
 
   @override
   String get redirectingToPayment => 'Mengarahkan ke pembayaran...';
@@ -1486,7 +1519,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get orderFailed => 'Gagal membuat pesanan';
 
   @override
-  String get orderFavoritePackages => 'Pesan paket bunga favorit Anda dalam hitungan menit';
+  String get orderFavoritePackages =>
+      'Pesan paket bunga favorit Anda dalam hitungan menit';
 
   @override
   String get orderHistory => 'Riwayat Pesanan';
@@ -1534,7 +1568,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get password => 'Kata Sandi';
 
   @override
-  String get passwordAndConfirmMismatch => 'Kata sandi dan konfirmasi tidak cocok';
+  String get passwordAndConfirmMismatch =>
+      'Kata sandi dan konfirmasi tidak cocok';
 
   @override
   String get passwordMin8Chars => 'Kata sandi minimal 8 karakter';
@@ -1576,13 +1611,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get paymentCancelled => 'Pembayaran Dibatalkan';
 
   @override
-  String get paymentCancelledDesc => 'Anda membatalkan pembayaran. Anda dapat melakukan pembayaran kapan saja.';
+  String get paymentCancelledDesc =>
+      'Anda membatalkan pembayaran. Anda dapat melakukan pembayaran kapan saja.';
 
   @override
   String get paymentFailed => 'Pembayaran Gagal';
 
   @override
-  String get paymentFailedDesc => 'Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi.';
+  String get paymentFailedDesc =>
+      'Terjadi kesalahan saat memproses pembayaran. Silakan coba lagi.';
 
   @override
   String get paymentMethod => 'Metode Pembayaran';
@@ -1591,7 +1628,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get paymentPending => 'Pembayaran Belum Selesai';
 
   @override
-  String get paymentPendingDesc => 'Pembayaran Anda masih menunggu konfirmasi. Silakan hubungi admin jika perlu bantuan.';
+  String get paymentPendingDesc =>
+      'Pembayaran Anda masih menunggu konfirmasi. Silakan hubungi admin jika perlu bantuan.';
 
   @override
   String get paymentStatus => 'Status Pembayaran';
@@ -1600,10 +1638,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get paymentSuccess => 'Pembayaran Berhasil';
 
   @override
-  String get paymentSubmitted => 'Pembayaran dikonfirmasi. Silakan unggah bukti pembayaran.';
+  String get paymentSubmitted =>
+      'Pembayaran dikonfirmasi. Silakan unggah bukti pembayaran.';
 
   @override
-  String get paymentSuccessDesc => 'Terima kasih! Pembayaran Anda telah diterima. Pesanan sedang diproses.';
+  String get paymentSuccessDesc =>
+      'Terima kasih! Pembayaran Anda telah diterima. Pesanan sedang diproses.';
 
   @override
   String get paymentTime => 'Waktu Bayar';
@@ -1624,7 +1664,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get iHaveTransferred => 'Saya Sudah Transfer';
 
   @override
-  String get confirmAfterTransferHint => 'Lakukan transfer sesuai instruksi di atas terlebih dahulu, lalu klik \"Saya Sudah Transfer\" agar admin dapat memverifikasi pembayaran Anda.';
+  String get confirmAfterTransferHint =>
+      'Lakukan transfer sesuai instruksi di atas terlebih dahulu, lalu klik \"Saya Sudah Transfer\" agar admin dapat memverifikasi pembayaran Anda.';
 
   @override
   String get uploadProof => 'Upload Bukti Pembayaran';
@@ -1633,7 +1674,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get sendProof => 'Kirim Bukti Pembayaran';
 
   @override
-  String get proofSent => 'Bukti pembayaran berhasil dikirim. Menunggu verifikasi admin.';
+  String get proofSent =>
+      'Bukti pembayaran berhasil dikirim. Menunggu verifikasi admin.';
 
   @override
   String get paymentProof => 'Bukti Pembayaran';
@@ -1642,10 +1684,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get waitingVerification => 'Menunggu Verifikasi';
 
   @override
-  String get waitingVerificationDesc => 'Bukti pembayaran sedang diverifikasi oleh admin. Proses ini biasanya memakan waktu 1x24 jam.';
+  String get waitingVerificationDesc =>
+      'Bukti pembayaran sedang diverifikasi oleh admin. Proses ini biasanya memakan waktu 1x24 jam.';
 
   @override
-  String get uploadProofDesc => 'Transfer sesuai nominal dan upload bukti pembayaran untuk verifikasi.';
+  String get uploadProofDesc =>
+      'Transfer sesuai nominal dan upload bukti pembayaran untuk verifikasi.';
 
   @override
   String get tapToUpload => 'Tap untuk upload foto bukti transfer';
@@ -1752,10 +1796,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get profilePhoto => 'Foto Profil';
 
   @override
-  String get profileSavedFailedSendOtp => 'Profil disimpan. Gagal kirim OTP verifikasi email.';
+  String get profileSavedFailedSendOtp =>
+      'Profil disimpan. Gagal kirim OTP verifikasi email.';
 
   @override
-  String get profileSavedVerifyEmail => 'Profil disimpan. Verifikasi email baru Anda.';
+  String get profileSavedVerifyEmail =>
+      'Profil disimpan. Verifikasi email baru Anda.';
 
   @override
   String get profileUpdateFailed => 'Gagal memperbarui profil';
@@ -1779,7 +1825,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get qrisImageNotAvailable => 'QRIS tidak tersedia';
 
   @override
-  String get qrScanInstruction => 'Scan QRIS ini menggunakan aplikasi e-wallet Anda';
+  String get qrScanInstruction =>
+      'Scan QRIS ini menggunakan aplikasi e-wallet Anda';
 
   @override
   String get quantity => 'Kuantitas';
@@ -1900,7 +1947,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get editReview => 'Edit Ulasan';
 
   @override
-  String get deleteReviewConfirm => 'Apakah Anda yakin ingin menghapus ulasan ini?';
+  String get deleteReviewConfirm =>
+      'Apakah Anda yakin ingin menghapus ulasan ini?';
 
   @override
   String get salary => 'Gaji';
@@ -1933,10 +1981,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get scanIssueBlur => 'Gambar buram — ambil ulang agar lebih tajam';
 
   @override
-  String get scanIssueDark => 'Gambar terlalu gelap — ambil ulang dengan pencahayaan lebih baik';
+  String get scanIssueDark =>
+      'Gambar terlalu gelap — ambil ulang dengan pencahayaan lebih baik';
 
   @override
-  String get scanIssueDocument => 'Tidak ada dokumen identitas valid terdeteksi — ambil ulang';
+  String get scanIssueDocument =>
+      'Tidak ada dokumen identitas valid terdeteksi — ambil ulang';
 
   @override
   String get scanIssueFace => 'Tidak ada satu wajah terdeteksi — ambil ulang';
@@ -2016,7 +2066,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get selectEventTime => 'Pilih jam acara';
 
   @override
-  String get selectEventDateTime => 'Pilih tanggal dan jam acara terlebih dahulu';
+  String get selectEventDateTime =>
+      'Pilih tanggal dan jam acara terlebih dahulu';
 
   @override
   String get selectGender => 'Pilih Jenis Kelamin';
@@ -2085,19 +2136,23 @@ class AppLocalizationsId extends AppLocalizations {
   String get selfieSim => 'Foto Selfie';
 
   @override
-  String get selfieTips => 'Tips: Pastikan wajah terlihat jelas, pencahayaan cukup, dan foto tidak buram.';
+  String get selfieTips =>
+      'Tips: Pastikan wajah terlihat jelas, pencahayaan cukup, dan foto tidak buram.';
 
   @override
   String get selfieWithCard => 'Selfie + Kartu Identitas';
 
   @override
-  String get selfieCardInstruction => 'Sejajarkan wajah Anda di bingkai atas dan kartu identitas di bingkai bawah';
+  String get selfieCardInstruction =>
+      'Sejajarkan wajah Anda di bingkai atas dan kartu identitas di bingkai bawah';
 
   @override
-  String get selfieCardHoldCard => 'Wajah terdeteksi — sekarang posisikan kartu identitas di bingkai bawah';
+  String get selfieCardHoldCard =>
+      'Wajah terdeteksi — sekarang posisikan kartu identitas di bingkai bawah';
 
   @override
-  String get selfieCardValidationFailed => 'Tidak dapat mendeteksi wajah dan kartu identitas secara bersamaan. Silakan ambil ulang.';
+  String get selfieCardValidationFailed =>
+      'Tidak dapat mendeteksi wajah dan kartu identitas secara bersamaan. Silakan ambil ulang.';
 
   @override
   String get send => 'Kirim';
@@ -2193,13 +2248,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get signIn => 'Masuk';
 
   @override
-  String get loginRequired => 'Silakan masuk atau daftar terlebih dahulu untuk melanjutkan checkout';
+  String get loginRequired =>
+      'Silakan masuk atau daftar terlebih dahulu untuk melanjutkan checkout';
 
   @override
   String get guestAccessTitle => 'Masuk untuk mengakses fitur ini';
 
   @override
-  String get guestAccessDescription => 'Silakan masuk atau daftar untuk menggunakan fitur akun ini.';
+  String get guestAccessDescription =>
+      'Silakan masuk atau daftar untuk menggunakan fitur akun ini.';
 
   @override
   String get signInSubtitle => 'Masuk ke akun Anda';
@@ -2289,13 +2346,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get subtitleBirth => 'Tempat dan tanggal lahir Anda';
 
   @override
-  String get subtitleCompleteData => 'Lengkapi informasi ini untuk meningkatkan keamanan akun';
+  String get subtitleCompleteData =>
+      'Lengkapi informasi ini untuk meningkatkan keamanan akun';
 
   @override
   String get subtitleCountry => 'Negara tempat tinggal Anda saat ini';
 
   @override
-  String get subtitleEmail => 'Alamat email aktif untuk verifikasi akun dan notifikasi';
+  String get subtitleEmail =>
+      'Alamat email aktif untuk verifikasi akun dan notifikasi';
 
   @override
   String get subtitleFullName => 'Nama sesuai dokumen identitas Anda';
@@ -2316,7 +2375,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get subtitleMotherName => 'Nama ibu kandung untuk verifikasi keamanan';
 
   @override
-  String get subtitleKtpNumber => 'Nomor identitas (KTP / Passport / SIM / NPWP)';
+  String get subtitleKtpNumber =>
+      'Nomor identitas (KTP / Passport / SIM / NPWP)';
 
   @override
   String get subtitleOccupation => 'Pekerjaan utama Anda saat ini';
@@ -2325,7 +2385,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get subtitlePostalCode => 'Kode pos wilayah tempat tinggal Anda';
 
   @override
-  String get subtitleRegion => 'Provinsi, kota, kecamatan, kelurahan, dan kode pos';
+  String get subtitleRegion =>
+      'Provinsi, kota, kecamatan, kelurahan, dan kode pos';
 
   @override
   String get subtitleReligion => 'Agama yang Anda anut';
@@ -2384,7 +2445,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get tapToSelectImage => 'Tap untuk memilih gambar';
 
   @override
-  String get tapToSelectPhoto => 'Ketuk untuk pilih foto dari galeri atau kamera';
+  String get tapToSelectPhoto =>
+      'Ketuk untuk pilih foto dari galeri atau kamera';
 
   @override
   String get tapToUploadProfilePhoto => 'Ketuk untuk mengunggah foto profil';
@@ -2500,7 +2562,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get uploadIdSelfie => 'Unggah Foto Selfie';
 
   @override
-  String get uploadImageToSearch => 'Unggah gambar untuk mencari katalog serupa';
+  String get uploadImageToSearch =>
+      'Unggah gambar untuk mencari katalog serupa';
 
   @override
   String get uploadPhoto => 'Upload Foto';
@@ -2520,16 +2583,19 @@ class AppLocalizationsId extends AppLocalizations {
   String get use => 'Gunakan';
 
   @override
-  String get useBiometricToUnlock => 'Gunakan sidik jari atau Face ID untuk membuka';
+  String get useBiometricToUnlock =>
+      'Gunakan sidik jari atau Face ID untuk membuka';
 
   @override
-  String get useDeviceFaceId => 'Buka kunci aplikasi dengan memindai wajah menggunakan kamera';
+  String get useDeviceFaceId =>
+      'Buka kunci aplikasi dengan memindai wajah menggunakan kamera';
 
   @override
   String get identityVerificationSection => 'Verifikasi Identitas';
 
   @override
-  String get faceVerificationDescription => 'Pindai wajah Anda dengan kamera AI untuk verifikasi identitas';
+  String get faceVerificationDescription =>
+      'Pindai wajah Anda dengan kamera AI untuk verifikasi identitas';
 
   @override
   String get usePinToUnlock => 'Gunakan PIN untuk membuka';
@@ -2556,7 +2622,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get enterCurrentPin => 'Masukkan PIN saat ini';
 
   @override
-  String get enterCurrentPinToDisable => 'Masukkan PIN saat ini untuk mematikan kunci PIN';
+  String get enterCurrentPinToDisable =>
+      'Masukkan PIN saat ini untuk mematikan kunci PIN';
 
   @override
   String get enterNewPin => 'Masukkan PIN baru';
@@ -2571,7 +2638,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get disablePin => 'Matikan kunci PIN';
 
   @override
-  String get useCbirFeature => 'Gunakan fitur CBIR untuk mencari dekorasi hanya dengan foto';
+  String get useCbirFeature =>
+      'Gunakan fitur CBIR untuk mencari dekorasi hanya dengan foto';
 
   @override
   String get useDarkTheme => 'Gunakan tema gelap';
@@ -2583,7 +2651,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get appLockFaceId => 'Kunci Aplikasi Wajah';
 
   @override
-  String get useAppLockFaceId => 'Daftarkan wajah untuk membuka kunci aplikasi (AI Core)';
+  String get useAppLockFaceId =>
+      'Daftarkan wajah untuk membuka kunci aplikasi (AI Core)';
 
   @override
   String get useFingerprint => 'Gunakan sidik jari untuk membuka aplikasi';
@@ -2607,7 +2676,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get username => 'Username';
 
   @override
-  String get usernameHint => 'Username hanya mengandung huruf, angka, titik, dan undersCore';
+  String get usernameHint =>
+      'Username hanya mengandung huruf, angka, titik, dan undersCore';
 
   @override
   String get vaNumber => 'VA Number';
@@ -2676,7 +2746,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get warningCheckRemember => 'Centang Ingat Saya terlebih dahulu';
 
   @override
-  String get warningMustAgree => 'Anda harus menyetujui perjanjian untuk melanjutkan.';
+  String get warningMustAgree =>
+      'Anda harus menyetujui perjanjian untuk melanjutkan.';
 
   @override
   String get weak => 'Lemah';
@@ -2703,7 +2774,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get whatsappNumber => 'Nomor WhatsApp';
 
   @override
-  String get whatsappUsedForNotification => 'Nomor WhatsApp akan digunakan untuk notifikasi pesanan';
+  String get whatsappUsedForNotification =>
+      'Nomor WhatsApp akan digunakan untuk notifikasi pesanan';
 
   @override
   String get whatsappVerified => 'WhatsApp terverifikasi';
@@ -2712,7 +2784,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get whatsappOtpSentTo => 'Masukkan kode OTP WhatsApp yang dikirim ke';
 
   @override
-  String get whatsappVerifyRequired => 'Harap verifikasi nomor WhatsApp Anda terlebih dahulu';
+  String get whatsappVerifyRequired =>
+      'Harap verifikasi nomor WhatsApp Anda terlebih dahulu';
 
   @override
   String get favoriteNotifications => 'Notifikasi Favorit';
@@ -2733,7 +2806,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get yesCancel => 'Ya, Batalkan';
 
   @override
-  String get youMustAgree => 'Anda harus menyetujui perjanjian untuk melanjutkan';
+  String get youMustAgree =>
+      'Anda harus menyetujui perjanjian untuk melanjutkan';
 
   @override
   String get yourNameAppearsHere => 'Nama Anda akan tampil di sini';
@@ -2778,7 +2852,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get invalidValue => 'Nilai tidak valid';
 
   @override
-  String get selectItemFirst => 'Silakan pilih tipe item dan item terlebih dahulu';
+  String get selectItemFirst =>
+      'Silakan pilih tipe item dan item terlebih dahulu';
 
   @override
   String get selectAll => 'Pilih Semua';
@@ -2848,7 +2923,11 @@ class AppLocalizationsId extends AppLocalizations {
   String get failedGetPaymentToken => 'Gagal mendapatkan token pembayaran';
 
   @override
-  String whatsappOrderTemplate(String orderNumber, String status, String total) {
+  String whatsappOrderTemplate(
+    String orderNumber,
+    String status,
+    String total,
+  ) {
     return 'Halo Admin, saya ingin menanyakan pesanan #$orderNumber. Status: $status. Total: $total.';
   }
 
@@ -2909,7 +2988,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get searchFailedTryAgain => 'Pencarian gagal. Silakan coba lagi.';
 
   @override
-  String get selectTwoImagesArithmetic => 'Pilih 2 gambar dan operasi aritmetika';
+  String get selectTwoImagesArithmetic =>
+      'Pilih 2 gambar dan operasi aritmetika';
 
   @override
   String get imageSearchFailed => 'Pencarian gambar gagal';
@@ -2999,16 +3079,20 @@ class AppLocalizationsId extends AppLocalizations {
   String get appleLoginFailed => 'Login Apple gagal';
 
   @override
-  String get appLockNote => 'Kunci Aplikasi menggunakan sidik jari perangkat, verifikasi wajah AI Core, atau PIN untuk membuka aplikasi. Ini berbeda dari Verifikasi Wajah profil (KYC) yang memindai wajah untuk verifikasi identitas.';
+  String get appLockNote =>
+      'Kunci Aplikasi menggunakan sidik jari perangkat, verifikasi wajah AI Core, atau PIN untuk membuka aplikasi. Ini berbeda dari Verifikasi Wajah profil (KYC) yang memindai wajah untuk verifikasi identitas.';
 
   @override
-  String get identityNumberAlreadyRegistered => 'Nomor identitas ini sudah terdaftar oleh pengguna lain';
+  String get identityNumberAlreadyRegistered =>
+      'Nomor identitas ini sudah terdaftar oleh pengguna lain';
 
   @override
-  String get googleAccountAlreadyRegistered => 'Akun Google kamu sudah terdaftar. Silakan masuk dengan email dan password.';
+  String get googleAccountAlreadyRegistered =>
+      'Akun Google kamu sudah terdaftar. Silakan masuk dengan email dan password.';
 
   @override
-  String get facebookAccountAlreadyRegistered => 'Akun Facebook kamu sudah terdaftar. Silakan masuk dengan email dan password.';
+  String get facebookAccountAlreadyRegistered =>
+      'Akun Facebook kamu sudah terdaftar. Silakan masuk dengan email dan password.';
 
   @override
   String get csTitle => 'Customer Service';
@@ -3020,7 +3104,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get csWelcomeTitle => 'Selamat Datang di Customer Service!';
 
   @override
-  String get csWelcomeDesc => 'Pilih topik di bawah atau langsung kirim pesan. Tim kami akan membantu Anda sesegera mungkin.';
+  String get csWelcomeDesc =>
+      'Pilih topik di bawah atau langsung kirim pesan. Tim kami akan membantu Anda sesegera mungkin.';
 
   @override
   String get csQuickBugReport => 'Lapor Bug';
@@ -3116,7 +3201,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get csHumanAgentJoined => 'Admin manusia telah bergabung';
 
   @override
-  String get csOfflineMessage => 'Tim kami sedang offline. Tinggalkan pesan dan kami akan membalas sesegera mungkin.';
+  String get csOfflineMessage =>
+      'Tim kami sedang offline. Tinggalkan pesan dan kami akan membalas sesegera mungkin.';
 
   @override
   String get csQuickFaq => 'FAQ';
@@ -3155,13 +3241,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get csNewChat => 'Chat Baru';
 
   @override
-  String get csAccountDataForm => '**Verifikasi Data Akun**\n\nSilakan lengkapi data berikut ini untuk verifikasi:\n\n1. **Email**\n2. **Username**\n3. **Nama Lengkap:**\n   - Nama Depan (First Name)\n   - Nama Tengah (Middle Name)\n   - Nama Belakang (Last Name)\n4. **Tempat Lahir**\n5. **Tanggal Lahir**\n6. **Nama Ibu Kandung**\n7. **Nomor WhatsApp**\n8. **Alamat Lengkap**\n9. **Kode Pos**\n\nSilakan balas dengan melengkapi data di atas. Bila diperlukan, lampirkan foto identitas (KTP) untuk verifikasi lebih lanjut.';
+  String get csAccountDataForm =>
+      '**Verifikasi Data Akun**\n\nSilakan lengkapi data berikut ini untuk verifikasi:\n\n1. **Email**\n2. **Username**\n3. **Nama Lengkap:**\n   - Nama Depan (First Name)\n   - Nama Tengah (Middle Name)\n   - Nama Belakang (Last Name)\n4. **Tempat Lahir**\n5. **Tanggal Lahir**\n6. **Nama Ibu Kandung**\n7. **Nomor WhatsApp**\n8. **Alamat Lengkap**\n9. **Kode Pos**\n\nSilakan balas dengan melengkapi data di atas. Bila diperlukan, lampirkan foto identitas (KTP) untuk verifikasi lebih lanjut.';
 
   @override
   String get csAccountFormTitle => 'Formulir Verifikasi Akun';
 
   @override
-  String get csAccountFormSubtitle => 'Silakan lengkapi semua kolom wajib di bawah ini. Data Anda hanya digunakan untuk verifikasi akun.';
+  String get csAccountFormSubtitle =>
+      'Silakan lengkapi semua kolom wajib di bawah ini. Data Anda hanya digunakan untuk verifikasi akun.';
 
   @override
   String get dateOfBirthRequired => 'Tanggal Lahir wajib diisi';
@@ -3219,7 +3307,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get confirmDeleteMessage => 'Hapus pesan ini?';
 
   @override
-  String get confirmDeleteForEveryone => 'Hapus untuk semua? Tindakan ini tidak dapat dibatalkan.';
+  String get confirmDeleteForEveryone =>
+      'Hapus untuk semua? Tindakan ini tidak dapat dibatalkan.';
 
   @override
   String get searchInChat => 'Cari di chat';
@@ -3336,7 +3425,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get csOnlineNow => 'Tim kami sedang online';
 
   @override
-  String get csOfflineNow => 'Tim kami sedang offline. Kami akan segera membalas.';
+  String get csOfflineNow =>
+      'Tim kami sedang offline. Kami akan segera membalas.';
 
   @override
   String get messageInfoTitle => 'Detail Pesan';
@@ -3363,7 +3453,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get voiceToggleMute => 'Nyala/matikan suara';
 
   @override
-  String get voiceDocumentGreeting => 'Posisikan dokumen identitas Anda di dalam bingkai';
+  String get voiceDocumentGreeting =>
+      'Posisikan dokumen identitas Anda di dalam bingkai';
 
   @override
   String get voiceDocumentDetected => 'Dokumen terdeteksi, tahan sebentar';
@@ -3375,13 +3466,16 @@ class AppLocalizationsId extends AppLocalizations {
   String get voiceDocumentCaptured => 'Dokumen berhasil diambil';
 
   @override
-  String get voiceDocumentValidationFailed => 'Dokumen tidak terdeteksi, silakan coba lagi';
+  String get voiceDocumentValidationFailed =>
+      'Dokumen tidak terdeteksi, silakan coba lagi';
 
   @override
-  String get voiceSelfieDocGreeting => 'Posisikan wajah di atas dan tunjukkan dokumen identitas di bawah';
+  String get voiceSelfieDocGreeting =>
+      'Posisikan wajah di atas dan tunjukkan dokumen identitas di bawah';
 
   @override
-  String get voiceSelfieDocFaceDetected => 'Wajah terdeteksi, sekarang tunjukkan dokumen';
+  String get voiceSelfieDocFaceDetected =>
+      'Wajah terdeteksi, sekarang tunjukkan dokumen';
 
   @override
   String get voiceSelfieDocCardDetected => 'Dokumen terdeteksi, tahan sebentar';
@@ -3390,7 +3484,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get voiceSelfieDocCaptured => 'Foto berhasil diambil';
 
   @override
-  String get voiceAutoCaptureGreeting => 'Posisikan objek yang ingin Anda foto di dalam bingkai';
+  String get voiceAutoCaptureGreeting =>
+      'Posisikan objek yang ingin Anda foto di dalam bingkai';
 
   @override
   String get voiceAutoCaptureTooDark => 'Cari tempat yang lebih terang';
@@ -3408,31 +3503,36 @@ class AppLocalizationsId extends AppLocalizations {
   String get catalogNotifications => 'Notifikasi Katalog';
 
   @override
-  String get catalogNotificationsDesc => 'Terima info katalog baru dan katalog unggulan';
+  String get catalogNotificationsDesc =>
+      'Terima info katalog baru dan katalog unggulan';
 
   @override
   String get packageNotifications => 'Notifikasi Paket';
 
   @override
-  String get packageNotificationsDesc => 'Terima info paket pernikahan yang tersedia';
+  String get packageNotificationsDesc =>
+      'Terima info paket pernikahan yang tersedia';
 
   @override
   String get voucherNotifications => 'Notifikasi Voucher & Promo';
 
   @override
-  String get voucherNotificationsDesc => 'Terima notifikasi voucher, promo dan diskon';
+  String get voucherNotificationsDesc =>
+      'Terima notifikasi voucher, promo dan diskon';
 
   @override
   String get reviewNotifications => 'Notifikasi Ulasan';
 
   @override
-  String get reviewNotificationsDesc => 'Terima notifikasi tentang ulasan dan penilaian';
+  String get reviewNotificationsDesc =>
+      'Terima notifikasi tentang ulasan dan penilaian';
 
   @override
   String get securityNotifications => 'Notifikasi Keamanan';
 
   @override
-  String get securityNotificationsDesc => 'Terima notifikasi login dan keamanan akun';
+  String get securityNotificationsDesc =>
+      'Terima notifikasi login dan keamanan akun';
 
   @override
   String get enableAllNotifications => 'Aktifkan Semua';
@@ -3444,7 +3544,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get notificationSoundEnabled => 'Suara Notifikasi';
 
   @override
-  String get notificationSoundEnabledDesc => 'Putar suara saat notifikasi masuk';
+  String get notificationSoundEnabledDesc =>
+      'Putar suara saat notifikasi masuk';
 
   @override
   String get appearance => 'Tampilan';
@@ -3456,10 +3557,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get changePassword => 'Ubah Kata Sandi';
 
   @override
-  String get changePasswordDesc => 'Perbarui kata sandi dan lindungi akun Anda.';
+  String get changePasswordDesc =>
+      'Perbarui kata sandi dan lindungi akun Anda.';
 
   @override
-  String get changePasswordInfo => 'Untuk keamanan, masukkan kata sandi Anda yang saat ini sebelum mengubahnya.';
+  String get changePasswordInfo =>
+      'Untuk keamanan, masukkan kata sandi Anda yang saat ini sebelum mengubahnya.';
 
   @override
   String get currentPassword => 'Kata Sandi Saat Ini';
@@ -3471,7 +3574,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get passwordMin12Chars => 'Kata sandi minimal 12 karakter';
 
   @override
-  String get newPasswordSameAsOld => 'Kata sandi baru tidak boleh sama dengan yang lama';
+  String get newPasswordSameAsOld =>
+      'Kata sandi baru tidak boleh sama dengan yang lama';
 
   @override
   String get passwordChanged => 'Kata sandi berhasil diubah';
@@ -3498,7 +3602,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get backupCodes => 'Kode Cadangan';
 
   @override
-  String get backupCodesDesc => 'Tambahkan kode cadangan dari aplikasi autentikator';
+  String get backupCodesDesc =>
+      'Tambahkan kode cadangan dari aplikasi autentikator';
 
   @override
   String get whatsappCodeMethodDesc => 'Kode login dikirim melalui WhatsApp';
@@ -3513,13 +3618,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get loginRequests => 'Permintaan Login/Sign';
 
   @override
-  String get loginRequestsDesc => 'Setujui permintaan masuk dari perangkat lain';
+  String get loginRequestsDesc =>
+      'Setujui permintaan masuk dari perangkat lain';
 
   @override
   String get authenticatorApp => 'Aplikasi Autentikasi';
 
   @override
-  String get authenticatorAppDesc => 'Dapatkan kode dari aplikasi seperti Duo Mobile atau Google Authenticator';
+  String get authenticatorAppDesc =>
+      'Dapatkan kode dari aplikasi seperti Duo Mobile atau Google Authenticator';
 
   @override
   String get trustedDevices => 'Perangkat Terpercaya';
@@ -3603,13 +3710,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get securityEmailPasswordChange => 'Kata Sandi Akun Berhasil Diubah';
 
   @override
-  String get securityEmailPasswordChangeBody => 'Kata sandi akun Anda telah berhasil diubah pada';
+  String get securityEmailPasswordChangeBody =>
+      'Kata sandi akun Anda telah berhasil diubah pada';
 
   @override
   String get securityEmailEmailChange => 'Email Akun Berhasil Diubah';
 
   @override
-  String get securityEmailEmailChangeBody => 'Email akun Anda telah berhasil diubah pada';
+  String get securityEmailEmailChangeBody =>
+      'Email akun Anda telah berhasil diubah pada';
 
   @override
   String get securityEmailLoginAlert => 'Peringatan Login Akun';
@@ -3621,13 +3730,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get securityEmailWhatsappChange => 'Nomor WhatsApp Berhasil Diubah';
 
   @override
-  String get securityEmailWhatsappChangeBody => 'Nomor WhatsApp akun Anda telah berhasil diubah pada';
+  String get securityEmailWhatsappChangeBody =>
+      'Nomor WhatsApp akun Anda telah berhasil diubah pada';
 
   @override
   String get securityEmailAccountUpdate => 'Akun Berhasil Diperbarui';
 
   @override
-  String get securityEmailAccountUpdateBody => 'Data akun Anda telah diperbarui pada';
+  String get securityEmailAccountUpdateBody =>
+      'Data akun Anda telah diperbarui pada';
 
   @override
   String get authorizedLogins => 'Login yang Diotorisasi';
@@ -3642,16 +3753,19 @@ class AppLocalizationsId extends AppLocalizations {
   String get savedLoginInfo => 'Login Tersimpan';
 
   @override
-  String get savedLoginInfoDesc => 'Aktifkan penyimpanan login di perangkat ini';
+  String get savedLoginInfoDesc =>
+      'Aktifkan penyimpanan login di perangkat ini';
 
   @override
-  String get savedLoginInfoDescShort => 'Kelola info Sign In yang tersimpan di perangkat.';
+  String get savedLoginInfoDescShort =>
+      'Kelola info Sign In yang tersimpan di perangkat.';
 
   @override
   String get savedLoginDevices => 'Perangkat yang Menyimpan Info Sign In';
 
   @override
-  String get savedLoginDevicesDesc => 'Lihat dan hapus perangkat yang menyimpan info Sign In akun Anda.';
+  String get savedLoginDevicesDesc =>
+      'Lihat dan hapus perangkat yang menyimpan info Sign In akun Anda.';
 
   @override
   String get securityCheck => 'Pemeriksaan Keamanan';
@@ -3660,7 +3774,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get whereYouLoggedIn => 'Tempat Anda Sign In';
 
   @override
-  String get whereYouLoggedInDesc => 'Lihat dan keluarkan sesi perangkat yang aktif.';
+  String get whereYouLoggedInDesc =>
+      'Lihat dan keluarkan sesi perangkat yang aktif.';
 
   @override
   String get recentEmails => 'Ubah Email';
@@ -3672,13 +3787,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get securityCheckup => 'Pemeriksaan Keamanan';
 
   @override
-  String get securityCheckupDesc => 'Tinjau perlindungan penting untuk akun Anda.';
+  String get securityCheckupDesc =>
+      'Tinjau perlindungan penting untuk akun Anda.';
 
   @override
   String get logoutOtherDevices => 'Logout dari perangkat lain';
 
   @override
-  String get logoutOtherDevicesDesc => 'Pilih ini jika orang lain menggunakan akun Anda';
+  String get logoutOtherDevicesDesc =>
+      'Pilih ini jika orang lain menggunakan akun Anda';
 
   @override
   String get otherDevicesLoggedOut => 'perangkat lain dikeluarkan.';
@@ -3726,16 +3843,19 @@ class AppLocalizationsId extends AppLocalizations {
   String get twoFactorEnabledDesc => 'Lapisan keamanan tambahan sedang aktif';
 
   @override
-  String get twoFactorDisabledDesc => 'Tambahkan lapisan keamanan ekstra ke akun Anda';
+  String get twoFactorDisabledDesc =>
+      'Tambahkan lapisan keamanan ekstra ke akun Anda';
 
   @override
   String get twoFactorEnabled => 'Autentikasi dua faktor berhasil diaktifkan';
 
   @override
-  String get twoFactorDisabled => 'Autentikasi dua faktor berhasil dinonaktifkan';
+  String get twoFactorDisabled =>
+      'Autentikasi dua faktor berhasil dinonaktifkan';
 
   @override
-  String get whatsappRequired2FA => 'Nomor WhatsApp diperlukan untuk mengaktifkan 2FA';
+  String get whatsappRequired2FA =>
+      'Nomor WhatsApp diperlukan untuk mengaktifkan 2FA';
 
   @override
   String get noNumberLinked => 'Tidak ada nomor WhatsApp yang terhubung';
@@ -3749,7 +3869,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get noBackupCodes => 'Belum ada kode cadangan yang dibuat';
 
   @override
-  String get generateBackupCodesConfirm => 'Buat kode cadangan baru? Kode sebelumnya akan dinonaktifkan.';
+  String get generateBackupCodesConfirm =>
+      'Buat kode cadangan baru? Kode sebelumnya akan dinonaktifkan.';
 
   @override
   String get generate => 'Buat';
@@ -3764,7 +3885,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get copyAllCodes => 'Salin Semua Kode';
 
   @override
-  String get backupCodesWarning => 'Simpan kode ini di tempat yang aman. Setiap kode hanya bisa digunakan sekali.';
+  String get backupCodesWarning =>
+      'Simpan kode ini di tempat yang aman. Setiap kode hanya bisa digunakan sekali.';
 
   @override
   String trustedDevicesCount(Object count) {
@@ -3781,7 +3903,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get removeTrustedDevice => 'Hapus Perangkat Terpercaya';
 
   @override
-  String get removeTrustedDeviceConfirm => 'Perangkat ini tidak akan lagi dipercaya untuk verifikasi login.';
+  String get removeTrustedDeviceConfirm =>
+      'Perangkat ini tidak akan lagi dipercaya untuk verifikasi login.';
 
   @override
   String get deviceRemoved => 'Perangkat berhasil dihapus';
@@ -3799,16 +3922,19 @@ class AppLocalizationsId extends AppLocalizations {
   String get firstUsed => 'Pertama dipakai:';
 
   @override
-  String get deviceTrustedMsg => 'Perangkat dikonfirmasi. Tidak akan ditanya lagi.';
+  String get deviceTrustedMsg =>
+      'Perangkat dikonfirmasi. Tidak akan ditanya lagi.';
 
   @override
-  String get deviceRejectedMsg => 'Semua sesi lain dikeluarkan. Segera ubah kata sandi Anda.';
+  String get deviceRejectedMsg =>
+      'Semua sesi lain dikeluarkan. Segera ubah kata sandi Anda.';
 
   @override
   String get removeDevice => 'Hapus Perangkat';
 
   @override
-  String get removeDeviceConfirm => 'Perangkat ini akan logout dan dihapus dari akun Anda.';
+  String get removeDeviceConfirm =>
+      'Perangkat ini akan logout dan dihapus dari akun Anda.';
 
   @override
   String get sessionRemoved => 'Sesi berhasil dihapus';
@@ -3838,25 +3964,31 @@ class AppLocalizationsId extends AppLocalizations {
   String get saveLoginInfo => 'Simpan Info Login';
 
   @override
-  String get twoFactorAuthDesc => 'Atur WhatsApp, kode cadangan, dan perangkat tepercaya.';
+  String get twoFactorAuthDesc =>
+      'Atur WhatsApp, kode cadangan, dan perangkat tepercaya.';
 
   @override
-  String get twoFactorPageSubtitle => 'Kelola metode verifikasi tambahan, aplikasi autentikasi, dan perangkat tepercaya dalam satu tempat.';
+  String get twoFactorPageSubtitle =>
+      'Kelola metode verifikasi tambahan, aplikasi autentikasi, dan perangkat tepercaya dalam satu tempat.';
 
   @override
-  String get savedLoginPageSubtitle => 'Kelola perangkat yang menyimpan info Sign In akun Anda.';
+  String get savedLoginPageSubtitle =>
+      'Kelola perangkat yang menyimpan info Sign In akun Anda.';
 
   @override
-  String get signInActivityPageSubtitle => 'Lihat dan keluarkan sesi perangkat yang aktif.';
+  String get signInActivityPageSubtitle =>
+      'Lihat dan keluarkan sesi perangkat yang aktif.';
 
   @override
-  String get changePasswordPageSubtitle => 'Gunakan kata sandi yang kuat untuk menjaga keamanan akun Anda.';
+  String get changePasswordPageSubtitle =>
+      'Gunakan kata sandi yang kuat untuk menjaga keamanan akun Anda.';
 
   @override
   String get changeEmail => 'Ubah Email';
 
   @override
-  String get changeEmailDesc => 'Masukkan email baru, lalu verifikasi kode OTP yang dikirimkan ke email tersebut.';
+  String get changeEmailDesc =>
+      'Masukkan email baru, lalu verifikasi kode OTP yang dikirimkan ke email tersebut.';
 
   @override
   String get currentEmail => 'Email Saat Ini';
@@ -3871,7 +4003,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get confirmNewEmail => 'Konfirmasi Email Baru';
 
   @override
-  String get confirmNewEmailDesc => 'Masukkan kembali email baru Anda untuk memastikan tidak ada salah ketik.';
+  String get confirmNewEmailDesc =>
+      'Masukkan kembali email baru Anda untuk memastikan tidak ada salah ketik.';
 
   @override
   String get sendEmailOtp => 'Kirim Kode OTP';
@@ -3892,7 +4025,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get emailChangedVerified => 'Email berhasil diubah dan diverifikasi.';
 
   @override
-  String get emailOtpFailed => 'Kode OTP gagal dikirim. Periksa konfigurasi email lalu coba lagi.';
+  String get emailOtpFailed =>
+      'Kode OTP gagal dikirim. Periksa konfigurasi email lalu coba lagi.';
 
   @override
   String get otpCode => 'Kode OTP';
@@ -3904,28 +4038,34 @@ class AppLocalizationsId extends AppLocalizations {
   String get removeAllTrustedDevices => 'Hapus Semua Perangkat';
 
   @override
-  String get removeAllTrustedDevicesConfirm => 'Semua perangkat terpercaya akan dihapus dan harus diverifikasi ulang.';
+  String get removeAllTrustedDevicesConfirm =>
+      'Semua perangkat terpercaya akan dihapus dan harus diverifikasi ulang.';
 
   @override
-  String get allDevicesRemoved => 'Semua perangkat kepercayaan berhasil dihapus';
+  String get allDevicesRemoved =>
+      'Semua perangkat kepercayaan berhasil dihapus';
 
   @override
   String get logoutAllOtherSessions => 'Keluarkan Semua Sesi Lain';
 
   @override
-  String get logoutAllOtherSessionsConfirm => 'Semua sesi perangkat lain akan dikeluarkan. Perangkat ini harus masuk lagi.';
+  String get logoutAllOtherSessionsConfirm =>
+      'Semua sesi perangkat lain akan dikeluarkan. Perangkat ini harus masuk lagi.';
 
   @override
-  String get logoutAllOtherSessionsPasswordConfirm => 'Silakan masukkan kata sandi Anda untuk mengonfirmasi bahwa Anda ingin keluar dari sesi browser lain di semua perangkat Anda.';
+  String get logoutAllOtherSessionsPasswordConfirm =>
+      'Silakan masukkan kata sandi Anda untuk mengonfirmasi bahwa Anda ingin keluar dari sesi browser lain di semua perangkat Anda.';
 
   @override
-  String get allSessionsRemoved => 'Semua sesi perangkat lain berhasil dikeluarkan';
+  String get allSessionsRemoved =>
+      'Semua sesi perangkat lain berhasil dikeluarkan';
 
   @override
   String get recentEmailsListTitle => 'Email Terbaru';
 
   @override
-  String get recentEmailsListDesc => 'Hanya menampilkan email dari 30 hari terakhir.';
+  String get recentEmailsListDesc =>
+      'Hanya menampilkan email dari 30 hari terakhir.';
 
   @override
   String get emailCategorySecurity => 'Keamanan';
@@ -3937,28 +4077,34 @@ class AppLocalizationsId extends AppLocalizations {
   String get noEmailsInPeriod => 'Tidak ada email dalam periode ini.';
 
   @override
-  String get twoFactorSetupEnabled => 'Autentikasi dua faktor berhasil diaktifkan';
+  String get twoFactorSetupEnabled =>
+      'Autentikasi dua faktor berhasil diaktifkan';
 
   @override
   String get twoFactorSetupOtpResent => 'Kode OTP baru telah dikirim.';
 
   @override
-  String get twoFactorSetupEmailDesc => 'Kode 6 digit dikirim ke email Anda setiap kali Sign In.';
+  String get twoFactorSetupEmailDesc =>
+      'Kode 6 digit dikirim ke email Anda setiap kali Sign In.';
 
   @override
-  String get twoFactorSetupAuthenticatorDesc => 'Kode 6 digit dari aplikasi seperti Google Authenticator atau Duo Mobile.';
+  String get twoFactorSetupAuthenticatorDesc =>
+      'Kode 6 digit dari aplikasi seperti Google Authenticator atau Duo Mobile.';
 
   @override
   String get twoFactorSetupNone => 'Tidak memakai 2FA';
 
   @override
-  String get twoFactorSetupNoneDesc => 'Matikan verifikasi dua langkah untuk akun ini.';
+  String get twoFactorSetupNoneDesc =>
+      'Matikan verifikasi dua langkah untuk akun ini.';
 
   @override
-  String get twoFactorSetupAlreadyUsed => 'Sudah dipakai akun ini -- tidak bisa dipilih lagi.';
+  String get twoFactorSetupAlreadyUsed =>
+      'Sudah dipakai akun ini -- tidak bisa dipilih lagi.';
 
   @override
-  String get twoFactorSetupManualSecret => 'Kode manual (kalau QR tidak bisa dipindai)';
+  String get twoFactorSetupManualSecret =>
+      'Kode manual (kalau QR tidak bisa dipindai)';
 
   @override
   String get copySecret => 'Salin kode';
@@ -3970,7 +4116,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get twoFactorAuthHeading => 'Aktifkan Aplikasi Autentikasi';
 
   @override
-  String get twoFactorAuthSubheading => 'Pindai kode QR dengan aplikasi seperti Google Authenticator atau Duo Mobile, lalu masukkan kode 6 digit untuk memastikan semuanya benar.';
+  String get twoFactorAuthSubheading =>
+      'Pindai kode QR dengan aplikasi seperti Google Authenticator atau Duo Mobile, lalu masukkan kode 6 digit untuk memastikan semuanya benar.';
 
   @override
   String get twoFactorSetupTitle => 'Aktifkan Autentikasi Dua Faktor';
@@ -3979,7 +4126,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get twoFactorSetupHeading => 'Tambah Autentikasi Dua Faktor';
 
   @override
-  String get twoFactorSetupSubtitle => 'Tambahkan langkah kedua saat Anda masuk. Kode login dikirim ke nomor WhatsApp Anda, dan Anda juga bisa membuat kode cadangan sekali pakai.';
+  String get twoFactorSetupSubtitle =>
+      'Tambahkan langkah kedua saat Anda masuk. Kode login dikirim ke nomor WhatsApp Anda, dan Anda juga bisa membuat kode cadangan sekali pakai.';
 
   @override
   String get twoFactorNeedCode => 'Masukkan kode untuk melanjutkan';
@@ -3994,7 +4142,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get strengthenAccount => 'Perkuat Keamanan Akun Anda';
 
   @override
-  String get strengthenAccountSubtitle => 'Dengan verifikasi dua langkah, akun Anda tetap bisa dipakai orang lain meskipun kata sandinya bocor.';
+  String get strengthenAccountSubtitle =>
+      'Dengan verifikasi dua langkah, akun Anda tetap bisa dipakai orang lain meskipun kata sandinya bocor.';
 
   @override
   String get strengthenAccountSkip => 'Tidak, Nanti Saja';
@@ -4012,13 +4161,16 @@ class AppLocalizationsId extends AppLocalizations {
   String get twoFactorRecoveryTitle => 'Pemulihan Dua Faktor';
 
   @override
-  String get twoFactorAuthenticatorHint => 'Masukkan kode dari aplikasi autentikasi Anda di bawah.';
+  String get twoFactorAuthenticatorHint =>
+      'Masukkan kode dari aplikasi autentikasi Anda di bawah.';
 
   @override
-  String get twoFactorEmailHint => 'Kami telah mengirim kode 6 digit ke email Anda. Masukkan kode tersebut di bawah.';
+  String get twoFactorEmailHint =>
+      'Kami telah mengirim kode 6 digit ke email Anda. Masukkan kode tersebut di bawah.';
 
   @override
-  String get twoFactorRecoveryHint => 'Jika Anda tidak dapat mengakses perangkat atau menerima kode autentikasi, masukkan salah satu kode pemulihan Anda untuk memverifikasi identitas.';
+  String get twoFactorRecoveryHint =>
+      'Jika Anda tidak dapat mengakses perangkat atau menerima kode autentikasi, masukkan salah satu kode pemulihan Anda untuk memverifikasi identitas.';
 
   @override
   String get twoFactorCodeLabel => 'Kode OTP';
@@ -4048,28 +4200,34 @@ class AppLocalizationsId extends AppLocalizations {
   String get addAuthenticatorApp => 'Tambahkan Aplikasi Autentikasi';
 
   @override
-  String get authenticatorAppActiveDesc => 'Aplikasi autentikasi aktif. Kode 6 digit akan diminta setiap kali Sign In.';
+  String get authenticatorAppActiveDesc =>
+      'Aplikasi autentikasi aktif. Kode 6 digit akan diminta setiap kali Sign In.';
 
   @override
-  String get authenticatorAppInactiveDesc => 'Belum aktif. Setelah diaktifkan, kode 6 digit akan diminta setiap kali Sign In.';
+  String get authenticatorAppInactiveDesc =>
+      'Belum aktif. Setelah diaktifkan, kode 6 digit akan diminta setiap kali Sign In.';
 
   @override
   String get twoFactorWrongCode => 'Kode salah';
 
   @override
-  String get twoFactorWrongCodeBody => 'Kode yang Anda masukkan tidak cocok atau sudah kedaluwarsa.';
+  String get twoFactorWrongCodeBody =>
+      'Kode yang Anda masukkan tidak cocok atau sudah kedaluwarsa.';
 
   @override
-  String get twoFactorSessionExpired => 'Sesi verifikasi sudah berakhir. Silakan Sign In ulang.';
+  String get twoFactorSessionExpired =>
+      'Sesi verifikasi sudah berakhir. Silakan Sign In ulang.';
 
   @override
-  String get twoFactorRequiredDesc => 'Masukkan kode verifikasi untuk melanjutkan.';
+  String get twoFactorRequiredDesc =>
+      'Masukkan kode verifikasi untuk melanjutkan.';
 
   @override
   String get twoFactorSetupDone => 'Lanjutkan';
 
   @override
-  String get twoFactorAlreadySetUp => 'Autentikasi dua faktor sudah aktif di akun ini.';
+  String get twoFactorAlreadySetUp =>
+      'Autentikasi dua faktor sudah aktif di akun ini.';
 
   @override
   String get reviewStar1 => 'Sangat Buruk';
@@ -4093,7 +4251,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get catalogRatingComments => 'Komentar Penilaian Katalog';
 
   @override
-  String get ratingWithoutComment => 'Pelanggan ini memberi penilaian tetapi tidak menulis komentar';
+  String get ratingWithoutComment =>
+      'Pelanggan ini memberi penilaian tetapi tidak menulis komentar';
 
   @override
   String get verifiedPurchase => 'Pembelian Terverifikasi';
@@ -4127,7 +4286,8 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get reportChatPrompt => '\n\nMohon bantu tindak lanjuti laporan ini, terima kasih.';
+  String get reportChatPrompt =>
+      '\n\nMohon bantu tindak lanjuti laporan ini, terima kasih.';
 
   @override
   String get reportCategory => 'Kategori';
@@ -4142,13 +4302,15 @@ class AppLocalizationsId extends AppLocalizations {
   String get reportDescription => 'Deskripsi';
 
   @override
-  String get reportDescriptionHint => 'Ceritakan detail lebih lanjut (opsional)';
+  String get reportDescriptionHint =>
+      'Ceritakan detail lebih lanjut (opsional)';
 
   @override
   String get reportSubmit => 'Kirim Laporan';
 
   @override
-  String get reportSuccess => 'Laporan berhasil dikirim. Tim kami akan meninjaunya.';
+  String get reportSuccess =>
+      'Laporan berhasil dikirim. Tim kami akan meninjaunya.';
 
   @override
   String get reportFailed => 'Gagal mengirim laporan';
@@ -4193,10 +4355,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get reportContentTitle => 'Konten yang Dilaporkan';
 
   @override
-  String get csRecoveryDetected => 'Sepertinya Anda membutuhkan bantuan akun. Silakan isi formulir verifikasi di bawah ini agar kami dapat membantu Anda:';
+  String get csRecoveryDetected =>
+      'Sepertinya Anda membutuhkan bantuan akun. Silakan isi formulir verifikasi di bawah ini agar kami dapat membantu Anda:';
 
   @override
-  String get csFormDetected => 'Terima kasih! Kami mendeteksi formulir verifikasi Anda. Mengirim OTP ke email Anda...';
+  String get csFormDetected =>
+      'Terima kasih! Kami mendeteksi formulir verifikasi Anda. Mengirim OTP ke email Anda...';
 
   @override
   String csOtpSentToEmailChat(String email) {
@@ -4204,10 +4368,12 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get csPasswordChangedSuccess => 'Password berhasil diubah! Silakan login dengan password baru Anda.';
+  String get csPasswordChangedSuccess =>
+      'Password berhasil diubah! Silakan login dengan password baru Anda.';
 
   @override
-  String get csPasswordChangeFailed => 'Gagal mengubah password. Silakan coba lagi.';
+  String get csPasswordChangeFailed =>
+      'Gagal mengubah password. Silakan coba lagi.';
 
   @override
   String get csPasswordMinLength => 'Password minimal 12 karakter';
@@ -4238,7 +4404,8 @@ class AppLocalizationsId extends AppLocalizations {
   }
 
   @override
-  String get csEnterOtpToReset => 'Masukkan kode 6 digit yang dikirim ke email Anda untuk mereset password';
+  String get csEnterOtpToReset =>
+      'Masukkan kode 6 digit yang dikirim ke email Anda untuk mereset password';
 
   @override
   String get csResettingPassword => 'Mereset password...';
@@ -4253,10 +4420,12 @@ class AppLocalizationsId extends AppLocalizations {
   String get cacheSize => 'Ukuran cache';
 
   @override
-  String get clearCacheDesc => 'Hapus file sementara dan gambar cache untuk membebaskan penyimpanan';
+  String get clearCacheDesc =>
+      'Hapus file sementara dan gambar cache untuk membebaskan penyimpanan';
 
   @override
-  String get clearCacheConfirm => 'Apakah Anda yakin ingin menghapus cache aplikasi?';
+  String get clearCacheConfirm =>
+      'Apakah Anda yakin ingin menghapus cache aplikasi?';
 
   @override
   String get cacheCleared => 'Cache berhasil dihapus';
@@ -4294,7 +4463,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get calendarNoResults => 'Kata kunci tidak ditemukan';
 
   @override
-  String get mediaServerNote => 'Semua media akan tetap ada di server dan dapat diunduh ulang jika diperlukan.';
+  String get mediaServerNote =>
+      'Semua media akan tetap ada di server dan dapat diunduh ulang jika diperlukan.';
 
   @override
   String get outgoing => 'Keluar';
@@ -4303,7 +4473,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get network => 'Jaringan';
 
   @override
-  String get proxyWarning => 'Hanya gunakan proxy jika Anda tidak bisa terhubung. Alamat IP Anda mungkin terlihat oleh provider proxy.';
+  String get proxyWarning =>
+      'Hanya gunakan proxy jika Anda tidak bisa terhubung. Alamat IP Anda mungkin terlihat oleh provider proxy.';
 
   @override
   String get addProxyServer => 'Tambahkan server untuk mengaktifkan proxy';
@@ -4315,7 +4486,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get uploadQuality => 'Kualitas unggahan';
 
   @override
-  String get chooseMediaQuality => 'Pilih kualitas foto dan video yang dikirim atau diunduh otomatis ke chat.';
+  String get chooseMediaQuality =>
+      'Pilih kualitas foto dan video yang dikirim atau diunduh otomatis ke chat.';
 
   @override
   String get voiceMessagesAuto => 'Pesan Suara selalu diunduh secara otomatis.';
@@ -4363,7 +4535,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get receivedBytes => 'Bita Diterima';
 
   @override
-  String get hdQualityDescription => 'Lebih lambat dikirim, ukuran bisa 6 kali lebih besar';
+  String get hdQualityDescription =>
+      'Lebih lambat dikirim, ukuran bisa 6 kali lebih besar';
 
   @override
   String resetLast(Object date) {
@@ -4389,7 +4562,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get proxy => 'Proxy';
 
   @override
-  String get standardQualityDescription => 'Lebih cepat saat dikirim, ukuran file lebih kecil';
+  String get standardQualityDescription =>
+      'Lebih cepat saat dikirim, ukuran file lebih kecil';
 
   @override
   String get storageUsage => 'Pemakaian Penyimpanan';
@@ -4485,7 +4659,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get failedUpdateOrder => 'Gagal memperbarui pesanan';
 
   @override
-  String get confirmDeleteOrder => 'Hapus pesanan ini? Pesanan akan hilang dari riwayat Anda.';
+  String get confirmDeleteOrder =>
+      'Hapus pesanan ini? Pesanan akan hilang dari riwayat Anda.';
 
   @override
   String get orderDeleted => 'Pesanan dihapus';
@@ -4500,5 +4675,6 @@ class AppLocalizationsId extends AppLocalizations {
   String get customerName => 'Nama Pelanggan';
 
   @override
-  String get editPaymentWarning => 'Mengubah metode pembayaran akan membuat nomor Virtual Account atau kode QRIS baru.';
+  String get editPaymentWarning =>
+      'Mengubah metode pembayaran akan membuat nomor Virtual Account atau kode QRIS baru.';
 }
