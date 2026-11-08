@@ -53,13 +53,17 @@ jobs:
           echo "PUSHER_APP_CLUSTER=mt1" >> .env
 
       - name: Decode Android keystore (optional)
-        if: secrets.KEYSTORE_BASE64 != ''
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        if: env.KEYSTORE_BASE64 != ''
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
+          echo "$KEYSTORE_BASE64" | base64 --decode > android/app/keystore.jks
           echo "storeFile=$(pwd)/android/app/keystore.jks" > android/key.properties
-          echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" >> android/key.properties
-          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
-          echo "keyPassword=${{ secrets.KEYSTORE_PASSWORD }}" >> android/key.properties
+          echo "storePassword=$KEYSTORE_PASSWORD" >> android/key.properties
+          echo "keyAlias=$KEY_ALIAS" >> android/key.properties
+          echo "keyPassword=$KEYSTORE_PASSWORD" >> android/key.properties
 
       - name: Build APK (release)
         run: flutter build apk --release --no-tree-shake-icons
