@@ -19,7 +19,7 @@ env:
 jobs:
   build-ios:
     name: Build iOS (no codesign)
-    runs-on: macos-14
+    runs-on: macos-latest
     defaults:
       run:
         shell: bash
