@@ -142,7 +142,7 @@ class _LanguagePickerContentState extends State<_LanguagePickerContent> {
                     size: 22,
                   ),
             title: Text(name, style: AppTextStyles.bodyMedium),
-            subtitle: Text(code, style: AppTextStyles.caption),
+            subtitle: Text(code, style: AppTextStyles.bodySmall),
             trailing: isSelected
                 ? Icon(Icons.check, color: AppColors.primaryColor)
                 : null,

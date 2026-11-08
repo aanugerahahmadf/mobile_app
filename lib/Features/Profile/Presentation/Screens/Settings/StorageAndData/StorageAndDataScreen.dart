@@ -1,4 +1,4 @@
-﻿import 'dart:math' as math;
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_app/L10n/AppLocalizations.dart';
@@ -19,7 +19,6 @@ import 'AutoDownload/PhotoAutoDownloadScreen.dart';
 import 'AutoDownload/AudioAutoDownloadScreen.dart';
 import 'AutoDownload/VideoAutoDownloadScreen.dart';
 import 'AutoDownload/DocumentAutoDownloadScreen.dart';
-
 
 final storageDataProvider = ChangeNotifierProvider<StorageDataController>((ref) => StorageDataController());
 
@@ -93,19 +92,30 @@ class StorageAndDataScreen extends ConsumerWidget {
         ]),
         _section(l.mediaQuality),
         _group([
-          _row(context, l.uploadQuality, value: c.upload == MediaQuality.hd ? 'HD' : 'Standar', onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => UploadQualityScreen(title: l.uploadQuality)))),
+          _row(context, l.uploadQuality, value: c.upload == MediaQuality.hd ? 'HD' : l.standard, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => UploadQualityScreen(title: l.uploadQuality)))),
           _row(context, l.autoDownloadQuality, onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => DownloadQualityScreen(title: l.autoDownloadQuality)))),
         ]),
         _section(l.automaticMediaDownload),
         _group([
-          ...c.auto.keys.map((key) => _row(context, key, value: _policyLabel(c.auto[key]!), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => _autoDownloadPage(key))))),
-          _row(context, l.resetAutoDownload, destructive: true, onTap: () async { if (await _confirm(context, 'Atur ulang pengaturan unduh otomatis?')) await ref.read(storageDataProvider).resetAuto(); }),
+          ...c.auto.keys.map((key) => _row(context, _displayMediaKey(key, l), value: _policyLabel(c.auto[key]!, l), onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => _autoDownloadPage(key))))),
+          _row(context, l.resetAutoDownload, destructive: true, onTap: () async { if (await _confirm(context, '${l.resetAutoDownload}?')) await ref.read(storageDataProvider).resetAuto(); }),
         ]),
         const SizedBox(height: 14),
         Text(l.voiceMessagesAuto),
       ]),
     );
   }
+}
+
+String _displayMediaKey(String key, AppLocalizations l) {
+  final isId = l.localeName.startsWith('id');
+  return switch (key) {
+    'Foto' => isId ? 'Foto' : 'Photos',
+    'Audio' => isId ? 'Audio' : 'Audio',
+    'Video' => isId ? 'Video' : 'Videos',
+    'Dokumen' => isId ? 'Dokumen' : 'Documents',
+    _ => key,
+  };
 }
 
 Widget _group(List<Widget> children) => Container(
@@ -146,11 +156,14 @@ class _StorageUsageState extends ConsumerState<StorageUsageScreen> {
   @override void initState() { super.initState(); for (final n in names) { selected[n] = true; } _load(); }
   Future<void> _load() async { final value = await getAppCacheSize(); if (mounted) setState(() => total = value); }
   String get selectedSize => formatStorageBytes(selected.values.any((v) => v) ? total : 0);
-  @override Widget build(BuildContext context) { return Scaffold(appBar: AppBar(title: const Text('Pemakaian Penyimpanan'), automaticallyImplyLeading: false, bottom: PreferredSize(preferredSize: const Size.fromHeight(36), child: _storageBreadcrumb(context, AppLocalizations.of(context)!.storageAndData))), body: ListView(padding: const EdgeInsets.all(16), children: [
+  @override Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final isId = l.localeName.startsWith('id');
+    return Scaffold(appBar: AppBar(title: Text(l.storageUsage), automaticallyImplyLeading: false, bottom: PreferredSize(preferredSize: const Size.fromHeight(36), child: _storageBreadcrumb(context, l.storageAndData))), body: ListView(padding: const EdgeInsets.all(16), children: [
     Center(child: SizedBox(width: 190, height: 190, child: CustomPaint(painter: _DonutPainter(total), child: Center(child: Text(formatStorageBytes(total), style: AppTextStyles.headTitle))))),
-    const SizedBox(height: 12), if (total == 0) const Center(child: Text('Tidak ada cache')) else ...names.map((name) => CheckboxListTile(value: selected[name], onChanged: (v) => setState(() => selected[name] = v ?? false), title: Text(name), subtitle: Text('${total == 0 ? 0 : 100 ~/ names.length}%  •  ${formatStorageBytes(total ~/ names.length)}'), secondary: CircleAvatar(radius: 7, backgroundColor: _color(names.indexOf(name))))),
-    const SizedBox(height: 8), LinearProgressIndicator(value: total == 0 ? 0 : .12), const SizedBox(height: 8), Text('Aplikasi memakai ${formatStorageBytes(total)} dari ruang penyimpanan kosong'), const SizedBox(height: 16),
-    FilledButton(onPressed: total == 0 ? null : () async { if (!await _confirm(context, 'Hapus seluruh cache?')) return; await clearAppCache(); await _load(); }, child: Text('Hapus Seluruh Cache $selectedSize')), const SizedBox(height: 16), const Text('Semua media akan tetap ada di server dan dapat diunduh ulang jika diperlukan.', textAlign: TextAlign.center),
+    const SizedBox(height: 12), if (total == 0) Center(child: Text(l.noCache)) else ...names.map((name) => CheckboxListTile(value: selected[name], onChanged: (v) => setState(() => selected[name] = v ?? false), title: Text(name), subtitle: Text('${total == 0 ? 0 : 100 ~/ names.length}%  •  ${formatStorageBytes(total ~/ names.length)}'), secondary: CircleAvatar(radius: 7, backgroundColor: _color(names.indexOf(name))))),
+    const SizedBox(height: 8), LinearProgressIndicator(value: total == 0 ? 0 : .12), const SizedBox(height: 8), Text(isId ? 'Aplikasi memakai ${formatStorageBytes(total)} dari ruang penyimpanan' : 'App uses ${formatStorageBytes(total)} of storage'), const SizedBox(height: 16),
+    FilledButton(onPressed: total == 0 ? null : () async { if (!await _confirm(context, l.clearCacheConfirm)) return; await clearAppCache(); await _load(); }, child: Text('${l.clearAllCache} $selectedSize')), const SizedBox(height: 16), Text(l.mediaServerNote, textAlign: TextAlign.center),
   ])); }
 }
 
@@ -159,15 +172,17 @@ class NetworkUsageScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final c = ref.watch(storageDataProvider);
+    final l = AppLocalizations.of(context)!;
+    final isId = l.localeName.startsWith('id');
     final groups = <String, List<String>>{
-      'Pesan': ['Dikirim', 'Diterima', 'Bita Dikirim', 'Bita Diterima'],
-      'Chat Media': ['Bita Dikirim', 'Bita Diterima'],
-      'Status Media': ['Bita Dikirim', 'Bita Diterima'],
-      'Panggilan': ['Keluar', 'Masuk', 'Bita Dikirim', 'Bita Diterima', 'Waktu Total'],
-      'Total Bita': ['Dikirim', 'Diterima'],
+      isId ? 'Pesan' : 'Messages': isId ? ['Dikirim', 'Diterima', 'Bita Dikirim', 'Bita Diterima'] : ['Sent', 'Received', 'Bytes Sent', 'Bytes Received'],
+      isId ? 'Chat Media' : 'Media': isId ? ['Bita Dikirim', 'Bita Diterima'] : ['Bytes Sent', 'Bytes Received'],
+      isId ? 'Status Media' : 'Status': isId ? ['Bita Dikirim', 'Bita Diterima'] : ['Bytes Sent', 'Bytes Received'],
+      isId ? 'Panggilan' : 'Calls': isId ? ['Keluar', 'Masuk', 'Bita Dikirim', 'Bita Diterima', 'Waktu Total'] : ['Outgoing', 'Incoming', 'Bytes Sent', 'Bytes Received', 'Total Time'],
+      isId ? 'Total Bita' : 'Total Bytes': isId ? ['Dikirim', 'Diterima'] : ['Sent', 'Received'],
     };
     return Scaffold(
-      appBar: AppBar(title: const Text('Penggunaan Jaringan'), automaticallyImplyLeading: false, bottom: PreferredSize(preferredSize: const Size.fromHeight(36), child: _storageBreadcrumb(context, AppLocalizations.of(context)!.storageAndData))),
+      appBar: AppBar(title: Text(l.networkUsage), automaticallyImplyLeading: false, bottom: PreferredSize(preferredSize: const Size.fromHeight(36), child: _storageBreadcrumb(context, l.storageAndData))),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -186,14 +201,14 @@ class NetworkUsageScreen extends ConsumerWidget {
           )),
           OutlinedButton(
             onPressed: () async {
-              if (await _confirm(context, 'Atur ulang statistik?')) {
+              if (await _confirm(context, '${l.resetStatistics}?')) {
                 await ref.read(storageDataProvider).resetStats();
               }
             },
-            child: const Text('Atur ulang statistik'),
+            child: Text(l.resetStatistics),
           ),
           const SizedBox(height: 8),
-          const Text('Atur ulang terakhir: Belum pernah'),
+          Text(l.resetLast(isId ? 'Belum pernah' : 'Never')),
         ],
       ),
     );
@@ -208,13 +223,14 @@ class QualityScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.watch(storageDataProvider);
     final active = upload ? controller.upload : controller.download;
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text(title), automaticallyImplyLeading: false, bottom: PreferredSize(preferredSize: const Size.fromHeight(36), child: _storageBreadcrumb(context, AppLocalizations.of(context)!.storageAndData))),
+      appBar: AppBar(title: Text(title), automaticallyImplyLeading: false, bottom: PreferredSize(preferredSize: const Size.fromHeight(36), child: _storageBreadcrumb(context, l.storageAndData))),
       body: ListView(padding: const EdgeInsets.all(16), children: [
-        const Text('Pilih kualitas foto dan video yang diunduh atau dikirim ke chat.'),
+        Text(l.chooseMediaQuality),
         const SizedBox(height: 12),
-        _choice(context, ref, 'Standar', 'Lebih cepat, ukuran file lebih kecil', MediaQuality.standard, active, upload),
-        _choice(context, ref, 'HD', 'Lebih lambat, ukuran bisa 6 kali lebih besar', MediaQuality.hd, active, upload),
+        _choice(context, ref, l.standard, l.standardQualityDescription, MediaQuality.standard, active, upload),
+        _choice(context, ref, 'HD', l.hdQualityDescription, MediaQuality.hd, active, upload),
       ]),
     );
   }
@@ -244,13 +260,14 @@ class AutoDownloadScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final current = ref.watch(storageDataProvider).auto[mediaType]!;
+    final l = AppLocalizations.of(context)!;
     return Scaffold(
-      appBar: AppBar(title: Text('Unduh otomatis $mediaType'), automaticallyImplyLeading: false, bottom: PreferredSize(preferredSize: const Size.fromHeight(36), child: _storageBreadcrumb(context, AppLocalizations.of(context)!.storageAndData))),
+      appBar: AppBar(title: Text('${l.automaticMediaDownload}: ${_displayMediaKey(mediaType, l)}'), automaticallyImplyLeading: false, bottom: PreferredSize(preferredSize: const Size.fromHeight(36), child: _storageBreadcrumb(context, l.storageAndData))),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: AutoDownloadPolicy.values.map((policy) => Card(
           child: ListTile(
-            title: Text(_policyLabel(policy)),
+            title: Text(_policyLabel(policy, l)),
             trailing: policy == current ? const Icon(Icons.check, color: AppColors.primaryColor) : null,
             onTap: () {
               ref.read(storageDataProvider).setAuto(mediaType, policy);
@@ -262,8 +279,46 @@ class AutoDownloadScreen extends ConsumerWidget {
     );
   }
 }
+
 class ProxyScreen extends StatefulWidget { const ProxyScreen({super.key}); @override State<ProxyScreen> createState() => _ProxyPageState(); }
-class _ProxyPageState extends State<ProxyScreen> { bool enabled = false; String? host; final secure = const FlutterSecureStorage(); @override void initState() { super.initState(); _load(); } Future<void> _load() async { final p = await SharedPreferences.getInstance(); setState(() { enabled = p.getBool('proxy_enabled') ?? false; host = p.getString('proxy_host'); }); } @override Widget build(BuildContext context) => Scaffold(appBar: AppBar(title: const Text('Proxy'), automaticallyImplyLeading: false, bottom: PreferredSize(preferredSize: const Size.fromHeight(36), child: _storageBreadcrumb(context, AppLocalizations.of(context)!.storageAndData)), actions: [IconButton(onPressed: host == null ? null : () => Share.share('Proxy: $host'), icon: const Icon(Icons.share))]), body: ListView(padding: const EdgeInsets.all(16), children: [Card(child: SwitchListTile(title: const Text('Gunakan Proxy'), subtitle: const Text('Hanya gunakan proxy jika Anda tidak bisa terhubung. Alamat IP Anda mungkin terlihat oleh provider proxy.'), value: enabled, onChanged: host == null ? null : (v) async { final p = await SharedPreferences.getInstance(); await p.setBool('proxy_enabled', v); setState(() => enabled = v); })), ListTile(title: Text(host ?? 'Belum ada server proxy'), subtitle: Text(host == null ? 'Tambahkan server untuk mengaktifkan proxy' : 'Terputus'), trailing: IconButton(icon: const Icon(Icons.add), onPressed: _add)), if (host != null) ListTile(title: const Text('Hapus server'), textColor: Colors.red, onTap: () async { await secure.delete(key: 'proxy_password'); final p = await SharedPreferences.getInstance(); await p.remove('proxy_host'); setState(() { host = null; enabled = false; }); })])); Future<void> _add() async { final controller = TextEditingController(); final value = await showDialog<String>(context: context, builder: (_) => AlertDialog(title: const Text('Server proxy'), content: TextField(controller: controller, decoration: const InputDecoration(hintText: 'host:port')), actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')), FilledButton(onPressed: () => Navigator.pop(context, controller.text), child: const Text('Simpan'))])); if (value == null || value.isEmpty) return; final p = await SharedPreferences.getInstance(); await p.setString('proxy_host', value); setState(() => host = value); } }
+class _ProxyPageState extends State<ProxyScreen> {
+  bool enabled = false;
+  String? host;
+  final secure = const FlutterSecureStorage();
+  @override void initState() { super.initState(); _load(); }
+  Future<void> _load() async {
+    final p = await SharedPreferences.getInstance();
+    setState(() {
+      enabled = p.getBool('proxy_enabled') ?? false;
+      host = p.getString('proxy_host');
+    });
+  }
+  @override Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(l.proxy),
+        automaticallyImplyLeading: false,
+        bottom: PreferredSize(preferredSize: const Size.fromHeight(36), child: _storageBreadcrumb(context, l.storageAndData)),
+        actions: [IconButton(onPressed: host == null ? null : () => Share.share('Proxy: $host'), icon: const Icon(Icons.share))],
+      ),
+      body: ListView(padding: const EdgeInsets.all(16), children: [
+        Card(child: SwitchListTile(title: Text(l.useProxy), subtitle: Text(l.proxyWarning), value: enabled, onChanged: host == null ? null : (v) async { final p = await SharedPreferences.getInstance(); await p.setBool('proxy_enabled', v); setState(() => enabled = v); })),
+        ListTile(title: Text(host ?? l.noProxyServer), subtitle: Text(host == null ? l.addProxyServer : l.disconnected), trailing: IconButton(icon: const Icon(Icons.add), onPressed: _add)),
+        if (host != null) ListTile(title: Text(l.deleteServer), textColor: Colors.red, onTap: () async { await secure.delete(key: 'proxy_password'); final p = await SharedPreferences.getInstance(); await p.remove('proxy_host'); setState(() { host = null; enabled = false; }); }),
+      ]),
+    );
+  }
+  Future<void> _add() async {
+    final l = AppLocalizations.of(context)!;
+    final controller = TextEditingController();
+    final value = await showDialog<String>(context: context, builder: (_) => AlertDialog(title: Text(l.proxyServer), content: TextField(controller: controller, decoration: InputDecoration(hintText: l.proxyHostPort)), actions: [TextButton(onPressed: () => Navigator.pop(context), child: Text(l.cancel)), FilledButton(onPressed: () => Navigator.pop(context, controller.text), child: Text(l.save))]));
+    if (value == null || value.isEmpty) return;
+    final p = await SharedPreferences.getInstance();
+    await p.setString('proxy_host', value);
+    setState(() => host = value);
+  }
+}
 
 Widget _autoDownloadPage(String key) {
   final page = switch (key) {
@@ -275,17 +330,55 @@ Widget _autoDownloadPage(String key) {
   };
   return page;
 }
-String _policyLabel(AutoDownloadPolicy p) => switch (p) { AutoDownloadPolicy.never => 'Jangan Pernah', AutoDownloadPolicy.wifi => 'Wi-Fi', AutoDownloadPolicy.wifiAndCellular => 'Wi-Fi dan Seluler' };
-Future<bool> _confirm(BuildContext context, String text) async => await showDialog<bool>(context: context, builder: (_) => AlertDialog(title: const Text('Konfirmasi'), content: Text(text), actions: [TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Batal')), FilledButton(onPressed: () => Navigator.pop(context, true), child: const Text('Ya'))])) ?? false;
-String formatStorageBytes(int bytes) { if (bytes < 1024) return '$bytes B'; final units = ['KB', 'MB', 'GB']; var value = bytes.toDouble(); var i = -1; while (value >= 1024 && i < units.length - 1) { value /= 1024; i++; } return '${value.toStringAsFixed(value >= 10 ? 0 : 1).replaceAll('.', ',')} ${units[i]}'; }
+
+String _policyLabel(AutoDownloadPolicy p, AppLocalizations l) => switch (p) {
+  AutoDownloadPolicy.never => l.never,
+  AutoDownloadPolicy.wifi => l.wifi,
+  AutoDownloadPolicy.wifiAndCellular => l.wifiAndCellular,
+};
+
+Future<bool> _confirm(BuildContext context, String text) async {
+  final l = AppLocalizations.of(context)!;
+  return await showDialog<bool>(
+    context: context,
+    builder: (_) => AlertDialog(
+      title: Text(l.confirm),
+      content: Text(text),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l.cancel)),
+        FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(l.confirm)),
+      ],
+    ),
+  ) ?? false;
+}
+
+String formatStorageBytes(int bytes) {
+  if (bytes < 1024) return '$bytes B';
+  final units = ['KB', 'MB', 'GB'];
+  var value = bytes.toDouble();
+  var i = -1;
+  while (value >= 1024 && i < units.length - 1) {
+    value /= 1024;
+    i++;
+  }
+  return '${value.toStringAsFixed(value >= 10 ? 0 : 1).replaceAll('.', ',')} ${units[i]}';
+}
+
 Color _color(int i) => [Colors.blue, Colors.orange, Colors.purple, Colors.green, Colors.red, Colors.teal, Colors.grey][i % 7];
-class _DonutPainter extends CustomPainter { final int total; _DonutPainter(this.total); @override void paint(Canvas canvas, Size size) { final rect = Offset.zero & size; final paint = Paint()..style = PaintingStyle.stroke..strokeWidth = 24..strokeCap = StrokeCap.butt; final colors = [Colors.blue, Colors.orange, Colors.purple, Colors.green, Colors.red, Colors.teal, Colors.grey]; for (var i = 0; i < colors.length; i++) { paint.color = colors[i]; canvas.drawArc(rect.deflate(24), -math.pi / 2 + i * math.pi * 2 / 7, math.pi * 2 / 7 - .04, false, paint); } } @override bool shouldRepaint(covariant _DonutPainter oldDelegate) => oldDelegate.total != total; }
 
-
-
-
-
-
-
-
-
+class _DonutPainter extends CustomPainter {
+  final int total;
+  _DonutPainter(this.total);
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final paint = Paint()..style = PaintingStyle.stroke..strokeWidth = 24..strokeCap = StrokeCap.butt;
+    final colors = [Colors.blue, Colors.orange, Colors.purple, Colors.green, Colors.red, Colors.teal, Colors.grey];
+    for (var i = 0; i < colors.length; i++) {
+      paint.color = colors[i];
+      canvas.drawArc(rect.deflate(24), -math.pi / 2 + i * math.pi * 2 / 7, math.pi * 2 / 7 - .04, false, paint);
+    }
+  }
+  @override
+  bool shouldRepaint(covariant _DonutPainter oldDelegate) => oldDelegate.total != total;
+}
