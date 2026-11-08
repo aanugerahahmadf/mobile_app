@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mobile_app/L10n/AppLocalizations.dart';
 import '../../../../../Core/Constants/AppSizes/AppSizes.dart';
 import '../../../../../Core/Constants/AppTextStyles/AppTextStyles.dart';
 import '../../../../../Core/Widgets/AppBreadcrumbs/AppBreadcrumbs.dart';
+import 'package:mobile_app/L10n/AppLocalizations.dart';
 
 class QrisPaymentScreen extends ConsumerStatefulWidget {
   final String orderId;
 
-  const QrisPaymentScreen({super.key, required this.orderId});
+  const QrisPaymentScreen({
+    super.key,
+    required this.orderId,
+  });
 
   @override
   ConsumerState<QrisPaymentScreen> createState() =>
@@ -19,10 +22,11 @@ class _QrisPaymentPageState extends ConsumerState<QrisPaymentScreen> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
+    final title = '${l.payment} QRIS';
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text('Payment QRIS'),
+        title: Text(title),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(38),
           child: const AppBreadcrumbs.global(),
@@ -33,7 +37,7 @@ class _QrisPaymentPageState extends ConsumerState<QrisPaymentScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Payment QRIS', style: AppTextStyles.headTitle),
+            Text(title, style: AppTextStyles.headTitle),
             const SizedBox(height: AppSizes.md),
             Text('${l.order} #${widget.orderId}'),
           ],
@@ -42,5 +46,3 @@ class _QrisPaymentPageState extends ConsumerState<QrisPaymentScreen> {
     );
   }
 }
-
-

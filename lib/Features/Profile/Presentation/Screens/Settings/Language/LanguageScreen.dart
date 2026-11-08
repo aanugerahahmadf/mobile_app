@@ -112,7 +112,7 @@ class _LanguageScreenState extends ConsumerState<LanguageScreen> {
                                 : AppColors.textSecondary,
                           ),
                     title: Text(name, style: AppTextStyles.bodyMedium),
-                    subtitle: Text(code, style: AppTextStyles.caption),
+                    subtitle: Text(code, style: AppTextStyles.bodySmall),
                     trailing: isSelected
                         ? Icon(Icons.check_circle, color: AppColors.primaryColor)
                         : null,
