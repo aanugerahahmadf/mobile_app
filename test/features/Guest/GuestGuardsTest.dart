@@ -24,43 +24,42 @@ import 'package:mobile_app/Features/Auth/Presentation/Screens/CompleteProfile/Co
 import 'package:mobile_app/Features/Profile/Presentation/Screens/Profile/EditProfile/EditProfileScreen.dart';
 import 'package:mobile_app/Features/Profile/Presentation/Screens/Profile/FieldProfile/ProfileFieldScreen.dart';
 import 'package:mobile_app/Features/Profile/Presentation/Screens/Settings/PasswordAndSecurity/PasswordAndSecurityScreen.dart';
-import 'package:mobile_app/Features/Review/Presentation/Screens/AllReviews/AllReviewsScreen.dart';
+import 'package:mobile_app/Features/Review/Presentation/Widgets/CatalogRatingComments/CatalogRatingCommentsView.dart';
 import 'package:mobile_app/Features/Review/Presentation/Screens/ReviewList/ReviewListScreen.dart';
-import 'package:mobile_app/Features/Review/Presentation/Providers/ReviewProvider/ReviewProvider.dart';
+import 'package:mobile_app/Features/Review/Presentation/Providers/CatalogRatingCommentsProvider/CatalogRatingCommentsProvider.dart';
+import 'package:mobile_app/Features/Review/Data/Models/CatalogRatingCommentModel/CatalogRatingCommentModel.dart';
 import 'package:mobile_app/Features/Review/Data/ReviewRepositoryImpl/ReviewRepositoryImpl.dart';
 import 'package:mobile_app/Features/Favorite/Presentation/Screens/Favorite/Favoritescreen.dart';
 import 'package:mobile_app/Core/Widgets/GuestAuthPrompt/GuestAuthPrompt.dart';
 import 'package:mobile_app/L10n/AppLocalizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class _FakeReviewNotifier extends ReviewNotifier {
-  _FakeReviewNotifier() : super(ReviewRepositoryImpl());
+/// Menyediakan satu ulasan siap-tampil tanpa network, agar guard guest pada
+/// aksi "Tulis Komentar Penilaian" dan vote dapat diuji.
+class _FakeCatalogRatingCommentsNotifier extends CatalogRatingCommentsNotifier {
+  _FakeCatalogRatingCommentsNotifier()
+    : super(ReviewRepositoryImpl(), catalogId: '1');
 
   @override
-  Future<void> fetchItemReviews({
-    String catalogId = '',
-    bool refresh = false,
-  }) async {
+  Future<void> fetchCatalogRatingComments({bool refresh = false}) async {
+    if (state.reviews.isNotEmpty) return;
     state = state.copyWith(
       loading: false,
       reviews: [
-        {
-          'id': 101,
-          'user_name': 'Budi',
-          'rating': 5,
-          'comment': 'Sangat bagus dan rapi',
-          'helpful_count': 2,
-        },
+        const CatalogRatingCommentModel(
+          id: 101,
+          userId: 7,
+          reviewerName: 'Budi',
+          rating: 5,
+          comment: 'Sangat bagus dan rapi',
+          helpfulCount: 2,
+        ),
       ],
     );
   }
 
   @override
-  Future<void> fetchRatingSummary({
-    String catalogId = '',
-  }) async {
-    state = state.copyWith(loading: false);
-  }
+  Future<void> voteHelpful(int reviewId) async {}
 }
 
 Widget _wrap(
@@ -252,20 +251,22 @@ void main() {
     },
   );
 
-  testWidgets('guest AllReviews tapping write review shows auth prompt sheet', (
+  testWidgets('guest rating comments tapping write CTA shows auth prompt sheet', (
     tester,
   ) async {
     await tester.pumpWidget(
       _wrap(
-        const AllReviewsScreen(catalogId: '1', title: 'Paket Wedding'),
+        const CatalogRatingCommentsView(catalogId: '1', title: 'Paket Wedding'),
         extraOverrides: [
-          reviewProvider.overrideWith((ref) => _FakeReviewNotifier()),
+          catalogRatingCommentsProvider.overrideWith(
+            (ref, catalogId) => _FakeCatalogRatingCommentsNotifier(),
+          ),
         ],
       ),
     );
     await tester.pumpAndSettle();
 
-    final writeBtn = find.text('Tulis Ulasan');
+    final writeBtn = find.text('Tulis Komentar Penilaian');
     expect(writeBtn, findsOneWidget);
     await tester.tap(writeBtn);
     await tester.pumpAndSettle();
@@ -274,25 +275,54 @@ void main() {
     expect(find.text('Daftar'), findsOneWidget);
   });
 
-  testWidgets('guest AllReviews tapping helpful vote shows auth prompt sheet', (
+  testWidgets('guest rating comments tapping helpful vote shows auth prompt sheet', (
     tester,
   ) async {
     await tester.pumpWidget(
       _wrap(
-        const AllReviewsScreen(catalogId: '1', title: 'Paket Wedding'),
+        const CatalogRatingCommentsView(catalogId: '1', title: 'Paket Wedding'),
         extraOverrides: [
-          reviewProvider.overrideWith((ref) => _FakeReviewNotifier()),
+          catalogRatingCommentsProvider.overrideWith(
+            (ref, catalogId) => _FakeCatalogRatingCommentsNotifier(),
+          ),
         ],
       ),
     );
     await tester.pumpAndSettle();
 
     final helpfulBtn = find.text('Membantu');
+    await tester.ensureVisible(helpfulBtn);
+    await tester.pumpAndSettle();
     expect(helpfulBtn, findsOneWidget);
     await tester.tap(helpfulBtn);
     await tester.pumpAndSettle();
 
     expect(find.text('Masuk'), findsOneWidget);
     expect(find.text('Daftar'), findsOneWidget);
+  });
+
+  testWidgets('rating comment card is not a per-author navigation affordance', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(
+        const CatalogRatingCommentsView(catalogId: '1', title: 'Paket Wedding'),
+        extraOverrides: [
+          catalogRatingCommentsProvider.overrideWith(
+            (ref, catalogId) => _FakeCatalogRatingCommentsNotifier(),
+          ),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Shopee, Tokopedia, dan TikTok Shop tidak menyediakan halaman "komentar per
+    // penulis". Kartu ulasan di section ini hanya tempat membaca: tap ke isi
+    // kartu tidak membuka sheet login maupun destinasi mana pun.
+    await tester.tap(find.text('Sangat bagus dan rapi'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Masuk'), findsNothing);
+    expect(find.text('Daftar'), findsNothing);
   });
 }

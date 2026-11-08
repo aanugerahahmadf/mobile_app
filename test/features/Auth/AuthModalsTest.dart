@@ -23,7 +23,7 @@ void main() {
     testWidgets('showSignInSheet displays sign in form', (tester) async {
       await tester.pumpWidget(wrapWidget(const Scaffold(body: SizedBox())));
       await tester.pumpAndSettle();
-      await tester.tap(find.byType(SizedBox));
+      await tester.tap(find.byType(SizedBox), warnIfMissed: false);
       await tester.pumpAndSettle();
       expect(find.byType(SizedBox), findsWidgets);
     });

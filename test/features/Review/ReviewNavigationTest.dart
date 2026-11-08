@@ -3,6 +3,9 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile_app/Features/Review/Presentation/Providers/ReviewProvider/ReviewProvider.dart';
 import 'package:mobile_app/Features/Review/Domain/ReviewRepository/ReviewRepository.dart';
+import 'package:mobile_app/Features/Review/Data/Models/MyReviewModel/MyReviewModel.dart';
+import 'package:mobile_app/Features/Review/Data/Models/CatalogRatingCommentModel/CatalogRatingCommentModel.dart';
+import 'package:mobile_app/Features/Review/Data/Models/ReviewPage/ReviewPage.dart';
 
 class _DelayedReviewRepository implements ReviewRepository {
   int createCalls = 0;
@@ -31,7 +34,28 @@ class _DelayedReviewRepository implements ReviewRepository {
   };
 
   @override
-  Future<List<Map<String, dynamic>>> getMyReviews() async => [];
+  Future<ReviewPage<MyReviewModel>> getMyReviews({
+    String sort = 'newest',
+    int? rating,
+    bool withPhoto = false,
+    bool withComment = false,
+    String search = '',
+    int page = 1,
+    int perPage = 10,
+  }) async => const ReviewPage<MyReviewModel>();
+
+  @override
+  Future<ReviewPage<CatalogRatingCommentModel>> getCatalogRatingComments({
+    String sort = 'newest',
+    int? rating,
+    bool withPhoto = false,
+    bool withComment = false,
+    bool verifiedOnly = false,
+    String search = '',
+    int? catalogId,
+    int page = 1,
+    int perPage = 10,
+  }) async => const ReviewPage<CatalogRatingCommentModel>();
 
   @override
   Future<List<Map<String, dynamic>>> getUserReviews(String userId) async => [];

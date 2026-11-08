@@ -1,0 +1,506 @@
+import 'dart:async';
+import 'dart:io';
+import 'dart:math';
+import 'package:camera/camera.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
+import 'package:mobile_app/L10n/AppLocalizations.dart';
+import '../../../../../Core/Constants/AppColors/AppColors.dart';
+import '../../../../../Core/Constants/AppTextStyles/AppTextStyles.dart';
+import '../../../../../Core/Constants/AppSizes/AppSizes.dart';
+import '../../../../../Core/Widgets/AppBreadcrumbs/AppBreadcrumbs.dart';
+import '../../../../../Core/Widgets/CameraCoverPreview/CameraCoverPreview.dart';
+
+/// Scanner kamera otomatis generik.
+///
+/// Mengambil foto **secara otomatis** ketika frame kamera sudah fokus dan
+/// stabil (deteksi ketajaman + kestabilan cahaya dari byte frame), lalu
+/// menampilkan layar konfirmasi (Retake / Use). Tombol manual tetap tersedia.
+///
+/// Dipakai untuk semua alur kamera generik: avatar, chat, review, bukti
+/// pembayaran, pencarian gambar (CBIR), dan lain-lain.
+class AutoCaptureScannerScreen extends StatefulWidget {
+  /// Judul app bar / mode scanner.
+  final String? title;
+
+  /// Subtitle/instruksi yang tampil di bawah overlay.
+  final String? instruction;
+
+  /// Aktifkan auto-capture. Saat false, hanya tombol manual.
+  final bool autoCapture;
+
+  const AutoCaptureScannerScreen({
+    super.key,
+    this.title,
+    this.instruction,
+    this.autoCapture = true,
+  });
+
+  @override
+  State<AutoCaptureScannerScreen> createState() =>
+      _AutoCaptureScannerPageState();
+}
+
+class _AutoCaptureScannerPageState extends State<AutoCaptureScannerScreen>
+    with WidgetsBindingObserver {
+  CameraController? _cameraController;
+  final FlutterTts _tts = FlutterTts();
+  bool _cameraReady = false;
+  bool _captured = false;
+  bool _detected = false;
+  bool _tooDark = false;
+  bool _blurry = false;
+  bool _isMuted = false;
+  bool _spokeTooDark = false;
+  File? _capturedImage;
+  int _stableCounter = 0;
+  bool _isProcessing = false;
+  DateTime _lastProcessAt = DateTime.fromMillisecondsSinceEpoch(0);
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _initializeCamera();
+    _initTts();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _cameraController?.dispose();
+    _tts.stop();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed &&
+        _cameraController != null &&
+        !_cameraController!.value.isInitialized) {
+      _initCamera();
+    }
+  }
+
+  Future<void> _initializeCamera() async {
+    final cameras = await availableCameras();
+    if (cameras.isEmpty) return;
+    final back = cameras.firstWhere(
+      (c) => c.lensDirection == CameraLensDirection.back,
+      orElse: () => cameras.first,
+    );
+    _cameraController = CameraController(
+      back,
+      ResolutionPreset.high,
+      enableAudio: false,
+    );
+    await _initCamera();
+  }
+
+  Future<void> _initTts() async {
+    final locale = Platform.localeName;
+    final langCode = locale.split('_').first;
+    if (langCode == 'id') {
+      await _tts.setLanguage('id-ID');
+    } else {
+      await _tts.setLanguage('en-US');
+    }
+    await _tts.setSpeechRate(0.5);
+    await _tts.setVolume(1.0);
+    await _tts.setPitch(1.0);
+  }
+
+  Future<void> _speak(String text) async {
+    if (_isMuted) return;
+    await _tts.stop();
+    await _tts.speak(text);
+  }
+
+  Future<void> _initCamera() async {
+    try {
+      await _cameraController!.initialize();
+      if (mounted) {
+        await _cameraController!.setFocusMode(FocusMode.auto);
+        setState(() => _cameraReady = true);
+        _cameraController!.startImageStream(_processImage);
+        if (mounted) {
+          final l = AppLocalizations.of(context);
+          if (l != null) _speak(l.voiceAutoCaptureGreeting);
+        }
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _cameraReady = false);
+      }
+    }
+  }
+
+  void _processImage(CameraImage image) {
+    if (!widget.autoCapture || _isProcessing || _captured) return;
+    final now = DateTime.now();
+    if (now.difference(_lastProcessAt).inMilliseconds < 150) return;
+    _lastProcessAt = now;
+    _isProcessing = true;
+
+    _analyzeFrame(image).then((quality) {
+      if (!mounted) return;
+      if (!_captured) {
+        setState(() {
+          _tooDark = quality.brightness < 60;
+          _blurry = !quality.inFocus;
+        });
+        if (_tooDark && !_spokeTooDark) {
+          setState(() => _spokeTooDark = true);
+          final l = AppLocalizations.of(context);
+          if (l != null) _speak(l.voiceAutoCaptureTooDark);
+        } else if (!_tooDark) {
+          setState(() => _spokeTooDark = false);
+        }
+        if (quality.inFocus && quality.brightness >= 60) {
+          _stableCounter++;
+          if (_stableCounter >= 5) {
+            setState(() => _detected = true);
+            final l = AppLocalizations.of(context);
+            if (l != null) _speak(l.voiceAutoCaptureDetected);
+            _capturePhoto();
+          }
+        } else {
+          _stableCounter = 0;
+          _detected = false;
+        }
+      }
+      _isProcessing = false;
+    });
+  }
+
+  /// Analisis sederhana frame: kecerahan rata-rata & ketajaman (sharpness)
+  /// berdasarkan selisih gradien piksel pada plane Y.
+  Future<_FrameQuality> _analyzeFrame(CameraImage image) async {
+    try {
+      final plane = image.planes.first;
+      final bytes = plane.bytes;
+      final stride = plane.bytesPerRow;
+
+      final width = image.width;
+      final height = image.height;
+      final step = max(1, width ~/ 40);
+
+      var sum = 0;
+      var gradient = 0;
+      var count = 0;
+      for (int y = 0; y < height; y += step * 2) {
+        final row = y * stride;
+        for (int x = 0; x < width; x += step) {
+          final i = row + x;
+          if (i + 1 >= bytes.length) continue;
+          final v = bytes[i];
+          sum += v;
+          final g = (bytes[i + 1] - v).abs();
+          gradient += g;
+          count++;
+        }
+      }
+      if (count == 0) return _FrameQuality(brightness: 0, inFocus: false);
+
+      final brightness = sum / count;
+      // Ketajaman normalisasi: gradien rata-rata yang tinggi = fokus tajam.
+      final sharpness = gradient / count;
+      final inFocus = sharpness >= 6;
+      return _FrameQuality(brightness: brightness, inFocus: inFocus);
+    } catch (_) {
+      return _FrameQuality(brightness: 0, inFocus: false);
+    }
+  }
+
+  Future<void> _capturePhoto() async {
+    try {
+      final photo = await _cameraController!.takePicture();
+      if (!mounted) return;
+      setState(() {
+        _captured = true;
+        _capturedImage = File(photo.path);
+        _cameraController!.stopImageStream();
+      });
+      final l = AppLocalizations.of(context);
+      if (l != null) _speak(l.voiceAutoCaptureCaptured);
+    } catch (_) {
+      _stableCounter = 0;
+      if (mounted) setState(() => _detected = false);
+    }
+  }
+
+  void _retry() {
+    setState(() {
+      _captured = false;
+      _capturedImage = null;
+      _detected = false;
+      _stableCounter = 0;
+    });
+    _cameraController!.startImageStream(_processImage);
+  }
+
+  void _accept() {
+    if (_capturedImage != null) {
+      Navigator.pop(context, _capturedImage!.path);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+    final title =
+        widget.title ?? (_captured ? l.confirmDocument : l.scanDocument);
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: Text(_captured ? l.confirmDocument : title),
+        centerTitle: true,
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(38),
+          child: AppBreadcrumbs.global(),
+        ),
+      ),
+      body: _cameraReady
+          ? _captured && _capturedImage != null
+                ? _buildConfirmation()
+                : _buildScanner()
+          : const Center(child: CircularProgressIndicator(color: Colors.white)),
+    );
+  }
+
+  Widget _buildScanner() {
+    final l = AppLocalizations.of(context)!;
+    final instruction =
+        widget.instruction ??
+        (_tooDark
+            ? l.needMoreLight
+            : _blurry
+            ? l.holdSteady
+            : _detected
+            ? l.readyToCapture
+            : l.documentScanInstruction);
+    return Stack(
+      children: [
+        CameraCoverPreview(_cameraController!),
+        _buildOverlay(),
+        Positioned(
+          top: MediaQuery.of(context).padding.top + 8,
+          right: 16,
+          child: _buildMuteButton(),
+        ),
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: MediaQuery.of(context).padding.bottom + 40,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  instruction,
+                  style: AppTextStyles.bodySmall.copyWith(color: Colors.white),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMuteButton() {
+    return GestureDetector(
+      onTap: () {
+        setState(() => _isMuted = !_isMuted);
+        if (_isMuted) {
+          _tts.stop();
+        } else {
+          final l = AppLocalizations.of(context);
+          if (l != null) {
+            _speak(l.voiceAutoCaptureGreeting);
+          }
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.black.withValues(alpha: 0.5),
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white24),
+        ),
+        child: Icon(
+          _isMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
+          color: Colors.white,
+          size: 22,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOverlay() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final size = constraints.biggest;
+        const sideMargin = 24.0;
+        const topMargin = 24.0;
+        final bottomReserve = MediaQuery.of(context).padding.bottom + 150;
+        final availableW = (size.width - sideMargin * 2).clamp(1.0, size.width);
+        final availableH = (size.height - topMargin - bottomReserve).clamp(
+          1.0,
+          size.height,
+        );
+
+        var frameW = availableW * 0.96;
+        var frameH = frameW * 0.85;
+        final scale = [
+          1.0,
+          availableW / frameW,
+          availableH / frameH,
+        ].reduce((a, b) => a < b ? a : b);
+        frameW *= scale;
+        frameH *= scale;
+
+        final left = (size.width - frameW) / 2;
+        final top = topMargin + (availableH - frameH) / 2;
+
+        return IgnorePointer(
+          child: CustomPaint(
+            size: size,
+            painter: _AutoScanOverlayPainter(
+              frameRect: Rect.fromLTWH(left, top, frameW, frameH),
+              detected: _detected,
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildConfirmation() {
+    final l = AppLocalizations.of(context)!;
+    return Column(
+      children: [
+        Expanded(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.file(_capturedImage!, fit: BoxFit.contain),
+              ),
+            ),
+          ),
+        ),
+        Container(
+          padding: EdgeInsets.fromLTRB(
+            24,
+            0,
+            24,
+            MediaQuery.of(context).padding.bottom + 32,
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _retry,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: Colors.white38),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(Icons.refresh),
+                  label: Text(l.retake),
+                ),
+              ),
+              SizedBox(width: AppSizes.md),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _accept,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(Icons.check),
+                  label: Text(l.use),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FrameQuality {
+  final double brightness;
+  final bool inFocus;
+  _FrameQuality({required this.brightness, required this.inFocus});
+}
+
+class _AutoScanOverlayPainter extends CustomPainter {
+  final Rect frameRect;
+  final bool detected;
+
+  _AutoScanOverlayPainter({required this.frameRect, required this.detected});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = _clampRect(frameRect, size);
+    if (rect.width <= 1 || rect.height <= 1) return;
+
+    final borderPaint = Paint()
+      ..color = detected ? Colors.green : Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, const Radius.circular(12)),
+      borderPaint,
+    );
+
+    if (!detected) {
+      final dashPaint = Paint()
+        ..color = Colors.white38
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1;
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(rect, const Radius.circular(12)),
+        dashPaint,
+      );
+    }
+  }
+
+  Rect _clampRect(Rect rect, Size size) {
+    final left = rect.left.clamp(0.0, size.width);
+    final top = rect.top.clamp(0.0, size.height);
+    final right = rect.right.clamp(0.0, size.width);
+    final bottom = rect.bottom.clamp(0.0, size.height);
+    return Rect.fromLTRB(left, top, right, bottom);
+  }
+
+  @override
+  bool shouldRepaint(_AutoScanOverlayPainter oldDelegate) {
+    return oldDelegate.detected != detected ||
+        oldDelegate.frameRect != frameRect;
+  }
+}

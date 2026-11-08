@@ -26,14 +26,35 @@
 
 Struktur modul KMP standar (composeApp, shared, androidApp, iosApp) dengan feature-based packages di commonMain.
 
-## 4. Design System (Modern Glass + Blur)
+## 4. Design System (Modern Glass + 3D Animation + Tri-Mode Themes)
 
-- Font: **Instrument Sans** (W400, W600) — asset lokal.
-- Background: gradient ivory/blush/champagne/lavender + decorative flower shapes.
-- Glass surface: white 55–72% alpha, border 1dp putih, shadow rendah, BackdropFilter blur (sigma 12–20).
-- Blur hanya pada top bar, card, modal, bottom capsule — bukan seluruh screen.
-- Radius card 24dp, capsule 32dp. Padding phone 20dp, tablet 32dp.
-- Full-screen screens; `CapsuleBottomBar` floating overlay (Home | Catalog | Visual Search | Orders | Profile).
+### 4.1. Core Visual Pillars
+- **Glass Modern (Glassmorphism)**:
+  - Frosted glass surfaces using real-time BackdropFilter (sigma 16-24).
+  - Multi-stop specular highlight borders (gradient stroke with top-left reflection highlight).
+  - Translucent surfaces with soft diffuse shadows and luxury wedding ambiance.
+  - Floating capsule bottom bar (CapsuleBottomBar), glass dialogs, and elevated glass cards.
+- **3D Animation & Perspective Transform**:
+  - Interactive 3D Perspective Tilt on cards and hero items via Matrix4.identity()..setEntry(3, 2, 0.0012)..rotateX(rotX)..rotateY(rotY).
+  - Dynamic specular light glare / sheen that realistically follows touch and tilt angle.
+  - Multi-plane depth parallax (Z-axis separation for text, glass surface, and decorative flower accents).
+  - Smooth spring physics and fluid micro-interactions.
+
+### 4.2. Tri-Mode Theme System (Light, Dark/Night, System Default)
+- **Mode System (Default)**:
+  - **Mengikuti pengaturan sistem HP secara real-time.**
+  - Jika HP pengguna berada di Mode Gelap (Dark), aplikasi secara otomatis menjadi Mode Gelap.
+  - Jika HP pengguna berada di Mode Terang (Light), aplikasi secara otomatis menjadi Mode Terang.
+  - Perubahan mode tema di HP langsung direspons seketika via WidgetsBindingObserver.didChangePlatformBrightness().
+- **Mode Light (Terang / Editorial Wedding)**:
+  - Background: Soft iridescent gradient (Ivory, blush, champagne, lavender, pure white #EEF2FF -> #F8F6F7 -> #FFFFFF).
+  - Glass surface: Pure crystal white frost (alpha 55-75%), border specular putih mengkilap.
+- **Mode Night / Dark (Gelap / Midnight Luxury)**:
+  - Background: Deep midnight obsidian & navy gradient (#0F2440 -> #1A1A2E -> #121212) dengan warm gold ambient glow.
+  - Glass surface: Smoked obsidian glass (alpha 30-45%) dengan luminous edge highlight.
+- Font: **Instrument Sans** (W400, W600) - asset lokal.
+- Radius card 20-24dp, capsule 32dp. Padding phone 20dp, tablet 32dp.
+- Full-screen screens; CapsuleBottomBar floating overlay (Home | Orders | Cart | Profile).
 - Fallback tanpa blur harus tetap terbaca (low-end device, dark theme, reduce-motion, high-contrast).
 - State wajib: loading, content, empty, refresh, pagination, upload, validation, unauthorized, forbidden, offline, server error.
 

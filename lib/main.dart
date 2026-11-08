@@ -101,6 +101,14 @@ class _WeddingAppState extends ConsumerState<WeddingApp>
     }
   }
 
+  @override
+  void didChangePlatformBrightness() {
+    super.didChangePlatformBrightness();
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
   Future<void> _maybeShowLock() async {
     if (isAppLockSuppressed()) return;
     // Wait briefly for auth state to settle after resume. Without this delay,
@@ -128,10 +136,11 @@ class _WeddingAppState extends ConsumerState<WeddingApp>
   Widget build(BuildContext context) {
     final themeMode = ref.watch(themeProvider);
     final locale = ref.watch(localeProvider);
+    final platformBrightness = View.of(context).platformDispatcher.platformBrightness;
     final isDark =
         themeMode == ThemeMode.dark ||
         (themeMode == ThemeMode.system &&
-            MediaQuery.of(context).platformBrightness == Brightness.dark);
+            platformBrightness == Brightness.dark);
 
     AppColors.updateBrightness(isDark);
 

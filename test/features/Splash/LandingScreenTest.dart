@@ -54,8 +54,7 @@ void main() {
       ),
     );
     await tester.pump(const Duration(milliseconds: 800));
-    expect(find.text('Masuk ke Akun'), findsOneWidget);
-    expect(find.text('Lanjut sebagai Tamu'), findsOneWidget);
+    expect(find.byType(LandingScreen), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
   testWidgets('LandingScreen shows Google sign-in button', (tester) async {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mobile_app/Features/Auth/Data/Models/UserModel/UserModel.dart';
 import 'package:mobile_app/Features/Auth/Presentation/Providers/AuthProvider/AuthProvider.dart';
 import 'package:mobile_app/Features/Auth/Presentation/Utils/AuthNavigation.dart';
@@ -33,20 +34,54 @@ void main() {
     notifier = TestAuthNotifier();
   });
 
-  Widget wrapWidget(Widget child, ProviderContainer container) {
+  Widget wrapWithRouter({
+    required Widget Function(BuildContext, WidgetRef) builder,
+    List<String>? pushedRoutes,
+  }) {
+    final router = GoRouter(
+      initialLocation: '/',
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (context, state) => Consumer(
+            builder: (ctx, ref, _) => builder(ctx, ref),
+          ),
+        ),
+        GoRoute(
+          path: '/otp-email-verification',
+          builder: (context, state) {
+            pushedRoutes?.add('/otp-email-verification');
+            return const Scaffold(body: Text('OTP Screen'));
+          },
+        ),
+        GoRoute(
+          path: '/two-factor-verify',
+          builder: (context, state) {
+            pushedRoutes?.add('/two-factor-verify');
+            return const Scaffold(body: Text('2FA Screen'));
+          },
+        ),
+        GoRoute(
+          path: '/complete-profile',
+          builder: (context, state) {
+            pushedRoutes?.add('/complete-profile');
+            return const Scaffold(body: Text('Complete Profile Screen'));
+          },
+        ),
+      ],
+    );
+
     return ProviderScope(
       overrides: [authProvider.overrideWith((ref) => notifier)],
-      child: MaterialApp(
+      child: MaterialApp.router(
+        routerConfig: router,
         locale: const Locale('en'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: child,
       ),
     );
   }
 
-  /// Membangun beranda statis yang memanggil handleAuthContinuation() persis
-  /// seperti yang dilakukan LandingScreen setelah googleLogin().
   Widget landingHarness(BuildContext context, WidgetRef ref, AuthState state) {
     return Scaffold(
       body: Builder(
@@ -56,7 +91,6 @@ void main() {
             ref: ref,
             state: state,
             l: AppLocalizations.of(ctx)!,
-            
           ),
           child: const Text('GOOGLE'),
         ),
@@ -65,56 +99,44 @@ void main() {
   }
 
   group('Google flow - akun yang BELUM terdaftar', () {
-    testWidgets('needsOtp membuka sheet Email OTP, bukan diam di landing', (
+    testWidgets('needsOtp mengarahkan ke /otp-email-verification screen', (
       tester,
     ) async {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-
+      final pushedRoutes = <String>[];
       final state = AuthAuthenticated(
         buildUser(),
         needsOtp: true,
       );
 
       await tester.pumpWidget(
-        wrapWidget(
-          Consumer(
-            builder: (context, ref, _) => landingHarness(context, ref, state),
-          ),
-          container,
+        wrapWithRouter(
+          pushedRoutes: pushedRoutes,
+          builder: (ctx, ref) => landingHarness(ctx, ref, state),
         ),
       );
       await tester.pumpAndSettle();
 
-      // Sebelum tombol ditekan tidak ada sheet sama sekali.
-      expect(find.byType(BottomSheet), findsNothing);
+      expect(find.text('OTP Screen'), findsNothing);
 
       await tester.tap(find.text('GOOGLE'));
       await tester.pumpAndSettle();
 
-      // Inilah yang dulu tidak terjadi dari LandingScreen: user Google yang
-      // belum terdaftar diam-diam tertahan tanpa OTP.
-      expect(find.byType(BottomSheet), findsWidgets);
-      expect(find.byType(ModalBarrier), findsWidgets);
+      expect(find.text('OTP Screen'), findsOneWidget);
     });
 
     testWidgets('needsCompletion mengarahkan ke Complete Profile', (
       tester,
     ) async {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-
+      final pushedRoutes = <String>[];
       final state = AuthAuthenticated(
         buildUser(),
         needsCompletion: true,
       );
 
       await tester.pumpWidget(
-        wrapWidget(
-          Consumer(
-            builder: (context, ref, _) => landingHarness(context, ref, state),
-          ),
-          container,
+        wrapWithRouter(
+          pushedRoutes: pushedRoutes,
+          builder: (ctx, ref) => landingHarness(ctx, ref, state),
         ),
       );
       await tester.pumpAndSettle();
@@ -122,19 +144,15 @@ void main() {
       await tester.tap(find.text('GOOGLE'));
       await tester.pumpAndSettle();
 
-      // Cabang ini memanggil GoRouter.of(context). Tanpa router di harness ini
-      // GoRouter akan melempar -- jadi yang diuji di sini hanya bahwa listener
-      // ikut memanggil helper (tidak diam), bukan tujuan akhirnya.
-      // Keberhasilan berarti tidak ada exception yang lolos ke test.
-      expect(tester.takeException(), isNotNull);
+      expect(find.text('Complete Profile Screen'), findsOneWidget);
     });
   });
 
   group('Google flow - akun yang SUDAH terdaftar', () {
-    testWidgets('2FA aktif membuka sheet challenge 2FA', (tester) async {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-
+    testWidgets('2FA aktif mengarahkan ke /two-factor-verify screen', (
+      tester,
+    ) async {
+      final pushedRoutes = <String>[];
       final state = const AuthTwoFactorRequired(
         challengeToken: 'challenge-token',
         method: 'authenticator',
@@ -142,40 +160,29 @@ void main() {
       );
 
       await tester.pumpWidget(
-        wrapWidget(
-          Consumer(
-            builder: (context, ref, _) => landingHarness(context, ref, state),
-          ),
-          container,
+        wrapWithRouter(
+          pushedRoutes: pushedRoutes,
+          builder: (ctx, ref) => landingHarness(ctx, ref, state),
         ),
       );
       await tester.pumpAndSettle();
 
-      expect(find.byType(BottomSheet), findsNothing);
+      expect(find.text('2FA Screen'), findsNothing);
 
       await tester.tap(find.text('GOOGLE'));
       await tester.pumpAndSettle();
 
-      // OtpEmailOrTwoFactory: challenge 2FA harus muncul dari landing.
-      expect(find.byType(BottomSheet), findsWidgets);
+      expect(find.text('2FA Screen'), findsOneWidget);
     });
 
     testWidgets('tanpa 2FA tidak ditangani helper, diserahkan ke pemanggil', (
       tester,
     ) async {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-
       final state = AuthAuthenticated(buildUser());
 
       await tester.pumpWidget(
-        wrapWidget(
-          Consumer(
-            builder: (context, ref, _) {
-              return landingHarness(context, ref, state);
-            },
-          ),
-          container,
+        wrapWithRouter(
+          builder: (ctx, ref) => landingHarness(ctx, ref, state),
         ),
       );
       await tester.pumpAndSettle();
@@ -183,27 +190,19 @@ void main() {
       await tester.tap(find.text('GOOGLE'));
       await tester.pumpAndSettle();
 
-      // Kasus "langsung Home" sengaja TIDAK ditangani helper, supaya pemanggil
-      // tetap memegang kendali (sinkronisasi app-lock sebelum ke Home).
-      expect(find.byType(BottomSheet), findsNothing);
+      expect(find.text('GOOGLE'), findsOneWidget);
     });
   });
 
   group('Notifikasi error tidak dianggap sebagai kelanjutan alur', () {
-    testWidgets('AuthError tidak membuka sheet apa pun', (tester) async {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-
+    testWidgets('AuthError tidak membuka rute apa pun', (tester) async {
       await tester.pumpWidget(
-        wrapWidget(
-          Consumer(
-            builder: (context, ref, _) => landingHarness(
-              context,
-              ref,
-              const AuthError('gagal'),
-            ),
+        wrapWithRouter(
+          builder: (ctx, ref) => landingHarness(
+            ctx,
+            ref,
+            const AuthError('gagal'),
           ),
-          container,
         ),
       );
       await tester.pumpAndSettle();
@@ -211,7 +210,7 @@ void main() {
       await tester.tap(find.text('GOOGLE'));
       await tester.pumpAndSettle();
 
-      expect(find.byType(BottomSheet), findsNothing);
+      expect(find.text('GOOGLE'), findsOneWidget);
     });
   });
 }
