@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+﻿import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kDebugMode, visibleForTesting;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
@@ -6,6 +6,44 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../Config/AppConfig/AppConfig.dart';
 import '../../Errors/AppErrorCodes/AppErrorCodes.dart';
 import '../../Errors/Failures/Failures.dart';
+
+/// Field sensitif yang TIDAK BOLEH muncul di log development (kDebugMode).
+/// [_sanitizeBody] menyensor nilainya sebelum PrettyDioLogger mencetak.
+const _kSensitiveFields = <String>{
+  'password',
+  'password_confirmation',
+  'current_password',
+  'otp',
+  'otp_code',
+  'code',
+  'token',
+  'firebase_id_token',
+  'google_id_token',
+  'id_token',
+  'secret',
+  'two_factor_secret',
+  'backup_codes',
+  'ktp_number',
+  'nik',
+  'npwp',
+  'pin',
+  'payment_proof',
+};
+
+/// Sensor nilai field sensitif secara rekursif agar tidak bocor ke log.
+dynamic _sanitizeBody(dynamic body) {
+  if (body is Map) {
+    return body.map((k, v) {
+      final key = k.toString().toLowerCase();
+      if (_kSensitiveFields.any((s) => key.contains(s))) {
+        return MapEntry(k, '***REDACTED***');
+      }
+      return MapEntry(k, _sanitizeBody(v));
+    });
+  }
+  if (body is List) return body.map(_sanitizeBody).toList();
+  return body;
+}
 
 class AuthInterceptor extends Interceptor {
   final _storage = const FlutterSecureStorage();
@@ -95,6 +133,41 @@ class ErrorInterceptor extends Interceptor {
   }
 }
 
+/// Interceptor yang mencetak request/response ke console di debug mode,
+/// dengan sensor otomatis pada field sensitif ([_kSensitiveFields]).
+/// Menggantikan PrettyDioLogger agar filtering body bisa dilakukan
+/// sebelum data dikirim ke logger.
+class _SanitizingLogInterceptor extends Interceptor {
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    // ignore: avoid_print
+    print('[DIO] -->  ');
+    if (options.data != null) {
+      // ignore: avoid_print
+      print('[DIO] Body: ');
+    }
+    handler.next(options);
+  }
+
+  @override
+  void onResponse(Response response, ResponseInterceptorHandler handler) {
+    // ignore: avoid_print
+    print('[DIO] <--  ');
+    if (response.data != null) {
+      // ignore: avoid_print
+      print('[DIO] Response: ');
+    }
+    handler.next(response);
+  }
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) {
+    // ignore: avoid_print
+    print('[DIO] ERROR  : ');
+    handler.next(err);
+  }
+}
+
 class DioClient {
   /// Instance tunggal yang benar-benar dipakai.
   ///
@@ -135,15 +208,7 @@ class DioClient {
     dio.interceptors.addAll([
       AuthInterceptor(),
       LocaleInterceptor(),
-      if (kDebugMode)
-        PrettyDioLogger(
-          requestHeader: true,
-          requestBody: true,
-          responseHeader: false,
-          responseBody: true,
-          error: true,
-          compact: false,
-        ),
+      if (kDebugMode) _SanitizingLogInterceptor(),
       ErrorInterceptor(),
     ]);
 

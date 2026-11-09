@@ -1158,7 +1158,7 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
             const SizedBox(height: AppSizes.md),
             SocialLoginButton(
               provider: SocialProvider.google,
-              enabled: _agreeTerms && _rememberMe,
+              loading: authState is AuthLoading,
               onPressed: _onGoogleLogin,
             ),
             const SizedBox(height: AppSizes.lg),
@@ -1839,6 +1839,15 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
     }
 
     ref.listen<AuthState>(authProvider, (_, state) {
+      if (handleAuthContinuationWithPop(
+        context: context,
+        ref: ref,
+        state: state,
+        l: l,
+      )) {
+        return;
+      }
+
       if (state is AuthAuthenticated) {
         clearGuestMode();
         final navigator = Navigator.of(context);
@@ -2752,7 +2761,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
             const SizedBox(height: AppSizes.md),
             SocialLoginButton(
               provider: SocialProvider.google,
-              enabled: _agreeTerms && _rememberMe,
+              loading: authState is AuthLoading,
               onPressed: () async {
                 if (!_agreeTerms) {
                   _showWarning(l.warningMustAgree);
