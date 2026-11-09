@@ -1,7 +1,6 @@
 ﻿import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kDebugMode, visibleForTesting;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../Config/AppConfig/AppConfig.dart';
 import '../../Errors/AppErrorCodes/AppErrorCodes.dart';
@@ -141,10 +140,10 @@ class _SanitizingLogInterceptor extends Interceptor {
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     // ignore: avoid_print
-    print('[DIO] -->  ');
+    print('[DIO] --> ${options.method} ${options.uri}');
     if (options.data != null) {
       // ignore: avoid_print
-      print('[DIO] Body: ');
+      print('[DIO] Body: ${_sanitizeBody(options.data)}');
     }
     handler.next(options);
   }
@@ -152,10 +151,10 @@ class _SanitizingLogInterceptor extends Interceptor {
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
     // ignore: avoid_print
-    print('[DIO] <--  ');
+    print('[DIO] <-- ${response.statusCode} ${response.requestOptions.uri}');
     if (response.data != null) {
       // ignore: avoid_print
-      print('[DIO] Response: ');
+      print('[DIO] Response: ${_sanitizeBody(response.data)}');
     }
     handler.next(response);
   }
@@ -163,7 +162,9 @@ class _SanitizingLogInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
     // ignore: avoid_print
-    print('[DIO] ERROR  : ');
+    print(
+      '[DIO] ERROR ${err.response?.statusCode} ${err.requestOptions.uri}: ${err.message}',
+    );
     handler.next(err);
   }
 }
