@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../../../../../FirebaseOptions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -377,7 +379,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> googleLogin() async {
     state = const AuthLoading();
     try {
-      await _googleSignIn.signOut();
+      try {
+        await _googleSignIn.signOut();
+      } catch (_) {}
+
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) {
         state = const AuthInitial();
@@ -385,19 +390,53 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-      final firebaseCredential = await FirebaseAuth.instance.signInWithCredential(credential);
-      final firebaseIdToken = await firebaseCredential.user?.getIdToken(true);
-      if (firebaseIdToken == null || firebaseIdToken.isEmpty) {
+
+      if (Firebase.apps.isEmpty) {
+        try {
+          await Firebase.initializeApp(
+            options: DefaultFirebaseOptions.currentPlatform,
+          );
+        } catch (e) {
+          debugPrint('[GoogleLogin] Firebase.initializeApp fallback: $e');
+        }
+      }
+
+      String? firebaseIdToken;
+      try {
+        final credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+        final firebaseCredential =
+            await FirebaseAuth.instance.signInWithCredential(credential);
+        firebaseIdToken = await firebaseCredential.user?.getIdToken(true);
+      } on FirebaseAuthException catch (e) {
+        debugPrint('[GoogleLogin] FirebaseAuthException (${e.code}): ${e.message}');
+      } catch (e) {
+        debugPrint('[GoogleLogin] Firebase sign-in with credential warning: $e');
+      }
+
+      // Pastikan ada token yang valid untuk dikirim ke backend
+      final googleIdToken = googleAuth.idToken;
+      if ((firebaseIdToken == null || firebaseIdToken.isEmpty) &&
+          (googleIdToken == null || googleIdToken.isEmpty)) {
         throw Exception(AppErrorCodes.failedGetGoogleToken);
+      }
+
+      final payload = <String, dynamic>{};
+      if (firebaseIdToken != null && firebaseIdToken.isNotEmpty) {
+        payload['firebase_id_token'] = firebaseIdToken;
+      }
+      if (googleIdToken != null && googleIdToken.isNotEmpty) {
+        payload['google_id_token'] = googleIdToken;
+        if (!payload.containsKey('firebase_id_token')) {
+          payload['id_token'] = googleIdToken;
+        }
       }
 
       final response = await _dio.post(
         ApiEndpoints.googleLogin,
-        data: {'firebase_id_token': firebaseIdToken},
+        data: payload,
       );
       final respData = response.data as Map<String, dynamic>? ?? {};
       final inner = respData['data'] as Map<String, dynamic>? ?? respData;
@@ -453,6 +492,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     } on DioException catch (e) {
       final msg = _extractBackendError(e);
       state = AuthError(msg);
+    } on FirebaseAuthException catch (e) {
+      debugPrint('[GoogleLogin] FirebaseAuthException caught: ${e.code} - ${e.message}');
+      state = AuthError(e.message ?? AppErrorCodes.googleLoginFailed);
     } catch (e, st) {
       debugPrint('[GoogleLogin] error: $e\n$st');
       state = AuthError(AppErrorCodes.anErrorOccurred);
