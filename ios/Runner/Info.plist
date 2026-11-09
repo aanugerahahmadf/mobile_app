@@ -36,7 +36,12 @@
 	<string>Buka aplikasi Wedding dengan Face ID</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
-		<key>NSAllowsArbitraryLoads</key>
+		<!--
+			Produksi wajib HTTPS. NSAllowsLocalNetworking hanya membuka koneksi
+			HTTP ke host lokal/LAN saat development; jangan ganti dengan
+			NSAllowsArbitraryLoads karena itu mematikan ATS untuk semua domain.
+		-->
+		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
 	<key>UIApplicationSceneManifest</key>
