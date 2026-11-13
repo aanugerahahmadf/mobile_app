@@ -507,26 +507,26 @@ class _HomePageState extends ConsumerState<HomeScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 MenuCard(
+                  assetPath: 'assets/gif/catalog.gif',
                   icon: Icons.card_giftcard,
-                  bgColor: const Color(0xFFE3F0FF),
                   iconColor: const Color(0xFF2B7BE4),
                   onTap: () => context.push('/catalog'),
                 ),
                 MenuCard(
+                  assetPath: 'assets/gif/review.gif',
                   icon: Icons.feedback_outlined,
-                  bgColor: const Color(0xFFFFF3E0),
                   iconColor: const Color(0xFFFF8F00),
                   onTap: () => context.push('/my-reviews'),
                 ),
                 MenuCard(
+                  assetPath: 'assets/gif/favorite.gif',
                   icon: Icons.favorite,
-                  bgColor: const Color(0xFFFCE4EC),
                   iconColor: const Color(0xFFE53935),
                   onTap: () => context.push('/Favorite'),
                 ),
                 MenuCard(
+                  assetPath: 'assets/gif/voucher.gif',
                   icon: Icons.local_activity,
-                  bgColor: const Color(0xFFE0F7FA),
                   iconColor: const Color(0xFF00897B),
                   onTap: () => context.push('/vouchers'),
                 ),

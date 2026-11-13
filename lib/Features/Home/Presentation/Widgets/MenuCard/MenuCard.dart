@@ -1,21 +1,24 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
-/// Glass Modern + 3D Tilt Menu Card for Home Screen Services.
+/// 3D Tilt Menu Card for Home Screen Services.
 class MenuCard extends StatefulWidget {
-  final IconData icon;
-  final Color bgColor;
+  final IconData? icon;
+  final String? assetPath;
   final Color iconColor;
   final VoidCallback? onTap;
 
   const MenuCard({
     super.key,
-    required this.icon,
-    required this.bgColor,
+    this.icon,
+    this.assetPath,
     required this.iconColor,
     this.onTap,
-  });
+  }) : assert(
+          icon != null || assetPath != null,
+          'Either icon or assetPath must be provided',
+        );
 
   @override
   State<MenuCard> createState() => _MenuCardState();
@@ -72,11 +75,6 @@ class _MenuCardState extends State<MenuCard> with SingleTickerProviderStateMixin
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final glassColor = isDark
-        ? widget.bgColor.withValues(alpha: 0.18)
-        : widget.bgColor.withValues(alpha: 0.72);
-
     final transform = Matrix4.identity()
       ..setEntry(3, 2, 0.002)
       ..scaleByDouble(_scale, _scale, 1.0, 1.0)
@@ -94,50 +92,45 @@ class _MenuCardState extends State<MenuCard> with SingleTickerProviderStateMixin
           child: Transform(
             transform: transform,
             alignment: FractionalOffset.center,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: widget.iconColor.withValues(alpha: isDark ? 0.25 : 0.18),
-                    blurRadius: 14,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                  child: Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      color: glassColor,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: isDark
-                            ? Colors.white.withValues(alpha: 0.15)
-                            : Colors.white.withValues(alpha: 0.70),
-                        width: 1.2,
-                      ),
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Colors.white.withValues(alpha: isDark ? 0.12 : 0.55),
-                          Colors.white.withValues(alpha: isDark ? 0.02 : 0.15),
-                        ],
-                      ),
-                    ),
-                    child: Icon(widget.icon, color: widget.iconColor, size: 26),
-                  ),
-                ),
-              ),
+            child: SizedBox(
+              width: 60,
+              height: 60,
+              child: Center(child: _buildIcon()),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildIcon() {
+    const iconSize = 40.0;
+    final assetPath = widget.assetPath;
+    if (assetPath != null && assetPath.isNotEmpty) {
+      final lower = assetPath.toLowerCase();
+      if (lower.endsWith('.svg')) {
+        return SvgPicture.asset(
+          assetPath,
+          width: iconSize,
+          height: iconSize,
+          placeholderBuilder: (_) => _fallbackIcon(size: iconSize),
+        );
+      }
+      return Image.asset(
+        assetPath,
+        width: iconSize,
+        height: iconSize,
+        errorBuilder: (_, _, _) => _fallbackIcon(size: iconSize),
+      );
+    }
+    return _fallbackIcon(size: iconSize);
+  }
+
+  Widget _fallbackIcon({double size = 40}) {
+    return Icon(
+      widget.icon ?? Icons.image_outlined,
+      color: widget.iconColor,
+      size: size,
     );
   }
 }

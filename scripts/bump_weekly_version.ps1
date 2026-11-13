@@ -2,7 +2,7 @@
 #
 # Menambah build number pubspec.yaml (1.0.0+N -> 1.0.0+N+1) sekali jalan.
 # Dipanggil otomatis Task Scheduler tiap hari Sabtu (task:
-# "WeddingApp-Mobile-Weekly-VersionBump") supaya versi aplikasi mobile selalu
+# "Timeless Florals-Mobile-Weekly-VersionBump") supaya versi aplikasi mobile selalu
 # update mingguan. versionName "1.0.0.<N>" di HP di-derive otomatis oleh
 # android/app/build.gradle.kts dari build number pubspec -- cukup edit satu file.
 #

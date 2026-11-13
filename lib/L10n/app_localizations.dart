@@ -479,7 +479,7 @@ abstract class AppLocalizations {
   /// No description provided for @agreeSuffix.
   ///
   /// In en, this message translates to:
-  /// **'Wedding Floral Decorations.'**
+  /// **'Timeless Florals.'**
   String get agreeSuffix;
 
   /// No description provided for @agreeTerms.
@@ -503,7 +503,7 @@ abstract class AppLocalizations {
   /// No description provided for @agreementSuffix.
   ///
   /// In en, this message translates to:
-  /// **'Wedding Floral Decorations.'**
+  /// **'Timeless Florals.'**
   String get agreementSuffix;
 
   /// No description provided for @all.
@@ -539,7 +539,7 @@ abstract class AppLocalizations {
   /// No description provided for @appDescription.
   ///
   /// In en, this message translates to:
-  /// **'WeddingApp helps you find the perfect Wedding Flower Decorations. Explore packages, search by image, and order easily.'**
+  /// **'Timeless Florals helps you find the perfect Timeless Florals. Explore packages, search by image, and order easily.'**
   String get appDescription;
 
   /// No description provided for @appLock.
@@ -551,7 +551,7 @@ abstract class AppLocalizations {
   /// No description provided for @appName.
   ///
   /// In en, this message translates to:
-  /// **'Wedding Flower Decorations'**
+  /// **'Timeless Florals'**
   String get appName;
 
   /// No description provided for @appPolicy.
@@ -563,7 +563,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'Wedding Flower Decorations'**
+  /// **'Timeless Florals'**
   String get appTitle;
 
   /// No description provided for @appVersion.
@@ -4406,6 +4406,126 @@ abstract class AppLocalizations {
   /// **'Shipping Cost'**
   String get shippingCost;
 
+  /// No description provided for @shippingTracking.
+  ///
+  /// In en, this message translates to:
+  /// **'Shipping & Tracking'**
+  String get shippingTracking;
+
+  /// No description provided for @courier.
+  ///
+  /// In en, this message translates to:
+  /// **'Courier'**
+  String get courier;
+
+  /// No description provided for @trackingNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracking Number'**
+  String get trackingNumber;
+
+  /// No description provided for @trackPackage.
+  ///
+  /// In en, this message translates to:
+  /// **'Track Package'**
+  String get trackPackage;
+
+  /// No description provided for @shippedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Shipped At'**
+  String get shippedAt;
+
+  /// No description provided for @deliveredAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered At'**
+  String get deliveredAt;
+
+  /// No description provided for @shippingNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Shipping Notes'**
+  String get shippingNotes;
+
+  /// No description provided for @shippingStatus.
+  ///
+  /// In en, this message translates to:
+  /// **'Shipping Status'**
+  String get shippingStatus;
+
+  /// No description provided for @noTrackingYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No Tracking Yet'**
+  String get noTrackingYet;
+
+  /// No description provided for @deliveryLocationMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Map & Delivery Location'**
+  String get deliveryLocationMap;
+
+  /// No description provided for @destinationLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Destination Location'**
+  String get destinationLocation;
+
+  /// No description provided for @openInMaps.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in Google Maps'**
+  String get openInMaps;
+
+  /// No description provided for @liveCourierLocationNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The map shows the destination. Live courier location will appear when real-time GPS tracking data from the courier/driver is available and connected.'**
+  String get liveCourierLocationNote;
+
+  /// No description provided for @waitingTrackingInfo.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracking info (J&T, SiCepat, Shopee Express, etc.) will appear once the order is processed.'**
+  String get waitingTrackingInfo;
+
+  /// No description provided for @syncTracking.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Tracking'**
+  String get syncTracking;
+
+  /// No description provided for @trackingHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracking History'**
+  String get trackingHistory;
+
+  /// No description provided for @trackingSynced.
+  ///
+  /// In en, this message translates to:
+  /// **'Tracking synced successfully'**
+  String get trackingSynced;
+
+  /// No description provided for @confirmReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Order Received'**
+  String get confirmReceived;
+
+  /// No description provided for @confirmReceivedDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm that you have received this order?'**
+  String get confirmReceivedDesc;
+
+  /// No description provided for @buyAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy Again'**
+  String get buyAgain;
+
   /// No description provided for @shopeepay.
   ///
   /// In en, this message translates to:
@@ -5420,6 +5540,12 @@ abstract class AppLocalizations {
   /// **'Welcome'**
   String get welcome;
 
+  /// No description provided for @welcomeToShopFloralDecorations.
+  ///
+  /// In en, this message translates to:
+  /// **'Welcome to Timeless Florals'**
+  String get welcomeToShopFloralDecorations;
+
   /// No description provided for @whatsapp.
   ///
   /// In en, this message translates to:
@@ -5479,6 +5605,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Write a Rating & Comment'**
   String get writeRatingComment;
+
+  /// No description provided for @toReview.
+  ///
+  /// In en, this message translates to:
+  /// **'To Review'**
+  String get toReview;
+
+  /// No description provided for @reviewed.
+  ///
+  /// In en, this message translates to:
+  /// **'Reviewed'**
+  String get reviewed;
+
+  /// No description provided for @viewMyReview.
+  ///
+  /// In en, this message translates to:
+  /// **'View Review'**
+  String get viewMyReview;
 
   /// No description provided for @writeYourReview.
   ///

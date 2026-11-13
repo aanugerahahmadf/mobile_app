@@ -202,7 +202,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'By checking Agree & Join or Continue, you agree to ';
 
   @override
-  String get agreeSuffix => 'Wedding Floral Decorations.';
+  String get agreeSuffix => 'Timeless Florals.';
 
   @override
   String get agreeTerms => 'I have read and agree to the';
@@ -215,7 +215,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'By checking Agree & Join or Continue, you agree to the ';
 
   @override
-  String get agreementSuffix => 'Wedding Floral Decorations.';
+  String get agreementSuffix => 'Timeless Florals.';
 
   @override
   String get all => 'All';
@@ -234,19 +234,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get appDescription =>
-      'WeddingApp helps you find the perfect Wedding Flower Decorations. Explore packages, search by image, and order easily.';
+      'Timeless Florals helps you find the perfect Timeless Florals. Explore packages, search by image, and order easily.';
 
   @override
   String get appLock => 'App Lock';
 
   @override
-  String get appName => 'Wedding Flower Decorations';
+  String get appName => 'Timeless Florals';
 
   @override
   String get appPolicy => 'App Policy';
 
   @override
-  String get appTitle => 'Wedding Flower Decorations';
+  String get appTitle => 'Timeless Florals';
 
   @override
   String get appVersion => '1.0.0';
@@ -2231,6 +2231,69 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shippingCost => 'Shipping Cost';
 
   @override
+  String get shippingTracking => 'Shipping & Tracking';
+
+  @override
+  String get courier => 'Courier';
+
+  @override
+  String get trackingNumber => 'Tracking Number';
+
+  @override
+  String get trackPackage => 'Track Package';
+
+  @override
+  String get shippedAt => 'Shipped At';
+
+  @override
+  String get deliveredAt => 'Delivered At';
+
+  @override
+  String get shippingNotes => 'Shipping Notes';
+
+  @override
+  String get shippingStatus => 'Shipping Status';
+
+  @override
+  String get noTrackingYet => 'No Tracking Yet';
+
+  @override
+  String get deliveryLocationMap => 'Map & Delivery Location';
+
+  @override
+  String get destinationLocation => 'Destination Location';
+
+  @override
+  String get openInMaps => 'Open in Google Maps';
+
+  @override
+  String get liveCourierLocationNote =>
+      'The map shows the destination. Live courier location will appear when real-time GPS tracking data from the courier/driver is available and connected.';
+
+  @override
+  String get waitingTrackingInfo =>
+      'Tracking info (J&T, SiCepat, Shopee Express, etc.) will appear once the order is processed.';
+
+  @override
+  String get syncTracking => 'Sync Tracking';
+
+  @override
+  String get trackingHistory => 'Tracking History';
+
+  @override
+  String get trackingSynced => 'Tracking synced successfully';
+
+  @override
+  String get confirmReceived => 'Order Received';
+
+  @override
+  String get confirmReceivedDesc =>
+      'Confirm that you have received this order?';
+
+  @override
+  String get buyAgain => 'Buy Again';
+
+  @override
   String get shopeepay => 'ShopeePay';
 
   @override
@@ -2758,6 +2821,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get welcome => 'Welcome';
 
   @override
+  String get welcomeToShopFloralDecorations => 'Welcome to Timeless Florals';
+
+  @override
   String get whatsapp => 'WhatsApp';
 
   @override
@@ -2788,6 +2854,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get writeRatingComment => 'Write a Rating & Comment';
+
+  @override
+  String get toReview => 'To Review';
+
+  @override
+  String get reviewed => 'Reviewed';
+
+  @override
+  String get viewMyReview => 'View Review';
 
   @override
   String get writeYourReview => 'Write your review...';

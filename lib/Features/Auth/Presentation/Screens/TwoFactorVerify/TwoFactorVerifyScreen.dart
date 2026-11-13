@@ -56,6 +56,13 @@ class _TwoFactorVerifyScreenState
   void initState() {
     super.initState();
     _method = _challenge?.method ?? _methodAuthenticator;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final auth = ref.read(authProvider);
+      if (auth is AuthAuthenticated && auth.user.isAdminRole) {
+        context.go('/home');
+      }
+    });
   }
 
   @override

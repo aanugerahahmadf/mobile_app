@@ -75,6 +75,7 @@ class OrderNotifier extends StateNotifier<OrderState> {
   Future<void> fetchOrders({
     String? status,
     String? paymentType,
+    String? reviewStatus,
     bool refresh = false,
   }) async {
     if (refresh) {
@@ -90,6 +91,7 @@ class OrderNotifier extends StateNotifier<OrderState> {
       final orders = await _repository.getOrders(
         status: status,
         paymentType: paymentType,
+        reviewStatus: reviewStatus,
         page: state.page,
       );
       if (refresh || state.page == 1) {
@@ -120,10 +122,18 @@ class OrderNotifier extends StateNotifier<OrderState> {
     }
   }
 
-  Future<void> loadMore({String? status, String? paymentType}) async {
+  Future<void> loadMore({
+    String? status,
+    String? paymentType,
+    String? reviewStatus,
+  }) async {
     if (!state.hasMore || state.loadingMore) return;
     state = state.copyWith(loadingMore: true, page: state.page + 1);
-    await fetchOrders(status: status, paymentType: paymentType);
+    await fetchOrders(
+      status: status,
+      paymentType: paymentType,
+      reviewStatus: reviewStatus,
+    );
   }
 
   Future<bool> createOrder(Map<String, dynamic> data) async {

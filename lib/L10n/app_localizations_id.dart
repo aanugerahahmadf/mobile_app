@@ -202,7 +202,7 @@ class AppLocalizationsId extends AppLocalizations {
       'Dengan mencentang Setuju & Bergabung atau Lanjutkan, Anda menyetujui ';
 
   @override
-  String get agreeSuffix => ' Wedding Floral Decorations.';
+  String get agreeSuffix => ' Timeless Florals.';
 
   @override
   String get agreeTerms => 'Saya telah membaca dan menyetujui';
@@ -215,7 +215,7 @@ class AppLocalizationsId extends AppLocalizations {
       'Dengan mencentang Setuju & Bergabung atau Lanjutkan, Anda menyetujui ';
 
   @override
-  String get agreementSuffix => ' Wedding Floral Decorations.';
+  String get agreementSuffix => ' Timeless Florals.';
 
   @override
   String get all => 'Semua';
@@ -234,19 +234,19 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get appDescription =>
-      'WeddingApp membantu Anda menemukan Wedding Flower Decorations yang sempurna. Jelajahi paket, cari dengan gambar, dan pesan dengan mudah.';
+      'Timeless Florals membantu Anda menemukan Timeless Florals yang sempurna. Jelajahi paket, cari dengan gambar, dan pesan dengan mudah.';
 
   @override
   String get appLock => 'Kunci Aplikasi';
 
   @override
-  String get appName => 'Dekorasi Bunga Pernikahan';
+  String get appName => 'Timeless Florals';
 
   @override
   String get appPolicy => 'Kebijakan Aplikasi';
 
   @override
-  String get appTitle => 'Dekorasi Bunga Pernikahan';
+  String get appTitle => 'Timeless Florals';
 
   @override
   String get appVersion => '1.0.0';
@@ -2236,6 +2236,69 @@ class AppLocalizationsId extends AppLocalizations {
   String get shippingCost => 'Ongkos Kirim';
 
   @override
+  String get shippingTracking => 'Pengiriman & Pelacakan';
+
+  @override
+  String get courier => 'Kurir';
+
+  @override
+  String get trackingNumber => 'Nomor Resi';
+
+  @override
+  String get trackPackage => 'Lacak Paket';
+
+  @override
+  String get shippedAt => 'Dikirim';
+
+  @override
+  String get deliveredAt => 'Diterima';
+
+  @override
+  String get shippingNotes => 'Catatan Pengiriman';
+
+  @override
+  String get shippingStatus => 'Status Pengiriman';
+
+  @override
+  String get noTrackingYet => 'Belum Ada Resi';
+
+  @override
+  String get deliveryLocationMap => 'Peta & Lokasi Pengantaran';
+
+  @override
+  String get destinationLocation => 'Lokasi Tujuan';
+
+  @override
+  String get openInMaps => 'Buka di Google Maps';
+
+  @override
+  String get liveCourierLocationNote =>
+      'Peta menampilkan lokasi tujuan. Posisi kurir secara live/real-time akan tampil jika data pelacakan GPS dari kurir/driver tersedia dan terhubung.';
+
+  @override
+  String get waitingTrackingInfo =>
+      'Info resi/pelacakan (J&T, SiCepat, Shopee Express, dll.) akan muncul setelah pesanan diproses.';
+
+  @override
+  String get syncTracking => 'Sinkronkan Pelacakan';
+
+  @override
+  String get trackingHistory => 'Riwayat Pelacakan';
+
+  @override
+  String get trackingSynced => 'Pelacakan berhasil disinkronkan';
+
+  @override
+  String get confirmReceived => 'Pesanan Diterima';
+
+  @override
+  String get confirmReceivedDesc =>
+      'Konfirmasi bahwa pesanan sudah Anda terima dan selesai?';
+
+  @override
+  String get buyAgain => 'Beli Lagi';
+
+  @override
   String get shopeepay => 'ShopeePay';
 
   @override
@@ -2765,6 +2828,10 @@ class AppLocalizationsId extends AppLocalizations {
   String get welcome => 'Selamat Datang';
 
   @override
+  String get welcomeToShopFloralDecorations =>
+      'Selamat Datang di Timeless Florals';
+
+  @override
   String get whatsapp => 'WhatsApp';
 
   @override
@@ -2795,6 +2862,15 @@ class AppLocalizationsId extends AppLocalizations {
 
   @override
   String get writeRatingComment => 'Tulis Komentar Penilaian';
+
+  @override
+  String get toReview => 'Belum Dinilai';
+
+  @override
+  String get reviewed => 'Sudah Dinilai';
+
+  @override
+  String get viewMyReview => 'Lihat Ulasan';
 
   @override
   String get writeYourReview => 'Tulis ulasan Anda...';

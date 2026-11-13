@@ -359,7 +359,15 @@ bool handleAuthContinuationWithPop({
   required AuthState state,
   required AppLocalizations l,
 }) {
-  // Tutup sheet sebelum navigasi.
+  final isDirectAuthenticatedHome = state is AuthAuthenticated &&
+      (state.user.isAdminRole || (!state.needsOtp && !state.needsCompletion));
+  if (isDirectAuthenticatedHome) {
+    // Biarkan pemanggil menutup sheet dan mengarahkan ke home
+    // (termasuk sinkronisasi app-lock bila perlu).
+    return false;
+  }
+
+  // Tutup sheet sebelum navigasi lanjutan (OTP/profil/2FA).
   Navigator.of(context).pop();
   return handleAuthContinuation(context: context, ref: ref, state: state, l: l);
 }

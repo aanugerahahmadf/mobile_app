@@ -17,8 +17,6 @@ class ApiEndpoints {
   static const String twoFactorResend = '/auth/two-factor/resend';
 
   static const String googleLogin = '/auth/google';
-  static const String facebookLogin = '/auth/facebook';
-  static const String appleLogin = '/auth/apple';
 
   // User & Profile
   static const String user = '/user';
@@ -56,8 +54,9 @@ class ApiEndpoints {
   static String profileDocumentNumber(String documentType) => '/profile/$documentType';
   static String profileDocumentPhoto(String documentType) => '/profile/$documentType-photo';
 
-  // Bookings / Orders
-  static const String bookings = '/bookings';
+  // Orders
+  static const String orders = '/orders';
+  static const String bookings = '/orders';
 
   // Search
   static const String search = '/search';
@@ -114,9 +113,11 @@ class ApiEndpoints {
   static String catalogDetail(String id) => '/catalog/$id';
   static String catalogTiers(String id) => '/catalog/$id/tiers';
   static String cartItem(String id) => '/cart/$id';
-  static String bookingDetail(String id) => '/bookings/$id';
-  static String bookingPay(String id) => '/bookings/$id/pay';
-  static String bookingCancel(String id) => '/bookings/$id/cancel';
+  static String bookingDetail(String id) => '/orders/$id';
+  static String bookingPay(String id) => '/orders/$id/pay';
+  static String bookingCancel(String id) => '/orders/$id/cancel';
+  static String orderTrackingSync(String id) => '/orders/$id/tracking/sync';
+  static String orderComplete(String id) => '/orders/$id/complete';
   static String favoriteItem(String packageId) => '/favorite/$packageId';
 
   static String conversationMessages(String id) =>
@@ -156,13 +157,13 @@ class ApiEndpoints {
   static String reviewDeleteReply(int reviewId, int replyId) =>
       '/reviews/$reviewId/reply/$replyId';
   static String orderConfirmPayment(String id) =>
-      '/bookings/$id/confirm-payment';
+      '/orders/$id/confirm-payment';
   static String orderVirtualAccount(String id) =>
-      '/bookings/$id/virtual-account';
-  static String orderQris(String id) => '/bookings/$id/qris';
-  static String bookingUploadProof(String id) => '/bookings/$id/upload-proof';
-  static String invoiceDownload(String id) => '/bookings/$id/invoice';
-  static String invoiceEmail(String id) => '/bookings/$id/invoice/email';
+      '/orders/$id/virtual-account';
+  static String orderQris(String id) => '/orders/$id/qris';
+  static String bookingUploadProof(String id) => '/orders/$id/upload-proof';
+  static String invoiceDownload(String id) => '/orders/$id/invoice';
+  static String invoiceEmail(String id) => '/orders/$id/invoice/email';
 
   // Security
   static const String securityCheckup = '/security/checkup';

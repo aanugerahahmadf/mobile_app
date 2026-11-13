@@ -176,6 +176,9 @@ class UserModel {
   bool get isEmailVerified =>
       emailVerifiedAt != null && emailVerifiedAt!.isNotEmpty;
 
+  bool get isAdminRole =>
+      roles.contains('super_admin') || roles.contains('admin');
+
   Map<String, dynamic> toJson() {
     return {
       'id': id,

@@ -72,7 +72,7 @@ if [ -n "$DISCORD_WEBHOOK" ]; then
       "description": "**Hasil Sinkronisasi:**\n- Berhasil: ${SUCCESS[*]}\n\n**Commit Terakhir:** ${LAST_COMMIT}",
       "color": 3066993,
       "footer": {
-        "text": "Wedding Flowers Decoration App"
+        "text": "Timeless Florals"
       },
       "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     }

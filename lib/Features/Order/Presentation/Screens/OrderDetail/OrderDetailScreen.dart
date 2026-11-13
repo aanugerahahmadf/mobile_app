@@ -40,6 +40,8 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailScreen> {
   bool _emailLoading = false;
   bool _cancelLoading = false;
   bool _deleteLoading = false;
+  bool _trackingSyncLoading = false;
+  bool _confirmReceivedLoading = false;
   String? _error;
 
   @override
@@ -323,6 +325,89 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailScreen> {
     );
   }
 
+  Future<void> _syncTracking() async {
+    final l = AppLocalizations.of(context)!;
+    setState(() => _trackingSyncLoading = true);
+    try {
+      final repo = OrderRepositoryImpl();
+      final data = await repo.syncTracking(widget.id);
+      if (!mounted) return;
+      setState(() {
+        _order = data.isNotEmpty ? data : _order;
+        _trackingSyncLoading = false;
+      });
+      final msg = data['_sync_message'] as String?;
+      AppSnackBar.show(
+        context,
+        msg ?? l.trackingSynced,
+        type: SnackBarType.success,
+      );
+      if (data.isEmpty) await _loadOrder();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _trackingSyncLoading = false);
+      AppSnackBar.show(
+        context,
+        LocalizedError.of(l, e.toString()),
+        type: SnackBarType.error,
+      );
+    }
+  }
+
+  Future<void> _confirmReceived() async {
+    final l = AppLocalizations.of(context)!;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.confirmReceived),
+        content: Text(l.confirmReceivedDesc),
+        actions: [
+          TextButton(onPressed: () => ctx.pop(false), child: Text(l.no)),
+          AppButton(
+            label: l.yes,
+            onPressed: () => ctx.pop(true),
+            type: ButtonType.text,
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+    setState(() => _confirmReceivedLoading = true);
+    try {
+      final repo = OrderRepositoryImpl();
+      final data = await repo.confirmReceived(widget.id);
+      if (!mounted) return;
+      setState(() {
+        if (data.isNotEmpty) _order = data;
+        _confirmReceivedLoading = false;
+      });
+      AppSnackBar.show(context, l.confirmReceived, type: SnackBarType.success);
+      if (data.isEmpty) await _loadOrder();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _confirmReceivedLoading = false);
+      AppSnackBar.show(
+        context,
+        LocalizedError.of(l, e.toString()),
+        type: SnackBarType.error,
+      );
+    }
+  }
+
+  void _buyAgain() {
+    final order = _order;
+    if (order == null) return;
+    final catalogId = '${order['catalog_id'] ?? (order['catalog'] as Map?)?['id'] ?? ''}';
+    final packageId = '${order['package_id'] ?? (order['package'] as Map?)?['id'] ?? ''}';
+    if (catalogId.isNotEmpty && catalogId != 'null') {
+      context.push('/catalog/$catalogId');
+      return;
+    }
+    if (packageId.isNotEmpty && packageId != 'null') {
+      context.push('/catalog/$packageId');
+    }
+  }
+
   /// Ringkasan checkout: metode bayar, nomor VA / payload QRIS, nominal, dan
   /// deadline semuanya berasal dari server.
   Widget _buildPaymentSummary(AppLocalizations l) {
@@ -365,6 +450,245 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailScreen> {
       child: Padding(
         padding: const EdgeInsets.all(AppSizes.md),
         child: Column(children: rows),
+      ),
+    );
+  }
+
+  Widget _buildShippingTracking(AppLocalizations l) {
+    final shipping = _order?['shipping'] as Map<String, dynamic>?;
+    final hasInfo = shipping?['has_info'] == true;
+    final courierName =
+        (shipping?['courier_name'] ?? shipping?['courier']) as String?;
+    final trackingNumber = shipping?['tracking_number'] as String?;
+    final trackingUrl = shipping?['tracking_url'] as String?;
+    final statusLabel = shipping?['status_label'] as String?;
+    final statusCode = shipping?['status'] as String?;
+    final shippedAt = shipping?['shipped_at'] as String?;
+    final deliveredAt = shipping?['delivered_at'] as String?;
+    final notes = shipping?['notes'] as String?;
+    final events = (shipping?['events'] as List?)?.cast<Map<String, dynamic>>() ?? const <Map<String, dynamic>>[];
+    final destination = (_order?['location_address'] ?? _order?['notes']) as String?;
+
+    final steps = const [
+      ('packed', 'Dikemas'),
+      ('picked_up', 'Diambil Kurir'),
+      ('in_transit', 'Dalam Perjalanan'),
+      ('out_for_delivery', 'Sedang Diantar'),
+      ('delivered', 'Terkirim'),
+    ];
+    const rank = {
+      'pending': 0,
+      'packed': 1,
+      'picked_up': 2,
+      'in_transit': 3,
+      'out_for_delivery': 4,
+      'delivered': 5,
+      'returned': 5,
+      'failed': 0,
+    };
+    final currentRank = rank[statusCode] ?? 0;
+    final showProgress = hasInfo && statusCode != 'failed';
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSizes.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.local_shipping_outlined,
+                    color: AppColors.primaryColor, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    l.shippingTracking,
+                    style: AppTextStyles.titleMedium,
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: (statusLabel != null
+                            ? AppColors.primaryColor
+                            : AppColors.textSecondary)
+                        .withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    statusLabel ?? l.noTrackingYet,
+                    style: AppTextStyles.bodySmall.copyWith(
+                      color: statusLabel != null
+                          ? AppColors.primaryColor
+                          : AppColors.textSecondary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              l.waitingTrackingInfo,
+              style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+            ),
+            if (showProgress) ...[
+              const SizedBox(height: 12),
+              Row(
+                children: steps.map((s) {
+                  final stepRank = rank[s.$1] ?? 0;
+                  final active = currentRank >= stepRank && currentRank > 0;
+                  return Expanded(
+                    child: Column(
+                      children: [
+                        Container(
+                          height: 6,
+                          margin: const EdgeInsets.symmetric(horizontal: 2),
+                          decoration: BoxDecoration(
+                            color: active
+                                ? AppColors.primaryColor
+                                : AppColors.textTertiary.withValues(alpha: 0.25),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          s.$2,
+                          textAlign: TextAlign.center,
+                          style: AppTextStyles.labelSmall.copyWith(
+                            fontSize: 10,
+                            color: active
+                                ? AppColors.primaryColor
+                                : AppColors.textSecondary,
+                            fontWeight:
+                                active ? FontWeight.w600 : FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
+            const SizedBox(height: 12),
+            _buildInfoRow(l.courier, (courierName != null && courierName.isNotEmpty) ? courierName : '-'),
+            _buildInfoRow(
+              l.trackingNumber,
+              (trackingNumber != null && trackingNumber.isNotEmpty)
+                  ? trackingNumber
+                  : l.noTrackingYet,
+            ),
+            if (shippedAt != null) _buildInfoRow(l.shippedAt, Formatters.dateTime(shippedAt)),
+            if (deliveredAt != null) _buildInfoRow(l.deliveredAt, Formatters.dateTime(deliveredAt)),
+            if (notes != null && notes.isNotEmpty) _buildInfoRow(l.shippingNotes, notes),
+            Row(
+              children: [
+                if (trackingUrl != null && trackingUrl.isNotEmpty)
+                  Expanded(
+                    child: AppButton(
+                      label: l.trackPackage,
+                      icon: Icons.open_in_new,
+                      type: ButtonType.outline,
+                      onPressed: () async {
+                        final uri = Uri.tryParse(trackingUrl);
+                        if (uri == null) return;
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      },
+                    ),
+                  ),
+                if (trackingNumber != null && trackingNumber.isNotEmpty) ...[
+                  if (trackingUrl != null && trackingUrl.isNotEmpty)
+                    const SizedBox(width: 8),
+                  Expanded(
+                    child: AppButton(
+                      label: _trackingSyncLoading ? '...' : l.syncTracking,
+                      icon: Icons.sync,
+                      type: ButtonType.primary,
+                      onPressed: _trackingSyncLoading ? null : _syncTracking,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            if (events.isNotEmpty) ...[
+              const SizedBox(height: 14),
+              Text(l.trackingHistory, style: AppTextStyles.titleSmall),
+              const SizedBox(height: 8),
+              ...events.take(12).map((e) {
+                final desc = (e['description'] ?? '-') as String;
+                final time = (e['time'] ?? '') as String;
+                final loc = e['location'] as String?;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        margin: const EdgeInsets.only(top: 5),
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: AppColors.primaryColor,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(desc, style: AppTextStyles.bodySmall),
+                            if (time.isNotEmpty || (loc != null && loc.isNotEmpty))
+                              Text(
+                                [if (time.isNotEmpty) time, if (loc != null && loc.isNotEmpty) loc].join(' • '),
+                                style: AppTextStyles.labelSmall.copyWith(color: AppColors.textSecondary),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ] else if (trackingNumber != null && trackingNumber.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                l.waitingTrackingInfo,
+                style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+              ),
+            ],
+            const SizedBox(height: 16),
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const Icon(Icons.location_on_outlined, color: AppColors.primaryColor, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(l.deliveryLocationMap, style: AppTextStyles.titleMedium),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              l.liveCourierLocationNote,
+              style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 8),
+            _buildInfoRow(
+              l.destinationLocation,
+              (destination != null && destination.trim().isNotEmpty) ? destination : '-',
+            ),
+            const SizedBox(height: 8),
+            Text(
+              (trackingNumber != null && trackingNumber.isNotEmpty)
+                  ? '${l.shippingStatus}: ${statusLabel ?? l.noTrackingYet} • ${l.trackingNumber}: $trackingNumber'
+                  : l.noTrackingYet,
+              style: AppTextStyles.bodySmall.copyWith(color: AppColors.textSecondary),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -580,6 +904,8 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailScreen> {
                     const SizedBox(height: 12),
                     _buildPaymentSummary(l),
                     const SizedBox(height: 12),
+                    _buildShippingTracking(l),
+                    const SizedBox(height: 12),
                     Card(
                       child: Padding(
                         padding: const EdgeInsets.all(AppSizes.md),
@@ -624,6 +950,23 @@ class _OrderDetailPageState extends ConsumerState<OrderDetailScreen> {
                       _sendWhatsapp,
                     ),
 
+                    if (_order!['can_confirm_received'] == true) ...[
+                      const SizedBox(height: 8),
+                      AppButton(
+                        label: _confirmReceivedLoading ? '...' : l.confirmReceived,
+                        icon: Icons.check_circle_outline,
+                        onPressed: _confirmReceivedLoading ? null : _confirmReceived,
+                      ),
+                    ],
+                    if ((_order!['catalog_id'] ?? (_order!['catalog'] as Map?)?['id']) != null) ...[
+                      const SizedBox(height: 8),
+                      AppButton(
+                        label: l.buyAgain,
+                        icon: Icons.shopping_bag_outlined,
+                        onPressed: _buyAgain,
+                        type: ButtonType.outline,
+                      ),
+                    ],
                     if (_order!['status'] == 'pending' ||
                         _order!['status'] == 'confirmed') ...[
                       const SizedBox(height: 8),

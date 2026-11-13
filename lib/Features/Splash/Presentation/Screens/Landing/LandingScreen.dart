@@ -173,6 +173,19 @@ class _LandingPageState extends ConsumerState<LandingScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSizes.lg,
+                    vertical: AppSizes.sm,
+                  ),
+                  child: Text(
+                    l.welcomeToShopFloralDecorations,
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.headTitle.copyWith(
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
                 _buildButtons(l),
                 _buildFooter(l),
               ],

@@ -3,6 +3,7 @@ abstract class OrderRepository {
   Future<List<Map<String, dynamic>>> getOrders({
     String? status,
     String? paymentType,
+    String? reviewStatus,
     int page = 1,
     int perPage = 10,
   });
@@ -16,4 +17,6 @@ abstract class OrderRepository {
   Future<void> cancelOrder(String id);
   Future<String> downloadInvoice(String id);
   Future<void> sendInvoiceEmail(String id);
+  Future<Map<String, dynamic>> syncTracking(String id);
+  Future<Map<String, dynamic>> confirmReceived(String id);
 }

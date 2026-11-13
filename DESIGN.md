@@ -212,7 +212,7 @@ Backend response branches:
 
 ## 11. Catatan
 
-- Semua string brand "Wedding Floral Decorations" (English).
+- Semua string brand "Timeless Florals" (English).
 - Endpoint `/wishlist` → `/favorite` (sudah di-rename di backend).
 - Model `Wishlist` → `Favorite`.
 - Payment VA/QRIS: screen `VirtualAccountPaymentScreen`, `QrisPaymentScreen`.

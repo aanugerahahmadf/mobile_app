@@ -1,8 +1,8 @@
 # Dokumentasi Lengkap GraphQL dan gRPC
 
-## Wedding Flowers Decoration App
+## Timeless Florals
 
-Dokumentasi ini menjelaskan implementasi lengkap GraphQL dan gRPC di aplikasi Wedding Flowers Decoration.
+Dokumentasi ini menjelaskan implementasi lengkap GraphQL dan gRPC di aplikasi Timeless Florals.
 
 ---
 
@@ -1189,7 +1189,7 @@ Future<void> refreshAuth() async {
 
 ## Kesimpulan
 
-Aplikasi Wedding Flowers Decoration menggunakan **hybrid architecture** yang menggabungkan:
+Aplikasi Timeless Florals menggunakan **hybrid architecture** yang menggabungkan:
 
 1. **Firebase Data Connect (GraphQL)** untuk data wedding decoration yang relational
 2. **Laravel GraphQL** untuk operasi bisnis yang sudah ada

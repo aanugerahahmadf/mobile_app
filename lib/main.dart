@@ -66,17 +66,17 @@ void main() async {
     debugPrint('NotificationService dilewati karena Firebase tidak siap.');
   }
 
-  runApp(ProviderScope(child: const WeddingApp()));
+  runApp(const ProviderScope(child: TimelessFloralsApp()));
 }
 
-class WeddingApp extends ConsumerStatefulWidget {
-  const WeddingApp({super.key});
+class TimelessFloralsApp extends ConsumerStatefulWidget {
+  const TimelessFloralsApp({super.key});
 
   @override
-  ConsumerState<WeddingApp> createState() => _WeddingAppState();
+  ConsumerState<TimelessFloralsApp> createState() => _TimelessFloralsAppState();
 }
 
-class _WeddingAppState extends ConsumerState<WeddingApp>
+class _TimelessFloralsAppState extends ConsumerState<TimelessFloralsApp>
     with WidgetsBindingObserver {
   @override
   void initState() {
@@ -166,7 +166,7 @@ class _WeddingAppState extends ConsumerState<WeddingApp>
         ),
       ),
       child: MaterialApp.router(
-      title: 'Wedding Flower Decorations',
+      title: 'Timeless Florals',
       onGenerateTitle: (context) => AppLocalizations.of(context)!.appTitle,
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,

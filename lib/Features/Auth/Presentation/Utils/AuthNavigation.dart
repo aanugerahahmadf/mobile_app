@@ -26,6 +26,11 @@ bool handleAuthContinuation({
   required AuthState state,
   required AppLocalizations l,
 }) {
+  // Admin & superadmin: selalu langsung ke home, tanpa alur Auth.
+  if (state is AuthAuthenticated && state.user.isAdminRole) {
+    return false;
+  }
+
   if (state is AuthTwoFactorRequired) {
     // Arahkan ke screen 2FA verification.
     context.push('/two-factor-verify');

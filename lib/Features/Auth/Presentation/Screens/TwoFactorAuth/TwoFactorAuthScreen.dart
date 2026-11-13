@@ -65,7 +65,12 @@ class _TwoFactorAuthPageState extends ConsumerState<TwoFactorAuthScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      if (!_isAuthenticated) {
+      final auth = ref.read(authProvider);
+      if (auth is! AuthAuthenticated) {
+        _goHome();
+        return;
+      }
+      if (auth.user.isAdminRole) {
         _goHome();
         return;
       }
@@ -79,8 +84,11 @@ class _TwoFactorAuthPageState extends ConsumerState<TwoFactorAuthScreen> {
   }
 
   /// Selesai alur Security Question: 2FA baru saja diaktifkan.
-  /// Alur sesuai spec: Two Factor Auth Screen Berhasil -> Landing Screen -> Home Screen.
+  /// Alur: Two Factor Auth Screen Berhasil -> Landing Screen -> Home Screen.
+  /// Pastikan sesi auth tetap valid agar Landing langsung meneruskan ke Home.
   Future<void> _finishToLanding() async {
+    if (!mounted) return;
+    await ref.read(authProvider.notifier).refreshUser();
     if (!mounted) return;
     context.go('/landing');
   }

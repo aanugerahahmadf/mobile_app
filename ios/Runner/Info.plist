@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Mobile App</string>
+	<string>Timeless Florals</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -33,7 +33,7 @@
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Akses galeri untuk memilih foto dan video yang akan dikirim di chat dan ulasan</string>
 	<key>NSFaceIDUsageDescription</key>
-	<string>Buka aplikasi Wedding dengan Face ID</string>
+	<string>Buka aplikasi Timeless Florals dengan Face ID</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<!--

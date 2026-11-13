@@ -140,7 +140,7 @@ class AboutModel {
   final String? owner;
 
   const AboutModel({
-    this.title = 'About WeddingApp',
+    this.title = 'About Timeless Florals',
     this.content,
     this.mission,
     this.owner,
@@ -152,7 +152,7 @@ class AboutModel {
   }) {
     final data = json['data'] as Map<String, dynamic>? ?? json;
     return AboutModel(
-      title: (data['title'] ?? 'About WeddingApp') as String,
+      title: (data['title'] ?? 'About Timeless Florals') as String,
       content: data['content'] as String?,
       mission: data['mission'] as String?,
       owner: data['owner'] as String?,
@@ -165,7 +165,7 @@ class AboutModel {
     String locale = 'id',
   }) {
     return AboutModel(
-      title: (json['title'] ?? 'About WeddingApp') as String,
+      title: (json['title'] ?? 'About Timeless Florals') as String,
       content: json['content'] as String?,
       mission: json['mission'] as String?,
       owner: json['owner'] as String?,
@@ -174,7 +174,7 @@ class AboutModel {
 
   /// Factory from gRPC response (protobuf message fields)
   factory AboutModel.fromGrpc({
-    String title = 'About WeddingApp',
+    String title = 'About Timeless Florals',
     String? content,
     String? mission,
     String? owner,

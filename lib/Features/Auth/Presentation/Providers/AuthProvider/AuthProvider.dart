@@ -9,8 +9,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
-import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import '../../../../../Core/Api/ApiEndpoints/ApiEndpoints.dart';
 import '../../../../../Core/Api/DioClient/DioClient.dart';
 import '../../../../../Core/Errors/AppErrorCodes/AppErrorCodes.dart';
@@ -143,13 +141,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
     bool needsOtp = false,
     bool needsCompletion = false,
   }) {
+    final isAdmin = user.isAdminRole;
     unawaited(clearGuestMode());
     state = AuthAuthenticated(
       user,
-      needsOtp: needsOtp,
-      needsCompletion: needsCompletion,
+      needsOtp: isAdmin ? false : needsOtp,
+      needsCompletion: isAdmin ? false : needsCompletion,
     );
-    if (!needsOtp && !needsCompletion) {
+    if ((isAdmin || (!needsOtp && !needsCompletion))) {
       unawaited(NotificationService.instance.syncFcmToken());
     }
   }
@@ -464,6 +463,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
         throw Exception(AppErrorCodes.googleLoginFailed);
       }
       final user = UserModel.fromJson(userMap);
+
+      // Admin & superadmin (Google Firebase): langsung ke User Home,
+      // lewati OTP, Complete Profile, Security Question, dan 2FA.
+      if (user.isAdminRole) {
+        await _storage.write(key: 'auth_token', value: token);
+        await _addOrUpdateAccount(
+          SavedAccount(
+            email: user.email,
+            fullName: user.fullName,
+            avatarUrl: user.avatarUrl,
+            token: token,
+          ),
+        );
+        _setAuthenticated(user);
+        return;
+      }
+
       final needsOtp = inner['needs_otp'] == true;
       final needsCompletion = inner['needs_completion'] == true;
 
@@ -501,148 +517,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> facebookLogin() async {
-    state = const AuthLoading();
-    try {
-      final result = await FacebookAuth.instance.login(
-        permissions: ['public_profile', 'email'],
-      );
-      if (result.status != LoginStatus.success) {
-        state = const AuthInitial();
-        return;
-      }
-      final accessToken = result.accessToken?.tokenString;
-      if (accessToken == null) {
-        throw Exception(AppErrorCodes.failedGetFacebookToken);
-      }
-
-      final response = await _dio.post(
-        ApiEndpoints.facebookLogin,
-        data: {'access_token': accessToken},
-      );
-      final respData = response.data as Map<String, dynamic>? ?? {};
-      final inner = respData['data'] as Map<String, dynamic>? ?? respData;
-
-      // 2FA aktif: server sengaja TIDAK menerbitkan token.
-      if (respData['status'] == 'two_factor_required') {
-        state = AuthTwoFactorRequired(
-          challengeToken: inner['challenge_token'] as String? ?? '',
-          method: inner['method'] as String? ?? 'authenticator',
-          email: inner['email'] as String? ?? '',
-        );
-        return;
-      }
-
-      final token = inner['token'] as String?;
-      final userMap = inner['user'] as Map<String, dynamic>?;
-      if (token == null || userMap == null) {
-        throw Exception(AppErrorCodes.facebookLoginFailed);
-      }
-      final user = UserModel.fromJson(userMap);
-      final needsOtp = inner['needs_otp'] == true;
-      final needsCompletion = inner['needs_completion'] == true;
-
-      await _storage.write(key: 'auth_token', value: token);
-      await _addOrUpdateAccount(
-        SavedAccount(
-          email: user.email,
-          fullName: user.fullName,
-          avatarUrl: user.avatarUrl,
-          token: token,
-        ),
-      );
-
-      if (needsOtp) {
-        await _dio.post(
-          ApiEndpoints.sendOtp,
-          data: {'email': user.email, 'purpose': 'google_register'},
-        );
-      }
-
-      _setAuthenticated(
-        user,
-        needsOtp: needsOtp,
-        needsCompletion: needsCompletion,
-      );
-    } on DioException catch (e) {
-      final msg = _extractBackendError(e);
-      state = AuthError(msg);
-    } catch (e) {
-      state = AuthError(AppErrorCodes.anErrorOccurred);
-    }
-  }
-
-  Future<void> appleLogin() async {
-    state = const AuthLoading();
-    try {
-      final credential = await SignInWithApple.getAppleIDCredential(
-        scopes: [
-          AppleIDAuthorizationScopes.email,
-          AppleIDAuthorizationScopes.fullName,
-        ],
-      );
-      final identityToken = credential.identityToken;
-      if (identityToken == null) {
-        throw Exception(AppErrorCodes.failedGetAppleToken);
-      }
-
-      final response = await _dio.post(
-        ApiEndpoints.appleLogin,
-        data: {'identity_token': identityToken},
-      );
-      final respData = response.data as Map<String, dynamic>? ?? {};
-      final inner = respData['data'] as Map<String, dynamic>? ?? respData;
-
-      // 2FA aktif: server sengaja TIDAK menerbitkan token.
-      if (respData['status'] == 'two_factor_required') {
-        state = AuthTwoFactorRequired(
-          challengeToken: inner['challenge_token'] as String? ?? '',
-          method: inner['method'] as String? ?? 'authenticator',
-          email: inner['email'] as String? ?? '',
-        );
-        return;
-      }
-
-      final token = inner['token'] as String?;
-      final userMap = inner['user'] as Map<String, dynamic>?;
-      if (token == null || userMap == null) {
-        throw Exception(AppErrorCodes.appleLoginFailed);
-      }
-      final user = UserModel.fromJson(userMap);
-      final needsOtp = inner['needs_otp'] == true;
-      final needsCompletion = inner['needs_completion'] == true;
-
-      await _storage.write(key: 'auth_token', value: token);
-      await _addOrUpdateAccount(
-        SavedAccount(
-          email: user.email,
-          fullName: user.fullName,
-          avatarUrl: user.avatarUrl,
-          token: token,
-        ),
-      );
-
-      if (needsOtp) {
-        await _dio.post(
-          ApiEndpoints.sendOtp,
-          data: {'email': user.email, 'purpose': 'google_register'},
-        );
-      }
-
-      _setAuthenticated(
-        user,
-        needsOtp: needsOtp,
-        needsCompletion: needsCompletion,
-      );
-    } on DioException catch (e) {
-      final msg =
-          e.response?.data?['message'] as String? ??
-          AppErrorCodes.appleLoginFailed;
-      state = AuthError(msg);
-    } catch (e) {
-      state = AuthError(AppErrorCodes.anErrorOccurred);
-    }
-  }
 
   Future<void> register({
     required String fullName,

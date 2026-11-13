@@ -43,7 +43,7 @@ class NotificationService {
     'wedding_notifications_v2',
     'Notifikasi Wedding',
     description:
-        'Notifikasi dari aplikasi Dekorasi Bunga Pernikahan / Wedding Flower Decorations',
+        'Notifikasi dari aplikasi Timeless Florals',
     importance: Importance.high,
     playSound: true,
     sound: RawResourceAndroidNotificationSound(_chimeResource),
@@ -121,7 +121,7 @@ class NotificationService {
       requestSoundPermission: true,
     );
     const windowsSettings = WindowsInitializationSettings(
-      appName: 'Wedding Flower Decorations',
+      appName: 'Timeless Florals',
       appUserModelId: 'com.wedding.flowerdecorations',
       guid: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
     );

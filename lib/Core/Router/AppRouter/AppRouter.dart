@@ -329,6 +329,8 @@ final appRouter = GoRouter(
         return ReviewListScreen(
           catalogId: extra?['catalog_id'] as String? ?? '',
           catalogName: extra?['name'] as String? ?? '',
+          packageId: extra?['package_id'] as String? ?? '',
+          orderId: extra?['order_id'] as String? ?? '',
         );
       },
     ),

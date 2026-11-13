@@ -1,10 +1,10 @@
-# Master PRD — Aplikasi Dekorasi Bunga Pernikahan
+# Master PRD — Aplikasi Timeless Florals
 
 > Dokumen payung. Detail per layar ada di [`../06-reference/SCREEN-INDEX.md`](../06-reference/SCREEN-INDEX.md).
 
 ## 1. Ringkasan produk
 
-Aplikasi mobile membantu calon pengantin menemukan, membandingkan, dan memesan dekorasi bunga pernikahan. Pengguna dapat mencari katalog secara teks maupun visual (CBIR), memilih paket/tier, menyimpan favorit, memasukkan item ke keranjang, checkout dengan voucher, membayar melalui Virtual Account atau QRIS, memantau status pesanan, serta berkomunikasi dengan admin melalui chat.
+Aplikasi mobile membantu calon pengantin menemukan, membandingkan, dan memesan Timeless Florals. Pengguna dapat mencari katalog secara teks maupun visual (CBIR), memilih paket/tier, menyimpan favorit, memasukkan item ke keranjang, checkout dengan voucher, membayar melalui Virtual Account atau QRIS, memantau status pesanan, serta berkomunikasi dengan admin melalui chat.
 
 Aplikasi juga mendukung **guest mode** untuk eksplorasi katalog dan chat awal tanpa akun. Fitur yang membutuhkan kepemilikan data (keranjang, pesanan, favorit, ulasan, keamanan akun) tetap memerlukan login.
 

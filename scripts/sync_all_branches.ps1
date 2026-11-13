@@ -129,7 +129,7 @@ if ($DiscordWebhook) {
                     description = $description
                     color = $embedColor
                     footer = @{
-                        text = "Wedding Flowers Decoration App"
+                        text = "Timeless Florals"
                     }
                     timestamp = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
                 }

@@ -2,6 +2,7 @@ import '../../../../../Core/Widgets/AppBlurBackdrop/AppBlurBackdrop.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../../Core/Constants/AppColors/AppColors.dart';
 import '../../../../../Core/Constants/AppTextStyles/AppTextStyles.dart';
 import '../../../../../Core/Constants/AppSizes/AppSizes.dart';
@@ -20,6 +21,7 @@ import '../../../../Auth/Presentation/Providers/AuthProvider/AuthProvider.dart';
 import '../../../../Payment/Presentation/Widgets/UploadPaymentProof/UploadPaymentProof.dart';
 import '../../Providers/OrderProvider/OrderProvider.dart';
 import '../../Widgets/OrderEditSheet/OrderEditSheet.dart';
+import '../../../Data/OrderRepositoryImpl/OrderRepositoryImpl.dart';
 import 'package:mobile_app/L10n/AppLocalizations.dart';
 
 class OrderHistoryScreen extends ConsumerStatefulWidget {
@@ -30,11 +32,14 @@ class OrderHistoryScreen extends ConsumerStatefulWidget {
 }
 
 class _OrderHistoryPageState extends ConsumerState<OrderHistoryScreen> {
+  static const String _toReviewStatus = '__to_review__';
+
   String? _activeStatus;
   String? _activePaymentType;
 
   final _tabStatuses = [
     null,
+    _toReviewStatus,
     'pending',
     'confirmed',
     'preparing',
@@ -55,6 +60,8 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryScreen> {
   String _statusLabel(String? status) {
     final l = AppLocalizations.of(context)!;
     switch (status) {
+      case _toReviewStatus:
+        return l.toReview;
       case 'pending':
         return l.pending;
       case 'confirmed':
@@ -98,11 +105,11 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryScreen> {
   }
 
   Future<void> _refresh() async {
-    await ref
-        .read(orderProvider.notifier)
-        .fetchOrders(
-          status: _activeStatus,
+    final isToReview = _activeStatus == _toReviewStatus;
+    await ref.read(orderProvider.notifier).fetchOrders(
+          status: isToReview ? null : _activeStatus,
           paymentType: _activePaymentType,
+          reviewStatus: isToReview ? 'unreviewed' : null,
           refresh: true,
         );
   }
@@ -225,6 +232,33 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryScreen> {
     await uploadPaymentProof(context, ref, orderId, onUploaded: _refresh);
   }
 
+  Future<void> _confirmReceivedOrder(Map<String, dynamic> order) async {
+    final l = AppLocalizations.of(context)!;
+    final ok = await _confirm(l.confirmReceivedDesc);
+    if (!ok || !mounted) return;
+    try {
+      final repo = OrderRepositoryImpl();
+      await repo.confirmReceived('${order['id']}');
+      if (!mounted) return;
+      AppSnackBar.show(context, l.confirmReceived, type: SnackBarType.success);
+      _refresh();
+    } catch (e) {
+      if (!mounted) return;
+      AppSnackBar.show(
+        context,
+        LocalizedError.of(l, e.toString()),
+        type: SnackBarType.error,
+      );
+    }
+  }
+
+  void _buyAgain(Map<String, dynamic> order) {
+    final catalogId = '${order['catalog_id'] ?? (order['catalog'] as Map?)?['id'] ?? ''}';
+    if (catalogId.isNotEmpty && catalogId != 'null') {
+      context.push('/catalog/$catalogId');
+    }
+  }
+
   Widget _buildChipRow({
     required List<String> labels,
     required List<String?> values,
@@ -329,6 +363,71 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryScreen> {
     );
   }
 
+  Widget _buildShippingStrip(Map<String, dynamic> order) {
+    final l = AppLocalizations.of(context)!;
+    final shipping = order['shipping'] as Map<String, dynamic>?;
+    if (shipping == null || shipping['has_info'] != true) {
+      return const SizedBox.shrink();
+    }
+    final courier = (shipping['courier_name'] ?? shipping['courier']) as String?;
+    final resi = shipping['tracking_number'] as String?;
+    final statusLabel = shipping['status_label'] as String?;
+    final trackingUrl = shipping['tracking_url'] as String?;
+
+    final parts = <String>[
+      if (statusLabel != null && statusLabel.isNotEmpty) statusLabel,
+      if (courier != null && courier.isNotEmpty) courier,
+      if (resi != null && resi.isNotEmpty) '${l.trackingNumber}: $resi',
+    ];
+    if (parts.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: AppColors.primaryColor.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.primaryColor.withValues(alpha: 0.12)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.local_shipping_outlined,
+              size: 18, color: AppColors.primaryColor),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              parts.join(' • '),
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          if (trackingUrl != null && trackingUrl.isNotEmpty)
+            InkWell(
+              onTap: () async {
+                final uri = Uri.tryParse(trackingUrl);
+                if (uri != null) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                }
+              },
+              child: Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: Text(
+                  l.trackPackage,
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: AppColors.primaryColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
@@ -353,6 +452,7 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryScreen> {
 
     final tabLabels = [
       l.all,
+      l.toReview,
       l.pending,
       l.confirmed,
       l.processed,
@@ -435,9 +535,11 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryScreen> {
                       itemCount: state.orders.length + (state.hasMore ? 1 : 0),
                       itemBuilder: (context, index) {
                         if (index == state.orders.length) {
+                          final isToReview = _activeStatus == _toReviewStatus;
                           notifier.loadMore(
-                            status: _activeStatus,
+                            status: isToReview ? null : _activeStatus,
                             paymentType: _activePaymentType,
+                            reviewStatus: isToReview ? 'unreviewed' : null,
                           );
                           return const Padding(
                             padding: EdgeInsets.all(16),
@@ -560,6 +662,16 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryScreen> {
                                   ),
                                   const SizedBox(height: 12),
                                   _buildPaymentStrip(order),
+                                  Builder(
+                                    builder: (context) {
+                                      final strip = _buildShippingStrip(order);
+                                      if (strip is SizedBox) return strip;
+                                      return Padding(
+                                        padding: const EdgeInsets.only(top: 8),
+                                        child: strip,
+                                      );
+                                    },
+                                  ),
                                   if (status == 'pending' ||
                                       order['payment_status'] == 'unpaid' ||
                                       order['can_pay'] == true) ...[
@@ -616,28 +728,131 @@ class _OrderHistoryPageState extends ConsumerState<OrderHistoryScreen> {
                                       type: ButtonType.outline,
                                     ),
                                   ],
-                                  if (status == 'completed') ...[
+                                  if (order['can_confirm_received'] == true) ...[
                                     const SizedBox(height: 12),
                                     AppButton(
-                                      label: l.writeRatingComment,
-                                      icon: Icons.rate_review_outlined,
-                                      onPressed: () => context.push(
-                                        '/write-review',
-                                        extra: {
-                                          'package_id':
-                                              '${order['package_id'] ?? ''}',
-                                          'catalog_id':
-                                              '${order['catalog_id'] ?? ''}',
-                                          'name':
-                                              (order['item']
-                                                  as Map<
-                                                    String,
-                                                    dynamic
-                                                  >?)?['name'] ??
-                                              '',
-                                        },
-                                      ),
+                                      label: l.confirmReceived,
+                                      icon: Icons.check_circle_outline,
+                                      onPressed: () => _confirmReceivedOrder(order),
+                                    ),
+                                  ],
+                                  if ((order['catalog_id'] ?? (order['catalog'] as Map?)?['id']) != null) ...[
+                                    const SizedBox(height: 8),
+                                    AppButton(
+                                      label: l.buyAgain,
+                                      icon: Icons.shopping_bag_outlined,
+                                      onPressed: () => _buyAgain(order),
                                       type: ButtonType.outline,
+                                    ),
+                                  ],
+                                  if (status == 'completed') ...[
+                                    const SizedBox(height: 12),
+                                    Builder(
+                                      builder: (context) {
+                                        final review = order['review']
+                                            as Map<String, dynamic>?;
+                                        final canReview =
+                                            order['can_review'] == true ||
+                                            review?['can_review'] == true;
+                                        final hasReview =
+                                            order['has_review'] == true ||
+                                            review?['is_reviewed'] == true;
+                                        final itemName =
+                                            (review?['item_name'] as String?) ??
+                                            (order['item']
+                                                    as Map<String, dynamic>?)?[
+                                                'name'] ??
+                                            l.myOrders;
+                                        final catalogId =
+                                            '${review?['catalog_id'] ?? order['catalog_id'] ?? ''}';
+                                        final packageId =
+                                            '${review?['package_id'] ?? order['package_id'] ?? ''}';
+
+                                        if (canReview) {
+                                          return AppButton(
+                                            label: l.writeRatingComment,
+                                            icon: Icons.rate_review_outlined,
+                                            onPressed: () async {
+                                              final result =
+                                                  await context.push(
+                                                '/write-review',
+                                                extra: {
+                                                  'order_id':
+                                                      '${order['id'] ?? ''}',
+                                                  'package_id': packageId,
+                                                  'catalog_id': catalogId,
+                                                  'name': itemName,
+                                                },
+                                              );
+                                              if (result == true) _refresh();
+                                            },
+                                            type: ButtonType.primary,
+                                          );
+                                        }
+
+                                        if (hasReview) {
+                                          return Row(
+                                            children: [
+                                              Expanded(
+                                                child: Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                    vertical: 10,
+                                                    horizontal: 12,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: AppColors
+                                                        .successColor
+                                                        .withAlpha(24),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            10),
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .center,
+                                                    children: [
+                                                      const Icon(
+                                                        Icons.check_circle,
+                                                        size: 18,
+                                                        color: AppColors
+                                                            .successColor,
+                                                      ),
+                                                      const SizedBox(width: 6),
+                                                      Text(
+                                                        l.reviewed,
+                                                        style: AppTextStyles
+                                                            .bodySmall
+                                                            .copyWith(
+                                                          color: AppColors
+                                                              .successColor,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: AppButton(
+                                                  label: l.viewMyReview,
+                                                  icon: Icons
+                                                      .reviews_outlined,
+                                                  onPressed: () =>
+                                                      context.push(
+                                                          '/my-reviews'),
+                                                  type: ButtonType.outline,
+                                                ),
+                                              ),
+                                            ],
+                                          );
+                                        }
+
+                                        return const SizedBox.shrink();
+                                      },
                                     ),
                                   ],
                                 ],

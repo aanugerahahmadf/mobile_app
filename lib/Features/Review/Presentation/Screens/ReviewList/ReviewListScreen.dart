@@ -19,11 +19,15 @@ import '../../Providers/ReviewProvider/ReviewProvider.dart';
 class ReviewListScreen extends ConsumerStatefulWidget {
   final String catalogId;
   final String catalogName;
+  final String packageId;
+  final String orderId;
 
   const ReviewListScreen({
     super.key,
     this.catalogId = '',
     this.catalogName = '',
+    this.packageId = '',
+    this.orderId = '',
   });
 
   @override
@@ -76,19 +80,31 @@ class _ReviewListPageState extends ConsumerState<ReviewListScreen> {
       AppSnackBar.show(context, l.writeYourReview, type: SnackBarType.warning);
       return;
     }
-    if (widget.catalogId.isEmpty) {
+    if (widget.catalogId.isEmpty && widget.packageId.isEmpty) {
       AppSnackBar.show(context, l.reviewFailed, type: SnackBarType.error);
       return;
     }
 
+    final payload = <String, dynamic>{
+      'rating': _rating,
+      'title': _titleController.text.trim(),
+      'comment': comment,
+    };
+    if (widget.catalogId.isNotEmpty) {
+      payload['catalog_id'] = widget.catalogId;
+    }
+    if (widget.packageId.isNotEmpty) {
+      payload['package_id'] = widget.packageId;
+    }
+    if (widget.orderId.isNotEmpty) {
+      payload['order_id'] = widget.orderId;
+    }
+
     _submitting = true;
     try {
-      await ref.read(reviewProvider.notifier).createReview({
-        'catalog_id': widget.catalogId,
-        'rating': _rating,
-        'title': _titleController.text.trim(),
-        'comment': comment,
-      }, photoPaths: _photoPaths);
+      await ref
+          .read(reviewProvider.notifier)
+          .createReview(payload, photoPaths: _photoPaths);
       if (mounted && _submitting) {
         AppSnackBar.show(
           context,

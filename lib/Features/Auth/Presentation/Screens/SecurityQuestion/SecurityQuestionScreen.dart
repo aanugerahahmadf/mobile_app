@@ -67,11 +67,17 @@ class _SecurityQuestionPageState extends ConsumerState<SecurityQuestionScreen> {
   ///      auth, bukan halaman yang bisa dibuka sendiri. Tanpa guard ini,
   ///      restore URI terakhir atau deep link bisa mendarat di sini lalu
   ///      terjebak, karena kedua tombolnya hanya mengarah ke Home.
+  ///
+  /// Admin & superadmin: langsung ke home, tidak perlu alur keamanan ini.
   Future<void> _guard() async {
     if (!mounted) return;
 
     final auth = ref.read(authProvider);
     if (auth is! AuthAuthenticated) {
+      await _goHome();
+      return;
+    }
+    if (auth.user.isAdminRole) {
       await _goHome();
       return;
     }

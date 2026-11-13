@@ -23,7 +23,7 @@ class handler(BaseHTTPRequestHandler):
         self.end_headers()
         response_data = {
             "status": "success",
-            "message": "Wedding Flowers Decoration API",
+            "message": "Timeless Florals API",
         }
         self.wfile.write(json.dumps(response_data).encode("utf-8"))
 
@@ -33,7 +33,7 @@ class handler(BaseHTTPRequestHandler):
         self.end_headers()
         response_data = {
             "status": "success",
-            "message": "Wedding Flowers Decoration API",
+            "message": "Timeless Florals API",
         }
         self.wfile.write(json.dumps(response_data).encode("utf-8"))
 
@@ -43,7 +43,7 @@ def app(environ, start_response):
     status = "200 OK"
     response_headers = [("Content-type", "application/json; charset=utf-8")]
     start_response(status, response_headers)
-    return [b'{"status":"success","message":"Wedding Flowers Decoration API"}']
+    return [b'{"status":"success","message":"Timeless Florals API"}']
 
 
 application = app

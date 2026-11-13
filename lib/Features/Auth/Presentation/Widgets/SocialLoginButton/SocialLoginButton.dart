@@ -104,48 +104,17 @@ class SocialLoginButton extends StatelessWidget {
   }
 
   Widget _buildIcon() {
-    switch (provider) {
-      case SocialProvider.google:
-        return Image.asset(
-          'assets/images/Google/google.png',
-          width: 22,
-          height: 22,
-          fit: BoxFit.contain,
-        );
-      case SocialProvider.facebook:
-        return const Icon(Icons.facebook, color: Color(0xFF1877F2), size: 22);
-      case SocialProvider.apple:
-        return Container(
-          width: 22,
-          height: 22,
-          decoration: const BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.black,
-          ),
-          child: const Center(
-            child: Text(
-              '\uF8FF',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        );
-    }
+    return Image.asset(
+      'assets/images/Google/google.png',
+      width: 22,
+      height: 22,
+      fit: BoxFit.contain,
+    );
   }
 
   String _label(AppLocalizations l) {
-    switch (provider) {
-      case SocialProvider.google:
-        return l.continueWithGoogle;
-      case SocialProvider.facebook:
-        return l.continueWithFacebook;
-      case SocialProvider.apple:
-        return l.continueWithApple;
-    }
+    return l.continueWithGoogle;
   }
 }
 
-enum SocialProvider { google, facebook, apple }
+enum SocialProvider { google }

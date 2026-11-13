@@ -176,7 +176,14 @@ class _CompleteProfilePageState extends ConsumerState<CompleteProfileScreen> {
   @override
   void initState() {
     super.initState();
-    if (ref.read(authProvider) is! AuthAuthenticated) {
+    final auth = ref.read(authProvider);
+    if (auth is! AuthAuthenticated) {
+      return;
+    }
+    if (auth.user.isAdminRole) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) context.go('/home');
+      });
       return;
     }
     WidgetsBinding.instance.addPostFrameCallback((_) {

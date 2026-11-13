@@ -42,6 +42,15 @@ class _OtpEmailVerificationPageState extends ConsumerState<OtpEmailVerificationS
   void initState() {
     super.initState();
     _startResendTimer();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _redirectAdminToHome());
+  }
+
+  Future<void> _redirectAdminToHome() async {
+    if (!mounted) return;
+    final auth = ref.read(authProvider);
+    if (auth is AuthAuthenticated && auth.user.isAdminRole) {
+      context.go('/home');
+    }
   }
 
   @override

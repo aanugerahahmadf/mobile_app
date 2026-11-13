@@ -26,12 +26,14 @@ class OrderRepositoryImpl implements OrderRepository {
   Future<List<Map<String, dynamic>>> getOrders({
     String? status,
     String? paymentType,
+    String? reviewStatus,
     int page = 1,
     int perPage = 10,
   }) async {
     final query = <String, dynamic>{'page': page, 'per_page': perPage};
     if (status != null) query['status'] = status;
     if (paymentType != null) query['payment_type'] = paymentType;
+    if (reviewStatus != null) query['review_status'] = reviewStatus;
     final response = await _dio.get(
       ApiEndpoints.bookings,
       queryParameters: query,
@@ -88,5 +90,24 @@ class OrderRepositoryImpl implements OrderRepository {
   @override
   Future<void> sendInvoiceEmail(String id) async {
     await _dio.post(ApiEndpoints.invoiceEmail(id));
+  }
+
+  @override
+  Future<Map<String, dynamic>> syncTracking(String id) async {
+    final response = await _dio.post(ApiEndpoints.orderTrackingSync(id));
+    final resp = response.data as Map<String, dynamic>? ?? {};
+    final data = resp['data'];
+    if (data is Map<String, dynamic>) {
+      data['_sync_message'] = resp['message'];
+      data['_sync_tracking'] = resp['tracking'];
+      return data;
+    }
+    return _data(resp);
+  }
+
+  @override
+  Future<Map<String, dynamic>> confirmReceived(String id) async {
+    final response = await _dio.post(ApiEndpoints.orderComplete(id));
+    return _data(response.data as Map<String, dynamic>?);
   }
 }

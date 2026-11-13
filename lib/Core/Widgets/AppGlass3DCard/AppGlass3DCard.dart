@@ -2,7 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// Premier Glass Modern 3D Card for the Wedding Flowers Decoration App.
+/// Premier Glass Modern 3D Card for the Timeless Florals.
 /// Features:
 /// - Real-time frosted glassmorphism (BackdropFilter blur)
 /// - Interactive 3D Perspective Tilt using Matrix4
