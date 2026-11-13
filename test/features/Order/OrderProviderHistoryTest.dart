@@ -35,6 +35,7 @@ class _FakeOrderRepository implements OrderRepository {
   Future<List<Map<String, dynamic>>> getOrders({
     String? status,
     String? paymentType,
+    String? reviewStatus,
     int page = 1,
     int perPage = 10,
   }) async {
@@ -43,6 +44,12 @@ class _FakeOrderRepository implements OrderRepository {
     if (failure != null) throw failure!;
     return rows;
   }
+
+  @override
+  Future<Map<String, dynamic>> syncTracking(String id) async => rows.first;
+
+  @override
+  Future<Map<String, dynamic>> confirmReceived(String id) async => rows.first;
 
   @override
   Future<Map<String, dynamic>> updateOrder(

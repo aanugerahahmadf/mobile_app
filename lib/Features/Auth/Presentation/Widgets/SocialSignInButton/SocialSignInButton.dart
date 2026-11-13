@@ -3,13 +3,13 @@ import 'package:mobile_app/L10n/AppLocalizations.dart';
 import '../../../../../Core/Constants/AppColors/AppColors.dart';
 import '../../../../../Core/Constants/AppSizes/AppSizes.dart';
 
-class SocialLoginButton extends StatelessWidget {
+class SocialSignInButton extends StatelessWidget {
   final SocialProvider provider;
   final VoidCallback? onPressed;
   final bool enabled;
   final bool loading;
 
-  const SocialLoginButton({
+  const SocialSignInButton({
     super.key,
     required this.provider,
     this.onPressed,

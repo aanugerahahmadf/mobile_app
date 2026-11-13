@@ -8,20 +8,21 @@ import '../../../../../../../../Core/Widgets/GuestAuthPrompt/GuestAuthPrompt.dar
 import '../../../../../../../../Core/Widgets/AppBreadcrumbs/AppBreadcrumbs.dart';
 import '../../../../../../../Auth/Presentation/Providers/AuthProvider/AuthProvider.dart';
 import 'package:mobile_app/L10n/AppLocalizations.dart';
+import '../../../../../../../../Core/Api/ApiEndpoints/ApiEndpoints.dart';
 import '../../../../../../../../Core/Api/DioClient/DioClient.dart';
 import '../../../../../../../../Core/Constants/AppColors/AppColors.dart';
 import '../../../../../../../../Core/Constants/AppTextStyles/AppTextStyles.dart';
 import '../../../../../../../../Core/Constants/AppSizes/AppSizes.dart';
 import '../../../../../../../../Core/Widgets/AppSnackbar/AppSnackbar.dart';
 
-class SavedLoginInfoScreen extends ConsumerStatefulWidget {
-  const SavedLoginInfoScreen({super.key});
+class SavedSignInInfoScreen extends ConsumerStatefulWidget {
+  const SavedSignInInfoScreen({super.key});
 
   @override
-  ConsumerState<SavedLoginInfoScreen> createState() => _SavedLoginInfoPageState();
+  ConsumerState<SavedSignInInfoScreen> createState() => _SavedSignInInfoPageState();
 }
 
-class _SavedLoginInfoPageState extends ConsumerState<SavedLoginInfoScreen> {
+class _SavedSignInInfoPageState extends ConsumerState<SavedSignInInfoScreen> {
   bool _savedLoginEnabled = true;
   bool _loading = true;
   bool _toggling = false;
@@ -44,7 +45,7 @@ class _SavedLoginInfoPageState extends ConsumerState<SavedLoginInfoScreen> {
       _error = null;
     });
     try {
-      final resp = await DioClient.instance.get('/security/saved-login');
+      final resp = await DioClient.instance.get(ApiEndpoints.securitySavedSignIn);
       final data = resp.data;
       if (data is Map<String, dynamic> && data['data'] is Map) {
         setState(() {
@@ -77,7 +78,7 @@ class _SavedLoginInfoPageState extends ConsumerState<SavedLoginInfoScreen> {
     setState(() => _toggling = true);
     try {
       await DioClient.instance.post(
-        '/security/saved-login/toggle',
+        ApiEndpoints.securitySavedSignInToggle,
         data: {'enabled': enabled},
       );
       setState(() => _savedLoginEnabled = enabled);

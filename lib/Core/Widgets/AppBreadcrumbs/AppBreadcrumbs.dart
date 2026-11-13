@@ -136,9 +136,9 @@ class AppNavigationTrail extends ChangeNotifier {
     if (normalized == '/edit-profile') return l.editProfile;
     if (normalized == '/my-reviews') return l.myCatalogRatingComments;
     if (normalized == '/write-review') return l.writeRatingComment;
-    if (normalized == '/saved-login-info') return l.savedLoginInfo;
+    if (normalized == '/saved-sign-in-info') return l.savedLoginInfo;
     if (normalized == '/trusted-devices') return l.trustedDevices;
-    if (normalized == '/login-activity') return l.whereYouLoggedIn;
+    if (normalized == '/sign-in-activity') return l.whereYouLoggedIn;
     if (normalized == '/recent-emails') return l.recentEmails;
     if (normalized == '/security-checkup') return l.securityCheckup;
     if (normalized == '/about') return l.aboutApp;

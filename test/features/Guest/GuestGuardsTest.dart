@@ -14,9 +14,9 @@ import 'package:mobile_app/Features/Payment/Presentation/Screens/PaymentInstruct
 import 'package:mobile_app/Features/Payment/Presentation/Screens/PaymentMethodDetail/PaymentMethodDetailScreen.dart';
 import 'package:mobile_app/Features/Payment/Domain/PaymentMethodInfo/PaymentMethodInfo.dart';
 import 'package:mobile_app/Features/Profile/Presentation/Screens/Profile/ProfileScreen.dart';
-import 'package:mobile_app/Features/Profile/Presentation/Screens/Settings/PasswordAndSecurity/SecurityCheck/WhereYouSignIn/LoginActivityScreen.dart';
+import 'package:mobile_app/Features/Profile/Presentation/Screens/Settings/PasswordAndSecurity/SecurityCheck/WhereYouSignIn/SignInActivityScreen.dart';
 import 'package:mobile_app/Features/Profile/Presentation/Screens/Settings/PasswordAndSecurity/SecurityCheck/LatestEmail/RecentEmailsScreen.dart';
-import 'package:mobile_app/Features/Profile/Presentation/Screens/Settings/PasswordAndSecurity/SignInAndRecovery/SavedSignIn/SavedLoginInfoScreen.dart';
+import 'package:mobile_app/Features/Profile/Presentation/Screens/Settings/PasswordAndSecurity/SignInAndRecovery/SavedSignIn/SavedSignInInfoScreen.dart';
 import 'package:mobile_app/Features/Profile/Presentation/Screens/Settings/PasswordAndSecurity/SecurityCheck/SecurityCheck/SecurityCheckupScreen.dart';
 import 'package:mobile_app/Features/History/Presentation/Screens/History/HistoryScreen.dart';
 import 'package:mobile_app/Features/Order/Presentation/Screens/Checkout/CheckoutScreen.dart';
@@ -187,9 +187,9 @@ void main() {
   });
 
   for (final entry in <MapEntry<String, Widget>>[
-    MapEntry('Login Activity', const LoginActivityScreen()),
+    MapEntry('Login Activity', const SignInActivityScreen()),
     MapEntry('Recent Emails', const RecentEmailsScreen()),
-    MapEntry('Saved Login', const SavedLoginInfoScreen()),
+    MapEntry('Saved Login', const SavedSignInInfoScreen()),
     MapEntry('Security Checkup', const SecurityCheckupScreen()),
     MapEntry('History', const HistoryScreen()),
     MapEntry('Security Settings', const PasswordAndSecurityScreen()),

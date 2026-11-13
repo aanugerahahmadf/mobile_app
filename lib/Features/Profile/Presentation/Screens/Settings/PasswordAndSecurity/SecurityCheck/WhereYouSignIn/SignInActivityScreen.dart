@@ -14,14 +14,14 @@ import '../../../../../../../../Core/Constants/AppTextStyles/AppTextStyles.dart'
 import '../../../../../../../../Core/Constants/AppSizes/AppSizes.dart';
 import '../../../../../../../../Core/Widgets/AppSnackbar/AppSnackbar.dart';
 
-class LoginActivityScreen extends ConsumerStatefulWidget {
-  const LoginActivityScreen({super.key});
+class SignInActivityScreen extends ConsumerStatefulWidget {
+  const SignInActivityScreen({super.key});
 
   @override
-  ConsumerState<LoginActivityScreen> createState() => _LoginActivityPageState();
+  ConsumerState<SignInActivityScreen> createState() => _SignInActivityPageState();
 }
 
-class _LoginActivityPageState extends ConsumerState<LoginActivityScreen> {
+class _SignInActivityPageState extends ConsumerState<SignInActivityScreen> {
   Map<String, dynamic>? _current;
   List<Map<String, dynamic>> _others = [];
   bool _loading = true;
@@ -45,7 +45,7 @@ class _LoginActivityPageState extends ConsumerState<LoginActivityScreen> {
       _error = null;
     });
     try {
-      final resp = await DioClient.instance.get('/security/login-activity');
+      final resp = await DioClient.instance.get(ApiEndpoints.securitySignInActivity);
       final data = resp.data;
       if (data is Map<String, dynamic> && data['data'] is Map) {
         final sessionData = data['data'] as Map<String, dynamic>;

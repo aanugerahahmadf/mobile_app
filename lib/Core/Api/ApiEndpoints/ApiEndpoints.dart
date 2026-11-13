@@ -2,7 +2,7 @@ class ApiEndpoints {
   ApiEndpoints._();
 
   // Auth
-  static const String login = '/login';
+  static const String signIn = '/login';
   static const String register = '/register';
   static const String logout = '/logout';
   static const String forgotPassword = '/forgot-password';
@@ -11,12 +11,12 @@ class ApiEndpoints {
   static const String verifyOtp = '/auth/verify-otp';
 
   // Tantangan 2FA setelah Sign In. Padanan OtpEmailOrTwoFactory di panel
-  // Filament: login() membalas tanpa token bila 2FA akun aktif, lalu kode
+  // Filament: signIn() membalas tanpa token bila 2FA akun aktif, lalu kode
   // diverifikasi lewat endpoint di sini sebelum token benar-benar terbit.
   static const String twoFactorVerify = '/auth/two-factor/verify';
   static const String twoFactorResend = '/auth/two-factor/resend';
 
-  static const String googleLogin = '/auth/google';
+  static const String googleSignIn = '/auth/google';
 
   // User & Profile
   static const String user = '/user';
@@ -199,9 +199,9 @@ class ApiEndpoints {
       '/security/change-email/send-otp';
   static const String securityChangeEmailVerifyOtp =
       '/security/change-email/verify-otp';
-  static const String securitySavedLogin = '/security/saved-login';
-  static const String securitySavedLoginToggle = '/security/saved-login/toggle';
-  static const String securityLoginActivity = '/security/login-activity';
+  static const String securitySavedSignIn = '/security/saved-login';
+  static const String securitySavedSignInToggle = '/security/saved-login/toggle';
+  static const String securitySignInActivity = '/security/login-activity';
   static String securityRemoveSession(int id) => '/security/login-activity/$id';
 
   // Dropdown Options (KYC fields)

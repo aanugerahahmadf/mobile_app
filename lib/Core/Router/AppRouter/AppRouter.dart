@@ -26,9 +26,9 @@ import '../../../Features/Profile/Presentation/Screens/Settings/PasswordAndSecur
 // Factor SETUP (dari Pengaturan, akhir kembali ke daftar Keamanan).
 import '../../../Features/Profile/Presentation/Screens/Settings/PasswordAndSecurity/SignInAndRecovery/TwoFaktorAuthentication/TwoFactorSetupScreen.dart'
     as security_two_factor_setup;
-import '../../../Features/Profile/Presentation/Screens/Settings/PasswordAndSecurity/SignInAndRecovery/SavedSignIn/SavedLoginInfoScreen.dart';
+import '../../../Features/Profile/Presentation/Screens/Settings/PasswordAndSecurity/SignInAndRecovery/SavedSignIn/SavedSignInInfoScreen.dart';
 import '../../../Features/Profile/Presentation/Screens/Settings/PasswordAndSecurity/SignInAndRecovery/TwoFaktorAuthentication/TrustedDevicesScreen.dart';
-import '../../../Features/Profile/Presentation/Screens/Settings/PasswordAndSecurity/SecurityCheck/WhereYouSignIn/LoginActivityScreen.dart';
+import '../../../Features/Profile/Presentation/Screens/Settings/PasswordAndSecurity/SecurityCheck/WhereYouSignIn/SignInActivityScreen.dart';
 import '../../../Features/Profile/Presentation/Screens/Settings/PasswordAndSecurity/SecurityCheck/LatestEmail/RecentEmailsScreen.dart';
 import '../../../Features/Profile/Presentation/Screens/Settings/PasswordAndSecurity/SecurityCheck/SecurityCheck/SecurityCheckupScreen.dart';
 import '../../../Features/Profile/Presentation/Screens/Profile/ProfileScreen.dart';
@@ -256,16 +256,16 @@ final appRouter = GoRouter(
       builder: (_, _) => const TwoFactorVerifyScreen(),
     ),
     GoRoute(
-      path: '/saved-login-info',
-      builder: (_, _) => const SavedLoginInfoScreen(),
+      path: '/saved-sign-in-info',
+      builder: (_, _) => const SavedSignInInfoScreen(),
     ),
     GoRoute(
       path: '/trusted-devices',
       builder: (_, _) => const TrustedDevicesScreen(),
     ),
     GoRoute(
-      path: '/login-activity',
-      builder: (_, _) => const LoginActivityScreen(),
+      path: '/sign-in-activity',
+      builder: (_, _) => const SignInActivityScreen(),
     ),
     GoRoute(
       path: '/recent-emails',

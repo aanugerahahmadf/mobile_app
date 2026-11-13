@@ -9,7 +9,7 @@ import '../../../../Auth/Presentation/Providers/AuthProvider/AuthProvider.dart';
 import '../../../../Auth/Presentation/Providers/BiometricSettingsProvider/BiometricSettingsProvider.dart';
 import '../../../../Auth/Data/AppLockService/AppLockService.dart';
 import '../../../../Auth/Presentation/Utils/AuthNavigation.dart';
-import '../../../../Auth/Presentation/Widgets/SocialLoginButton/SocialLoginButton.dart';
+import '../../../../Auth/Presentation/Widgets/SocialSignInButton/SocialSignInButton.dart';
 import '../../../../Auth/Presentation/Widgets/AuthModals/AuthModals.dart';
 import 'package:mobile_app/L10n/AppLocalizations.dart';
 import '../../../../../Core/Widgets/AppBlurBackdrop/AppBlurBackdrop.dart';
@@ -216,7 +216,7 @@ class _LandingPageState extends ConsumerState<LandingScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SocialLoginButton(
+            SocialSignInButton(
               provider: SocialProvider.google,
               onPressed: () async {
                 // Tandai onboarding sudah dilihat SEBELUM memulai autentikasi,
@@ -227,7 +227,7 @@ class _LandingPageState extends ConsumerState<LandingScreen> {
                 // sini aman (idempotent).
                 await _markOnboardingSeen();
                 if (!mounted) return;
-                ref.read(authProvider.notifier).googleLogin();
+                ref.read(authProvider.notifier).googleSignIn();
               },
             ),
           ],

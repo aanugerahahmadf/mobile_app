@@ -78,7 +78,7 @@ class PasswordAndSecurityScreen extends ConsumerWidget {
                   icon: Icons.bookmark_outline,
                   title: l.savedLoginInfo,
                   subtitle: l.savedLoginInfoDescShort,
-                  onTap: () => context.push('/saved-login-info'),
+                  onTap: () => context.push('/saved-sign-in-info'),
                 ),
               ],
             ),
@@ -99,7 +99,7 @@ class PasswordAndSecurityScreen extends ConsumerWidget {
                   icon: Icons.location_on_outlined,
                   title: l.whereYouLoggedIn,
                   subtitle: l.whereYouLoggedInDesc,
-                  onTap: () => context.push('/login-activity'),
+                  onTap: () => context.push('/sign-in-activity'),
                 ),
                 const Divider(height: 1, indent: 56),
                 _menuTile(

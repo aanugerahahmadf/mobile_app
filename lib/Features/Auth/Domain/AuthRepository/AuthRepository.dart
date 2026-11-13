@@ -1,7 +1,7 @@
 import '../../Data/Models/UserModel/UserModel.dart';
 
 abstract class AuthRepository {
-  Future<UserModel> login({required String login, required String password});
+  Future<UserModel> signIn({required String identifier, required String password});
 
   Future<UserModel> register({
     required String fullName,
@@ -42,7 +42,7 @@ abstract class AuthRepository {
 
   Future<String> uploadAvatar(String filePath);
 
-  Future<bool> isLoggedIn();
+  Future<bool> isSignedIn();
 
   Future<String?> getToken();
 }

@@ -14,7 +14,7 @@ import './Core/Utils/ValidatorsTest.dart' as t_11;
 import './features/Auth/AppLockSettingsTest.dart' as t_12;
 import './features/Auth/AuthFlowRoutingTest.dart' as t_13;
 import './features/Auth/AuthModalsTest.dart' as t_14;
-import './features/Auth/SocialLoginButtonTest.dart' as t_15;
+import './features/Auth/SocialSignInButtonTest.dart' as t_15;
 import './features/Cart/CartProviderStateTest.dart' as t_16;
 import './features/Catalog/CatalogGridScreenTest.dart' as t_17;
 import './features/Cbir/CbirProviderStateTest.dart' as t_18;

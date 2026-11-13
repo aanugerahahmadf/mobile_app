@@ -38,7 +38,7 @@ import '../../../../Legal/Presentation/Providers/LegalProvider/LegalProvider.dar
 import '../../Providers/AuthProvider/AuthProvider.dart';
 import '../../Utils/AuthNavigation.dart';
 import '../AuthHeader/AuthHeader.dart';
-import '../SocialLoginButton/SocialLoginButton.dart';
+import '../SocialSignInButton/SocialSignInButton.dart';
 import 'package:mobile_app/L10n/AppLocalizations.dart';
 
 enum AgreementMode { wizard, terms, privacy, weddingPolicy }
@@ -1004,8 +1004,8 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
     }
     ref
         .read(authProvider.notifier)
-        .login(
-          login: _emailController.text.trim(),
+        .signIn(
+          identifier: _emailController.text.trim(),
           password: _passwordController.text,
         );
   }
@@ -1020,7 +1020,7 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
       _showWarning(l.warningCheckRemember);
       return;
     }
-    await ref.read(authProvider.notifier).googleLogin();
+    await ref.read(authProvider.notifier).googleSignIn();
   }
 
   void _showWarning(String msg) {
@@ -1164,7 +1164,7 @@ class _SignInSheetContentState extends ConsumerState<_SignInSheetContent> {
               ],
             ),
             const SizedBox(height: AppSizes.md),
-            SocialLoginButton(
+            SocialSignInButton(
               provider: SocialProvider.google,
               loading: authState is AuthLoading,
               onPressed: _onGoogleLogin,
@@ -2767,7 +2767,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
               ],
             ),
             const SizedBox(height: AppSizes.md),
-            SocialLoginButton(
+            SocialSignInButton(
               provider: SocialProvider.google,
               loading: authState is AuthLoading,
               onPressed: () async {
@@ -2779,7 +2779,7 @@ class _SignUpSheetContentState extends ConsumerState<_SignUpSheetContent> {
                   _showWarning(l.warningCheckRemember);
                   return;
                 }
-                await ref.read(authProvider.notifier).googleLogin();
+                await ref.read(authProvider.notifier).googleSignIn();
               },
             ),
             const SizedBox(height: AppSizes.lg),

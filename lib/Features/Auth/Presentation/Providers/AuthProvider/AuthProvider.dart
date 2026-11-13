@@ -239,18 +239,18 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> login({
-    required String login,
+  Future<void> signIn({
+    required String identifier,
     required String password,
     String? loginType,
   }) async {
     state = const AuthLoading();
     try {
-      final data = <String, dynamic>{'login': login, 'password': password};
+      final data = <String, dynamic>{'login': identifier, 'password': password};
       if (loginType != null && loginType != 'email') {
         data['login_type'] = loginType;
       }
-      final response = await _dio.post(ApiEndpoints.login, data: data);
+      final response = await _dio.post(ApiEndpoints.signIn, data: data);
       final respData = response.data as Map<String, dynamic>? ?? {};
       final inner = respData['data'] as Map<String, dynamic>? ?? respData;
 
@@ -375,7 +375,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<void> googleLogin() async {
+  Future<void> googleSignIn() async {
     state = const AuthLoading();
     try {
       try {
@@ -434,7 +434,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       }
 
       final response = await _dio.post(
-        ApiEndpoints.googleLogin,
+        ApiEndpoints.googleSignIn,
         data: payload,
       );
       final respData = response.data as Map<String, dynamic>? ?? {};
