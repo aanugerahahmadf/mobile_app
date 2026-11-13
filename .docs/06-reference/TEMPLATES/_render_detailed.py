@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Renderer PRD dan SKILL layar versi detail.
 
-Semua fakta diambil dari registry layar, generator endpoint/tabel, kode Flutter,
+Semua fakta diambil dari registry layar, generator endpoint/tabel, implementasi aplikasi saat ini,
 dan controller Laravel. Bagian yang bersifat rekomendasi diberi tanda [Usulan].
 """
 from __future__ import annotations
@@ -50,7 +50,7 @@ STATE_BEHAVIOR = [
     ("loading", "Skeleton/spinner; blokir aksi ganda."),
     ("kosong", "Empty state dengan penjelasan dan CTA lanjutan."),
     ("error", "Pesan ramah, tombol coba lagi, pertahankan data lama bila ada."),
-    ("guest", "Tampilkan `GuestAuthPrompt`; jangan panggil endpoint privat."),
+    ("guest", "Tampilkan prompt autentikasi tamu; jangan panggil endpoint privat."),
     ("offline", "Banner/empty offline dan opsi coba lagi."),
     ("habis", "Tampilkan penanda akhir daftar atau status kedaluwarsa."),
     ("kedaluwarsa", "Tampilkan status kedaluwarsa dan aksi muat ulang."),
@@ -81,6 +81,37 @@ def code(text: str) -> str:
     if "`" in text:
         return f"`` {text} ``"
     return f"`{text}`"
+
+
+def display_state_mode(mode: str) -> str:
+    mode = str(mode or "")
+    lower = mode.lower()
+    if "riverpod" in lower and "state lokal" in lower:
+        return "State management terpusat + state lokal"
+    if "riverpod" in lower:
+        return "State management terpusat"
+    if "state lokal" in lower or "setstate" in lower:
+        return "State lokal"
+    if "stateless" in lower:
+        return "Tanpa state lokal"
+    return mode or "Tidak terdeteksi"
+
+
+def display_component_type(base: str) -> str:
+    base = str(base or "")
+    lower = base.lower()
+    if "consumerstateful" in lower or "stateful" in lower or "hook" in lower:
+        return "Komponen ber-state"
+    if "consumerwidget" in lower or "stateless" in lower:
+        return "Komponen UI"
+    return base or "Tidak terdeteksi"
+
+
+def display_ref_path(path: str | None) -> str:
+    if not path:
+        return "Implementasi referensi aplikasi saat ini"
+    # avoid exposing framework-specific source paths
+    return "Implementasi referensi aplikasi saat ini"
 
 
 def unique(values):
@@ -115,7 +146,7 @@ def guard_text(auth: str) -> str:
     auth_l = auth.lower()
     if "guest" in auth_l:
         return ("Guest boleh membuka layar, tetapi aksi privat harus memunculkan "
-                "`GuestAuthPrompt` dan tidak mengirim Bearer token kosong.")
+                "prompt autentikasi tamu dan tidak mengirim Bearer token kosong.")
     if "sanctum" in auth_l:
         return ("Butuh Bearer token valid. 401 harus membersihkan token dan "
                 "mengarahkan pengguna ke Landing/login.")
@@ -128,7 +159,7 @@ def guard_text(auth: str) -> str:
 
 def back_text(slug: str, kind: str, route: str) -> str:
     if route in {"/home", "/orders", "/chat-list", "/cart", "/profile"}:
-        return ("State tab dipertahankan oleh `StatefulShellRoute.indexedStack`; "
+        return ("State tab dipertahankan oleh navigasi tab/shell; "
                 "kembali tidak boleh mereset cabang lain. [Usulan]")
     if kind in {"form", "order"}:
         return "Jika ada perubahan belum disimpan, tampilkan konfirmasi sebelum keluar. [Usulan]"
@@ -138,7 +169,7 @@ def back_text(slug: str, kind: str, route: str) -> str:
         return "Kembali dapat keluar dari alur autentikasi; jangan menyimpan kredensial di state global."
     if kind == "detail":
         return "Kembali ke daftar asal; deep link tetap membuka detail yang sama."
-    return "Gunakan tombol back bawaan `go_router`; jangan membuat navigasi manual yang menduplikasi route."
+    return "Gunakan navigasi kembali bawaan router; jangan membuat navigasi manual yang menduplikasi route."
 
 
 def success_text(screen: dict, kind: str) -> str:
@@ -159,7 +190,7 @@ def success_text(screen: dict, kind: str) -> str:
 
 def status_text(screen: dict) -> str:
     if screen["route"] == "-":
-        return "Belum terhubung ke `AppRouter` (lihat gap)"
+        return "Belum terhubung ke router aplikasi (lihat gap)"
     if screen["gaps"]:
         return "Kontrak terdokumentasi; ada gap yang harus ditangani"
     return "Kontrak terdokumentasi"
@@ -300,7 +331,7 @@ def kind_specific_copy(kind: str, title: str) -> list[tuple[str, str, str]]:
     rows: list[tuple[str, str, str]] = []
     if kind == "chat":
         rows += [
-            ("Placeholder input", "Ketik pesan...", "[Usulan] Gunakan AppLocalizations."),
+            ("Placeholder input", "Ketik pesan...", "[Usulan] Gunakan sistem lokalisasi/i18n."),
             ("Empty list", "Belum ada percakapan.", "[Usulan] Sertakan CTA mulai chat."),
         ]
     elif kind == "payment":
@@ -368,15 +399,15 @@ def render_prd_detailed(screen, feature, file, lines, rows, tables, related):
         f"**Akses:** {screen['auth']} · **Tipe:** {kind_label}"
     )
     out.append(
-        f"> **Implementasi:** `{file or '-'}` — `{ex['class']}` ({lines} baris) · "
-        f"**State:** {ex['state_mode']} · **Pola:** {ex['realtime']}"
+        f"> **Implementasi referensi (aplikasi saat ini):** `{ex['class']}` · "
+        f"**State:** {display_state_mode(ex['state_mode'])} · **Pola:** {ex['realtime']}"
     )
     out.append(
         f"> **API:** {len(rows)} endpoint · **Tabel:** {len(tables)} · "
         f"**Model:** {len(ex['models'])}"
     )
     out.append(
-        f"> Diverifikasi {VERIFIED} dari kode Flutter, route Laravel, dan skema PostgreSQL. "
+        f"> Diverifikasi {VERIFIED} dari implementasi aplikasi saat ini, route Laravel, dan skema PostgreSQL. "
         "Bagian bertanda **[Usulan]** adalah rekomendasi, bukan perilaku yang sudah diverifikasi.\n"
     )
 
@@ -487,18 +518,18 @@ def render_prd_detailed(screen, feature, file, lines, rows, tables, related):
     out.append("## 4. Arsitektur Layar\n")
     out.append("| Aspek | Nilai |")
     out.append("|---|---|")
-    out.append(f"| File | `{file or '-'}` |")
-    out.append(f"| Kelas layar | `{ex['class']}` |")
-    out.append(f"| Base widget | `{ex['base'] or 'Tidak terdeteksi'}` |")
-    if ex["state_class"]:
-        out.append(f"| Kelas state | `{ex['state_class']}` |")
-    out.append(f"| State management | {ex['state_mode']} |")
+    out.append(f"| Komponen/layar | `{ex['class']}` |")
+    out.append(f"| Identifier | `{ex['class']}` |")
+    out.append(f"| Tipe komponen | {display_component_type(ex.get('base', ''))} |")
+    if ex.get("state_class"):
+        out.append(f"| Komponen state | Tersedia pada implementasi referensi |")
+    out.append(f"| State management | {display_state_mode(ex['state_mode'])} |")
     out.append(f"| Pola data | {ex['realtime']} |")
-    out.append(f"| Provider | {_inline_list(ex['providers'])} |")
-    out.append(f"| Repository | {_inline_list(ex['repositories'])} |")
+    out.append(f"| State/dependency | {_inline_list(ex['providers'])} |")
+    out.append(f"| Data source/repository | {_inline_list(ex['repositories'])} |")
     out.append(f"| Service | {_inline_list(ex['services'])} |")
-    out.append(f"| Widget inti | {_inline_list(ex['core_widgets'])} |")
-    out.append(f"| Widget fitur | {_inline_list(ex['feature_widgets'])} |")
+    out.append(f"| Komponen UI bersama | {_inline_list(ex['core_widgets'])} |")
+    out.append(f"| Komponen UI fitur | {_inline_list(ex['feature_widgets'])} |")
     out.append(f"| Model | {_inline_list([m['class'] for m in ex['models']])} |")
     out.append("")
     if ex["state_fields"]:
@@ -513,19 +544,19 @@ def render_prd_detailed(screen, feature, file, lines, rows, tables, related):
         out.append(", ".join(code(m) for m in ex["methods"]) + ".\n")
     out.append("### 4.3 Alur data\n")
     out.append("```text")
-    out.append("Widget / State")
+    out.append("UI / State layar")
     if ex["providers"]:
         out.append("   ↓ baca/tulis")
-        out.append("Provider Riverpod")
+        out.append("State management / dependency")
     out.append("   ↓")
-    out.append("Repository / DioClient")
+    out.append("Repository / HTTP client")
     out.append(f"   ↓ REST")
     out.append(f"Controller Laravel → PostgreSQL ({len(tables)} tabel terkait)")
     out.append("```\n")
 
     # 5 --------------------------------------------------------------------
     out.append("## 5. Blueprint UI\n")
-    out.append("Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti file implementasi.\n")
+    out.append("Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti implementasi aplikasi.\n")
     out.append("```text")
     out.append("┌" + "─" * WIDTH + "┐")
     out.append("│ " + title[:WIDTH - 3].ljust(WIDTH - 2) + "│")
@@ -563,7 +594,7 @@ def render_prd_detailed(screen, feature, file, lines, rows, tables, related):
     out.append(f"| Dropdown | {ex['dropdowns']} |")
     out.append(f"| Switch/toggle | {ex['switches']} |")
     out.append(f"| Validator client | {ex['validators']} |")
-    out.append(f"| Field password (`obscureText`) | {ex['obscure']} |")
+    out.append(f"| Field password (teks tersamar) | {ex['obscure']} |")
     out.append(f"| maxLength | {', '.join(ex['max_lengths']) if ex['max_lengths'] else 'Tidak terdeteksi'} |")
     out.append(f"| Keyboard | {', '.join(ex['keyboard_types']) if ex['keyboard_types'] else 'Tidak terdeteksi'} |")
     out.append(f"| Input formatter | {', '.join(ex['input_formatters']) if ex['input_formatters'] else 'Tidak terdeteksi'} |")
@@ -577,7 +608,7 @@ def render_prd_detailed(screen, feature, file, lines, rows, tables, related):
 
     # 7 --------------------------------------------------------------------
     out.append("## 7. Copywriting & Microcopy\n")
-    out.append("Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocalizations` dan mengikuti gaya bahasa layar lain.\n")
+    out.append("Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai sistem lokalisasi/i18n yang konsisten dan mengikuti gaya bahasa layar lain.\n")
     out.append("| Lokasi | Draft copy | Catatan |")
     out.append("|---|---|---|")
     out.append(f"| Judul/header | {safe(title)} | Samakan dengan label navigasi. |")
@@ -587,7 +618,7 @@ def render_prd_detailed(screen, feature, file, lines, rows, tables, related):
     out.append(f"| Error | {safe(f'Gagal memuat {lower}. Periksa koneksi lalu coba lagi.')} | [Usulan] Jangan tampilkan stack trace. |")
     out.append("| Retry | Coba lagi | [Usulan] Pertahankan data lama bila ada. |")
     if "guest" in screen["auth"].lower():
-        out.append("| Guest | Masuk untuk melanjutkan. | [Usulan] Gunakan `GuestAuthPrompt`. |")
+        out.append("| Guest | Masuk untuk melanjutkan. | [Usulan] Gunakan prompt autentikasi tamu. |")
     out.append("| Offline | Anda sedang offline. Periksa koneksi internet. | [Usulan] Sediakan retry. |")
     out.append("| Validasi | Periksa kembali data yang Anda isi. | [Usulan] Fokus ke field pertama. |")
     for location, copy, note in kind_specific_copy(kind, title):
@@ -600,17 +631,17 @@ def render_prd_detailed(screen, feature, file, lines, rows, tables, related):
     out.append("| Token | Nilai |")
     out.append("|---|---|")
     out.append("| Font | Instrument Sans (W400/W600), aset lokal |")
-    out.append("| Warna primer | `AppColors.primaryColor` = `#1E3A5F` |")
-    out.append("| Aksen | `AppColors.accentColor` = `#C9A94E` |")
-    out.append("| Background light | `AppColors.backgroundColor` = `#F8F6F7` |")
-    out.append("| Surface light | `AppColors.surfaceColor` = `#FFFFFF` |")
-    out.append("| Background dark | `AppColors.darkBackground` = `#121212` |")
-    out.append("| Surface dark | `AppColors.darkSurface` = `#1E1E1E` |")
+    out.append("| Warna primer | `#1E3A5F` (token primer aplikasi) |")
+    out.append("| Aksen | `#C9A94E` |")
+    out.append("| Background light | `#F8F6F7` |")
+    out.append("| Surface light | `#FFFFFF` |")
+    out.append("| Background dark | `#121212` |")
+    out.append("| Surface dark | `#1E1E1E` |")
     out.append("| Teks primer light | `#1A1A2E`; dark `#E8E8E8` |")
     out.append("| Teks sekunder light | `#8E8E9A`; dark `#A0A0A0` |")
     out.append("| Sukses/error/warning/info | `#10B981` / `#EF4444` / `#F59E0B` / `#3B82F6` |")
     out.append("| Tipografi | `headTitle` 22/w600; `subHeadTitle` 16/w400; `h3` 14/w600; `h4` 12/w400; `description` 14/1.4 |")
-    out.append("| Spacing | `AppSizes` 2, 4, 8, 16, 24, 32, 48, 64 |")
+    out.append("| Spacing | skala 2, 4, 8, 16, 24, 32, 48, 64 |")
     out.append("| Radius | card 16, button 14, input 14, avatar 28, bottom nav 24 |")
     out.append("| Glass | `AppBlurBackdrop`; `blurSigma` 15; tint light `#32FFFFFF`, night `#32000000` |")
     out.append("")
@@ -624,7 +655,7 @@ def render_prd_detailed(screen, feature, file, lines, rows, tables, related):
     out.append("")
     out.append("### 8.3 Mode gelap & glass\n")
     out.append("- Tema mengikuti sistem (light/dark) dan dapat di-override `ThemeProvider`.")
-    out.append("- Jangan hardcode warna; gunakan `AppColors`/`AppTheme` agar mode gelap bekerja.")
+    out.append("- Jangan hardcode warna; gunakan token/tema desain aplikasi agar mode gelap bekerja.")
     out.append("- Fallback tanpa blur harus tetap kontras dan terbaca.")
     out.append("- Hormati reduce-motion; animasi 3D/parallax tidak boleh menjadi satu-satunya pembeda state.")
     out.append("")
@@ -703,7 +734,7 @@ def render_prd_detailed(screen, feature, file, lines, rows, tables, related):
         out.append("```\n")
     else:
         out.append("Layar ini **tidak memanggil API jaringan**. Semua state disimpan di perangkat "
-                   "(`SharedPreferences`/`FlutterSecureStorage`) atau diterima lewat `extra`/provider.\n")
+                   "(penyimpanan lokal/secure storage) atau diterima lewat `extra`/provider.\n")
     out.append("### 10.3 Pemetaan error HTTP\n")
     out.append("| HTTP | Failure | Perilaku UI |")
     out.append("|---|---|---|")
@@ -737,12 +768,12 @@ def render_prd_detailed(screen, feature, file, lines, rows, tables, related):
     out.append("### 11.1 Aturan data\n")
     out.append("- Jangan menampilkan data dari cache setelah logout.")
     out.append("- Nominal, stok, status pesanan, dan kepemilikan resource **wajib** divalidasi backend.")
-    out.append("- Jangan mengakses PostgreSQL dari Flutter; gunakan endpoint Laravel.")
+    out.append("- Jangan mengakses PostgreSQL langsung dari klien; gunakan endpoint Laravel.")
     out.append("- Filter data milik pengguna dilakukan server-side (`user_id` dari token), bukan di client.")
     if "orders" in [t for t, _ in tables]:
         out.append("- Jangan menyimpulkan status pembayaran dari `orders.status`; gunakan data pembayaran/transaksi.")
     if flags.get("shared_prefs"):
-        out.append("- Preferensi lokal disimpan di `SharedPreferences`; token tetap di `FlutterSecureStorage`.")
+        out.append("- Preferensi lokal disimpan di penyimpanan lokal; token tetap di secure storage.")
     out.append("")
 
     # 12 -------------------------------------------------------------------
@@ -778,8 +809,8 @@ def render_prd_detailed(screen, feature, file, lines, rows, tables, related):
     out.append("### 12.4 Aturan bisnis wajib\n")
     out.append("- Disable tombol submit selama request berjalan untuk mencegah duplikasi.")
     out.append("- Terapkan `Accept-Language` dari `localeProvider` pada setiap request.")
-    out.append("- Gunakan `DioClient`/repository yang sudah ada; jangan membuat instance Dio baru.")
-    out.append("- Guest tidak boleh memanggil endpoint privat; tampilkan `GuestAuthPrompt`.")
+    out.append("- Gunakan HTTP client/data source/repository yang sudah ada; jangan membuat client baru di komponen UI.")
+    out.append("- Guest tidak boleh memanggil endpoint privat; tampilkan prompt autentikasi tamu.")
     for rule in _kind_business_rules(kind):
         out.append(f"- {rule}")
     out.append("")
@@ -853,7 +884,7 @@ def render_prd_detailed(screen, feature, file, lines, rows, tables, related):
     out.append("- [ ] Target sentuh minimal 48×48 dp dan label semantik tersedia.")
     out.append("")
     out.append("### 18.6 Kualitas\n")
-    out.append("- [ ] `flutter analyze` bersih untuk file yang diubah.")
+    out.append("- [ ] Analisis statis/lint sesuai toolchain target bersih untuk bagian yang diubah.")
     out.append("- [ ] Test happy path dan minimal satu error path ditambahkan/diperbarui.")
     out.append("- [ ] PRD/SKILL diperbarui bila route, endpoint, atau tabel berubah.")
     out.append("")
@@ -893,26 +924,25 @@ def render_prd_detailed(screen, feature, file, lines, rows, tables, related):
 
     # 21 -------------------------------------------------------------------
     out.append("## 21. Peta Implementasi & Simbol\n")
-    out.append("| Layer | File/Simbol | Catatan |")
+    out.append("| Layer | Komponen/Referensi | Catatan |")
     out.append("|---|---|---|")
-    out.append(f"| Screen | `{file or '-'}` · `{ex['class']}` | {lines} baris |")
+    out.append(f"| Layar/UI | `{ex['class']}` | Implementasi referensi aplikasi saat ini |")
     for provider in ex["providers"]:
-        provider_file = find_provider_file(provider)
-        out.append(f"| Provider | `{provider}` | {('`' + provider_file + '`') if provider_file else 'File tidak terdeteksi'} |")
+        out.append(f"| State/dependency | `{provider}` | Komponen state/dependency terkait |")
     for model in ex["models"]:
-        out.append(f"| Model | `{model['class']}` | `{model['file']}` |")
+        out.append(f"| Model/data | `{model['class']}` | Struktur data terkait |")
     for widget in ex["core_widgets"]:
-        out.append(f"| Widget inti | `{widget}` | `lib/Core/Widgets/{widget}/` |")
+        out.append(f"| Komponen UI bersama | `{widget}` | Komponen UI reusable |")
     for widget in ex["feature_widgets"]:
-        out.append(f"| Widget fitur | `{widget}` | Berada di `Presentation/Widgets/` fitur terkait |")
-    out.append(f"| Test | `test/Features/{feature['name'].split()[0]}/` | Tambahkan test sesuai §19 |")
+        out.append(f"| Komponen UI fitur | `{widget}` | Komponen UI khusus fitur |")
+    out.append("| Test | Sesuai platform target | Tambahkan test sesuai §19 |")
     out.append(f"| Dokumen | `.docs/screens/{feature['folder']}/{screen['slug']}.md` | PRD ini |")
     out.append(f"| Prompt | `.skills/screens/{feature['folder']}/{screen['slug']}/SKILL.md` | Skill layar |")
     out.append("")
     if ex["methods"]:
         out.append("**Metode internal terdeteksi:** " + ", ".join(code(m) for m in ex["methods"]) + ".\n")
     if flags.get("direct_dio"):
-        out.append("> **Catatan arsitektur:** layar memakai `DioClient.instance` langsung. "
+        out.append("> **Catatan arsitektur:** layar memakai HTTP client bersama langsung. "
                    "Saat refactor, pindahkan ke repository/provider tanpa mengubah kontrak.\n")
 
     # 22 -------------------------------------------------------------------
@@ -927,7 +957,7 @@ def render_prd_detailed(screen, feature, file, lines, rows, tables, related):
     out.append("| Tanggal | Perubahan | Sumber |")
     out.append("|---|---|---|")
     out.append(f"| {VERIFIED} | Regenerasi detail: arsitektur, state machine, kontrak API, validasi, a11y, test plan | "
-               "Kode Flutter, route Laravel, skema PostgreSQL |")
+               "Implementasi aplikasi, route Laravel, skema PostgreSQL |")
     out.append("")
     return "\n".join(out)
 
@@ -966,20 +996,20 @@ def render_skill_detailed(screen, feature, file, rows, tables):
     out.append(f"# Skill: {title}\n")
     out.append(
         f"> **Tipe:** {kind_label} · **Route:** {route_badge} · **Akses:** {screen['auth']} · "
-        f"**State:** {ex['state_mode']}\n"
+        f"**State:** {display_state_mode(ex['state_mode'])}\n"
     )
 
     # Prompt siap pakai
     out.append("## 0. Prompt siap pakai\n")
     out.append("Tempel blok berikut ke agen implementasi. Ganti bagian dalam `<...>` bila perlu.\n")
     out.append("```text")
-    out.append(f"Anda bekerja pada layar {title} ({ex['class']}) di fitur {feature['name']}.")
-    out.append(f"File utama: {file or '-'}. Route: {screen['route']} ({screen['auth']}).")
+    out.append(f"Anda bekerja pada layar {title} di fitur {feature['name']}.")
+    out.append(f"Referensi implementasi saat ini: {ex['class']}. Route: {screen['route']} ({screen['auth']}).")
     out.append(f"Tujuan: {screen['purpose']}")
     out.append("")
     out.append("Konteks wajib:")
     out.append(f"- Baca PRD lengkap: .docs/screens/{folder}/{slug}.md")
-    out.append(f"- State management: {ex['state_mode']}; pola data: {ex['realtime']}.")
+    out.append(f"- State management: {display_state_mode(ex['state_mode'])}; pola data: {ex['realtime']}.")
     out.append("- Endpoint: " + _sentence(_endpoint_summary(rows)))
     out.append(f"- Tabel: {_table_summary(tables)}.")
     out.append("- Parameter/extra: " + _sentence(screen['route_note'] or 'tidak ada parameter khusus'))
@@ -988,20 +1018,20 @@ def render_skill_detailed(screen, feature, file, rows, tables):
     for item in screen["accept"][:6]:
         out.append(f"- {item}")
     out.append("- Tangani loading, empty, error, offline, unauthorized, dan double-submit.")
-    out.append("- Gunakan AppColors/AppTextStyles/AppSizes/AppLocalizations; jangan hardcode.")
+    out.append("- Gunakan token desain dan sistem lokalisasi yang konsisten; jangan hardcode.")
     out.append("- Jangan mengarang endpoint/kolom. Verifikasi ke backend sebelum menulis kode.")
-    out.append("- Jangan memanggil Dio baru dari widget; gunakan repository/DioClient yang ada.")
+    out.append("- Jangan memanggil HTTP client baru dari komponen UI; gunakan repository/data source yang ada.")
     out.append("")
     out.append(f"Selesai jika: {cta.lower()} bekerja, semua state di atas tertangani, "
-               "flutter analyze bersih, dan test happy path + minimal satu error path lulus.")
+               "analisis statis/lint bersih, dan test otomatis sesuai platform target untuk happy path + minimal satu error path lulus.")
     out.append("```\n")
 
     # 1
     out.append("## 1. Kapan dipakai / tidak\n")
-    out.append(f"**Dipakai** saat mengubah, menguji, me-refactor, atau mendokumentasikan `{ex['class']}`.\n")
+    out.append(f"**Dipakai** saat mengubah, menguji, me-refactor, atau mendokumentasikan layar **{title}** (referensi implementasi: `{ex['class']}`).\n")
     out.append("**Tidak dipakai** untuk:")
     out.append("- Mengubah kontrak backend tanpa juga memperbarui PRD dan peta endpoint.")
-    out.append("- Mendesain ulang seluruh design system; muat `shared/flutter-screen` dan `shared/security-auth`.")
+    out.append("- Mendesain ulang seluruh design system; ikuti panduan desain dan keamanan bersama jika tersedia.")
     if kind == "chat":
         out.append("- Mengubah signaling WebRTC/panggilan tanpa membaca dokumentasi chat.")
     if kind == "payment":
@@ -1012,12 +1042,12 @@ def render_skill_detailed(screen, feature, file, rows, tables):
     out.append("## 2. Input & prasyarat\n")
     out.append("| Prasyarat | Nilai |")
     out.append("|---|---|")
-    out.append(f"| File layar | `{file or '-'}` |")
+    out.append(f"| Referensi implementasi | `{ex['class']}` |")
     out.append(f"| Route | {route_badge} |")
     out.append(f"| Akses | {screen['auth']} |")
     out.append(f"| Parameter | {safe(screen['route_note'] or 'Tidak ada')} |")
     out.append(f"| Masuk dari | {safe(screen['entry'])} |")
-    out.append(f"| Provider | {_inline_list(ex['providers'])} |")
+    out.append(f"| State/dependency | {_inline_list(ex['providers'])} |")
     out.append(f"| Model | {_inline_list([m['class'] for m in ex['models']])} |")
     out.append(f"| Endpoint | {len(rows)} |")
     out.append(f"| Tabel | {len(tables)} |")
@@ -1033,10 +1063,10 @@ def render_skill_detailed(screen, feature, file, rows, tables):
     out.append("## 3. Sumber kebenaran\n")
     out.append("| Aspek | Sumber |")
     out.append("|---|---|")
-    out.append("| Layar & route | `lib/Core/Router/AppRouter/AppRouter.dart` |")
-    out.append("| Endpoint client | `lib/Core/Api/ApiEndpoints/ApiEndpoints.dart` |")
-    out.append("| HTTP client | `lib/Core/Api/DioClient/DioClient.dart` |")
-    out.append("| Desain | `lib/Core/Constants/` dan `lib/Core/Theme/` |")
+    out.append("| Layar & route | Konfigurasi router aplikasi |")
+    out.append("| Endpoint client | Definisi endpoint API klien |")
+    out.append("| HTTP client | HTTP client/data source bersama |")
+    out.append("| Desain | Token desain/tema aplikasi |")
     out.append("| Backend | `../Mobile-And-Backend/routes/api` dan `app/Http/Controllers/Api/User` |")
     out.append("| Database | PostgreSQL `wedding_florals_decorations` |")
     out.append(f"| PRD | `.docs/screens/{folder}/{slug}.md` |")
@@ -1044,15 +1074,15 @@ def render_skill_detailed(screen, feature, file, rows, tables):
 
     # 4
     out.append("## 4. Peta file yang akan disentuh\n")
-    out.append("| Layer | File | Perubahan yang diharapkan |")
+    out.append("| Area | Komponen | Perubahan yang diharapkan |")
     out.append("|---|---|---|")
-    out.append(f"| Screen | `{file or '-'}` | UI, state, interaksi |")
+    out.append(f"| Layar/UI | `{ex['class']}` | UI, state, interaksi |")
     for provider in ex["providers"]:
         provider_file = find_provider_file(provider)
-        out.append(f"| Provider | {('`' + provider_file + '`') if provider_file else '`' + provider + '`'} | State/aksi domain |")
+        out.append(f"| State/dependency | `{provider}` | State/aksi domain |")
     for model in ex["models"]:
         out.append(f"| Model | `{model['file']}` | Parsing/serialisasi bila kontrak berubah |")
-    out.append(f"| Test | `test/Features/{feature['name'].split()[0]}/` | Test happy path + error path |")
+    out.append(f"| Test | Test otomatis (platform target) di area {feature['name'].split()[0]}/` | Test happy path + error path |")
     out.append(f"| PRD | `.docs/screens/{folder}/{slug}.md` | Perbarui bila route/API/tabel berubah |")
     out.append(f"| Prompt | `.skills/screens/{folder}/{slug}/SKILL.md` | Skill ini |")
     out.append("")
@@ -1086,22 +1116,22 @@ def render_skill_detailed(screen, feature, file, rows, tables):
     out.append("## 6. Langkah implementasi\n")
     out.append("### Fase 0 — Recon (wajib)\n")
     out.append(f"1. Baca PRD `.docs/screens/{folder}/{slug}.md` dan skill ini sampai selesai.")
-    out.append(f"2. Buka `{file or '-'}`; catat widget, state, dan panggilan API yang sudah ada.")
-    out.append(f"3. Verifikasi route di `AppRouter`: {route_badge}.")
+    out.append(f"2. Tinjau implementasi referensi `{ex['class']}`; catat komponen UI, state, dan panggilan API yang sudah ada.")
+    out.append(f"3. Verifikasi route di konfigurasi router: {route_badge}.")
     out.append("4. Verifikasi endpoint ke backend: " + _sentence(_endpoint_summary(rows)))
     out.append("5. Cek tabel/kolom di `DATABASE.md`; jangan mengarang kolom.\n")
     out.append("### Fase 1 — Navigasi & guard\n")
-    out.append("1. Pastikan route dan parameter/extra sesuai. Jangan menambah route baru tanpa mendaftarkannya di `AppRouter`.")
+    out.append("1. Pastikan route dan parameter/extra sesuai. Jangan menambah route baru tanpa mendaftarkannya di konfigurasi router.")
     out.append(f"2. Terapkan guard: {guard_text(screen['auth'])}")
     out.append("3. Pastikan back tidak mengulang submit dan tidak kehilangan input tanpa konfirmasi.\n")
     out.append("### Fase 2 — UI scaffold\n")
-    out.append("1. Susun layout sesuai blueprint PRD §5; gunakan widget yang sudah ada bila cocok.")
-    out.append("2. Gunakan `AppColors`, `AppTextStyles`, `AppSizes`, `AppLocalizations`.")
+    out.append("1. Susun layout sesuai blueprint PRD §5; gunakan komponen UI yang sudah ada bila cocok.")
+    out.append("2. Gunakan token desain (warna, tipografi, spacing) dan lokalisasi yang konsisten.")
     out.append("3. Pastikan layout tidak overflow di 320 px dan aman terhadap keyboard/safe area.\n")
     out.append("### Fase 3 — State & data\n")
     fase3 = [
         "Implementasikan state: " + ", ".join(code(s[0]) for s in state_rows[:10]) + ".",
-        "Panggil API lewat repository/DioClient; jangan dari `build()`.",
+        "Panggil API lewat repository/data source; jangan dari siklus render UI.",
         "Simpan state minimal yang diperlukan; jangan menduplikasi sumber kebenaran.",
     ]
     if flags.get("pagination"):
@@ -1183,32 +1213,32 @@ def render_skill_detailed(screen, feature, file, rows, tables):
     out.append("- [ ] Semua elemen UI di §5.2 tampil dan berfungsi.")
     out.append("- [ ] Semua state di §5.3/§9 tertangani, termasuk error dan offline.")
     out.append("- [ ] Kontrak endpoint dan tabel tidak berubah tanpa update PRD/peta endpoint.")
-    out.append("- [ ] Tidak ada panggilan API langsung dari `build()` atau instance Dio baru.")
+    out.append("- [ ] Tidak ada panggilan API langsung dari siklus render UI atau pembuatan HTTP client baru di komponen UI.")
     out.append("- [ ] Nominal/stok/status berasal dari backend.")
     out.append("- [ ] 401 membersihkan token dan mengarahkan ke Landing/login.")
     out.append("- [ ] Tidak ada overflow di 320 px, landscape, dan text scale 200%.")
     out.append("- [ ] Mode terang/gelap terbaca dan target sentuh ≥48 dp.")
-    out.append("- [ ] `flutter analyze` bersih.")
+    out.append("- [ ] Analisis statis/lint sesuai toolchain target bersih.")
     out.append("- [ ] Test happy path + minimal satu error path lulus.")
     out.append("- [ ] PRD dan SKILL diperbarui bila ada perubahan.")
     out.append("")
 
     # 12
     out.append("## 12. Verifikasi\n")
-    out.append("```powershell")
-    out.append("# dari root mobile_app")
-    out.append(f"rg \"{ex['class']}\" lib")
-    out.append("flutter analyze")
-    out.append(f"flutter test test/Features/{feature['name'].split()[0]}")
+    out.append("```text")
+    out.append("# verifikasi implementasi")
+    out.append(f"- Pastikan komponen/layar referensi `{ex['class']}` dan perilakunya sesuai")
+    out.append("- Jalankan analisis statis/lint sesuai toolchain target")
+    out.append("- Jalankan test otomatis sesuai platform target")
     if rows:
         first_path = rows[0]["path"].split("{")[0]
         out.append("")
-        out.append("# dari root backend")
-        out.append(f"php artisan route:list --path=api | Select-String \"{first_path}\"")
+        out.append("# verifikasi backend (opsional)")
+        out.append(f"- Cek route API: {first_path}")
     if tables:
         out.append("")
-        out.append("# dari PostgreSQL")
-        out.append(f"\\d+ {tables[0][0]}")
+        out.append("# verifikasi database (opsional)")
+        out.append(f"- Cek tabel: {tables[0][0]}")
     out.append("```\n")
     out.append("Uji manual minimum: happy path, loading, empty, error jaringan, 401, 422, "
                "double-tap submit, 320 px, mode gelap, dan text scale 200%.\n")
@@ -1221,7 +1251,7 @@ def render_skill_detailed(screen, feature, file, rows, tables):
     else:
         out.append("- Tidak ada gap khusus; tetap hormati kontrak backend.")
     if flags.get("direct_dio"):
-        out.append("- Layar memakai `DioClient.instance` langsung. Refactor ke repository harus menjaga kontrak dan error mapping.")
+        out.append("- Layar memakai HTTP client bersama langsung. Refactor ke repository harus menjaga kontrak dan error mapping.")
     if screen["route"] == "-":
         out.append("- Layar belum terdaftar di `AppRouter`; jangan menganggapnya dapat dijangkau lewat deep link.")
     out.append("- Jangan mengubah nama endpoint/konstanta tanpa memperbarui PRD dan peta endpoint.")
@@ -1280,7 +1310,7 @@ def _field_role(name: str) -> str:
     if "error" in lower:
         return "Menyimpan pesan kegagalan."
     if "controller" in lower:
-        return "Controller input; wajib dispose."
+        return "Controller/state input; wajib dibersihkan saat tidak dipakai."
     if any(k in lower for k in ("selected", "filter", "sort", "category", "query")):
         return "Filter/sortir lokal."
     if any(k in lower for k in ("page", "scroll", "hasmore")):
@@ -1288,7 +1318,7 @@ def _field_role(name: str) -> str:
     if any(k in lower for k in ("callactive", "callstatus", "callstate", "incall", "call_token", "calltoken")):
         return "Status panggilan; sinkronkan dengan sinyal server."
     if any(k in lower for k in ("camera", "tts", "recognizer", "timer")):
-        return "Resource native; wajib dibersihkan di `dispose`."
+        return "Resource native; wajib dibersihkan saat layar/komponen ditutup."
     if any(k in lower for k in ("data", "items", "list", "model", "profile", "orders")):
         return "Data yang ditampilkan."
     return "State lokal layar."
@@ -1365,7 +1395,7 @@ def _state_rows(screen, kind, flags, rows):
     if kind == "payment":
         add("expired", "Deadline pembayaran lewat", "Status kedaluwarsa + instruksi", "Muat ulang/buat kode baru")
     if "guest" in screen["auth"].lower():
-        add("guest", "Guest menekan aksi privat", "`GuestAuthPrompt`", "Login")
+        add("guest", "Guest menekan aksi privat", "prompt autentikasi tamu", "Login")
     for state in screen["states"]:
         add(state, "Kondisi domain", behavior_for(state), "Ikuti aksi pemulihan pada pesan")
     return rows_out
@@ -1463,7 +1493,7 @@ def _screen_failures(kind, flags, screen):
 
 def _security_rules(kind, flags, screen):
     items = [
-        "Token hanya di `FlutterSecureStorage`; jangan di `SharedPreferences` atau log.",
+        "Token hanya di secure storage; jangan di penyimpanan lokal atau log.",
         "Jangan menampilkan stack trace, query database, atau detail internal pada pengguna.",
         "Jangan mengirim PII ke analytics/crash report.",
         "Validasi kepemilikan resource di backend; client tidak boleh menentukan `user_id`.",
@@ -1665,11 +1695,11 @@ def _dependency_rows(screen, rows, tables, ex):
     for row in rows:
         deps.append(("Endpoint", f"{row['method']} {row['path']}", row["controller"]))
     for table, _role in tables:
-        deps.append(("Database", table, "Jangan query langsung dari Flutter."))
+        deps.append(("Database", table, "Jangan query langsung dari klien."))
     for provider in ex["providers"]:
         deps.append(("Provider", provider, find_provider_file(provider) or "File tidak terdeteksi"))
     if screen["route"] != "-":
-        deps.append(("Route", screen["route"], "Terdaftar di `AppRouter`."))
+        deps.append(("Route", screen["route"], "Terdaftar di konfigurasi router aplikasi."))
     else:
         deps.append(("Route", "tidak terdaftar", "Layar belum dapat dijangkau lewat deep link."))
     return deps[:20]
@@ -1678,12 +1708,12 @@ def _dependency_rows(screen, rows, tables, ex):
 def _guardrails(kind):
     items = [
         "Jangan mengarang endpoint, parameter, atau kolom database.",
-        "Jangan membuat instance `Dio` baru di widget; gunakan `DioClient`/repository.",
+        "Jangan membuat HTTP client baru di komponen UI; gunakan data source/repository bersama.",
         "Jangan memanggil API di `build()` atau setiap rebuild.",
-        "Jangan menyimpan token/password/PIN di `SharedPreferences` atau log.",
+        "Jangan menyimpan token/password/PIN di penyimpanan lokal atau log.",
         "Jangan menampilkan stack trace/pesan database ke pengguna.",
         "Jangan menambah dependensi baru tanpa alasan dan persetujuan.",
-        "Jangan mengubah route/parameter tanpa memperbarui `AppRouter` dan dokumen.",
+        "Jangan mengubah route/parameter tanpa memperbarui konfigurasi router dan dokumen.",
         "Jangan menghapus test yang ada untuk membuat build lulus.",
     ]
     if kind == "payment":

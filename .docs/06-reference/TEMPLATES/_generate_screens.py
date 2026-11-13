@@ -987,8 +987,10 @@ flutter test test/Features/<Fitur>/
 
 
 def main() -> None:
-    if len(SCREENS) != 78:
-        raise SystemExit(f"Registry harus berisi 78 layar, ditemukan {len(SCREENS)}")
+    # 77 layar: `catalog/catalog-rating-comments-by-user` sudah dilepas dari
+    # aplikasi (AGENTS.md §3.6), jadi registry dan `.docs/screens/` kini 77.
+    if len(SCREENS) != 77:
+        raise SystemExit(f"Registry harus berisi 77 layar, ditemukan {len(SCREENS)}")
     slugs = [(s["feature"], s["slug"]) for s in SCREENS]
     if len(set(slugs)) != len(slugs):
         raise SystemExit("Ada slug duplikat")

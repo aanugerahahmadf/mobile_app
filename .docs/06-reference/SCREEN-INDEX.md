@@ -1,6 +1,6 @@
 # Indeks Layar
 
-Total **78 layar** dari 19 fitur, diverifikasi 6 November 2026.
+Total **77 layar** dari 19 fitur, diverifikasi 6 November 2026.
 
 Setiap layar memiliki PRD di `.docs/screens/` dan skill di `.skills/screens/`.
 
@@ -21,7 +21,7 @@ Setiap layar memiliki PRD di `.docs/screens/` dan skill di `.skills/screens/`.
 | Onboarding | 1 | [`screens/onboarding/`](../screens/onboarding/) |
 | Pesanan | 3 | [`screens/order/`](../screens/order/) |
 | Pembayaran | 5 | [`screens/payment/`](../screens/payment/) |
-| Profil & Pengaturan | 31 | [`screens/profile/`](../screens/profile/) |
+| Profil & Pengaturan | 30 | [`screens/profile/`](../screens/profile/) |
 | Laporan | 1 | [`screens/report/`](../screens/report/) |
 | Ulasan | 2 | [`screens/review/`](../screens/review/) |
 | Pencarian | 2 | [`screens/search/`](../screens/search/) |
@@ -82,9 +82,9 @@ Setiap layar memiliki PRD di `.docs/screens/` dan skill di `.skills/screens/`.
 | 48 | Profil & Pengaturan | `PasswordAndSecurityScreen` | `/password-and-security` | Sanctum | 5 | [password-and-security.md](../screens/profile/password-and-security.md) | [SKILL.md](../../.skills/screens/profile/password-and-security/SKILL.md) |
 | 49 | Profil & Pengaturan | `RecentEmailsScreen` | `/recent-emails` | Sanctum | 3 | [recent-emails.md](../screens/profile/recent-emails.md) | [SKILL.md](../../.skills/screens/profile/recent-emails/SKILL.md) |
 | 50 | Profil & Pengaturan | `SecurityCheckupScreen` | `/security-checkup` | Sanctum | 6 | [security-checkup.md](../screens/profile/security-checkup.md) | [SKILL.md](../../.skills/screens/profile/security-checkup/SKILL.md) |
-| 51 | Profil & Pengaturan | `LoginActivityScreen` | `/login-activity` | Sanctum | 3 | [login-activity.md](../screens/profile/login-activity.md) | [SKILL.md](../../.skills/screens/profile/login-activity/SKILL.md) |
+| 51 | Profil & Pengaturan | `SignInActivityScreen` | `/login-activity` | Sanctum | 3 | [login-activity.md](../screens/profile/login-activity.md) | [SKILL.md](../../.skills/screens/profile/login-activity/SKILL.md) |
 | 52 | Profil & Pengaturan | `ChangePasswordScreen` | `/change-password` | Sanctum | 2 | [change-password.md](../screens/profile/change-password.md) | [SKILL.md](../../.skills/screens/profile/change-password/SKILL.md) |
-| 53 | Profil & Pengaturan | `SavedLoginInfoScreen` | `/saved-login-info` | Sanctum | 2 | [saved-login-info.md](../screens/profile/saved-login-info.md) | [SKILL.md](../../.skills/screens/profile/saved-login-info/SKILL.md) |
+| 53 | Profil & Pengaturan | `SavedSignInInfoScreen` | `/saved-login-info` | Sanctum | 2 | [saved-login-info.md](../screens/profile/saved-login-info.md) | [SKILL.md](../../.skills/screens/profile/saved-login-info/SKILL.md) |
 | 54 | Profil & Pengaturan | `TrustedDevicesScreen` | `/trusted-devices` | Sanctum | 7 | [trusted-devices.md](../screens/profile/trusted-devices.md) | [SKILL.md](../../.skills/screens/profile/trusted-devices/SKILL.md) |
 | 55 | Profil & Pengaturan | `TwoFactorSettingsScreen` | `/two-factor-settings` | Sanctum | 5 | [two-factor-settings.md](../screens/profile/two-factor-settings.md) | [SKILL.md](../../.skills/screens/profile/two-factor-settings/SKILL.md) |
 | 56 | Profil & Pengaturan | `TwoFactorSetupScreen` | `/security/two-factor-setup` | Sanctum | 5 | [two-factor-setup.md](../screens/profile/two-factor-setup.md) | [SKILL.md](../../.skills/screens/profile/two-factor-setup/SKILL.md) |
@@ -105,7 +105,7 @@ Setiap layar memiliki PRD di `.docs/screens/` dan skill di `.skills/screens/`.
 | 71 | Ulasan | `ReviewListScreen` | `/write-review` | Sanctum | 7 | [review-list.md](../screens/review/review-list.md) | [SKILL.md](../../.skills/screens/review/review-list/SKILL.md) |
 | 72 | Pencarian | `SearchResultsScreen` | — | Guest + Sanctum | 1 | [search-results.md](../screens/search/search-results.md) | [SKILL.md](../../.skills/screens/search/search-results/SKILL.md) |
 | 73 | Pencarian | `SearchScreen` | `/search` | Guest + Sanctum | 2 | [search.md](../screens/search/search.md) | [SKILL.md](../../.skills/screens/search/search/SKILL.md) |
-| 74 | Splash & Landing | `LandingScreen` | `/landing` | Publik | 8 | [landing.md](../screens/splash/landing.md) | [SKILL.md](../../.skills/screens/splash/landing/SKILL.md) |
+| 74 | Splash & Landing | `LandingScreen` | `/landing` | Publik | 1 | [landing.md](../screens/splash/landing.md) | [SKILL.md](../../.skills/screens/splash/landing/SKILL.md) |
 | 75 | Splash & Landing | `StartupScreen` | `/startup` | Publik | 2 | [startup.md](../screens/splash/startup.md) | [SKILL.md](../../.skills/screens/splash/startup/SKILL.md) |
 | 76 | Voucher | `VoucherDetailScreen` | `/vouchers/:id` | Sanctum | 2 | [voucher-detail.md](../screens/voucher/voucher-detail.md) | [SKILL.md](../../.skills/screens/voucher/voucher-detail/SKILL.md) |
 | 77 | Voucher | `VoucherListScreen` | `/vouchers` | Sanctum | 2 | [voucher-list.md](../screens/voucher/voucher-list.md) | [SKILL.md](../../.skills/screens/voucher/voucher-list/SKILL.md) |

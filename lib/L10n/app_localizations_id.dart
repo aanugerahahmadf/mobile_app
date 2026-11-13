@@ -2828,8 +2828,8 @@ class AppLocalizationsId extends AppLocalizations {
   String get welcome => 'Selamat Datang';
 
   @override
-  String get welcomeToShopFloralDecorations =>
-      'Selamat Datang di Timeless Florals';
+  String get welcomeToShopTimelessFlorals =>
+      'Selamat Datang di Shop Timeless Florals';
 
   @override
   String get whatsapp => 'WhatsApp';

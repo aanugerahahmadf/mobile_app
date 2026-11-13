@@ -1,9 +1,9 @@
 # Bahasa
 
-> **Fitur:** Profil & Pengaturan · **Route:** `/language` · **Akses:** Publik · **Tipe:** Konten / navigasi
-> **Implementasi:** `lib/Features/Profile/Presentation/Screens/Settings/Language/LanguageScreen.dart` — `LanguageScreen` (74 baris) · **State:** Riverpod (`ConsumerWidget`) · **Pola:** request-response
+> **Fitur:** Profil & Pengaturan · **Route:** `/language` · **Akses:** Publik · **Tipe:** Formulir
+> **Implementasi referensi (aplikasi saat ini):** `LanguageScreen` · **State:** State management terpusat + state lokal · **Pola:** request-response
 > **API:** 0 endpoint · **Tabel:** 0 · **Model:** 0
-> Diverifikasi 6 November 2026 dari kode Flutter, route Laravel, dan skema PostgreSQL. Bagian bertanda **[Usulan]** adalah rekomendasi, bukan perilaku yang sudah diverifikasi.
+> Diverifikasi 6 November 2026 dari implementasi aplikasi saat ini, route Laravel, dan skema PostgreSQL. Bagian bertanda **[Usulan]** adalah rekomendasi, bukan perilaku yang sudah diverifikasi.
 
 ## 0. Ringkasan Eksekutif
 
@@ -12,7 +12,7 @@
 | Tujuan | Mengubah bahasa antarmuka aplikasi. |
 | Aktor | Pengunjung publik |
 | Nilai pengguna | Mengubah bahasa antarmuka aplikasi. |
-| Definisi sukses | Konten utama tampil dan navigasi lanjutan berfungsi. |
+| Definisi sukses | Data tersimpan dan validasi backend terpetakan ke field. |
 | Risiko utama | Tidak memanggil `PUT /user/language`; preferensi tidak tersimpan di akun (GAP-09). |
 | Status dokumen | Kontrak terdokumentasi; ada gap yang harus ditangani |
 
@@ -22,7 +22,7 @@
 
 | Persona | Kebutuhan | Ukuran keberhasilan |
 |---|---|---|
-| Pelanggan dekorasi pernikahan | Mengubah bahasa antarmuka aplikasi. | Konten utama tampil dan navigasi lanjutan berfungsi. |
+| Pelanggan dekorasi pernikahan | Mengubah bahasa antarmuka aplikasi. | Data tersimpan dan validasi backend terpetakan ke field. |
 
 ### 1.2 In scope
 
@@ -46,7 +46,7 @@
 | Parameter/extra | Tidak ada parameter khusus. |
 | Guard | Tidak membutuhkan token. Tetap tangani 401/403 bila endpoint berubah menjadi privat. |
 | Keluar ke | Tidak ada navigasi keluar langsung yang terdeteksi. |
-| Perilaku back | Gunakan tombol back bawaan `go_router`; jangan membuat navigasi manual yang menduplikasi route. |
+| Perilaku back | Jika ada perubahan belum disimpan, tampilkan konfirmasi sebelum keluar. [Usulan] |
 
 ### 2.1 Layar terkait dalam fitur yang sama
 
@@ -82,39 +82,41 @@ flowchart TD
 
 | Aspek | Nilai |
 |---|---|
-| File | `lib/Features/Profile/Presentation/Screens/Settings/Language/LanguageScreen.dart` |
-| Kelas layar | `LanguageScreen` |
-| Base widget | `ConsumerWidget` |
-| State management | Riverpod (`ConsumerWidget`) |
+| Komponen/layar | `LanguageScreen` |
+| Identifier | `LanguageScreen` |
+| Tipe komponen | Komponen ber-state |
+| Komponen state | Tersedia pada implementasi referensi |
+| State management | State management terpusat + state lokal |
 | Pola data | request-response |
-| Provider | `localeProvider` |
-| Repository | Tidak terdeteksi |
+| State/dependency | `localeProvider` |
+| Data source/repository | Tidak terdeteksi |
 | Service | Tidak terdeteksi |
-| Widget inti | `AppBreadcrumbs` |
-| Widget fitur | Tidak terdeteksi |
+| Komponen UI bersama | `AppBreadcrumbs` |
+| Komponen UI fitur | Tidak terdeteksi |
 | Model | Tidak terdeteksi |
 
 ### 4.1 State lokal yang terdeteksi
 
 | Field | Tipe | Peran |
 |---|---|---|
-| `_languages` | `static const` | State lokal layar. |
+| `_searchController` | `TextEditingController` | Controller/state input; wajib dibersihkan saat tidak dipakai. |
+| `_query` | `String` | Filter/sortir lokal. |
 
 ### 4.3 Alur data
 
 ```text
-Widget / State
+UI / State layar
    ↓ baca/tulis
-Provider Riverpod
+State management / dependency
    ↓
-Repository / DioClient
+Repository / HTTP client
    ↓ REST
 Controller Laravel → PostgreSQL (0 tabel terkait)
 ```
 
 ## 5. Blueprint UI
 
-Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti file implementasi.
+Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti implementasi aplikasi.
 
 ```text
 ┌────────────────────────────────────────────────────────────────────┐
@@ -142,12 +144,12 @@ Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti file im
 
 | Fakta | Nilai |
 |---|---|
-| TextEditingController | 0 |
-| Field teks/form | 0 |
+| TextEditingController | 1 |
+| Field teks/form | 1 |
 | Dropdown | 0 |
 | Switch/toggle | 0 |
 | Validator client | 0 |
-| Field password (`obscureText`) | 0 |
+| Field password (teks tersamar) | 0 |
 | maxLength | Tidak terdeteksi |
 | Keyboard | Tidak terdeteksi |
 | Input formatter | Tidak terdeteksi |
@@ -160,7 +162,7 @@ Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti file im
 
 ## 7. Copywriting & Microcopy
 
-Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocalizations` dan mengikuti gaya bahasa layar lain.
+Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai sistem lokalisasi/i18n yang konsisten dan mengikuti gaya bahasa layar lain.
 
 | Lokasi | Draft copy | Catatan |
 |---|---|---|
@@ -172,6 +174,8 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 | Retry | Coba lagi | [Usulan] Pertahankan data lama bila ada. |
 | Offline | Anda sedang offline. Periksa koneksi internet. | [Usulan] Sediakan retry. |
 | Validasi | Periksa kembali data yang Anda isi. | [Usulan] Fokus ke field pertama. |
+| Validasi | Periksa kembali data yang Anda isi. | [Usulan] Fokus ke field pertama yang salah. |
+| Sukses | Data berhasil disimpan. | [Usulan] Kembali ke layar sebelumnya. |
 
 ## 8. Design System & Responsif
 
@@ -180,17 +184,17 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 | Token | Nilai |
 |---|---|
 | Font | Instrument Sans (W400/W600), aset lokal |
-| Warna primer | `AppColors.primaryColor` = `#1E3A5F` |
-| Aksen | `AppColors.accentColor` = `#C9A94E` |
-| Background light | `AppColors.backgroundColor` = `#F8F6F7` |
-| Surface light | `AppColors.surfaceColor` = `#FFFFFF` |
-| Background dark | `AppColors.darkBackground` = `#121212` |
-| Surface dark | `AppColors.darkSurface` = `#1E1E1E` |
+| Warna primer | `#1E3A5F` (token primer aplikasi) |
+| Aksen | `#C9A94E` |
+| Background light | `#F8F6F7` |
+| Surface light | `#FFFFFF` |
+| Background dark | `#121212` |
+| Surface dark | `#1E1E1E` |
 | Teks primer light | `#1A1A2E`; dark `#E8E8E8` |
 | Teks sekunder light | `#8E8E9A`; dark `#A0A0A0` |
 | Sukses/error/warning/info | `#10B981` / `#EF4444` / `#F59E0B` / `#3B82F6` |
 | Tipografi | `headTitle` 22/w600; `subHeadTitle` 16/w400; `h3` 14/w600; `h4` 12/w400; `description` 14/1.4 |
-| Spacing | `AppSizes` 2, 4, 8, 16, 24, 32, 48, 64 |
+| Spacing | skala 2, 4, 8, 16, 24, 32, 48, 64 |
 | Radius | card 16, button 14, input 14, avatar 28, bottom nav 24 |
 | Glass | `AppBlurBackdrop`; `blurSigma` 15; tint light `#32FFFFFF`, night `#32000000` |
 
@@ -206,7 +210,7 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 ### 8.3 Mode gelap & glass
 
 - Tema mengikuti sistem (light/dark) dan dapat di-override `ThemeProvider`.
-- Jangan hardcode warna; gunakan `AppColors`/`AppTheme` agar mode gelap bekerja.
+- Jangan hardcode warna; gunakan token/tema desain aplikasi agar mode gelap bekerja.
 - Fallback tanpa blur harus tetap kontras dan terbaca.
 - Hormati reduce-motion; animasi 3D/parallax tidak boleh menjadi satu-satunya pembeda state.
 
@@ -220,6 +224,7 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 | `empty` | Data kosong | Empty state dengan penjelasan + CTA | Refresh atau aksi lanjutan |
 | `error` | Request gagal | Pesan ramah + tombol coba lagi | Retry |
 | `offline` | Koneksi putus | Banner/empty offline | Coba lagi saat online |
+| `submitting` | Pengguna menekan aksi utama | Tombol disabled + progress | Selesai atau tampilkan error |
 | `bahasa aktif` | Kondisi domain | Tampilkan status yang jelas dan aksi pemulihan. | Ikuti aksi pemulihan pada pesan |
 | `loading preferensi` | Kondisi domain | Skeleton/spinner; blokir aksi ganda. | Ikuti aksi pemulihan pada pesan |
 
@@ -227,7 +232,7 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 
 ## 10. Kontrak API
 
-Layar ini **tidak memanggil API jaringan**. Semua state disimpan di perangkat (`SharedPreferences`/`FlutterSecureStorage`) atau diterima lewat `extra`/provider.
+Layar ini **tidak memanggil API jaringan**. Semua state disimpan di perangkat (penyimpanan lokal/secure storage) atau diterima lewat `extra`/provider.
 
 ### 10.3 Pemetaan error HTTP
 
@@ -250,7 +255,7 @@ Tidak ada tabel PostgreSQL yang dibaca/ditulis langsung oleh layar ini.
 
 - Jangan menampilkan data dari cache setelah logout.
 - Nominal, stok, status pesanan, dan kepemilikan resource **wajib** divalidasi backend.
-- Jangan mengakses PostgreSQL dari Flutter; gunakan endpoint Laravel.
+- Jangan mengakses PostgreSQL langsung dari klien; gunakan endpoint Laravel.
 - Filter data milik pengguna dilakukan server-side (`user_id` dari token), bukan di client.
 
 ## 12. Aturan Bisnis & Validasi
@@ -266,15 +271,17 @@ Tidak ada aturan validasi field yang terdeteksi otomatis. Periksa controller/For
 
 ### 12.3 Validasi client yang terdeteksi
 
-- Tidak ada form input yang terdeteksi pada layar ini.
+- Form memiliki **1 field** dan **0 validator** client.
+- Validasi client hanya untuk UX; hasil final tetap dari backend (`422`).
 
 ### 12.4 Aturan bisnis wajib
 
 - Disable tombol submit selama request berjalan untuk mencegah duplikasi.
 - Terapkan `Accept-Language` dari `localeProvider` pada setiap request.
-- Gunakan `DioClient`/repository yang sudah ada; jangan membuat instance Dio baru.
-- Guest tidak boleh memanggil endpoint privat; tampilkan `GuestAuthPrompt`.
-- Konten statis tetap harus memiliki loading/error state bila berasal dari API.
+- Gunakan HTTP client/data source/repository yang sudah ada; jangan membuat client baru di komponen UI.
+- Guest tidak boleh memanggil endpoint privat; tampilkan prompt autentikasi tamu.
+- Validasi client untuk UX; validasi final di backend.
+- Pertahankan input saat 422/network error.
 
 ## 13. Error Handling
 
@@ -287,14 +294,16 @@ Pemetaan status HTTP mengikuti `.docs/02-architecture/STATE-AND-ERRORS.md` (liha
 - 401 → bersihkan token dan arahkan ke Landing/login.
 - 403 → tampilkan akses ditolak tanpa logout otomatis.
 - 5xx → error server + retry; jangan menampilkan stack trace.
+- 422 → petakan `errors` ke field; fokus ke field pertama.
 - Gap: Tidak memanggil `PUT /user/language`; preferensi tidak tersimpan di akun (GAP-09).
 
 ## 14. Keamanan & Privasi
 
-- Token hanya di `FlutterSecureStorage`; jangan di `SharedPreferences` atau log.
+- Token hanya di secure storage; jangan di penyimpanan lokal atau log.
 - Jangan menampilkan stack trace, query database, atau detail internal pada pengguna.
 - Jangan mengirim PII ke analytics/crash report.
 - Validasi kepemilikan resource di backend; client tidak boleh menentukan `user_id`.
+- Data identitas (nama, email, telepon, alamat, KTP, selfie) adalah PII; batasi tampilan dan log.
 
 ## 15. Aksesibilitas
 
@@ -323,6 +332,7 @@ Belum diverifikasi apakah event berikut sudah diimplementasikan. Jangan mengirim
 | `language_cta_tap` | Aksi utama ditekan | cta, state | Tidak |
 | `language_success` | Aksi utama berhasil | duration_ms | Tidak |
 | `language_failure` | Request/aksi gagal | error_code, status | Tidak |
+| `language_validation_failed` | Validasi gagal | field_count | Tidak |
 
 - Catat `request_id`/status code pada log debug, bukan payload sensitif.
 - Crashlytics tidak boleh memuat token, password, dokumen identitas, atau isi chat.
@@ -364,7 +374,7 @@ Belum diverifikasi apakah event berikut sudah diimplementasikan. Jangan mengirim
 
 ### 18.6 Kualitas
 
-- [ ] `flutter analyze` bersih untuk file yang diubah.
+- [ ] Analisis statis/lint sesuai toolchain target bersih untuk bagian yang diubah.
 - [ ] Test happy path dan minimal satu error path ditambahkan/diperbarui.
 - [ ] PRD/SKILL diperbarui bila route, endpoint, atau tabel berubah.
 
@@ -383,7 +393,9 @@ Belum diverifikasi apakah event berikut sudah diimplementasikan. Jangan mengirim
 | TC-09 | Manual | Layar kecil | Uji lebar 320 px dan landscape | Tidak ada overflow; tombol tetap terjangkau. |
 | TC-10 | Manual | Mode gelap | Aktifkan dark mode sistem | Semua teks/komponen terbaca; tidak ada warna hardcode yang pecah. |
 | TC-11 | Manual | Aksesibilitas | Aktifkan screen reader dan text scale 200% | Label terbaca; tidak ada teks terpotong. |
-| TC-12 | Manual | Regresi fitur terkait | Buka layar terkait setelah aksi | Navigasi/state tidak rusak dan data konsisten. |
+| TC-12 | Widget | Validasi kosong | Submit form kosong | Error inline per field; fokus ke field pertama. |
+| TC-13 | Manual | Validasi 422 | Mock 422 dengan errors | Error dipetakan ke field; input dipertahankan. |
+| TC-14 | Manual | Regresi fitur terkait | Buka layar terkait setelah aksi | Navigasi/state tidak rusak dan data konsisten. |
 
 **Otomasi yang disarankan:** widget test untuk state utama, unit test untuk parsing/validasi, dan golden test untuk layar dengan layout kompleks.
 
@@ -403,19 +415,19 @@ Belum diverifikasi apakah event berikut sudah diimplementasikan. Jangan mengirim
 
 | Jenis | Item | Catatan |
 |---|---|---|
-| Provider | localeProvider | lib/Core/Providers/LocaleProvider/LocaleProvider.dart |
-| Route | /language | Terdaftar di `AppRouter`. |
+| State/dependency | localeProvider | Komponen state/dependency terkait |
+| Route | /language | Terdaftar di konfigurasi router aplikasi. |
 
 Rujukan global: [Known Gaps](../../06-reference/KNOWN-GAPS.md).
 
 ## 21. Peta Implementasi & Simbol
 
-| Layer | File/Simbol | Catatan |
+| Layer | Komponen/Referensi | Catatan |
 |---|---|---|
-| Screen | `lib/Features/Profile/Presentation/Screens/Settings/Language/LanguageScreen.dart` · `LanguageScreen` | 74 baris |
-| Provider | `localeProvider` | `lib/Core/Providers/LocaleProvider/LocaleProvider.dart` |
-| Widget inti | `AppBreadcrumbs` | `lib/Core/Widgets/AppBreadcrumbs/` |
-| Test | `test/Features/Profil/` | Tambahkan test sesuai §19 |
+| Layar/UI | `LanguageScreen` | Implementasi referensi aplikasi saat ini |
+| State/dependency | `localeProvider` | Komponen state/dependency terkait |
+| Komponen UI bersama | `AppBreadcrumbs` | Komponen UI reusable |
+| Test | Sesuai platform target | Tambahkan test sesuai §19 |
 | Dokumen | `.docs/screens/profile/language.md` | PRD ini |
 | Prompt | `.skills/screens/profile/language/SKILL.md` | Skill layar |
 
@@ -430,4 +442,4 @@ Rujukan global: [Known Gaps](../../06-reference/KNOWN-GAPS.md).
 
 | Tanggal | Perubahan | Sumber |
 |---|---|---|
-| 6 November 2026 | Regenerasi detail: arsitektur, state machine, kontrak API, validasi, a11y, test plan | Kode Flutter, route Laravel, skema PostgreSQL |
+| 6 November 2026 | Regenerasi detail: arsitektur, state machine, kontrak API, validasi, a11y, test plan | Implementasi aplikasi, route Laravel, skema PostgreSQL |

@@ -24,15 +24,32 @@ class LandingScreen extends ConsumerStatefulWidget {
 }
 
 class _LandingPageState extends ConsumerState<LandingScreen> {
+  bool _agreedToTerms = false;
+
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
+    Future.microtask(() async {
+      final prefs = await SharedPreferences.getInstance();
+      final agreed = prefs.getBool('landing_terms_agreed') ?? false;
+      if (mounted) {
+        setState(() {
+          _agreedToTerms = agreed;
+        });
+      }
       final current = ref.read(authProvider);
       if (current is! AuthAuthenticated) {
         ref.read(authProvider.notifier).checkAuth();
       }
     });
+  }
+
+  Future<void> _setAgreedToTerms(bool value) async {
+    setState(() {
+      _agreedToTerms = value;
+    });
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('landing_terms_agreed', value);
   }
 
   /// Tandai bahwa pengguna sudah melewati layar awal.
@@ -179,14 +196,14 @@ class _LandingPageState extends ConsumerState<LandingScreen> {
                     vertical: AppSizes.sm,
                   ),
                   child: Text(
-                    l.welcomeToShopFloralDecorations,
+                    l.welcomeToShopTimelessFlorals,
                     textAlign: TextAlign.center,
                     style: AppTextStyles.headTitle.copyWith(
                       color: Colors.white,
                     ),
                   ),
                 ),
-                _buildButtons(l),
+                _buildButtons(l, authState),
                 _buildFooter(l),
               ],
             ),
@@ -208,16 +225,20 @@ class _LandingPageState extends ConsumerState<LandingScreen> {
     );
   }
 
-  Widget _buildButtons(AppLocalizations l) {
+  Widget _buildButtons(AppLocalizations l, AuthState authState) {
+    final isLoading = authState is AuthLoading;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
       child: AppBlurBackdrop(
         padding: const EdgeInsets.all(AppSizes.md),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SocialSignInButton(
               provider: SocialProvider.google,
+              loading: isLoading,
+              enabled: _agreedToTerms && !isLoading,
               onPressed: () async {
                 // Tandai onboarding sudah dilihat SEBELUM memulai autentikasi,
                 // supaya route perantara (OTP, Complete Profile, Security
@@ -229,6 +250,111 @@ class _LandingPageState extends ConsumerState<LandingScreen> {
                 if (!mounted) return;
                 ref.read(authProvider.notifier).googleSignIn();
               },
+            ),
+            const SizedBox(height: AppSizes.sm),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: Checkbox(
+                    value: _agreedToTerms,
+                    onChanged: isLoading
+                        ? null
+                        : (value) {
+                            if (value == true) {
+                              showAgreementModal(
+                                context,
+                                mode: AgreementMode.wizard,
+                                onAgreed: () {
+                                  _setAgreedToTerms(true);
+                                },
+                              );
+                            } else {
+                              _setAgreedToTerms(false);
+                            }
+                          },
+                    activeColor: AppColors.primaryColor,
+                    side: const BorderSide(color: Colors.white70),
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+                const SizedBox(width: AppSizes.xs),
+                Expanded(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: isLoading
+                        ? null
+                        : () {
+                            if (!_agreedToTerms) {
+                              showAgreementModal(
+                                context,
+                                mode: AgreementMode.wizard,
+                                onAgreed: () {
+                                  _setAgreedToTerms(true);
+                                },
+                              );
+                            } else {
+                              _setAgreedToTerms(false);
+                            }
+                          },
+                    child: RichText(
+                      text: TextSpan(
+                      style: AppTextStyles.bodySmall.copyWith(
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
+                      children: [
+                        TextSpan(text: '${l.agreeToTerms} '),
+                        TextSpan(
+                          text: l.termsOfService,
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: Colors.white,
+                            decoration: TextDecoration.underline,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () => showAgreementModal(
+                                  context,
+                                  mode: AgreementMode.terms,
+                                ),
+                        ),
+                        TextSpan(text: l.agreeComma),
+                        TextSpan(
+                          text: l.privacyPolicy,
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: Colors.white,
+                            decoration: TextDecoration.underline,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () => showAgreementModal(
+                                  context,
+                                  mode: AgreementMode.privacy,
+                                ),
+                        ),
+                        TextSpan(text: l.agreeAnd),
+                        TextSpan(
+                          text: l.appPolicy,
+                          style: AppTextStyles.bodySmall.copyWith(
+                            color: Colors.white,
+                            decoration: TextDecoration.underline,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () => showAgreementModal(
+                                  context,
+                                  mode: AgreementMode.weddingPolicy,
+                                ),
+                        ),
+                        const TextSpan(text: '.'),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

@@ -1,9 +1,9 @@
 # Home
 
 > **Fitur:** Home · **Route:** `/home` · **Akses:** Guest + Sanctum · **Tipe:** Konten / navigasi
-> **Implementasi:** `lib/Features/Home/Presentation/Screens/Home/HomeScreen.dart` — `HomeScreen` (747 baris) · **State:** Riverpod + state lokal (`setState`) · **Pola:** request-response
+> **Implementasi referensi (aplikasi saat ini):** `HomeScreen` · **State:** State management terpusat + state lokal · **Pola:** request-response
 > **API:** 3 endpoint · **Tabel:** 6 · **Model:** 1
-> Diverifikasi 6 November 2026 dari kode Flutter, route Laravel, dan skema PostgreSQL. Bagian bertanda **[Usulan]** adalah rekomendasi, bukan perilaku yang sudah diverifikasi.
+> Diverifikasi 6 November 2026 dari implementasi aplikasi saat ini, route Laravel, dan skema PostgreSQL. Bagian bertanda **[Usulan]** adalah rekomendasi, bukan perilaku yang sudah diverifikasi.
 
 ## 0. Ringkasan Eksekutif
 
@@ -45,9 +45,9 @@
 | Masuk dari | Tab Home setelah startup/landing. |
 | Route | `/home` |
 | Parameter/extra | Tidak ada parameter khusus. |
-| Guard | Guest boleh membuka layar, tetapi aksi privat harus memunculkan `GuestAuthPrompt` dan tidak mengirim Bearer token kosong. |
+| Guard | Guest boleh membuka layar, tetapi aksi privat harus memunculkan prompt autentikasi tamu dan tidak mengirim Bearer token kosong. |
 | Keluar ke | `/catalog/:id`, `/edit-profile`, `/notifications`, `/catalog`, `/my-reviews`, `/Favorite`, `/vouchers`, `/vouchers/:id` |
-| Perilaku back | State tab dipertahankan oleh `StatefulShellRoute.indexedStack`; kembali tidak boleh mereset cabang lain. [Usulan] |
+| Perilaku back | State tab dipertahankan oleh navigasi tab/shell; kembali tidak boleh mereset cabang lain. [Usulan] |
 
 ## 3. Alur Pengguna
 
@@ -75,17 +75,17 @@ flowchart TD
 
 | Aspek | Nilai |
 |---|---|
-| File | `lib/Features/Home/Presentation/Screens/Home/HomeScreen.dart` |
-| Kelas layar | `HomeScreen` |
-| Base widget | `ConsumerStatefulWidget` |
-| Kelas state | `_HomePageState` |
-| State management | Riverpod + state lokal (`setState`) |
+| Komponen/layar | `HomeScreen` |
+| Identifier | `HomeScreen` |
+| Tipe komponen | Komponen ber-state |
+| Komponen state | Tersedia pada implementasi referensi |
+| State management | State management terpusat + state lokal |
 | Pola data | request-response |
-| Provider | `authProvider`, `notificationListProvider`, `guestModeProvider` |
-| Repository | Tidak terdeteksi |
+| State/dependency | `authProvider`, `notificationListProvider`, `guestModeProvider` |
+| Data source/repository | Tidak terdeteksi |
 | Service | Tidak terdeteksi |
-| Widget inti | `AppBlurBackdrop`, `AppFilterWidgets`, `AppShimmer` |
-| Widget fitur | `GlobalSearchBar`, `CombinedCard`, `AuthModals` |
+| Komponen UI bersama | `AppBlurBackdrop`, `AppFilterWidgets`, `AppShimmer` |
+| Komponen UI fitur | `GlobalSearchBar`, `CombinedCard`, `AuthModals` |
 | Model | `ItemModel` |
 
 ### 4.1 State lokal yang terdeteksi
@@ -94,7 +94,7 @@ flowchart TD
 |---|---|---|
 | `_homeData` | `Map<String, dynamic>?` | Data yang ditampilkan. |
 | `_loading` | `bool` | Menandai proses muat/aksi. |
-| `_pageController` | `PageController` | Controller input; wajib dispose. |
+| `_pageController` | `PageController` | Controller/state input; wajib dibersihkan saat tidak dipakai. |
 | `_combinedItems` | `List<Map<String, dynamic>>` | Data yang ditampilkan. |
 | `_catalogLoading` | `bool` | Menandai proses muat/aksi. |
 | `_catalogCategories` | `List<Map<String, dynamic>>` | State lokal layar. |
@@ -110,18 +110,18 @@ flowchart TD
 ### 4.3 Alur data
 
 ```text
-Widget / State
+UI / State layar
    ↓ baca/tulis
-Provider Riverpod
+State management / dependency
    ↓
-Repository / DioClient
+Repository / HTTP client
    ↓ REST
 Controller Laravel → PostgreSQL (6 tabel terkait)
 ```
 
 ## 5. Blueprint UI
 
-Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti file implementasi.
+Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti implementasi aplikasi.
 
 ```text
 ┌────────────────────────────────────────────────────────────────────┐
@@ -159,7 +159,7 @@ Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti file im
 | Dropdown | 0 |
 | Switch/toggle | 0 |
 | Validator client | 0 |
-| Field password (`obscureText`) | 0 |
+| Field password (teks tersamar) | 0 |
 | maxLength | Tidak terdeteksi |
 | Keyboard | Tidak terdeteksi |
 | Input formatter | Tidak terdeteksi |
@@ -172,7 +172,7 @@ Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti file im
 
 ## 7. Copywriting & Microcopy
 
-Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocalizations` dan mengikuti gaya bahasa layar lain.
+Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai sistem lokalisasi/i18n yang konsisten dan mengikuti gaya bahasa layar lain.
 
 | Lokasi | Draft copy | Catatan |
 |---|---|---|
@@ -182,7 +182,7 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 | Empty state | Belum ada home. | [Usulan] Sertakan CTA lanjutan. |
 | Error | Gagal memuat home. Periksa koneksi lalu coba lagi. | [Usulan] Jangan tampilkan stack trace. |
 | Retry | Coba lagi | [Usulan] Pertahankan data lama bila ada. |
-| Guest | Masuk untuk melanjutkan. | [Usulan] Gunakan `GuestAuthPrompt`. |
+| Guest | Masuk untuk melanjutkan. | [Usulan] Gunakan prompt autentikasi tamu. |
 | Offline | Anda sedang offline. Periksa koneksi internet. | [Usulan] Sediakan retry. |
 | Validasi | Periksa kembali data yang Anda isi. | [Usulan] Fokus ke field pertama. |
 
@@ -193,17 +193,17 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 | Token | Nilai |
 |---|---|
 | Font | Instrument Sans (W400/W600), aset lokal |
-| Warna primer | `AppColors.primaryColor` = `#1E3A5F` |
-| Aksen | `AppColors.accentColor` = `#C9A94E` |
-| Background light | `AppColors.backgroundColor` = `#F8F6F7` |
-| Surface light | `AppColors.surfaceColor` = `#FFFFFF` |
-| Background dark | `AppColors.darkBackground` = `#121212` |
-| Surface dark | `AppColors.darkSurface` = `#1E1E1E` |
+| Warna primer | `#1E3A5F` (token primer aplikasi) |
+| Aksen | `#C9A94E` |
+| Background light | `#F8F6F7` |
+| Surface light | `#FFFFFF` |
+| Background dark | `#121212` |
+| Surface dark | `#1E1E1E` |
 | Teks primer light | `#1A1A2E`; dark `#E8E8E8` |
 | Teks sekunder light | `#8E8E9A`; dark `#A0A0A0` |
 | Sukses/error/warning/info | `#10B981` / `#EF4444` / `#F59E0B` / `#3B82F6` |
 | Tipografi | `headTitle` 22/w600; `subHeadTitle` 16/w400; `h3` 14/w600; `h4` 12/w400; `description` 14/1.4 |
-| Spacing | `AppSizes` 2, 4, 8, 16, 24, 32, 48, 64 |
+| Spacing | skala 2, 4, 8, 16, 24, 32, 48, 64 |
 | Radius | card 16, button 14, input 14, avatar 28, bottom nav 24 |
 | Glass | `AppBlurBackdrop`; `blurSigma` 15; tint light `#32FFFFFF`, night `#32000000` |
 
@@ -219,7 +219,7 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 ### 8.3 Mode gelap & glass
 
 - Tema mengikuti sistem (light/dark) dan dapat di-override `ThemeProvider`.
-- Jangan hardcode warna; gunakan `AppColors`/`AppTheme` agar mode gelap bekerja.
+- Jangan hardcode warna; gunakan token/tema desain aplikasi agar mode gelap bekerja.
 - Fallback tanpa blur harus tetap kontras dan terbaca.
 - Hormati reduce-motion; animasi 3D/parallax tidak boleh menjadi satu-satunya pembeda state.
 
@@ -235,7 +235,7 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 | `unauthorized` | HTTP 401 | Sesi berakhir; arahkan login/Landing | Login ulang |
 | `offline` | Koneksi putus | Banner/empty offline | Coba lagi saat online |
 | `refreshing` | Pull to refresh | Spinner di atas konten | Selesai; reset halaman |
-| `guest` | Guest menekan aksi privat | `GuestAuthPrompt` | Login |
+| `guest` | Guest menekan aksi privat | prompt autentikasi tamu | Login |
 | `error 401` | Kondisi domain | Pesan ramah, tombol coba lagi, pertahankan data lama bila ada. | Ikuti aksi pemulihan pada pesan |
 | `kosong` | Kondisi domain | Empty state dengan penjelasan dan CTA lanjutan. | Ikuti aksi pemulihan pada pesan |
 | `gambar gagal` | Kondisi domain | Pesan ramah + retry; pertahankan input pengguna. | Ikuti aksi pemulihan pada pesan |
@@ -305,7 +305,7 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 
 | Model | File | Field kunci |
 |---|---|---|
-| `ItemModel` | `lib/Features/Catalog/Data/Models/ItemModel/ItemModel.dart` | `id`, `categoryId`, `name`, `slug`, `description`, `stock`, `isActive`, `isFeatured`, `features`, `theme` |
+| `ItemModel` | implementasi referensi aplikasi | `id`, `categoryId`, `name`, `slug`, `description`, `stock`, `isActive`, `isFeatured`, `features`, `theme` |
 
 ## 11. Data & Database
 
@@ -324,7 +324,7 @@ Akses tabel di atas adalah **indikasi dari endpoint**; verifikasi controller/ser
 
 - Jangan menampilkan data dari cache setelah logout.
 - Nominal, stok, status pesanan, dan kepemilikan resource **wajib** divalidasi backend.
-- Jangan mengakses PostgreSQL dari Flutter; gunakan endpoint Laravel.
+- Jangan mengakses PostgreSQL langsung dari klien; gunakan endpoint Laravel.
 - Filter data milik pengguna dilakukan server-side (`user_id` dari token), bukan di client.
 
 ## 12. Aturan Bisnis & Validasi
@@ -346,8 +346,8 @@ Tidak ada aturan validasi field yang terdeteksi otomatis. Periksa controller/For
 
 - Disable tombol submit selama request berjalan untuk mencegah duplikasi.
 - Terapkan `Accept-Language` dari `localeProvider` pada setiap request.
-- Gunakan `DioClient`/repository yang sudah ada; jangan membuat instance Dio baru.
-- Guest tidak boleh memanggil endpoint privat; tampilkan `GuestAuthPrompt`.
+- Gunakan HTTP client/data source/repository yang sudah ada; jangan membuat client baru di komponen UI.
+- Guest tidak boleh memanggil endpoint privat; tampilkan prompt autentikasi tamu.
 - Konten statis tetap harus memiliki loading/error state bila berasal dari API.
 
 ## 13. Error Handling
@@ -366,7 +366,7 @@ Pemetaan status HTTP mengikuti `.docs/02-architecture/STATE-AND-ERRORS.md` (liha
 
 ## 14. Keamanan & Privasi
 
-- Token hanya di `FlutterSecureStorage`; jangan di `SharedPreferences` atau log.
+- Token hanya di secure storage; jangan di penyimpanan lokal atau log.
 - Jangan menampilkan stack trace, query database, atau detail internal pada pengguna.
 - Jangan mengirim PII ke analytics/crash report.
 - Validasi kepemilikan resource di backend; client tidak boleh menentukan `user_id`.
@@ -441,7 +441,7 @@ Belum diverifikasi apakah event berikut sudah diimplementasikan. Jangan mengirim
 
 ### 18.6 Kualitas
 
-- [ ] `flutter analyze` bersih untuk file yang diubah.
+- [ ] Analisis statis/lint sesuai toolchain target bersih untuk bagian yang diubah.
 - [ ] Test happy path dan minimal satu error path ditambahkan/diperbarui.
 - [ ] PRD/SKILL diperbarui bila route, endpoint, atau tabel berubah.
 
@@ -487,41 +487,41 @@ Belum diverifikasi apakah event berikut sudah diimplementasikan. Jangan mengirim
 | Endpoint | GET /home | HomeController@index |
 | Endpoint | GET /catalog | CatalogController@index |
 | Endpoint | GET /categories | CategoryController@index |
-| Database | hero_banners | Jangan query langsung dari Flutter. |
-| Database | promotions | Jangan query langsung dari Flutter. |
-| Database | categories | Jangan query langsung dari Flutter. |
-| Database | catalogs | Jangan query langsung dari Flutter. |
-| Database | packages | Jangan query langsung dari Flutter. |
-| Database | media | Jangan query langsung dari Flutter. |
-| Provider | authProvider | lib/Features/Auth/Presentation/Providers/AuthProvider/AuthProvider.dart |
-| Provider | notificationListProvider | lib/Features/Notification/Presentation/Providers/NotificationProvider/NotificationProvider.dart |
-| Provider | guestModeProvider | lib/Core/Utils/GuestMode/GuestMode.dart |
-| Route | /home | Terdaftar di `AppRouter`. |
+| Database | hero_banners | Jangan query langsung dari klien. |
+| Database | promotions | Jangan query langsung dari klien. |
+| Database | categories | Jangan query langsung dari klien. |
+| Database | catalogs | Jangan query langsung dari klien. |
+| Database | packages | Jangan query langsung dari klien. |
+| Database | media | Jangan query langsung dari klien. |
+| State/dependency | authProvider | Komponen state/dependency terkait |
+| State/dependency | notificationListProvider | Komponen state/dependency terkait |
+| State/dependency | guestModeProvider | Komponen state/dependency terkait |
+| Route | /home | Terdaftar di konfigurasi router aplikasi. |
 
 Rujukan global: [Known Gaps](../../06-reference/KNOWN-GAPS.md).
 
 ## 21. Peta Implementasi & Simbol
 
-| Layer | File/Simbol | Catatan |
+| Layer | Komponen/Referensi | Catatan |
 |---|---|---|
-| Screen | `lib/Features/Home/Presentation/Screens/Home/HomeScreen.dart` · `HomeScreen` | 747 baris |
-| Provider | `authProvider` | `lib/Features/Auth/Presentation/Providers/AuthProvider/AuthProvider.dart` |
-| Provider | `notificationListProvider` | `lib/Features/Notification/Presentation/Providers/NotificationProvider/NotificationProvider.dart` |
-| Provider | `guestModeProvider` | `lib/Core/Utils/GuestMode/GuestMode.dart` |
-| Model | `ItemModel` | `lib/Features/Catalog/Data/Models/ItemModel/ItemModel.dart` |
-| Widget inti | `AppBlurBackdrop` | `lib/Core/Widgets/AppBlurBackdrop/` |
-| Widget inti | `AppFilterWidgets` | `lib/Core/Widgets/AppFilterWidgets/` |
-| Widget inti | `AppShimmer` | `lib/Core/Widgets/AppShimmer/` |
-| Widget fitur | `GlobalSearchBar` | Berada di `Presentation/Widgets/` fitur terkait |
-| Widget fitur | `CombinedCard` | Berada di `Presentation/Widgets/` fitur terkait |
-| Widget fitur | `AuthModals` | Berada di `Presentation/Widgets/` fitur terkait |
-| Test | `test/Features/Home/` | Tambahkan test sesuai §19 |
+| Layar/UI | `HomeScreen` | Implementasi referensi aplikasi saat ini |
+| State/dependency | `authProvider` | Komponen state/dependency terkait |
+| State/dependency | `notificationListProvider` | Komponen state/dependency terkait |
+| State/dependency | `guestModeProvider` | Komponen state/dependency terkait |
+| Model/data | `ItemModel` | Struktur data terkait |
+| Komponen UI bersama | `AppBlurBackdrop` | Komponen UI reusable |
+| Komponen UI bersama | `AppFilterWidgets` | Komponen UI reusable |
+| Komponen UI bersama | `AppShimmer` | Komponen UI reusable |
+| Komponen UI fitur | `GlobalSearchBar` | Komponen UI khusus fitur |
+| Komponen UI fitur | `CombinedCard` | Komponen UI khusus fitur |
+| Komponen UI fitur | `AuthModals` | Komponen UI khusus fitur |
+| Test | Sesuai platform target | Tambahkan test sesuai §19 |
 | Dokumen | `.docs/screens/home/home.md` | PRD ini |
 | Prompt | `.skills/screens/home/home/SKILL.md` | Skill layar |
 
 **Metode internal terdeteksi:** `_effectiveItemPrice`, `_itemHasTierDiscount`, `_fetchHome`, `_fetchCatalog`, `_fetchCategories`, `_buildSearchBar`, `_buildWelcomeRow`, `_buildMenuSection`, `_buildVoucherSection`, `_buildCatalogHeader`, `_showRatingFilterDialog`, `_buildRatingOption`.
 
-> **Catatan arsitektur:** layar memakai `DioClient.instance` langsung. Saat refactor, pindahkan ke repository/provider tanpa mengubah kontrak.
+> **Catatan arsitektur:** layar memakai HTTP client bersama langsung. Saat refactor, pindahkan ke repository/provider tanpa mengubah kontrak.
 
 ## 22. Referensi & Riwayat
 
@@ -534,4 +534,4 @@ Rujukan global: [Known Gaps](../../06-reference/KNOWN-GAPS.md).
 
 | Tanggal | Perubahan | Sumber |
 |---|---|---|
-| 6 November 2026 | Regenerasi detail: arsitektur, state machine, kontrak API, validasi, a11y, test plan | Kode Flutter, route Laravel, skema PostgreSQL |
+| 6 November 2026 | Regenerasi detail: arsitektur, state machine, kontrak API, validasi, a11y, test plan | Implementasi aplikasi, route Laravel, skema PostgreSQL |

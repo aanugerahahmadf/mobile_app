@@ -5,20 +5,20 @@ description: Implementasi layar Ulasan Saya (MyReviewsScreen) pada fitur Ulasan;
 
 # Skill: Ulasan Saya
 
-> **Tipe:** Formulir · **Route:** `/my-reviews` · **Akses:** Sanctum · **State:** Riverpod + state lokal (`setState`)
+> **Tipe:** Formulir · **Route:** `/my-reviews` · **Akses:** Sanctum · **State:** State management terpusat + state lokal
 
 ## 0. Prompt siap pakai
 
 Tempel blok berikut ke agen implementasi. Ganti bagian dalam `<...>` bila perlu.
 
 ```text
-Anda bekerja pada layar Ulasan Saya (MyReviewsScreen) di fitur Ulasan.
-File utama: lib/Features/Review/Presentation/Screens/MyReviews/MyReviewsScreen.dart. Route: /my-reviews (Sanctum).
+Anda bekerja pada layar Ulasan Saya di fitur Ulasan.
+Referensi implementasi saat ini: MyReviewsScreen. Route: /my-reviews (Sanctum).
 Tujuan: Menampilkan ulasan milik pengguna dan memungkinkan edit/hapus.
 
 Konteks wajib:
 - Baca PRD lengkap: .docs/screens/review/my-reviews.md
-- State management: Riverpod + state lokal (`setState`); pola data: request-response.
+- State management: State management terpusat + state lokal; pola data: request-response.
 - Endpoint: GET /reviews/user; PUT /reviews/{id}; DELETE /reviews/{id}; GET /catalog/{id}.
 - Tabel: reviews, catalogs, packages, media, categories.
 - Parameter/extra: tidak ada parameter khusus.
@@ -27,31 +27,31 @@ Wajib dipertahankan:
 - Ulasan yang dihapus hilang dari daftar.
 - Edit mempertahankan rating dan komentar.
 - Tangani loading, empty, error, offline, unauthorized, dan double-submit.
-- Gunakan AppColors/AppTextStyles/AppSizes/AppLocalizations; jangan hardcode.
+- Gunakan token desain dan sistem lokalisasi yang konsisten; jangan hardcode.
 - Jangan mengarang endpoint/kolom. Verifikasi ke backend sebelum menulis kode.
-- Jangan memanggil Dio baru dari widget; gunakan repository/DioClient yang ada.
+- Jangan memanggil HTTP client baru dari komponen UI; gunakan repository/data source yang ada.
 
-Selesai jika: kirim ulasan bekerja, semua state di atas tertangani, flutter analyze bersih, dan test happy path + minimal satu error path lulus.
+Selesai jika: kirim ulasan bekerja, semua state di atas tertangani, analisis statis/lint bersih, dan test otomatis sesuai platform target untuk happy path + minimal satu error path lulus.
 ```
 
 ## 1. Kapan dipakai / tidak
 
-**Dipakai** saat mengubah, menguji, me-refactor, atau mendokumentasikan `MyReviewsScreen`.
+**Dipakai** saat mengubah, menguji, me-refactor, atau mendokumentasikan layar **Ulasan Saya** (referensi implementasi: `MyReviewsScreen`).
 
 **Tidak dipakai** untuk:
 - Mengubah kontrak backend tanpa juga memperbarui PRD dan peta endpoint.
-- Mendesain ulang seluruh design system; muat `shared/flutter-screen` dan `shared/security-auth`.
+- Mendesain ulang seluruh design system; ikuti panduan desain dan keamanan bersama jika tersedia.
 
 ## 2. Input & prasyarat
 
 | Prasyarat | Nilai |
 |---|---|
-| File layar | `lib/Features/Review/Presentation/Screens/MyReviews/MyReviewsScreen.dart` |
+| Referensi implementasi | `MyReviewsScreen` |
 | Route | `/my-reviews` |
 | Akses | Sanctum |
 | Parameter | Tidak ada |
 | Masuk dari | Dari `ProfileScreen` atau tautan di voucher. |
-| Provider | `authProvider`, `myReviewsProvider` |
+| State/dependency | `authProvider`, `myReviewsProvider` |
 | Model | `MyReviewModel` |
 | Endpoint | 4 |
 | Tabel | 5 |
@@ -60,23 +60,23 @@ Selesai jika: kirim ulasan bekerja, semua state di atas tertangani, flutter anal
 
 | Aspek | Sumber |
 |---|---|
-| Layar & route | `lib/Core/Router/AppRouter/AppRouter.dart` |
-| Endpoint client | `lib/Core/Api/ApiEndpoints/ApiEndpoints.dart` |
-| HTTP client | `lib/Core/Api/DioClient/DioClient.dart` |
-| Desain | `lib/Core/Constants/` dan `lib/Core/Theme/` |
+| Layar & route | Konfigurasi router aplikasi |
+| Endpoint client | Definisi endpoint API klien |
+| HTTP client | HTTP client/data source bersama |
+| Desain | Token desain/tema aplikasi |
 | Backend | `../Mobile-And-Backend/routes/api` dan `app/Http/Controllers/Api/User` |
 | Database | PostgreSQL `wedding_florals_decorations` |
 | PRD | `.docs/screens/review/my-reviews.md` |
 
 ## 4. Peta file yang akan disentuh
 
-| Layer | File | Perubahan yang diharapkan |
+| Area | Komponen | Perubahan yang diharapkan |
 |---|---|---|
-| Screen | `lib/Features/Review/Presentation/Screens/MyReviews/MyReviewsScreen.dart` | UI, state, interaksi |
-| Provider | `lib/Features/Auth/Presentation/Providers/AuthProvider/AuthProvider.dart` | State/aksi domain |
-| Provider | `lib/Features/Review/Presentation/Providers/MyReviewsProvider/MyReviewsProvider.dart` | State/aksi domain |
-| Model | `lib/Features/Review/Data/Models/MyReviewModel/MyReviewModel.dart` | Parsing/serialisasi bila kontrak berubah |
-| Test | `test/Features/Ulasan/` | Test happy path + error path |
+| Layar/UI | `MyReviewsScreen` | UI, state, interaksi |
+| State/dependency | `authProvider` | State/aksi domain |
+| State/dependency | `myReviewsProvider` | State/aksi domain |
+| Model | implementasi referensi aplikasi | Parsing/serialisasi bila kontrak berubah |
+| Test | Test otomatis (platform target) di area Ulasan/` | Test happy path + error path |
 | PRD | `.docs/screens/review/my-reviews.md` | Perbarui bila route/API/tabel berubah |
 | Prompt | `.skills/screens/review/my-reviews/SKILL.md` | Skill ini |
 
@@ -128,27 +128,27 @@ Menampilkan ulasan milik pengguna dan memungkinkan edit/hapus.
 ### Fase 0 — Recon (wajib)
 
 1. Baca PRD `.docs/screens/review/my-reviews.md` dan skill ini sampai selesai.
-2. Buka `lib/Features/Review/Presentation/Screens/MyReviews/MyReviewsScreen.dart`; catat widget, state, dan panggilan API yang sudah ada.
-3. Verifikasi route di `AppRouter`: `/my-reviews`.
+2. Tinjau implementasi referensi `MyReviewsScreen`; catat komponen UI, state, dan panggilan API yang sudah ada.
+3. Verifikasi route di konfigurasi router: `/my-reviews`.
 4. Verifikasi endpoint ke backend: GET /reviews/user; PUT /reviews/{id}; DELETE /reviews/{id}; GET /catalog/{id}.
 5. Cek tabel/kolom di `DATABASE.md`; jangan mengarang kolom.
 
 ### Fase 1 — Navigasi & guard
 
-1. Pastikan route dan parameter/extra sesuai. Jangan menambah route baru tanpa mendaftarkannya di `AppRouter`.
+1. Pastikan route dan parameter/extra sesuai. Jangan menambah route baru tanpa mendaftarkannya di konfigurasi router.
 2. Terapkan guard: Butuh Bearer token valid. 401 harus membersihkan token dan mengarahkan pengguna ke Landing/login.
 3. Pastikan back tidak mengulang submit dan tidak kehilangan input tanpa konfirmasi.
 
 ### Fase 2 — UI scaffold
 
-1. Susun layout sesuai blueprint PRD §5; gunakan widget yang sudah ada bila cocok.
-2. Gunakan `AppColors`, `AppTextStyles`, `AppSizes`, `AppLocalizations`.
+1. Susun layout sesuai blueprint PRD §5; gunakan komponen UI yang sudah ada bila cocok.
+2. Gunakan token desain (warna, tipografi, spacing) dan lokalisasi yang konsisten.
 3. Pastikan layout tidak overflow di 320 px dan aman terhadap keyboard/safe area.
 
 ### Fase 3 — State & data
 
 1. Implementasikan state: `initial`, `loading`, `content`, `empty`, `error`, `unauthorized`, `offline`, `submitting`, `refreshing`, `pagination`.
-2. Panggil API lewat repository/DioClient; jangan dari `build()`.
+2. Panggil API lewat repository/data source; jangan dari siklus render UI.
 3. Simpan state minimal yang diperlukan; jangan menduplikasi sumber kebenaran.
 4. Implementasikan pagination: simpan `currentPage`/`hasMore`, reset saat refresh.
 
@@ -223,12 +223,12 @@ Envelope: `{"status":"success","message":"...","data":{}}`; periksa controller u
 ## 10. Guardrail
 
 - Jangan mengarang endpoint, parameter, atau kolom database.
-- Jangan membuat instance `Dio` baru di widget; gunakan `DioClient`/repository.
+- Jangan membuat HTTP client baru di komponen UI; gunakan data source/repository bersama.
 - Jangan memanggil API di `build()` atau setiap rebuild.
-- Jangan menyimpan token/password/PIN di `SharedPreferences` atau log.
+- Jangan menyimpan token/password/PIN di penyimpanan lokal atau log.
 - Jangan menampilkan stack trace/pesan database ke pengguna.
 - Jangan menambah dependensi baru tanpa alasan dan persetujuan.
-- Jangan mengubah route/parameter tanpa memperbarui `AppRouter` dan dokumen.
+- Jangan mengubah route/parameter tanpa memperbarui konfigurasi router dan dokumen.
 - Jangan menghapus test yang ada untuk membuat build lulus.
 
 ## 11. Definition of Done
@@ -236,28 +236,28 @@ Envelope: `{"status":"success","message":"...","data":{}}`; periksa controller u
 - [ ] Semua elemen UI di §5.2 tampil dan berfungsi.
 - [ ] Semua state di §5.3/§9 tertangani, termasuk error dan offline.
 - [ ] Kontrak endpoint dan tabel tidak berubah tanpa update PRD/peta endpoint.
-- [ ] Tidak ada panggilan API langsung dari `build()` atau instance Dio baru.
+- [ ] Tidak ada panggilan API langsung dari siklus render UI atau pembuatan HTTP client baru di komponen UI.
 - [ ] Nominal/stok/status berasal dari backend.
 - [ ] 401 membersihkan token dan mengarahkan ke Landing/login.
 - [ ] Tidak ada overflow di 320 px, landscape, dan text scale 200%.
 - [ ] Mode terang/gelap terbaca dan target sentuh ≥48 dp.
-- [ ] `flutter analyze` bersih.
+- [ ] Analisis statis/lint sesuai toolchain target bersih.
 - [ ] Test happy path + minimal satu error path lulus.
 - [ ] PRD dan SKILL diperbarui bila ada perubahan.
 
 ## 12. Verifikasi
 
-```powershell
-# dari root mobile_app
-rg "MyReviewsScreen" lib
-flutter analyze
-flutter test test/Features/Ulasan
+```text
+# verifikasi implementasi
+- Pastikan komponen/layar referensi `MyReviewsScreen` dan perilakunya sesuai
+- Jalankan analisis statis/lint sesuai toolchain target
+- Jalankan test otomatis sesuai platform target
 
-# dari root backend
-php artisan route:list --path=api | Select-String "/reviews/user"
+# verifikasi backend (opsional)
+- Cek route API: /reviews/user
 
-# dari PostgreSQL
-\d+ reviews
+# verifikasi database (opsional)
+- Cek tabel: reviews
 ```
 
 Uji manual minimum: happy path, loading, empty, error jaringan, 401, 422, double-tap submit, 320 px, mode gelap, dan text scale 200%.

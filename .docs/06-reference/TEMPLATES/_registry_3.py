@@ -123,7 +123,7 @@ SCREENS_3 = [
       ["Checklist konsisten dengan status backend.", "Aksi membuka layar yang tepat."],
       notes="Endpoint `GET /security/checkup` menggabungkan beberapa status."),
 
-    s("profile", "login-activity", "LoginActivityScreen", "Aktivitas Login", "/login-activity", "Sanctum",
+    s("profile", "login-activity", "SignInActivityScreen", "Aktivitas Login", "/login-activity", "Sanctum",
       "Menampilkan sesi/perangkat yang pernah login dan memungkinkan mencabut sesi.",
       "Dari `PasswordAndSecurityScreen`.",
       ["Muat daftar sesi.", "Tandai sesi saat ini.", "Cabut satu sesi atau semua sesi lain."],
@@ -142,7 +142,7 @@ SCREENS_3 = [
       ["Password baru tidak sama dengan yang lama.", "Setelah sukses, sesi lain dapat dicabut sesuai kebijakan backend."],
       notes="Endpoint `POST/PUT /profile/change-password`."),
 
-    s("profile", "saved-login-info", "SavedLoginInfoScreen", "Info Login Tersimpan", "/saved-login-info", "Sanctum",
+    s("profile", "saved-login-info", "SavedSignInInfoScreen", "Info Login Tersimpan", "/saved-login-info", "Sanctum",
       "Mengatur apakah informasi login disimpan untuk mempercepat login berikutnya.",
       "Dari `PasswordAndSecurityScreen`.",
       ["Muat status.", "Tampilkan penjelasan.", "Ubah switch.", "Simpan ke backend."],

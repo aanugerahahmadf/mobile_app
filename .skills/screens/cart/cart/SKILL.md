@@ -5,20 +5,20 @@ description: Implementasi layar Keranjang (CartScreen) pada fitur Keranjang; rou
 
 # Skill: Keranjang
 
-> **Tipe:** Konten / navigasi · **Route:** `/cart` · **Akses:** Sanctum · **State:** Riverpod (`ConsumerWidget`)
+> **Tipe:** Konten / navigasi · **Route:** `/cart` · **Akses:** Sanctum · **State:** State management terpusat
 
 ## 0. Prompt siap pakai
 
 Tempel blok berikut ke agen implementasi. Ganti bagian dalam `<...>` bila perlu.
 
 ```text
-Anda bekerja pada layar Keranjang (CartScreen) di fitur Keranjang.
-File utama: lib/Features/Cart/Presentation/Screens/Cart/CartScreen.dart. Route: /cart (Sanctum).
+Anda bekerja pada layar Keranjang di fitur Keranjang.
+Referensi implementasi saat ini: CartScreen. Route: /cart (Sanctum).
 Tujuan: Menampilkan item keranjang, mengubah kuantitas, memilih item, menghapus, dan melanjutkan ke checkout.
 
 Konteks wajib:
 - Baca PRD lengkap: .docs/screens/cart/cart.md
-- State management: Riverpod (`ConsumerWidget`); pola data: request-response.
+- State management: State management terpusat; pola data: request-response.
 - Endpoint: GET /cart; POST /cart/add; PUT /cart/{cart}; DELETE /cart/{cart}; POST /Favorite/toggle.
 - Tabel: carts, catalogs, packages, favorites.
 - Parameter/extra: tidak ada parameter khusus.
@@ -28,31 +28,31 @@ Wajib dipertahankan:
 - Kuantitas tidak melebihi stok.
 - Checkout diblokir bila tidak ada item terpilih.
 - Tangani loading, empty, error, offline, unauthorized, dan double-submit.
-- Gunakan AppColors/AppTextStyles/AppSizes/AppLocalizations; jangan hardcode.
+- Gunakan token desain dan sistem lokalisasi yang konsisten; jangan hardcode.
 - Jangan mengarang endpoint/kolom. Verifikasi ke backend sebelum menulis kode.
-- Jangan memanggil Dio baru dari widget; gunakan repository/DioClient yang ada.
+- Jangan memanggil HTTP client baru dari komponen UI; gunakan repository/data source yang ada.
 
-Selesai jika: checkout bekerja, semua state di atas tertangani, flutter analyze bersih, dan test happy path + minimal satu error path lulus.
+Selesai jika: checkout bekerja, semua state di atas tertangani, analisis statis/lint bersih, dan test otomatis sesuai platform target untuk happy path + minimal satu error path lulus.
 ```
 
 ## 1. Kapan dipakai / tidak
 
-**Dipakai** saat mengubah, menguji, me-refactor, atau mendokumentasikan `CartScreen`.
+**Dipakai** saat mengubah, menguji, me-refactor, atau mendokumentasikan layar **Keranjang** (referensi implementasi: `CartScreen`).
 
 **Tidak dipakai** untuk:
 - Mengubah kontrak backend tanpa juga memperbarui PRD dan peta endpoint.
-- Mendesain ulang seluruh design system; muat `shared/flutter-screen` dan `shared/security-auth`.
+- Mendesain ulang seluruh design system; ikuti panduan desain dan keamanan bersama jika tersedia.
 
 ## 2. Input & prasyarat
 
 | Prasyarat | Nilai |
 |---|---|
-| File layar | `lib/Features/Cart/Presentation/Screens/Cart/CartScreen.dart` |
+| Referensi implementasi | `CartScreen` |
 | Route | `/cart` |
 | Akses | Sanctum |
 | Parameter | Tidak ada |
 | Masuk dari | Tab Keranjang di `MainShell` atau setelah menambah item dari katalog. |
-| Provider | `authProvider`, `cartProvider` |
+| State/dependency | `authProvider`, `cartProvider` |
 | Model | Tidak terdeteksi |
 | Endpoint | 5 |
 | Tabel | 4 |
@@ -61,22 +61,22 @@ Selesai jika: checkout bekerja, semua state di atas tertangani, flutter analyze 
 
 | Aspek | Sumber |
 |---|---|
-| Layar & route | `lib/Core/Router/AppRouter/AppRouter.dart` |
-| Endpoint client | `lib/Core/Api/ApiEndpoints/ApiEndpoints.dart` |
-| HTTP client | `lib/Core/Api/DioClient/DioClient.dart` |
-| Desain | `lib/Core/Constants/` dan `lib/Core/Theme/` |
+| Layar & route | Konfigurasi router aplikasi |
+| Endpoint client | Definisi endpoint API klien |
+| HTTP client | HTTP client/data source bersama |
+| Desain | Token desain/tema aplikasi |
 | Backend | `../Mobile-And-Backend/routes/api` dan `app/Http/Controllers/Api/User` |
 | Database | PostgreSQL `wedding_florals_decorations` |
 | PRD | `.docs/screens/cart/cart.md` |
 
 ## 4. Peta file yang akan disentuh
 
-| Layer | File | Perubahan yang diharapkan |
+| Area | Komponen | Perubahan yang diharapkan |
 |---|---|---|
-| Screen | `lib/Features/Cart/Presentation/Screens/Cart/CartScreen.dart` | UI, state, interaksi |
-| Provider | `lib/Features/Auth/Presentation/Providers/AuthProvider/AuthProvider.dart` | State/aksi domain |
-| Provider | `lib/Features/Cart/Presentation/Providers/CartProvider/CartProvider.dart` | State/aksi domain |
-| Test | `test/Features/Keranjang/` | Test happy path + error path |
+| Layar/UI | `CartScreen` | UI, state, interaksi |
+| State/dependency | `authProvider` | State/aksi domain |
+| State/dependency | `cartProvider` | State/aksi domain |
+| Test | Test otomatis (platform target) di area Keranjang/` | Test happy path + error path |
 | PRD | `.docs/screens/cart/cart.md` | Perbarui bila route/API/tabel berubah |
 | Prompt | `.skills/screens/cart/cart/SKILL.md` | Skill ini |
 
@@ -115,7 +115,7 @@ Menampilkan item keranjang, mengubah kuantitas, memilih item, menghapus, dan mel
 | `submitting` | Tombol disabled + progress | Selesai atau tampilkan error |
 | `refreshing` | Spinner di atas konten | Selesai; reset halaman |
 | `kosong` | Empty state dengan penjelasan dan CTA lanjutan. | Ikuti aksi pemulihan pada pesan |
-| `guest` | Tampilkan `GuestAuthPrompt`; jangan panggil endpoint privat. | Ikuti aksi pemulihan pada pesan |
+| `guest` | Tampilkan prompt autentikasi tamu; jangan panggil endpoint privat. | Ikuti aksi pemulihan pada pesan |
 | `stok habis` | Tampilkan badge stok habis dan nonaktifkan aksi beli. | Ikuti aksi pemulihan pada pesan |
 | `undo gagal` | Pesan ramah + retry; pertahankan input pengguna. | Ikuti aksi pemulihan pada pesan |
 
@@ -131,27 +131,27 @@ Menampilkan item keranjang, mengubah kuantitas, memilih item, menghapus, dan mel
 ### Fase 0 — Recon (wajib)
 
 1. Baca PRD `.docs/screens/cart/cart.md` dan skill ini sampai selesai.
-2. Buka `lib/Features/Cart/Presentation/Screens/Cart/CartScreen.dart`; catat widget, state, dan panggilan API yang sudah ada.
-3. Verifikasi route di `AppRouter`: `/cart`.
+2. Tinjau implementasi referensi `CartScreen`; catat komponen UI, state, dan panggilan API yang sudah ada.
+3. Verifikasi route di konfigurasi router: `/cart`.
 4. Verifikasi endpoint ke backend: GET /cart; POST /cart/add; PUT /cart/{cart}; DELETE /cart/{cart}; POST /Favorite/toggle.
 5. Cek tabel/kolom di `DATABASE.md`; jangan mengarang kolom.
 
 ### Fase 1 — Navigasi & guard
 
-1. Pastikan route dan parameter/extra sesuai. Jangan menambah route baru tanpa mendaftarkannya di `AppRouter`.
+1. Pastikan route dan parameter/extra sesuai. Jangan menambah route baru tanpa mendaftarkannya di konfigurasi router.
 2. Terapkan guard: Butuh Bearer token valid. 401 harus membersihkan token dan mengarahkan pengguna ke Landing/login.
 3. Pastikan back tidak mengulang submit dan tidak kehilangan input tanpa konfirmasi.
 
 ### Fase 2 — UI scaffold
 
-1. Susun layout sesuai blueprint PRD §5; gunakan widget yang sudah ada bila cocok.
-2. Gunakan `AppColors`, `AppTextStyles`, `AppSizes`, `AppLocalizations`.
+1. Susun layout sesuai blueprint PRD §5; gunakan komponen UI yang sudah ada bila cocok.
+2. Gunakan token desain (warna, tipografi, spacing) dan lokalisasi yang konsisten.
 3. Pastikan layout tidak overflow di 320 px dan aman terhadap keyboard/safe area.
 
 ### Fase 3 — State & data
 
 1. Implementasikan state: `initial`, `loading`, `content`, `empty`, `error`, `unauthorized`, `offline`, `submitting`, `refreshing`, `kosong`.
-2. Panggil API lewat repository/DioClient; jangan dari `build()`.
+2. Panggil API lewat repository/data source; jangan dari siklus render UI.
 3. Simpan state minimal yang diperlukan; jangan menduplikasi sumber kebenaran.
 
 ### Fase 4 — Interaksi & feedback
@@ -219,12 +219,12 @@ Envelope: `{"status":"success","message":"...","data":{}}`; periksa controller u
 ## 10. Guardrail
 
 - Jangan mengarang endpoint, parameter, atau kolom database.
-- Jangan membuat instance `Dio` baru di widget; gunakan `DioClient`/repository.
+- Jangan membuat HTTP client baru di komponen UI; gunakan data source/repository bersama.
 - Jangan memanggil API di `build()` atau setiap rebuild.
-- Jangan menyimpan token/password/PIN di `SharedPreferences` atau log.
+- Jangan menyimpan token/password/PIN di penyimpanan lokal atau log.
 - Jangan menampilkan stack trace/pesan database ke pengguna.
 - Jangan menambah dependensi baru tanpa alasan dan persetujuan.
-- Jangan mengubah route/parameter tanpa memperbarui `AppRouter` dan dokumen.
+- Jangan mengubah route/parameter tanpa memperbarui konfigurasi router dan dokumen.
 - Jangan menghapus test yang ada untuk membuat build lulus.
 
 ## 11. Definition of Done
@@ -232,28 +232,28 @@ Envelope: `{"status":"success","message":"...","data":{}}`; periksa controller u
 - [ ] Semua elemen UI di §5.2 tampil dan berfungsi.
 - [ ] Semua state di §5.3/§9 tertangani, termasuk error dan offline.
 - [ ] Kontrak endpoint dan tabel tidak berubah tanpa update PRD/peta endpoint.
-- [ ] Tidak ada panggilan API langsung dari `build()` atau instance Dio baru.
+- [ ] Tidak ada panggilan API langsung dari siklus render UI atau pembuatan HTTP client baru di komponen UI.
 - [ ] Nominal/stok/status berasal dari backend.
 - [ ] 401 membersihkan token dan mengarahkan ke Landing/login.
 - [ ] Tidak ada overflow di 320 px, landscape, dan text scale 200%.
 - [ ] Mode terang/gelap terbaca dan target sentuh ≥48 dp.
-- [ ] `flutter analyze` bersih.
+- [ ] Analisis statis/lint sesuai toolchain target bersih.
 - [ ] Test happy path + minimal satu error path lulus.
 - [ ] PRD dan SKILL diperbarui bila ada perubahan.
 
 ## 12. Verifikasi
 
-```powershell
-# dari root mobile_app
-rg "CartScreen" lib
-flutter analyze
-flutter test test/Features/Keranjang
+```text
+# verifikasi implementasi
+- Pastikan komponen/layar referensi `CartScreen` dan perilakunya sesuai
+- Jalankan analisis statis/lint sesuai toolchain target
+- Jalankan test otomatis sesuai platform target
 
-# dari root backend
-php artisan route:list --path=api | Select-String "/cart"
+# verifikasi backend (opsional)
+- Cek route API: /cart
 
-# dari PostgreSQL
-\d+ carts
+# verifikasi database (opsional)
+- Cek tabel: carts
 ```
 
 Uji manual minimum: happy path, loading, empty, error jaringan, 401, 422, double-tap submit, 320 px, mode gelap, dan text scale 200%.

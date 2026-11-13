@@ -1,9 +1,9 @@
 # Ulasan Saya
 
 > **Fitur:** Ulasan · **Route:** `/my-reviews` · **Akses:** Sanctum · **Tipe:** Formulir
-> **Implementasi:** `lib/Features/Review/Presentation/Screens/MyReviews/MyReviewsScreen.dart` — `MyReviewsScreen` (1015 baris) · **State:** Riverpod + state lokal (`setState`) · **Pola:** request-response
+> **Implementasi referensi (aplikasi saat ini):** `MyReviewsScreen` · **State:** State management terpusat + state lokal · **Pola:** request-response
 > **API:** 4 endpoint · **Tabel:** 5 · **Model:** 1
-> Diverifikasi 6 November 2026 dari kode Flutter, route Laravel, dan skema PostgreSQL. Bagian bertanda **[Usulan]** adalah rekomendasi, bukan perilaku yang sudah diverifikasi.
+> Diverifikasi 6 November 2026 dari implementasi aplikasi saat ini, route Laravel, dan skema PostgreSQL. Bagian bertanda **[Usulan]** adalah rekomendasi, bukan perilaku yang sudah diverifikasi.
 
 ## 0. Ringkasan Eksekutif
 
@@ -80,17 +80,17 @@ flowchart TD
 
 | Aspek | Nilai |
 |---|---|
-| File | `lib/Features/Review/Presentation/Screens/MyReviews/MyReviewsScreen.dart` |
-| Kelas layar | `MyReviewsScreen` |
-| Base widget | `ConsumerStatefulWidget` |
-| Kelas state | `_MyReviewsPageState` |
-| State management | Riverpod + state lokal (`setState`) |
+| Komponen/layar | `MyReviewsScreen` |
+| Identifier | `MyReviewsScreen` |
+| Tipe komponen | Komponen ber-state |
+| Komponen state | Tersedia pada implementasi referensi |
+| State management | State management terpusat + state lokal |
 | Pola data | request-response |
-| Provider | `authProvider`, `myReviewsProvider` |
-| Repository | Tidak terdeteksi |
+| State/dependency | `authProvider`, `myReviewsProvider` |
+| Data source/repository | Tidak terdeteksi |
 | Service | Tidak terdeteksi |
-| Widget inti | `AppShimmer`, `AppEmptyState`, `AppErrorState`, `AppSnackbar`, `GuestAuthPrompt`, `AppBreadcrumbs`, `AppActionSheet`, `MediaViewer` |
-| Widget fitur | Tidak terdeteksi |
+| Komponen UI bersama | `AppShimmer`, `AppEmptyState`, `AppErrorState`, `AppSnackbar`, `GuestAuthPrompt`, `AppBreadcrumbs`, `AppActionSheet`, `MediaViewer` |
+| Komponen UI fitur | Tidak terdeteksi |
 | Model | `MyReviewModel` |
 
 ### 4.1 State lokal yang terdeteksi
@@ -98,7 +98,7 @@ flowchart TD
 | Field | Tipe | Peran |
 |---|---|---|
 | `_navigationBusy` | `bool` | State lokal layar. |
-| `_scrollController` | `ScrollController` | Controller input; wajib dispose. |
+| `_scrollController` | `ScrollController` | Controller/state input; wajib dibersihkan saat tidak dipakai. |
 
 ### 4.2 Metode internal
 
@@ -107,18 +107,18 @@ flowchart TD
 ### 4.3 Alur data
 
 ```text
-Widget / State
+UI / State layar
    ↓ baca/tulis
-Provider Riverpod
+State management / dependency
    ↓
-Repository / DioClient
+Repository / HTTP client
    ↓ REST
 Controller Laravel → PostgreSQL (5 tabel terkait)
 ```
 
 ## 5. Blueprint UI
 
-Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti file implementasi.
+Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti implementasi aplikasi.
 
 ```text
 ┌────────────────────────────────────────────────────────────────────┐
@@ -155,7 +155,7 @@ Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti file im
 | Dropdown | 0 |
 | Switch/toggle | 0 |
 | Validator client | 0 |
-| Field password (`obscureText`) | 0 |
+| Field password (teks tersamar) | 0 |
 | maxLength | 255 |
 | Keyboard | Tidak terdeteksi |
 | Input formatter | Tidak terdeteksi |
@@ -168,7 +168,7 @@ Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti file im
 
 ## 7. Copywriting & Microcopy
 
-Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocalizations` dan mengikuti gaya bahasa layar lain.
+Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai sistem lokalisasi/i18n yang konsisten dan mengikuti gaya bahasa layar lain.
 
 | Lokasi | Draft copy | Catatan |
 |---|---|---|
@@ -190,17 +190,17 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 | Token | Nilai |
 |---|---|
 | Font | Instrument Sans (W400/W600), aset lokal |
-| Warna primer | `AppColors.primaryColor` = `#1E3A5F` |
-| Aksen | `AppColors.accentColor` = `#C9A94E` |
-| Background light | `AppColors.backgroundColor` = `#F8F6F7` |
-| Surface light | `AppColors.surfaceColor` = `#FFFFFF` |
-| Background dark | `AppColors.darkBackground` = `#121212` |
-| Surface dark | `AppColors.darkSurface` = `#1E1E1E` |
+| Warna primer | `#1E3A5F` (token primer aplikasi) |
+| Aksen | `#C9A94E` |
+| Background light | `#F8F6F7` |
+| Surface light | `#FFFFFF` |
+| Background dark | `#121212` |
+| Surface dark | `#1E1E1E` |
 | Teks primer light | `#1A1A2E`; dark `#E8E8E8` |
 | Teks sekunder light | `#8E8E9A`; dark `#A0A0A0` |
 | Sukses/error/warning/info | `#10B981` / `#EF4444` / `#F59E0B` / `#3B82F6` |
 | Tipografi | `headTitle` 22/w600; `subHeadTitle` 16/w400; `h3` 14/w600; `h4` 12/w400; `description` 14/1.4 |
-| Spacing | `AppSizes` 2, 4, 8, 16, 24, 32, 48, 64 |
+| Spacing | skala 2, 4, 8, 16, 24, 32, 48, 64 |
 | Radius | card 16, button 14, input 14, avatar 28, bottom nav 24 |
 | Glass | `AppBlurBackdrop`; `blurSigma` 15; tint light `#32FFFFFF`, night `#32000000` |
 
@@ -216,7 +216,7 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 ### 8.3 Mode gelap & glass
 
 - Tema mengikuti sistem (light/dark) dan dapat di-override `ThemeProvider`.
-- Jangan hardcode warna; gunakan `AppColors`/`AppTheme` agar mode gelap bekerja.
+- Jangan hardcode warna; gunakan token/tema desain aplikasi agar mode gelap bekerja.
 - Fallback tanpa blur harus tetap kontras dan terbaca.
 - Hormati reduce-motion; animasi 3D/parallax tidak boleh menjadi satu-satunya pembeda state.
 
@@ -325,7 +325,7 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 
 | Model | File | Field kunci |
 |---|---|---|
-| `MyReviewModel` | `lib/Features/Review/Data/Models/MyReviewModel/MyReviewModel.dart` | `id`, `userId`, `catalogId`, `packageId`, `orderId`, `rating`, `title`, `comment`, `variation`, `specifications` |
+| `MyReviewModel` | implementasi referensi aplikasi | `id`, `userId`, `catalogId`, `packageId`, `orderId`, `rating`, `title`, `comment`, `variation`, `specifications` |
 
 ## 11. Data & Database
 
@@ -343,7 +343,7 @@ Akses tabel di atas adalah **indikasi dari endpoint**; verifikasi controller/ser
 
 - Jangan menampilkan data dari cache setelah logout.
 - Nominal, stok, status pesanan, dan kepemilikan resource **wajib** divalidasi backend.
-- Jangan mengakses PostgreSQL dari Flutter; gunakan endpoint Laravel.
+- Jangan mengakses PostgreSQL langsung dari klien; gunakan endpoint Laravel.
 - Filter data milik pengguna dilakukan server-side (`user_id` dari token), bukan di client.
 
 ## 12. Aturan Bisnis & Validasi
@@ -377,8 +377,8 @@ Akses tabel di atas adalah **indikasi dari endpoint**; verifikasi controller/ser
 
 - Disable tombol submit selama request berjalan untuk mencegah duplikasi.
 - Terapkan `Accept-Language` dari `localeProvider` pada setiap request.
-- Gunakan `DioClient`/repository yang sudah ada; jangan membuat instance Dio baru.
-- Guest tidak boleh memanggil endpoint privat; tampilkan `GuestAuthPrompt`.
+- Gunakan HTTP client/data source/repository yang sudah ada; jangan membuat client baru di komponen UI.
+- Guest tidak boleh memanggil endpoint privat; tampilkan prompt autentikasi tamu.
 - Validasi client untuk UX; validasi final di backend.
 - Pertahankan input saat 422/network error.
 
@@ -397,7 +397,7 @@ Pemetaan status HTTP mengikuti `.docs/02-architecture/STATE-AND-ERRORS.md` (liha
 
 ## 14. Keamanan & Privasi
 
-- Token hanya di `FlutterSecureStorage`; jangan di `SharedPreferences` atau log.
+- Token hanya di secure storage; jangan di penyimpanan lokal atau log.
 - Jangan menampilkan stack trace, query database, atau detail internal pada pengguna.
 - Jangan mengirim PII ke analytics/crash report.
 - Validasi kepemilikan resource di backend; client tidak boleh menentukan `user_id`.
@@ -475,7 +475,7 @@ Belum diverifikasi apakah event berikut sudah diimplementasikan. Jangan mengirim
 
 ### 18.6 Kualitas
 
-- [ ] `flutter analyze` bersih untuk file yang diubah.
+- [ ] Analisis statis/lint sesuai toolchain target bersih untuk bagian yang diubah.
 - [ ] Test happy path dan minimal satu error path ditambahkan/diperbarui.
 - [ ] PRD/SKILL diperbarui bila route, endpoint, atau tabel berubah.
 
@@ -521,34 +521,34 @@ Tidak ada gap khusus untuk layar ini.
 | Endpoint | PUT /reviews/{id} | ReviewController@update |
 | Endpoint | DELETE /reviews/{id} | ReviewController@destroy |
 | Endpoint | GET /catalog/{id} | CatalogController@show |
-| Database | reviews | Jangan query langsung dari Flutter. |
-| Database | catalogs | Jangan query langsung dari Flutter. |
-| Database | packages | Jangan query langsung dari Flutter. |
-| Database | media | Jangan query langsung dari Flutter. |
-| Database | categories | Jangan query langsung dari Flutter. |
-| Provider | authProvider | lib/Features/Auth/Presentation/Providers/AuthProvider/AuthProvider.dart |
-| Provider | myReviewsProvider | lib/Features/Review/Presentation/Providers/MyReviewsProvider/MyReviewsProvider.dart |
-| Route | /my-reviews | Terdaftar di `AppRouter`. |
+| Database | reviews | Jangan query langsung dari klien. |
+| Database | catalogs | Jangan query langsung dari klien. |
+| Database | packages | Jangan query langsung dari klien. |
+| Database | media | Jangan query langsung dari klien. |
+| Database | categories | Jangan query langsung dari klien. |
+| State/dependency | authProvider | Komponen state/dependency terkait |
+| State/dependency | myReviewsProvider | Komponen state/dependency terkait |
+| Route | /my-reviews | Terdaftar di konfigurasi router aplikasi. |
 
 Rujukan global: [Known Gaps](../../06-reference/KNOWN-GAPS.md).
 
 ## 21. Peta Implementasi & Simbol
 
-| Layer | File/Simbol | Catatan |
+| Layer | Komponen/Referensi | Catatan |
 |---|---|---|
-| Screen | `lib/Features/Review/Presentation/Screens/MyReviews/MyReviewsScreen.dart` · `MyReviewsScreen` | 1015 baris |
-| Provider | `authProvider` | `lib/Features/Auth/Presentation/Providers/AuthProvider/AuthProvider.dart` |
-| Provider | `myReviewsProvider` | `lib/Features/Review/Presentation/Providers/MyReviewsProvider/MyReviewsProvider.dart` |
-| Model | `MyReviewModel` | `lib/Features/Review/Data/Models/MyReviewModel/MyReviewModel.dart` |
-| Widget inti | `AppShimmer` | `lib/Core/Widgets/AppShimmer/` |
-| Widget inti | `AppEmptyState` | `lib/Core/Widgets/AppEmptyState/` |
-| Widget inti | `AppErrorState` | `lib/Core/Widgets/AppErrorState/` |
-| Widget inti | `AppSnackbar` | `lib/Core/Widgets/AppSnackbar/` |
-| Widget inti | `GuestAuthPrompt` | `lib/Core/Widgets/GuestAuthPrompt/` |
-| Widget inti | `AppBreadcrumbs` | `lib/Core/Widgets/AppBreadcrumbs/` |
-| Widget inti | `AppActionSheet` | `lib/Core/Widgets/AppActionSheet/` |
-| Widget inti | `MediaViewer` | `lib/Core/Widgets/MediaViewer/` |
-| Test | `test/Features/Ulasan/` | Tambahkan test sesuai §19 |
+| Layar/UI | `MyReviewsScreen` | Implementasi referensi aplikasi saat ini |
+| State/dependency | `authProvider` | Komponen state/dependency terkait |
+| State/dependency | `myReviewsProvider` | Komponen state/dependency terkait |
+| Model/data | `MyReviewModel` | Struktur data terkait |
+| Komponen UI bersama | `AppShimmer` | Komponen UI reusable |
+| Komponen UI bersama | `AppEmptyState` | Komponen UI reusable |
+| Komponen UI bersama | `AppErrorState` | Komponen UI reusable |
+| Komponen UI bersama | `AppSnackbar` | Komponen UI reusable |
+| Komponen UI bersama | `GuestAuthPrompt` | Komponen UI reusable |
+| Komponen UI bersama | `AppBreadcrumbs` | Komponen UI reusable |
+| Komponen UI bersama | `AppActionSheet` | Komponen UI reusable |
+| Komponen UI bersama | `MediaViewer` | Komponen UI reusable |
+| Test | Sesuai platform target | Tambahkan test sesuai §19 |
 | Dokumen | `.docs/screens/review/my-reviews.md` | PRD ini |
 | Prompt | `.skills/screens/review/my-reviews/SKILL.md` | Skill layar |
 
@@ -565,4 +565,4 @@ Rujukan global: [Known Gaps](../../06-reference/KNOWN-GAPS.md).
 
 | Tanggal | Perubahan | Sumber |
 |---|---|---|
-| 6 November 2026 | Regenerasi detail: arsitektur, state machine, kontrak API, validasi, a11y, test plan | Kode Flutter, route Laravel, skema PostgreSQL |
+| 6 November 2026 | Regenerasi detail: arsitektur, state machine, kontrak API, validasi, a11y, test plan | Implementasi aplikasi, route Laravel, skema PostgreSQL |

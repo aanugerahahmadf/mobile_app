@@ -1,9 +1,9 @@
 # Detail Chat & Panggilan
 
 > **Fitur:** Chat & Panggilan · **Route:** `/chat/:id` · **Akses:** Guest + Sanctum · **Tipe:** Chat / real-time
-> **Implementasi:** `lib/Features/Chat/Presentation/Screens/ChatDetail/ChatDetailScreen.dart` — `ChatDetailScreen` (3169 baris) · **State:** Riverpod + state lokal (`setState`) · **Pola:** polling periodik
+> **Implementasi referensi (aplikasi saat ini):** `ChatDetailScreen` · **State:** State management terpusat + state lokal · **Pola:** polling periodik
 > **API:** 25 endpoint · **Tabel:** 14 · **Model:** 0
-> Diverifikasi 6 November 2026 dari kode Flutter, route Laravel, dan skema PostgreSQL. Bagian bertanda **[Usulan]** adalah rekomendasi, bukan perilaku yang sudah diverifikasi.
+> Diverifikasi 6 November 2026 dari implementasi aplikasi saat ini, route Laravel, dan skema PostgreSQL. Bagian bertanda **[Usulan]** adalah rekomendasi, bukan perilaku yang sudah diverifikasi.
 
 ## 0. Ringkasan Eksekutif
 
@@ -47,9 +47,9 @@
 | Masuk dari | Dari `ChatListScreen`, notifikasi, atau tautan laporan dari katalog. |
 | Route | `/chat/:id` |
 | Parameter/extra | Path `id` = inboxId. `extra: {cs_category, guestId/guest_id}`. |
-| Guard | Guest boleh membuka layar, tetapi aksi privat harus memunculkan `GuestAuthPrompt` dan tidak mengirim Bearer token kosong. |
+| Guard | Guest boleh membuka layar, tetapi aksi privat harus memunculkan prompt autentikasi tamu dan tidak mengirim Bearer token kosong. |
 | Keluar ke | Tidak ada navigasi keluar langsung yang terdeteksi. |
-| Perilaku back | Gunakan tombol back bawaan `go_router`; jangan membuat navigasi manual yang menduplikasi route. |
+| Perilaku back | Gunakan navigasi kembali bawaan router; jangan membuat navigasi manual yang menduplikasi route. |
 
 ### 2.1 Layar terkait dalam fitur yang sama
 
@@ -85,28 +85,28 @@ flowchart TD
 
 | Aspek | Nilai |
 |---|---|
-| File | `lib/Features/Chat/Presentation/Screens/ChatDetail/ChatDetailScreen.dart` |
-| Kelas layar | `ChatDetailScreen` |
-| Base widget | `ConsumerStatefulWidget` |
-| Kelas state | `_ChatDetailPageState` |
-| State management | Riverpod + state lokal (`setState`) |
+| Komponen/layar | `ChatDetailScreen` |
+| Identifier | `ChatDetailScreen` |
+| Tipe komponen | Komponen ber-state |
+| Komponen state | Tersedia pada implementasi referensi |
+| State management | State management terpusat + state lokal |
 | Pola data | polling periodik |
-| Provider | `guestModeProvider`, `authProvider`, `chatProvider` |
-| Repository | Tidak terdeteksi |
+| State/dependency | `guestModeProvider`, `authProvider`, `chatProvider` |
+| Data source/repository | Tidak terdeteksi |
 | Service | Tidak terdeteksi |
-| Widget inti | `MediaViewer`, `AppActionSheet`, `AppBreadcrumbs` |
-| Widget fitur | Tidak terdeteksi |
+| Komponen UI bersama | `MediaViewer`, `AppActionSheet`, `AppBreadcrumbs` |
+| Komponen UI fitur | Tidak terdeteksi |
 | Model | Tidak terdeteksi |
 
 ### 4.1 State lokal yang terdeteksi
 
 | Field | Tipe | Peran |
 |---|---|---|
-| `_messageController` | `TextEditingController` | Controller input; wajib dispose. |
+| `_messageController` | `TextEditingController` | Controller/state input; wajib dibersihkan saat tidak dipakai. |
 | `_messageFocusNode` | `FocusNode` | State lokal layar. |
-| `_scrollController` | `ScrollController` | Controller input; wajib dispose. |
-| `_searchController` | `TextEditingController` | Controller input; wajib dispose. |
-| `_pollTimer` | `Timer?` | Resource native; wajib dibersihkan di `dispose`. |
+| `_scrollController` | `ScrollController` | Controller/state input; wajib dibersihkan saat tidak dipakai. |
+| `_searchController` | `TextEditingController` | Controller/state input; wajib dibersihkan saat tidak dipakai. |
+| `_pollTimer` | `Timer?` | Resource native; wajib dibersihkan saat layar/komponen ditutup. |
 | `_categorySent` | `bool` | Filter/sortir lokal. |
 | `_guestId` | `String?` | State lokal layar. |
 | `_guestName` | `String?` | State lokal layar. |
@@ -127,18 +127,18 @@ flowchart TD
 ### 4.3 Alur data
 
 ```text
-Widget / State
+UI / State layar
    ↓ baca/tulis
-Provider Riverpod
+State management / dependency
    ↓
-Repository / DioClient
+Repository / HTTP client
    ↓ REST
 Controller Laravel → PostgreSQL (14 tabel terkait)
 ```
 
 ## 5. Blueprint UI
 
-Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti file implementasi.
+Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti implementasi aplikasi.
 
 ```text
 ┌────────────────────────────────────────────────────────────────────┐
@@ -177,7 +177,7 @@ Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti file im
 | Dropdown | 0 |
 | Switch/toggle | 0 |
 | Validator client | 0 |
-| Field password (`obscureText`) | 0 |
+| Field password (teks tersamar) | 0 |
 | maxLength | 2000, 1 |
 | Keyboard | number |
 | Input formatter | FilteringTextInputFormatter |
@@ -190,7 +190,7 @@ Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti file im
 
 ## 7. Copywriting & Microcopy
 
-Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocalizations` dan mengikuti gaya bahasa layar lain.
+Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai sistem lokalisasi/i18n yang konsisten dan mengikuti gaya bahasa layar lain.
 
 | Lokasi | Draft copy | Catatan |
 |---|---|---|
@@ -200,10 +200,10 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 | Empty state | Belum ada detail Chat & Panggilan. | [Usulan] Sertakan CTA lanjutan. |
 | Error | Gagal memuat detail Chat & Panggilan. Periksa koneksi lalu coba lagi. | [Usulan] Jangan tampilkan stack trace. |
 | Retry | Coba lagi | [Usulan] Pertahankan data lama bila ada. |
-| Guest | Masuk untuk melanjutkan. | [Usulan] Gunakan `GuestAuthPrompt`. |
+| Guest | Masuk untuk melanjutkan. | [Usulan] Gunakan prompt autentikasi tamu. |
 | Offline | Anda sedang offline. Periksa koneksi internet. | [Usulan] Sediakan retry. |
 | Validasi | Periksa kembali data yang Anda isi. | [Usulan] Fokus ke field pertama. |
-| Placeholder input | Ketik pesan... | [Usulan] Gunakan AppLocalizations. |
+| Placeholder input | Ketik pesan... | [Usulan] Gunakan sistem lokalisasi/i18n. |
 | Empty list | Belum ada percakapan. | [Usulan] Sertakan CTA mulai chat. |
 
 ## 8. Design System & Responsif
@@ -213,17 +213,17 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 | Token | Nilai |
 |---|---|
 | Font | Instrument Sans (W400/W600), aset lokal |
-| Warna primer | `AppColors.primaryColor` = `#1E3A5F` |
-| Aksen | `AppColors.accentColor` = `#C9A94E` |
-| Background light | `AppColors.backgroundColor` = `#F8F6F7` |
-| Surface light | `AppColors.surfaceColor` = `#FFFFFF` |
-| Background dark | `AppColors.darkBackground` = `#121212` |
-| Surface dark | `AppColors.darkSurface` = `#1E1E1E` |
+| Warna primer | `#1E3A5F` (token primer aplikasi) |
+| Aksen | `#C9A94E` |
+| Background light | `#F8F6F7` |
+| Surface light | `#FFFFFF` |
+| Background dark | `#121212` |
+| Surface dark | `#1E1E1E` |
 | Teks primer light | `#1A1A2E`; dark `#E8E8E8` |
 | Teks sekunder light | `#8E8E9A`; dark `#A0A0A0` |
 | Sukses/error/warning/info | `#10B981` / `#EF4444` / `#F59E0B` / `#3B82F6` |
 | Tipografi | `headTitle` 22/w600; `subHeadTitle` 16/w400; `h3` 14/w600; `h4` 12/w400; `description` 14/1.4 |
-| Spacing | `AppSizes` 2, 4, 8, 16, 24, 32, 48, 64 |
+| Spacing | skala 2, 4, 8, 16, 24, 32, 48, 64 |
 | Radius | card 16, button 14, input 14, avatar 28, bottom nav 24 |
 | Glass | `AppBlurBackdrop`; `blurSigma` 15; tint light `#32FFFFFF`, night `#32000000` |
 
@@ -239,7 +239,7 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 ### 8.3 Mode gelap & glass
 
 - Tema mengikuti sistem (light/dark) dan dapat di-override `ThemeProvider`.
-- Jangan hardcode warna; gunakan `AppColors`/`AppTheme` agar mode gelap bekerja.
+- Jangan hardcode warna; gunakan token/tema desain aplikasi agar mode gelap bekerja.
 - Fallback tanpa blur harus tetap kontras dan terbaca.
 - Hormati reduce-motion; animasi 3D/parallax tidak boleh menjadi satu-satunya pembeda state.
 
@@ -255,7 +255,7 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 | `unauthorized` | HTTP 401 | Sesi berakhir; arahkan login/Landing | Login ulang |
 | `offline` | Koneksi putus | Banner/empty offline | Coba lagi saat online |
 | `submitting` | Pengguna menekan aksi utama | Tombol disabled + progress | Selesai atau tampilkan error |
-| `guest` | Guest menekan aksi privat | `GuestAuthPrompt` | Login |
+| `guest` | Guest menekan aksi privat | prompt autentikasi tamu | Login |
 | `kosong` | Kondisi domain | Empty state dengan penjelasan dan CTA lanjutan. | Ikuti aksi pemulihan pada pesan |
 | `gagal kirim` | Kondisi domain | Pesan ramah + retry; pertahankan input pengguna. | Ikuti aksi pemulihan pada pesan |
 | `reconnect` | Kondisi domain | Tampilkan status yang jelas dan aksi pemulihan. | Ikuti aksi pemulihan pada pesan |
@@ -648,7 +648,7 @@ Akses tabel di atas adalah **indikasi dari endpoint**; verifikasi controller/ser
 
 - Jangan menampilkan data dari cache setelah logout.
 - Nominal, stok, status pesanan, dan kepemilikan resource **wajib** divalidasi backend.
-- Jangan mengakses PostgreSQL dari Flutter; gunakan endpoint Laravel.
+- Jangan mengakses PostgreSQL langsung dari klien; gunakan endpoint Laravel.
 - Filter data milik pengguna dilakukan server-side (`user_id` dari token), bukan di client.
 - Jangan menyimpulkan status pembayaran dari `orders.status`; gunakan data pembayaran/transaksi.
 
@@ -708,8 +708,8 @@ Akses tabel di atas adalah **indikasi dari endpoint**; verifikasi controller/ser
 
 - Disable tombol submit selama request berjalan untuk mencegah duplikasi.
 - Terapkan `Accept-Language` dari `localeProvider` pada setiap request.
-- Gunakan `DioClient`/repository yang sudah ada; jangan membuat instance Dio baru.
-- Guest tidak boleh memanggil endpoint privat; tampilkan `GuestAuthPrompt`.
+- Gunakan HTTP client/data source/repository yang sudah ada; jangan membuat client baru di komponen UI.
+- Guest tidak boleh memanggil endpoint privat; tampilkan prompt autentikasi tamu.
 - Pesan gagal kirim harus dapat dicoba ulang tanpa menduplikasi pesan.
 - Lampiran divalidasi tipe/ukuran; jangan unggah file tak dikenal.
 - Guest hanya boleh memakai alur guest yang didukung backend.
@@ -733,7 +733,7 @@ Pemetaan status HTTP mengikuti `.docs/02-architecture/STATE-AND-ERRORS.md` (liha
 
 ## 14. Keamanan & Privasi
 
-- Token hanya di `FlutterSecureStorage`; jangan di `SharedPreferences` atau log.
+- Token hanya di secure storage; jangan di penyimpanan lokal atau log.
 - Jangan menampilkan stack trace, query database, atau detail internal pada pengguna.
 - Jangan mengirim PII ke analytics/crash report.
 - Validasi kepemilikan resource di backend; client tidak boleh menentukan `user_id`.
@@ -816,7 +816,7 @@ Belum diverifikasi apakah event berikut sudah diimplementasikan. Jangan mengirim
 
 ### 18.6 Kualitas
 
-- [ ] `flutter analyze` bersih untuk file yang diubah.
+- [ ] Analisis statis/lint sesuai toolchain target bersih untuk bagian yang diubah.
 - [ ] Test happy path dan minimal satu error path ditambahkan/diperbarui.
 - [ ] PRD/SKILL diperbarui bila route, endpoint, atau tabel berubah.
 
@@ -888,22 +888,22 @@ Rujukan global: [Known Gaps](../../06-reference/KNOWN-GAPS.md).
 
 ## 21. Peta Implementasi & Simbol
 
-| Layer | File/Simbol | Catatan |
+| Layer | Komponen/Referensi | Catatan |
 |---|---|---|
-| Screen | `lib/Features/Chat/Presentation/Screens/ChatDetail/ChatDetailScreen.dart` · `ChatDetailScreen` | 3169 baris |
-| Provider | `guestModeProvider` | `lib/Core/Utils/GuestMode/GuestMode.dart` |
-| Provider | `authProvider` | `lib/Features/Auth/Presentation/Providers/AuthProvider/AuthProvider.dart` |
-| Provider | `chatProvider` | `lib/Features/Chat/Presentation/Providers/ChatProvider.dart` |
-| Widget inti | `MediaViewer` | `lib/Core/Widgets/MediaViewer/` |
-| Widget inti | `AppActionSheet` | `lib/Core/Widgets/AppActionSheet/` |
-| Widget inti | `AppBreadcrumbs` | `lib/Core/Widgets/AppBreadcrumbs/` |
-| Test | `test/Features/Chat/` | Tambahkan test sesuai §19 |
+| Layar/UI | `ChatDetailScreen` | Implementasi referensi aplikasi saat ini |
+| State/dependency | `guestModeProvider` | Komponen state/dependency terkait |
+| State/dependency | `authProvider` | Komponen state/dependency terkait |
+| State/dependency | `chatProvider` | Komponen state/dependency terkait |
+| Komponen UI bersama | `MediaViewer` | Komponen UI reusable |
+| Komponen UI bersama | `AppActionSheet` | Komponen UI reusable |
+| Komponen UI bersama | `AppBreadcrumbs` | Komponen UI reusable |
+| Test | Sesuai platform target | Tambahkan test sesuai §19 |
 | Dokumen | `.docs/screens/chat/chat-detail.md` | PRD ini |
 | Prompt | `.skills/screens/chat/chat-detail/SKILL.md` | Skill layar |
 
 **Metode internal terdeteksi:** `_callOtherUser`, `_downloadReportPdf`, `_openCsReportForm`, `_startPolling`, `_senderName`, `_scrollToBottom`, `_cancelReply`, `_setReplyTo`, `_detectIntentAndRespond`, `_openAccountRecoveryForm`, `_buildAccountFormMessage`, `_detectFormAndProcess`, `_triggerForgotPassword`, `_sendAutoMessage`, `_resetRecoveryState`, `_showOtpAndPasswordSheet`, `_formatDateHeader`, `_sendCsCategoryMessage`, `_sendMessage`, `_showAttachmentOptions`.
 
-> **Catatan arsitektur:** layar memakai `DioClient.instance` langsung. Saat refactor, pindahkan ke repository/provider tanpa mengubah kontrak.
+> **Catatan arsitektur:** layar memakai HTTP client bersama langsung. Saat refactor, pindahkan ke repository/provider tanpa mengubah kontrak.
 
 ## 22. Referensi & Riwayat
 
@@ -916,4 +916,4 @@ Rujukan global: [Known Gaps](../../06-reference/KNOWN-GAPS.md).
 
 | Tanggal | Perubahan | Sumber |
 |---|---|---|
-| 6 November 2026 | Regenerasi detail: arsitektur, state machine, kontrak API, validasi, a11y, test plan | Kode Flutter, route Laravel, skema PostgreSQL |
+| 6 November 2026 | Regenerasi detail: arsitektur, state machine, kontrak API, validasi, a11y, test plan | Implementasi aplikasi, route Laravel, skema PostgreSQL |

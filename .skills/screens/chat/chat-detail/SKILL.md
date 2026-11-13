@@ -5,20 +5,20 @@ description: Implementasi layar Detail Chat & Panggilan (ChatDetailScreen) pada 
 
 # Skill: Detail Chat & Panggilan
 
-> **Tipe:** Chat / real-time · **Route:** `/chat/:id` · **Akses:** Guest + Sanctum · **State:** Riverpod + state lokal (`setState`)
+> **Tipe:** Chat / real-time · **Route:** `/chat/:id` · **Akses:** Guest + Sanctum · **State:** State management terpusat + state lokal
 
 ## 0. Prompt siap pakai
 
 Tempel blok berikut ke agen implementasi. Ganti bagian dalam `<...>` bila perlu.
 
 ```text
-Anda bekerja pada layar Detail Chat & Panggilan (ChatDetailScreen) di fitur Chat & Panggilan.
-File utama: lib/Features/Chat/Presentation/Screens/ChatDetail/ChatDetailScreen.dart. Route: /chat/:id (Guest + Sanctum).
+Anda bekerja pada layar Detail Chat & Panggilan di fitur Chat & Panggilan.
+Referensi implementasi saat ini: ChatDetailScreen. Route: /chat/:id (Guest + Sanctum).
 Tujuan: Percakapan real-time dengan teks, lampiran, balasan, reaksi, laporan, dan panggilan audio/video WebRTC.
 
 Konteks wajib:
 - Baca PRD lengkap: .docs/screens/chat/chat-detail.md
-- State management: Riverpod + state lokal (`setState`); pola data: polling periodik.
+- State management: State management terpusat + state lokal; pola data: polling periodik.
 - Endpoint: GET /messages/conversations/{inboxId}; POST /messages/send; POST /messages/{id}/star; DELETE /messages/{id}/delete; POST /messages/{id}/forward; POST /messages/{id}/react …
 - Tabel: fm_messages, fm_inboxes, chat_calls, users, catalogs, categories, packages, media, orders, transactions, order_timelines, vouchers, user_vouchers, reports.
 - Parameter/extra: Path `id` = inboxId. `extra: {cs_category, guestId/guest_id}`.
@@ -28,32 +28,32 @@ Wajib dipertahankan:
 - Panggilan dapat diterima/ditolak dan state dipulihkan setelah reconnect.
 - Guest tidak dapat mengakses inbox pengguna lain.
 - Tangani loading, empty, error, offline, unauthorized, dan double-submit.
-- Gunakan AppColors/AppTextStyles/AppSizes/AppLocalizations; jangan hardcode.
+- Gunakan token desain dan sistem lokalisasi yang konsisten; jangan hardcode.
 - Jangan mengarang endpoint/kolom. Verifikasi ke backend sebelum menulis kode.
-- Jangan memanggil Dio baru dari widget; gunakan repository/DioClient yang ada.
+- Jangan memanggil HTTP client baru dari komponen UI; gunakan repository/data source yang ada.
 
-Selesai jika: kirim bekerja, semua state di atas tertangani, flutter analyze bersih, dan test happy path + minimal satu error path lulus.
+Selesai jika: kirim bekerja, semua state di atas tertangani, analisis statis/lint bersih, dan test otomatis sesuai platform target untuk happy path + minimal satu error path lulus.
 ```
 
 ## 1. Kapan dipakai / tidak
 
-**Dipakai** saat mengubah, menguji, me-refactor, atau mendokumentasikan `ChatDetailScreen`.
+**Dipakai** saat mengubah, menguji, me-refactor, atau mendokumentasikan layar **Detail Chat & Panggilan** (referensi implementasi: `ChatDetailScreen`).
 
 **Tidak dipakai** untuk:
 - Mengubah kontrak backend tanpa juga memperbarui PRD dan peta endpoint.
-- Mendesain ulang seluruh design system; muat `shared/flutter-screen` dan `shared/security-auth`.
+- Mendesain ulang seluruh design system; ikuti panduan desain dan keamanan bersama jika tersedia.
 - Mengubah signaling WebRTC/panggilan tanpa membaca dokumentasi chat.
 
 ## 2. Input & prasyarat
 
 | Prasyarat | Nilai |
 |---|---|
-| File layar | `lib/Features/Chat/Presentation/Screens/ChatDetail/ChatDetailScreen.dart` |
+| Referensi implementasi | `ChatDetailScreen` |
 | Route | `/chat/:id` |
 | Akses | Guest + Sanctum |
 | Parameter | Path `id` = inboxId. `extra: {cs_category, guestId/guest_id}`. |
 | Masuk dari | Dari `ChatListScreen`, notifikasi, atau tautan laporan dari katalog. |
-| Provider | `guestModeProvider`, `authProvider`, `chatProvider` |
+| State/dependency | `guestModeProvider`, `authProvider`, `chatProvider` |
 | Model | Tidak terdeteksi |
 | Endpoint | 25 |
 | Tabel | 14 |
@@ -64,23 +64,23 @@ Selesai jika: kirim bekerja, semua state di atas tertangani, flutter analyze ber
 
 | Aspek | Sumber |
 |---|---|
-| Layar & route | `lib/Core/Router/AppRouter/AppRouter.dart` |
-| Endpoint client | `lib/Core/Api/ApiEndpoints/ApiEndpoints.dart` |
-| HTTP client | `lib/Core/Api/DioClient/DioClient.dart` |
-| Desain | `lib/Core/Constants/` dan `lib/Core/Theme/` |
+| Layar & route | Konfigurasi router aplikasi |
+| Endpoint client | Definisi endpoint API klien |
+| HTTP client | HTTP client/data source bersama |
+| Desain | Token desain/tema aplikasi |
 | Backend | `../Mobile-And-Backend/routes/api` dan `app/Http/Controllers/Api/User` |
 | Database | PostgreSQL `wedding_florals_decorations` |
 | PRD | `.docs/screens/chat/chat-detail.md` |
 
 ## 4. Peta file yang akan disentuh
 
-| Layer | File | Perubahan yang diharapkan |
+| Area | Komponen | Perubahan yang diharapkan |
 |---|---|---|
-| Screen | `lib/Features/Chat/Presentation/Screens/ChatDetail/ChatDetailScreen.dart` | UI, state, interaksi |
-| Provider | `lib/Core/Utils/GuestMode/GuestMode.dart` | State/aksi domain |
-| Provider | `lib/Features/Auth/Presentation/Providers/AuthProvider/AuthProvider.dart` | State/aksi domain |
-| Provider | `lib/Features/Chat/Presentation/Providers/ChatProvider.dart` | State/aksi domain |
-| Test | `test/Features/Chat/` | Test happy path + error path |
+| Layar/UI | `ChatDetailScreen` | UI, state, interaksi |
+| State/dependency | `guestModeProvider` | State/aksi domain |
+| State/dependency | `authProvider` | State/aksi domain |
+| State/dependency | `chatProvider` | State/aksi domain |
+| Test | Test otomatis (platform target) di area Chat/` | Test happy path + error path |
 | PRD | `.docs/screens/chat/chat-detail.md` | Perbarui bila route/API/tabel berubah |
 | Prompt | `.skills/screens/chat/chat-detail/SKILL.md` | Skill ini |
 
@@ -117,7 +117,7 @@ Percakapan real-time dengan teks, lampiran, balasan, reaksi, laporan, dan panggi
 | `unauthorized` | Sesi berakhir; arahkan login/Landing | Login ulang |
 | `offline` | Banner/empty offline | Coba lagi saat online |
 | `submitting` | Tombol disabled + progress | Selesai atau tampilkan error |
-| `guest` | `GuestAuthPrompt` | Login |
+| `guest` | prompt autentikasi tamu | Login |
 | `kosong` | Empty state dengan penjelasan dan CTA lanjutan. | Ikuti aksi pemulihan pada pesan |
 | `gagal kirim` | Pesan ramah + retry; pertahankan input pengguna. | Ikuti aksi pemulihan pada pesan |
 | `reconnect` | Tampilkan status yang jelas dan aksi pemulihan. | Ikuti aksi pemulihan pada pesan |
@@ -138,27 +138,27 @@ Percakapan real-time dengan teks, lampiran, balasan, reaksi, laporan, dan panggi
 ### Fase 0 — Recon (wajib)
 
 1. Baca PRD `.docs/screens/chat/chat-detail.md` dan skill ini sampai selesai.
-2. Buka `lib/Features/Chat/Presentation/Screens/ChatDetail/ChatDetailScreen.dart`; catat widget, state, dan panggilan API yang sudah ada.
-3. Verifikasi route di `AppRouter`: `/chat/:id`.
+2. Tinjau implementasi referensi `ChatDetailScreen`; catat komponen UI, state, dan panggilan API yang sudah ada.
+3. Verifikasi route di konfigurasi router: `/chat/:id`.
 4. Verifikasi endpoint ke backend: GET /messages/conversations/{inboxId}; POST /messages/send; POST /messages/{id}/star; DELETE /messages/{id}/delete; POST /messages/{id}/forward; POST /messages/{id}/react …
 5. Cek tabel/kolom di `DATABASE.md`; jangan mengarang kolom.
 
 ### Fase 1 — Navigasi & guard
 
-1. Pastikan route dan parameter/extra sesuai. Jangan menambah route baru tanpa mendaftarkannya di `AppRouter`.
-2. Terapkan guard: Guest boleh membuka layar, tetapi aksi privat harus memunculkan `GuestAuthPrompt` dan tidak mengirim Bearer token kosong.
+1. Pastikan route dan parameter/extra sesuai. Jangan menambah route baru tanpa mendaftarkannya di konfigurasi router.
+2. Terapkan guard: Guest boleh membuka layar, tetapi aksi privat harus memunculkan prompt autentikasi tamu dan tidak mengirim Bearer token kosong.
 3. Pastikan back tidak mengulang submit dan tidak kehilangan input tanpa konfirmasi.
 
 ### Fase 2 — UI scaffold
 
-1. Susun layout sesuai blueprint PRD §5; gunakan widget yang sudah ada bila cocok.
-2. Gunakan `AppColors`, `AppTextStyles`, `AppSizes`, `AppLocalizations`.
+1. Susun layout sesuai blueprint PRD §5; gunakan komponen UI yang sudah ada bila cocok.
+2. Gunakan token desain (warna, tipografi, spacing) dan lokalisasi yang konsisten.
 3. Pastikan layout tidak overflow di 320 px dan aman terhadap keyboard/safe area.
 
 ### Fase 3 — State & data
 
 1. Implementasikan state: `initial`, `loading`, `content`, `empty`, `error`, `unauthorized`, `offline`, `submitting`, `guest`, `kosong`.
-2. Panggil API lewat repository/DioClient; jangan dari `build()`.
+2. Panggil API lewat repository/data source; jangan dari siklus render UI.
 3. Simpan state minimal yang diperlukan; jangan menduplikasi sumber kebenaran.
 4. Kelola timer/polling: mulai setelah layar siap, hentikan di `dispose`/background.
 
@@ -268,12 +268,12 @@ Envelope: `{"status":"success","message":"...","data":{}}`; periksa controller u
 ## 10. Guardrail
 
 - Jangan mengarang endpoint, parameter, atau kolom database.
-- Jangan membuat instance `Dio` baru di widget; gunakan `DioClient`/repository.
+- Jangan membuat HTTP client baru di komponen UI; gunakan data source/repository bersama.
 - Jangan memanggil API di `build()` atau setiap rebuild.
-- Jangan menyimpan token/password/PIN di `SharedPreferences` atau log.
+- Jangan menyimpan token/password/PIN di penyimpanan lokal atau log.
 - Jangan menampilkan stack trace/pesan database ke pengguna.
 - Jangan menambah dependensi baru tanpa alasan dan persetujuan.
-- Jangan mengubah route/parameter tanpa memperbarui `AppRouter` dan dokumen.
+- Jangan mengubah route/parameter tanpa memperbarui konfigurasi router dan dokumen.
 - Jangan menghapus test yang ada untuk membuat build lulus.
 - Jangan menandai pesan terkirim sebelum server mengonfirmasi.
 
@@ -282,28 +282,28 @@ Envelope: `{"status":"success","message":"...","data":{}}`; periksa controller u
 - [ ] Semua elemen UI di §5.2 tampil dan berfungsi.
 - [ ] Semua state di §5.3/§9 tertangani, termasuk error dan offline.
 - [ ] Kontrak endpoint dan tabel tidak berubah tanpa update PRD/peta endpoint.
-- [ ] Tidak ada panggilan API langsung dari `build()` atau instance Dio baru.
+- [ ] Tidak ada panggilan API langsung dari siklus render UI atau pembuatan HTTP client baru di komponen UI.
 - [ ] Nominal/stok/status berasal dari backend.
 - [ ] 401 membersihkan token dan mengarahkan ke Landing/login.
 - [ ] Tidak ada overflow di 320 px, landscape, dan text scale 200%.
 - [ ] Mode terang/gelap terbaca dan target sentuh ≥48 dp.
-- [ ] `flutter analyze` bersih.
+- [ ] Analisis statis/lint sesuai toolchain target bersih.
 - [ ] Test happy path + minimal satu error path lulus.
 - [ ] PRD dan SKILL diperbarui bila ada perubahan.
 
 ## 12. Verifikasi
 
-```powershell
-# dari root mobile_app
-rg "ChatDetailScreen" lib
-flutter analyze
-flutter test test/Features/Chat
+```text
+# verifikasi implementasi
+- Pastikan komponen/layar referensi `ChatDetailScreen` dan perilakunya sesuai
+- Jalankan analisis statis/lint sesuai toolchain target
+- Jalankan test otomatis sesuai platform target
 
-# dari root backend
-php artisan route:list --path=api | Select-String "/messages/conversations/"
+# verifikasi backend (opsional)
+- Cek route API: /messages/conversations/
 
-# dari PostgreSQL
-\d+ fm_messages
+# verifikasi database (opsional)
+- Cek tabel: fm_messages
 ```
 
 Uji manual minimum: happy path, loading, empty, error jaringan, 401, 422, double-tap submit, 320 px, mode gelap, dan text scale 200%.
@@ -313,7 +313,7 @@ Uji manual minimum: happy path, loading, empty, error jaringan, 401, 422, double
 - Layar sangat besar (3170 baris); pisahkan logika panggilan dan composer.
 - `fm_messages.inbox_id` tidak memiliki FK (GAP-11).
 - Laporan dibuat lewat `openReportChat`, bukan form laporan terpisah.
-- Layar memakai `DioClient.instance` langsung. Refactor ke repository harus menjaga kontrak dan error mapping.
+- Layar memakai HTTP client bersama langsung. Refactor ke repository harus menjaga kontrak dan error mapping.
 - Jangan mengubah nama endpoint/konstanta tanpa memperbarui PRD dan peta endpoint.
 
 ## 14. Handoff

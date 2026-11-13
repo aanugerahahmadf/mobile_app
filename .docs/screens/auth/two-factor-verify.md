@@ -1,9 +1,9 @@
 # Verifikasi 2FA saat Login
 
 > **Fitur:** Auth & Keamanan · **Route:** `/two-factor-verify` · **Akses:** Publik (challenge) · **Tipe:** Autentikasi & keamanan
-> **Implementasi:** `lib/Features/Auth/Presentation/Screens/TwoFactorVerify/TwoFactorVerifyScreen.dart` — `TwoFactorVerifyScreen` (387 baris) · **State:** Riverpod + state lokal (`setState`) · **Pola:** request-response
+> **Implementasi referensi (aplikasi saat ini):** `TwoFactorVerifyScreen` · **State:** State management terpusat + state lokal · **Pola:** request-response
 > **API:** 2 endpoint · **Tabel:** 2 · **Model:** 0
-> Diverifikasi 6 November 2026 dari kode Flutter, route Laravel, dan skema PostgreSQL. Bagian bertanda **[Usulan]** adalah rekomendasi, bukan perilaku yang sudah diverifikasi.
+> Diverifikasi 6 November 2026 dari implementasi aplikasi saat ini, route Laravel, dan skema PostgreSQL. Bagian bertanda **[Usulan]** adalah rekomendasi, bukan perilaku yang sudah diverifikasi.
 
 ## 0. Ringkasan Eksekutif
 
@@ -45,7 +45,7 @@
 | Route | `/two-factor-verify` |
 | Parameter/extra | Tidak menerima parameter; challenge disimpan di `AuthProvider`. |
 | Guard | Tidak membutuhkan token. Tetap tangani 401/403 bila endpoint berubah menjadi privat. |
-| Keluar ke | `/app-lock`, `/home`, `/landing` |
+| Keluar ke | `/home`, `/app-lock`, `/landing` |
 | Perilaku back | Kembali dapat keluar dari alur autentikasi; jangan menyimpan kredensial di state global. |
 
 ### 2.1 Layar terkait dalam fitur yang sama
@@ -83,17 +83,17 @@ flowchart TD
 
 | Aspek | Nilai |
 |---|---|
-| File | `lib/Features/Auth/Presentation/Screens/TwoFactorVerify/TwoFactorVerifyScreen.dart` |
-| Kelas layar | `TwoFactorVerifyScreen` |
-| Base widget | `ConsumerStatefulWidget` |
-| Kelas state | `_TwoFactorVerifyScreenState` |
-| State management | Riverpod + state lokal (`setState`) |
+| Komponen/layar | `TwoFactorVerifyScreen` |
+| Identifier | `TwoFactorVerifyScreen` |
+| Tipe komponen | Komponen ber-state |
+| Komponen state | Tersedia pada implementasi referensi |
+| State management | State management terpusat + state lokal |
 | Pola data | request-response |
-| Provider | `authProvider`, `currentAccountEmailProvider` |
-| Repository | Tidak terdeteksi |
+| State/dependency | `authProvider`, `currentAccountEmailProvider` |
+| Data source/repository | Tidak terdeteksi |
 | Service | Tidak terdeteksi |
-| Widget inti | `AppButton`, `AppNotification` |
-| Widget fitur | Tidak terdeteksi |
+| Komponen UI bersama | `AppButton`, `AppNotification` |
+| Komponen UI fitur | Tidak terdeteksi |
 | Model | Tidak terdeteksi |
 
 ### 4.1 State lokal yang terdeteksi
@@ -101,7 +101,7 @@ flowchart TD
 | Field | Tipe | Peran |
 |---|---|---|
 | `_formKey` | `GlobalKey<FormState>` | State lokal layar. |
-| `_codeController` | `TextEditingController` | Controller input; wajib dispose. |
+| `_codeController` | `TextEditingController` | Controller/state input; wajib dibersihkan saat tidak dipakai. |
 | `_method` | `String` | State lokal layar. |
 | `_verifying` | `bool` | State lokal layar. |
 | `_resending` | `bool` | Mencegah submit ganda. |
@@ -114,18 +114,18 @@ flowchart TD
 ### 4.3 Alur data
 
 ```text
-Widget / State
+UI / State layar
    ↓ baca/tulis
-Provider Riverpod
+State management / dependency
    ↓
-Repository / DioClient
+Repository / HTTP client
    ↓ REST
 Controller Laravel → PostgreSQL (2 tabel terkait)
 ```
 
 ## 5. Blueprint UI
 
-Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti file implementasi.
+Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti implementasi aplikasi.
 
 ```text
 ┌────────────────────────────────────────────────────────────────────┐
@@ -160,7 +160,7 @@ Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti file im
 | Dropdown | 0 |
 | Switch/toggle | 0 |
 | Validator client | 0 |
-| Field password (`obscureText`) | 0 |
+| Field password (teks tersamar) | 0 |
 | maxLength | Tidak terdeteksi |
 | Keyboard | Tidak terdeteksi |
 | Input formatter | LengthLimitingTextInputFormatter, FilteringTextInputFormatter, TextInputFormatter |
@@ -173,7 +173,7 @@ Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti file im
 
 ## 7. Copywriting & Microcopy
 
-Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocalizations` dan mengikuti gaya bahasa layar lain.
+Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai sistem lokalisasi/i18n yang konsisten dan mengikuti gaya bahasa layar lain.
 
 | Lokasi | Draft copy | Catatan |
 |---|---|---|
@@ -195,17 +195,17 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 | Token | Nilai |
 |---|---|
 | Font | Instrument Sans (W400/W600), aset lokal |
-| Warna primer | `AppColors.primaryColor` = `#1E3A5F` |
-| Aksen | `AppColors.accentColor` = `#C9A94E` |
-| Background light | `AppColors.backgroundColor` = `#F8F6F7` |
-| Surface light | `AppColors.surfaceColor` = `#FFFFFF` |
-| Background dark | `AppColors.darkBackground` = `#121212` |
-| Surface dark | `AppColors.darkSurface` = `#1E1E1E` |
+| Warna primer | `#1E3A5F` (token primer aplikasi) |
+| Aksen | `#C9A94E` |
+| Background light | `#F8F6F7` |
+| Surface light | `#FFFFFF` |
+| Background dark | `#121212` |
+| Surface dark | `#1E1E1E` |
 | Teks primer light | `#1A1A2E`; dark `#E8E8E8` |
 | Teks sekunder light | `#8E8E9A`; dark `#A0A0A0` |
 | Sukses/error/warning/info | `#10B981` / `#EF4444` / `#F59E0B` / `#3B82F6` |
 | Tipografi | `headTitle` 22/w600; `subHeadTitle` 16/w400; `h3` 14/w600; `h4` 12/w400; `description` 14/1.4 |
-| Spacing | `AppSizes` 2, 4, 8, 16, 24, 32, 48, 64 |
+| Spacing | skala 2, 4, 8, 16, 24, 32, 48, 64 |
 | Radius | card 16, button 14, input 14, avatar 28, bottom nav 24 |
 | Glass | `AppBlurBackdrop`; `blurSigma` 15; tint light `#32FFFFFF`, night `#32000000` |
 
@@ -221,7 +221,7 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 ### 8.3 Mode gelap & glass
 
 - Tema mengikuti sistem (light/dark) dan dapat di-override `ThemeProvider`.
-- Jangan hardcode warna; gunakan `AppColors`/`AppTheme` agar mode gelap bekerja.
+- Jangan hardcode warna; gunakan token/tema desain aplikasi agar mode gelap bekerja.
 - Fallback tanpa blur harus tetap kontras dan terbaca.
 - Hormati reduce-motion; animasi 3D/parallax tidak boleh menjadi satu-satunya pembeda state.
 
@@ -314,7 +314,7 @@ Akses tabel di atas adalah **indikasi dari endpoint**; verifikasi controller/ser
 
 - Jangan menampilkan data dari cache setelah logout.
 - Nominal, stok, status pesanan, dan kepemilikan resource **wajib** divalidasi backend.
-- Jangan mengakses PostgreSQL dari Flutter; gunakan endpoint Laravel.
+- Jangan mengakses PostgreSQL langsung dari klien; gunakan endpoint Laravel.
 - Filter data milik pengguna dilakukan server-side (`user_id` dari token), bukan di client.
 
 ## 12. Aturan Bisnis & Validasi
@@ -342,8 +342,8 @@ Akses tabel di atas adalah **indikasi dari endpoint**; verifikasi controller/ser
 
 - Disable tombol submit selama request berjalan untuk mencegah duplikasi.
 - Terapkan `Accept-Language` dari `localeProvider` pada setiap request.
-- Gunakan `DioClient`/repository yang sudah ada; jangan membuat instance Dio baru.
-- Guest tidak boleh memanggil endpoint privat; tampilkan `GuestAuthPrompt`.
+- Gunakan HTTP client/data source/repository yang sudah ada; jangan membuat client baru di komponen UI.
+- Guest tidak boleh memanggil endpoint privat; tampilkan prompt autentikasi tamu.
 - Jangan menyimpan password/PIN plaintext; gunakan secure storage untuk token.
 - Terapkan rate limit/lockout dan jangan membocorkan apakah akun terdaftar.
 - OTP/challenge memiliki masa berlaku; tangani kedaluwarsa.
@@ -363,7 +363,7 @@ Pemetaan status HTTP mengikuti `.docs/02-architecture/STATE-AND-ERRORS.md` (liha
 
 ## 14. Keamanan & Privasi
 
-- Token hanya di `FlutterSecureStorage`; jangan di `SharedPreferences` atau log.
+- Token hanya di secure storage; jangan di penyimpanan lokal atau log.
 - Jangan menampilkan stack trace, query database, atau detail internal pada pengguna.
 - Jangan mengirim PII ke analytics/crash report.
 - Validasi kepemilikan resource di backend; client tidak boleh menentukan `user_id`.
@@ -439,7 +439,7 @@ Belum diverifikasi apakah event berikut sudah diimplementasikan. Jangan mengirim
 
 ### 18.6 Kualitas
 
-- [ ] `flutter analyze` bersih untuk file yang diubah.
+- [ ] Analisis statis/lint sesuai toolchain target bersih untuk bagian yang diubah.
 - [ ] Test happy path dan minimal satu error path ditambahkan/diperbarui.
 - [ ] PRD/SKILL diperbarui bila route, endpoint, atau tabel berubah.
 
@@ -482,24 +482,24 @@ Belum diverifikasi apakah event berikut sudah diimplementasikan. Jangan mengirim
 |---|---|---|
 | Endpoint | POST /auth/two-factor/verify | AuthController@verifyTwoFactor |
 | Endpoint | POST /auth/two-factor/resend | AuthController@resendTwoFactorCode |
-| Database | users | Jangan query langsung dari Flutter. |
-| Database | backup_codes | Jangan query langsung dari Flutter. |
-| Provider | authProvider | lib/Features/Auth/Presentation/Providers/AuthProvider/AuthProvider.dart |
-| Provider | currentAccountEmailProvider | lib/Features/Auth/Presentation/Providers/BiometricSettingsProvider/BiometricSettingsProvider.dart |
-| Route | /two-factor-verify | Terdaftar di `AppRouter`. |
+| Database | users | Jangan query langsung dari klien. |
+| Database | backup_codes | Jangan query langsung dari klien. |
+| State/dependency | authProvider | Komponen state/dependency terkait |
+| State/dependency | currentAccountEmailProvider | Komponen state/dependency terkait |
+| Route | /two-factor-verify | Terdaftar di konfigurasi router aplikasi. |
 
 Rujukan global: [Known Gaps](../../06-reference/KNOWN-GAPS.md).
 
 ## 21. Peta Implementasi & Simbol
 
-| Layer | File/Simbol | Catatan |
+| Layer | Komponen/Referensi | Catatan |
 |---|---|---|
-| Screen | `lib/Features/Auth/Presentation/Screens/TwoFactorVerify/TwoFactorVerifyScreen.dart` · `TwoFactorVerifyScreen` | 387 baris |
-| Provider | `authProvider` | `lib/Features/Auth/Presentation/Providers/AuthProvider/AuthProvider.dart` |
-| Provider | `currentAccountEmailProvider` | `lib/Features/Auth/Presentation/Providers/BiometricSettingsProvider/BiometricSettingsProvider.dart` |
-| Widget inti | `AppButton` | `lib/Core/Widgets/AppButton/` |
-| Widget inti | `AppNotification` | `lib/Core/Widgets/AppNotification/` |
-| Test | `test/Features/Auth/` | Tambahkan test sesuai §19 |
+| Layar/UI | `TwoFactorVerifyScreen` | Implementasi referensi aplikasi saat ini |
+| State/dependency | `authProvider` | Komponen state/dependency terkait |
+| State/dependency | `currentAccountEmailProvider` | Komponen state/dependency terkait |
+| Komponen UI bersama | `AppButton` | Komponen UI reusable |
+| Komponen UI bersama | `AppNotification` | Komponen UI reusable |
+| Test | Sesuai platform target | Tambahkan test sesuai §19 |
 | Dokumen | `.docs/screens/auth/two-factor-verify.md` | PRD ini |
 | Prompt | `.skills/screens/auth/two-factor-verify/SKILL.md` | Skill layar |
 
@@ -516,4 +516,4 @@ Rujukan global: [Known Gaps](../../06-reference/KNOWN-GAPS.md).
 
 | Tanggal | Perubahan | Sumber |
 |---|---|---|
-| 6 November 2026 | Regenerasi detail: arsitektur, state machine, kontrak API, validasi, a11y, test plan | Kode Flutter, route Laravel, skema PostgreSQL |
+| 6 November 2026 | Regenerasi detail: arsitektur, state machine, kontrak API, validasi, a11y, test plan | Implementasi aplikasi, route Laravel, skema PostgreSQL |

@@ -5540,11 +5540,11 @@ abstract class AppLocalizations {
   /// **'Welcome'**
   String get welcome;
 
-  /// No description provided for @welcomeToShopFloralDecorations.
+  /// No description provided for @welcomeToShopTimelessFlorals.
   ///
   /// In en, this message translates to:
-  /// **'Welcome to Timeless Florals'**
-  String get welcomeToShopFloralDecorations;
+  /// **'Welcome to Shop Timeless Florals'**
+  String get welcomeToShopTimelessFlorals;
 
   /// No description provided for @whatsapp.
   ///

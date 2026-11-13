@@ -1,9 +1,9 @@
 # Checkout
 
 > **Fitur:** Pesanan · **Route:** `/checkout` · **Akses:** Sanctum · **Tipe:** Pesanan / checkout
-> **Implementasi:** `lib/Features/Order/Presentation/Screens/Checkout/CheckoutScreen.dart` — `CheckoutScreen` (1610 baris) · **State:** Riverpod + state lokal (`setState`) · **Pola:** request-response
+> **Implementasi referensi (aplikasi saat ini):** `CheckoutScreen` · **State:** State management terpusat + state lokal · **Pola:** request-response
 > **API:** 5 endpoint · **Tabel:** 12 · **Model:** 1
-> Diverifikasi 6 November 2026 dari kode Flutter, route Laravel, dan skema PostgreSQL. Bagian bertanda **[Usulan]** adalah rekomendasi, bukan perilaku yang sudah diverifikasi.
+> Diverifikasi 6 November 2026 dari implementasi aplikasi saat ini, route Laravel, dan skema PostgreSQL. Bagian bertanda **[Usulan]** adalah rekomendasi, bukan perilaku yang sudah diverifikasi.
 
 ## 0. Ringkasan Eksekutif
 
@@ -83,17 +83,17 @@ flowchart TD
 
 | Aspek | Nilai |
 |---|---|
-| File | `lib/Features/Order/Presentation/Screens/Checkout/CheckoutScreen.dart` |
-| Kelas layar | `CheckoutScreen` |
-| Base widget | `ConsumerStatefulWidget` |
-| Kelas state | `_CheckoutPageState` |
-| State management | Riverpod + state lokal (`setState`) |
+| Komponen/layar | `CheckoutScreen` |
+| Identifier | `CheckoutScreen` |
+| Tipe komponen | Komponen ber-state |
+| Komponen state | Tersedia pada implementasi referensi |
+| State management | State management terpusat + state lokal |
 | Pola data | request-response |
-| Provider | `authProvider`, `voucherProvider` |
-| Repository | Tidak terdeteksi |
+| State/dependency | `authProvider`, `voucherProvider` |
+| Data source/repository | Tidak terdeteksi |
 | Service | Tidak terdeteksi |
-| Widget inti | `AppButton`, `AppSnackbar`, `AppCountryPickerField`, `AppMapAddressPicker`, `AppTextField`, `AppOptionsPickerSheet`, `AppDateTimePicker`, `GuestAuthPrompt`, `AppShimmer`, `AppBreadcrumbs` |
-| Widget fitur | `AuthModals`, `PaymentMethodSelector`, `PaymentCountdown`, `UploadPaymentProof` |
+| Komponen UI bersama | `AppButton`, `AppSnackbar`, `AppCountryPickerField`, `AppMapAddressPicker`, `AppTextField`, `AppOptionsPickerSheet`, `AppDateTimePicker`, `GuestAuthPrompt`, `AppShimmer`, `AppBreadcrumbs` |
+| Komponen UI fitur | `AuthModals`, `PaymentMethodSelector`, `PaymentCountdown`, `UploadPaymentProof` |
 | Model | `VoucherModel` |
 
 ### 4.1 State lokal yang terdeteksi
@@ -101,16 +101,16 @@ flowchart TD
 | Field | Tipe | Peran |
 |---|---|---|
 | `_formKey` | `GlobalKey<FormState>` | State lokal layar. |
-| `_nameController` | `TextEditingController` | Controller input; wajib dispose. |
-| `_whatsappController` | `TextEditingController` | Controller input; wajib dispose. |
-| `_notesController` | `TextEditingController` | Controller input; wajib dispose. |
-| `_voucherController` | `TextEditingController` | Controller input; wajib dispose. |
+| `_nameController` | `TextEditingController` | Controller/state input; wajib dibersihkan saat tidak dipakai. |
+| `_whatsappController` | `TextEditingController` | Controller/state input; wajib dibersihkan saat tidak dipakai. |
+| `_notesController` | `TextEditingController` | Controller/state input; wajib dibersihkan saat tidak dipakai. |
+| `_voucherController` | `TextEditingController` | Controller/state input; wajib dibersihkan saat tidak dipakai. |
 | `_currentStep` | `int` | State lokal layar. |
 | `_loadingItem` | `bool` | Menandai proses muat/aksi. |
 | `_submitting` | `bool` | Mencegah submit ganda. |
 | `_voucherValid` | `bool` | State lokal layar. |
-| `_countryController` | `TextEditingController` | Controller input; wajib dispose. |
-| `_addressController` | `TextEditingController` | Controller input; wajib dispose. |
+| `_countryController` | `TextEditingController` | Controller/state input; wajib dibersihkan saat tidak dipakai. |
+| `_addressController` | `TextEditingController` | Controller/state input; wajib dibersihkan saat tidak dipakai. |
 | `_countryCode` | `String` | State lokal layar. |
 | `_provinceId` | `int?` | State lokal layar. |
 | `_cityId` | `int?` | State lokal layar. |
@@ -128,18 +128,18 @@ flowchart TD
 ### 4.3 Alur data
 
 ```text
-Widget / State
+UI / State layar
    ↓ baca/tulis
-Provider Riverpod
+State management / dependency
    ↓
-Repository / DioClient
+Repository / HTTP client
    ↓ REST
 Controller Laravel → PostgreSQL (12 tabel terkait)
 ```
 
 ## 5. Blueprint UI
 
-Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti file implementasi.
+Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti implementasi aplikasi.
 
 ```text
 ┌────────────────────────────────────────────────────────────────────┐
@@ -177,7 +177,7 @@ Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti file im
 | Dropdown | 0 |
 | Switch/toggle | 0 |
 | Validator client | 2 |
-| Field password (`obscureText`) | 0 |
+| Field password (teks tersamar) | 0 |
 | maxLength | Tidak terdeteksi |
 | Keyboard | number |
 | Input formatter | FilteringTextInputFormatter |
@@ -190,7 +190,7 @@ Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti file im
 
 ## 7. Copywriting & Microcopy
 
-Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocalizations` dan mengikuti gaya bahasa layar lain.
+Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai sistem lokalisasi/i18n yang konsisten dan mengikuti gaya bahasa layar lain.
 
 | Lokasi | Draft copy | Catatan |
 |---|---|---|
@@ -212,17 +212,17 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 | Token | Nilai |
 |---|---|
 | Font | Instrument Sans (W400/W600), aset lokal |
-| Warna primer | `AppColors.primaryColor` = `#1E3A5F` |
-| Aksen | `AppColors.accentColor` = `#C9A94E` |
-| Background light | `AppColors.backgroundColor` = `#F8F6F7` |
-| Surface light | `AppColors.surfaceColor` = `#FFFFFF` |
-| Background dark | `AppColors.darkBackground` = `#121212` |
-| Surface dark | `AppColors.darkSurface` = `#1E1E1E` |
+| Warna primer | `#1E3A5F` (token primer aplikasi) |
+| Aksen | `#C9A94E` |
+| Background light | `#F8F6F7` |
+| Surface light | `#FFFFFF` |
+| Background dark | `#121212` |
+| Surface dark | `#1E1E1E` |
 | Teks primer light | `#1A1A2E`; dark `#E8E8E8` |
 | Teks sekunder light | `#8E8E9A`; dark `#A0A0A0` |
 | Sukses/error/warning/info | `#10B981` / `#EF4444` / `#F59E0B` / `#3B82F6` |
 | Tipografi | `headTitle` 22/w600; `subHeadTitle` 16/w400; `h3` 14/w600; `h4` 12/w400; `description` 14/1.4 |
-| Spacing | `AppSizes` 2, 4, 8, 16, 24, 32, 48, 64 |
+| Spacing | skala 2, 4, 8, 16, 24, 32, 48, 64 |
 | Radius | card 16, button 14, input 14, avatar 28, bottom nav 24 |
 | Glass | `AppBlurBackdrop`; `blurSigma` 15; tint light `#32FFFFFF`, night `#32000000` |
 
@@ -238,7 +238,7 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 ### 8.3 Mode gelap & glass
 
 - Tema mengikuti sistem (light/dark) dan dapat di-override `ThemeProvider`.
-- Jangan hardcode warna; gunakan `AppColors`/`AppTheme` agar mode gelap bekerja.
+- Jangan hardcode warna; gunakan token/tema desain aplikasi agar mode gelap bekerja.
 - Fallback tanpa blur harus tetap kontras dan terbaca.
 - Hormati reduce-motion; animasi 3D/parallax tidak boleh menjadi satu-satunya pembeda state.
 
@@ -363,7 +363,7 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 
 | Model | File | Field kunci |
 |---|---|---|
-| `VoucherModel` | `lib/Features/Voucher/Data/Models/VoucherModel/VoucherModel.dart` | `id`, `name`, `code`, `description`, `discountAmount`, `discountType`, `minPurchase`, `expiresAt`, `isActive`, `isClaimed` |
+| `VoucherModel` | implementasi referensi aplikasi | `id`, `name`, `code`, `description`, `discountAmount`, `discountType`, `minPurchase`, `expiresAt`, `isActive`, `isClaimed` |
 
 ## 11. Data & Database
 
@@ -388,7 +388,7 @@ Akses tabel di atas adalah **indikasi dari endpoint**; verifikasi controller/ser
 
 - Jangan menampilkan data dari cache setelah logout.
 - Nominal, stok, status pesanan, dan kepemilikan resource **wajib** divalidasi backend.
-- Jangan mengakses PostgreSQL dari Flutter; gunakan endpoint Laravel.
+- Jangan mengakses PostgreSQL langsung dari klien; gunakan endpoint Laravel.
 - Filter data milik pengguna dilakukan server-side (`user_id` dari token), bukan di client.
 - Jangan menyimpulkan status pembayaran dari `orders.status`; gunakan data pembayaran/transaksi.
 
@@ -426,8 +426,8 @@ Akses tabel di atas adalah **indikasi dari endpoint**; verifikasi controller/ser
 
 - Disable tombol submit selama request berjalan untuk mencegah duplikasi.
 - Terapkan `Accept-Language` dari `localeProvider` pada setiap request.
-- Gunakan `DioClient`/repository yang sudah ada; jangan membuat instance Dio baru.
-- Guest tidak boleh memanggil endpoint privat; tampilkan `GuestAuthPrompt`.
+- Gunakan HTTP client/data source/repository yang sudah ada; jangan membuat client baru di komponen UI.
+- Guest tidak boleh memanggil endpoint privat; tampilkan prompt autentikasi tamu.
 - Stok, harga, dan ketersediaan paket divalidasi backend saat membuat pesanan.
 - Cegah submit ganda; satu tap menghasilkan satu pesanan.
 - Jangan mengirim total/harga final dari client sebagai sumber kebenaran.
@@ -449,7 +449,7 @@ Pemetaan status HTTP mengikuti `.docs/02-architecture/STATE-AND-ERRORS.md` (liha
 
 ## 14. Keamanan & Privasi
 
-- Token hanya di `FlutterSecureStorage`; jangan di `SharedPreferences` atau log.
+- Token hanya di secure storage; jangan di penyimpanan lokal atau log.
 - Jangan menampilkan stack trace, query database, atau detail internal pada pengguna.
 - Jangan mengirim PII ke analytics/crash report.
 - Validasi kepemilikan resource di backend; client tidak boleh menentukan `user_id`.
@@ -524,7 +524,7 @@ Belum diverifikasi apakah event berikut sudah diimplementasikan. Jangan mengirim
 
 ### 18.6 Kualitas
 
-- [ ] `flutter analyze` bersih untuk file yang diubah.
+- [ ] Analisis statis/lint sesuai toolchain target bersih untuk bagian yang diubah.
 - [ ] Test happy path dan minimal satu error path ditambahkan/diperbarui.
 - [ ] PRD/SKILL diperbarui bila route, endpoint, atau tabel berubah.
 
@@ -575,53 +575,53 @@ Belum diverifikasi apakah event berikut sudah diimplementasikan. Jangan mengirim
 | Endpoint | POST /vouchers/validate | VoucherController@validateVoucher |
 | Endpoint | GET /bookings | OrderController@getOrders |
 | Endpoint | POST /bookings | OrderController@createOrder |
-| Database | catalogs | Jangan query langsung dari Flutter. |
-| Database | categories | Jangan query langsung dari Flutter. |
-| Database | packages | Jangan query langsung dari Flutter. |
-| Database | reviews | Jangan query langsung dari Flutter. |
-| Database | media | Jangan query langsung dari Flutter. |
-| Database | carts | Jangan query langsung dari Flutter. |
-| Database | vouchers | Jangan query langsung dari Flutter. |
-| Database | discounts | Jangan query langsung dari Flutter. |
-| Database | user_vouchers | Jangan query langsung dari Flutter. |
-| Database | orders | Jangan query langsung dari Flutter. |
-| Database | transactions | Jangan query langsung dari Flutter. |
-| Database | order_timelines | Jangan query langsung dari Flutter. |
-| Provider | authProvider | lib/Features/Auth/Presentation/Providers/AuthProvider/AuthProvider.dart |
-| Provider | voucherProvider | lib/Features/Voucher/Presentation/Providers/VoucherProvider/VoucherProvider.dart |
-| Route | /checkout | Terdaftar di `AppRouter`. |
+| Database | catalogs | Jangan query langsung dari klien. |
+| Database | categories | Jangan query langsung dari klien. |
+| Database | packages | Jangan query langsung dari klien. |
+| Database | reviews | Jangan query langsung dari klien. |
+| Database | media | Jangan query langsung dari klien. |
+| Database | carts | Jangan query langsung dari klien. |
+| Database | vouchers | Jangan query langsung dari klien. |
+| Database | discounts | Jangan query langsung dari klien. |
+| Database | user_vouchers | Jangan query langsung dari klien. |
+| Database | orders | Jangan query langsung dari klien. |
+| Database | transactions | Jangan query langsung dari klien. |
+| Database | order_timelines | Jangan query langsung dari klien. |
+| State/dependency | authProvider | Komponen state/dependency terkait |
+| State/dependency | voucherProvider | Komponen state/dependency terkait |
+| Route | /checkout | Terdaftar di konfigurasi router aplikasi. |
 
 Rujukan global: [Known Gaps](../../06-reference/KNOWN-GAPS.md).
 
 ## 21. Peta Implementasi & Simbol
 
-| Layer | File/Simbol | Catatan |
+| Layer | Komponen/Referensi | Catatan |
 |---|---|---|
-| Screen | `lib/Features/Order/Presentation/Screens/Checkout/CheckoutScreen.dart` · `CheckoutScreen` | 1610 baris |
-| Provider | `authProvider` | `lib/Features/Auth/Presentation/Providers/AuthProvider/AuthProvider.dart` |
-| Provider | `voucherProvider` | `lib/Features/Voucher/Presentation/Providers/VoucherProvider/VoucherProvider.dart` |
-| Model | `VoucherModel` | `lib/Features/Voucher/Data/Models/VoucherModel/VoucherModel.dart` |
-| Widget inti | `AppButton` | `lib/Core/Widgets/AppButton/` |
-| Widget inti | `AppSnackbar` | `lib/Core/Widgets/AppSnackbar/` |
-| Widget inti | `AppCountryPickerField` | `lib/Core/Widgets/AppCountryPickerField/` |
-| Widget inti | `AppMapAddressPicker` | `lib/Core/Widgets/AppMapAddressPicker/` |
-| Widget inti | `AppTextField` | `lib/Core/Widgets/AppTextField/` |
-| Widget inti | `AppOptionsPickerSheet` | `lib/Core/Widgets/AppOptionsPickerSheet/` |
-| Widget inti | `AppDateTimePicker` | `lib/Core/Widgets/AppDateTimePicker/` |
-| Widget inti | `GuestAuthPrompt` | `lib/Core/Widgets/GuestAuthPrompt/` |
-| Widget inti | `AppShimmer` | `lib/Core/Widgets/AppShimmer/` |
-| Widget inti | `AppBreadcrumbs` | `lib/Core/Widgets/AppBreadcrumbs/` |
-| Widget fitur | `AuthModals` | Berada di `Presentation/Widgets/` fitur terkait |
-| Widget fitur | `PaymentMethodSelector` | Berada di `Presentation/Widgets/` fitur terkait |
-| Widget fitur | `PaymentCountdown` | Berada di `Presentation/Widgets/` fitur terkait |
-| Widget fitur | `UploadPaymentProof` | Berada di `Presentation/Widgets/` fitur terkait |
-| Test | `test/Features/Pesanan/` | Tambahkan test sesuai §19 |
+| Layar/UI | `CheckoutScreen` | Implementasi referensi aplikasi saat ini |
+| State/dependency | `authProvider` | Komponen state/dependency terkait |
+| State/dependency | `voucherProvider` | Komponen state/dependency terkait |
+| Model/data | `VoucherModel` | Struktur data terkait |
+| Komponen UI bersama | `AppButton` | Komponen UI reusable |
+| Komponen UI bersama | `AppSnackbar` | Komponen UI reusable |
+| Komponen UI bersama | `AppCountryPickerField` | Komponen UI reusable |
+| Komponen UI bersama | `AppMapAddressPicker` | Komponen UI reusable |
+| Komponen UI bersama | `AppTextField` | Komponen UI reusable |
+| Komponen UI bersama | `AppOptionsPickerSheet` | Komponen UI reusable |
+| Komponen UI bersama | `AppDateTimePicker` | Komponen UI reusable |
+| Komponen UI bersama | `GuestAuthPrompt` | Komponen UI reusable |
+| Komponen UI bersama | `AppShimmer` | Komponen UI reusable |
+| Komponen UI bersama | `AppBreadcrumbs` | Komponen UI reusable |
+| Komponen UI fitur | `AuthModals` | Komponen UI khusus fitur |
+| Komponen UI fitur | `PaymentMethodSelector` | Komponen UI khusus fitur |
+| Komponen UI fitur | `PaymentCountdown` | Komponen UI khusus fitur |
+| Komponen UI fitur | `UploadPaymentProof` | Komponen UI khusus fitur |
+| Test | Sesuai platform target | Tambahkan test sesuai §19 |
 | Dokumen | `.docs/screens/order/checkout.md` | PRD ini |
 | Prompt | `.skills/screens/order/checkout/SKILL.md` | Skill layar |
 
 **Metode internal terdeteksi:** `_parseDialCode`, `_digitsAfterDialCode`, `_fetchItem`, `_loadFromCart`, `_pickDate`, `_pickTime`, `_checkVoucher`, `_checkVoucherFallback`, `_getItemPrice`, `_getBaseTotal`, `_getFinalPrice`, `_getItemName`, `_getItemImage`, `_nextStep`, `_prevStep`, `_requireAuthThen`, `_handleCheckout`, `_refreshAfterUpload`, `_openPaymentMethod`, `_countryCodeLabel`.
 
-> **Catatan arsitektur:** layar memakai `DioClient.instance` langsung. Saat refactor, pindahkan ke repository/provider tanpa mengubah kontrak.
+> **Catatan arsitektur:** layar memakai HTTP client bersama langsung. Saat refactor, pindahkan ke repository/provider tanpa mengubah kontrak.
 
 ## 22. Referensi & Riwayat
 
@@ -634,4 +634,4 @@ Rujukan global: [Known Gaps](../../06-reference/KNOWN-GAPS.md).
 
 | Tanggal | Perubahan | Sumber |
 |---|---|---|
-| 6 November 2026 | Regenerasi detail: arsitektur, state machine, kontrak API, validasi, a11y, test plan | Kode Flutter, route Laravel, skema PostgreSQL |
+| 6 November 2026 | Regenerasi detail: arsitektur, state machine, kontrak API, validasi, a11y, test plan | Implementasi aplikasi, route Laravel, skema PostgreSQL |

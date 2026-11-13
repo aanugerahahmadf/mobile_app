@@ -57,3 +57,5 @@ build_debug.txt
 
 # Artefak hasil `flutter test` yang menimpa report dari test runner.
 test_run.json
+
+**/java_pid*.hprof

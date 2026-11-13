@@ -1,19 +1,19 @@
 # Landing
 
 > **Fitur:** Splash & Landing · **Route:** `/landing` · **Akses:** Publik · **Tipe:** Konten / navigasi
-> **Implementasi:** `lib/Features/Splash/Presentation/Screens/Landing/LandingScreen.dart` — `LandingScreen` (289 baris) · **State:** Riverpod + state lokal (`setState`) · **Pola:** request-response
-> **API:** 8 endpoint · **Tabel:** 4 · **Model:** 0
-> Diverifikasi 6 November 2026 dari kode Flutter, route Laravel, dan skema PostgreSQL. Bagian bertanda **[Usulan]** adalah rekomendasi, bukan perilaku yang sudah diverifikasi.
+> **Implementasi referensi (aplikasi saat ini):** `LandingScreen` · **State:** State management terpusat + state lokal · **Pola:** request-response
+> **API:** 1 endpoint · **Tabel:** 2 · **Model:** 0
+> Diverifikasi 6 November 2026 dari implementasi aplikasi saat ini, route Laravel, dan skema PostgreSQL. Bagian bertanda **[Usulan]** adalah rekomendasi, bukan perilaku yang sudah diverifikasi.
 
 ## 0. Ringkasan Eksekutif
 
 | Aspek | Ringkasan |
 |---|---|
-| Tujuan | Gerbang masuk: login, registrasi, login sosial, atau lanjut sebagai guest. |
+| Tujuan | Gerbang masuk satu pintu: checkbox persetujuan + tombol Google via Firebase; tamu hanya bisa membuka Customer Service tanpa login. |
 | Aktor | Pengunjung publik |
-| Nilai pengguna | Gerbang masuk: login, registrasi, login sosial, atau lanjut sebagai guest. |
+| Nilai pengguna | Gerbang masuk satu pintu: checkbox persetujuan + tombol Google via Firebase; tamu hanya bisa membuka Customer Service tanpa login. |
 | Definisi sukses | Konten utama tampil dan navigasi lanjutan berfungsi. |
-| Risiko utama | `POST /login` dan `/register` tidak tersedia di backend (GAP-01). |
+| Risiko utama | Persetujuan diwajibkan lewat checkbox di UI sebelum autentikasi Google dimulai. |
 | Status dokumen | Kontrak terdokumentasi; ada gap yang harus ditangani |
 
 ## 1. Konteks Fitur
@@ -22,14 +22,16 @@
 
 | Persona | Kebutuhan | Ukuran keberhasilan |
 |---|---|---|
-| Pelanggan dekorasi pernikahan | Gerbang masuk: login, registrasi, login sosial, atau lanjut sebagai guest. | Konten utama tampil dan navigasi lanjutan berfungsi. |
+| Pelanggan dekorasi pernikahan | Gerbang masuk satu pintu: checkbox persetujuan + tombol Google via Firebase; tamu hanya bisa membuka Customer Service tanpa login. | Konten utama tampil dan navigasi lanjutan berfungsi. |
 
 ### 1.2 In scope
 
-- Tampilkan branding dan tombol masuk.
-- Buka modal login/registrasi.
-- Login Google/Facebook/Apple.
-- Masuk sebagai guest.
+- Tampilkan gambar hero, greeting, checkbox persetujuan, dan satu tombol Google.
+- Pengguna wajib menyetujui Terms/Privacy/Wedding Policy lewat checkbox; saat dicentang, wizard persetujuan (`AuthModals`) ditampilkan dan persetujuan dicatat setelah diselesaikan. Tombol Google aktif setelah disetujui.
+- Tap Google (saat setuju): set `onboarding_seen`, jalankan `GoogleSignIn.signIn()` lalu `FirebaseAuth.signInWithCredential()` untuk mendapat ID token.
+- Kirim `firebase_id_token` (fallback `google_id_token`/`id_token`) ke `POST /auth/google`.
+- Server memverifikasi token, menerbitkan token Sanctum, lalu lanjutan OTP/2FA/Complete Profile ditangani `AuthNavigation`.
+- Sukses: set `onboarding_seen`, buka `/app-lock` bila app lock aktif, selain itu `/home`.
 
 ### 1.3 Out of scope
 
@@ -46,7 +48,7 @@
 | Parameter/extra | Tidak ada parameter khusus. |
 | Guard | Tidak membutuhkan token. Tetap tangani 401/403 bila endpoint berubah menjadi privat. |
 | Keluar ke | `/app-lock`, `/home`, `/chat-list` |
-| Perilaku back | Gunakan tombol back bawaan `go_router`; jangan membuat navigasi manual yang menduplikasi route. |
+| Perilaku back | Gunakan navigasi kembali bawaan router; jangan membuat navigasi manual yang menduplikasi route. |
 
 ### 2.1 Layar terkait dalam fitur yang sama
 
@@ -56,10 +58,12 @@
 
 ## 3. Alur Pengguna
 
-1. Tampilkan branding dan tombol masuk.
-2. Buka modal login/registrasi.
-3. Login Google/Facebook/Apple.
-4. Masuk sebagai guest.
+1. Tampilkan gambar hero, greeting, checkbox persetujuan, dan satu tombol Google.
+2. Pengguna wajib menyetujui Terms/Privacy/Wedding Policy lewat checkbox; saat dicentang, wizard persetujuan (`AuthModals`) ditampilkan dan persetujuan dicatat setelah diselesaikan. Tombol Google aktif setelah disetujui.
+3. Tap Google (saat setuju): set `onboarding_seen`, jalankan `GoogleSignIn.signIn()` lalu `FirebaseAuth.signInWithCredential()` untuk mendapat ID token.
+4. Kirim `firebase_id_token` (fallback `google_id_token`/`id_token`) ke `POST /auth/google`.
+5. Server memverifikasi token, menerbitkan token Sanctum, lalu lanjutan OTP/2FA/Complete Profile ditangani `AuthNavigation`.
+6. Sukses: set `onboarding_seen`, buka `/app-lock` bila app lock aktif, selain itu `/home`.
 
 **Decision points yang wajib diuji:**
 
@@ -68,8 +72,8 @@
 ```mermaid
 flowchart TD
   A["Masuk: Awal aplikasi setelah startup, atau setelah logout."] --> B["Render awal / muat data"]
-  B -->|sukses| C["Logo"]
-  C --> D["Masuk sebagai guest."]
+  B -->|sukses| C["Gambar hero"]
+  C --> D["Sukses: set onboarding_seen, buka /app-lock bila app lock aktif, selain itu /home."]
   B -->|gagal| E["Error state + retry"]
   E --> B
   D --> F["Selesai / navigasi keluar"]
@@ -79,73 +83,75 @@ flowchart TD
 
 | Aspek | Nilai |
 |---|---|
-| File | `lib/Features/Splash/Presentation/Screens/Landing/LandingScreen.dart` |
-| Kelas layar | `LandingScreen` |
-| Base widget | `ConsumerStatefulWidget` |
-| Kelas state | `_LandingPageState` |
-| State management | Riverpod + state lokal (`setState`) |
+| Komponen/layar | `LandingScreen` |
+| Identifier | `LandingScreen` |
+| Tipe komponen | Komponen ber-state |
+| Komponen state | Tersedia pada implementasi referensi |
+| State management | State management terpusat + state lokal |
 | Pola data | request-response |
-| Provider | `authProvider`, `currentAccountEmailProvider`, `localeProvider` |
-| Repository | Tidak terdeteksi |
+| State/dependency | `authProvider`, `currentAccountEmailProvider`, `localeProvider` |
+| Data source/repository | Tidak terdeteksi |
 | Service | Tidak terdeteksi |
-| Widget inti | `AppBlurBackdrop` |
-| Widget fitur | `SocialLoginButton`, `AuthModals` |
+| Komponen UI bersama | `AppBlurBackdrop` |
+| Komponen UI fitur | `SocialSignInButton`, `AuthModals` |
 | Model | Tidak terdeteksi |
 
 ### 4.1 State lokal yang terdeteksi
 
 | Field | Tipe | Peran |
 |---|---|---|
+| `_agreedToTerms` | `bool` | State lokal layar. |
 | `_routeScheduled` | `bool` | State lokal layar. |
 
 ### 4.2 Metode internal
 
-`_markOnboardingSeen`, `_routeAfterAuth`, `_buildLandingUI`, `_openCs`, `_blob`, `_buildButtons`, `_buildFooter`.
+`_setAgreedToTerms`, `_markOnboardingSeen`, `_routeAfterAuth`, `_buildLandingUI`, `_openCs`, `_blob`, `_buildButtons`, `_buildFooter`.
 
 ### 4.3 Alur data
 
 ```text
-Widget / State
+UI / State layar
    ↓ baca/tulis
-Provider Riverpod
+State management / dependency
    ↓
-Repository / DioClient
+Repository / HTTP client
    ↓ REST
-Controller Laravel → PostgreSQL (4 tabel terkait)
+Controller Laravel → PostgreSQL (2 tabel terkait)
 ```
 
 ## 5. Blueprint UI
 
-Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti file implementasi.
+Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti implementasi aplikasi.
 
 ```text
 ┌────────────────────────────────────────────────────────────────────┐
 │ Landing                                                           │
 ├────────────────────────────────────────────────────────────────────┤
-│ 1. Logo                                                           │
-│ 2. Tombol masuk                                                   │
-│ 3. Tombol daftar                                                  │
-│ 4. Tombol sosial                                                  │
-│ 5. Tombol guest                                                   │
-│ 6. Modal auth                                                     │
+│ 1. Gambar hero                                                    │
+│ 2. Greeting selamat datang                                        │
+│ 3. Checkbox persetujuan Terms/Privacy/Wedding Policy              │
+│ 4. Tombol Google (`SocialSignInButton`, nonaktif sampai           │
+│ disetujui)                                                        │
+│ 5. Ikon Customer Service (guest chat)                             │
+│ 6. Footer persetujuan Terms/Privacy/Policy                        │
 └────────────────────────────────────────────────────────────────────┘
 ```
 
 **Komponen bersama yang terdeteksi:**
 
 - Core: `AppBlurBackdrop`
-- Fitur: `SocialLoginButton`, `AuthModals`
+- Fitur: `SocialSignInButton`, `AuthModals`
 
 ## 6. Inventaris Komponen & Interaksi
 
 | # | Elemen | Jenis | Aksi | Feedback |
 |---|---|---|---|---|
-| 1 | Logo | Konten | Tampilkan informasi; tidak ada aksi tulis. | Loading/error state tetap wajib. |
-| 2 | Tombol masuk | Aksi | Tap → jalankan aksi utama layar. | Disabled saat loading; error lewat SnackBar/inline. |
-| 3 | Tombol daftar | Aksi | Tap → jalankan aksi utama layar. | Disabled saat loading; error lewat SnackBar/inline. |
-| 4 | Tombol sosial | Aksi | Tap → jalankan aksi utama layar. | Disabled saat loading; error lewat SnackBar/inline. |
-| 5 | Tombol guest | Aksi | Tap → jalankan aksi utama layar. | Disabled saat loading; error lewat SnackBar/inline. |
-| 6 | Modal auth | Overlay | Konfirmasi/pilih; tutup dengan back atau aksi batal. | Fokus terperangkap; dismiss aman. |
+| 1 | Gambar hero | Lampiran | Pilih file; validasi tipe/ukuran sebelum upload. | Progress upload; error tipe/ukuran. |
+| 2 | Greeting selamat datang | Konten | Tampilkan informasi; tidak ada aksi tulis. | Loading/error state tetap wajib. |
+| 3 | Checkbox persetujuan Terms/Privacy/Wedding Policy | Toggle | Ubah preferensi; simpan segera atau lewat tombol simpan. | Simpan optimistic dengan rollback bila gagal. |
+| 4 | Tombol Google (`SocialSignInButton`, nonaktif sampai disetujui) | Aksi | Tap → jalankan aksi utama layar. | Disabled saat loading; error lewat SnackBar/inline. |
+| 5 | Ikon Customer Service (guest chat) | Konten | Tampilkan informasi; tidak ada aksi tulis. | Loading/error state tetap wajib. |
+| 6 | Footer persetujuan Terms/Privacy/Policy | Konten | Tampilkan informasi; tidak ada aksi tulis. | Loading/error state tetap wajib. |
 
 ### 6.1 Fakta teknis form & interaksi
 
@@ -156,7 +162,7 @@ Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti file im
 | Dropdown | 0 |
 | Switch/toggle | 0 |
 | Validator client | 0 |
-| Field password (`obscureText`) | 0 |
+| Field password (teks tersamar) | 0 |
 | maxLength | Tidak terdeteksi |
 | Keyboard | Tidak terdeteksi |
 | Input formatter | Tidak terdeteksi |
@@ -169,13 +175,13 @@ Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti file im
 
 ## 7. Copywriting & Microcopy
 
-Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocalizations` dan mengikuti gaya bahasa layar lain.
+Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai sistem lokalisasi/i18n yang konsisten dan mengikuti gaya bahasa layar lain.
 
 | Lokasi | Draft copy | Catatan |
 |---|---|---|
 | Judul/header | Landing | Samakan dengan label navigasi. |
-| Subjudul | Gerbang masuk: login, registrasi, login sosial, atau lanjut sebagai guest. | Ringkas; jangan mengulang judul. |
-| Tombol utama | Masuk sebagai guest | [Usulan] Disabled saat proses. |
+| Subjudul | Gerbang masuk satu pintu: checkbox persetujuan + tombol Google via Firebase; tamu hanya b… | Ringkas; jangan mengulang judul. |
+| Tombol utama | Lanjutkan | [Usulan] Disabled saat proses. |
 | Empty state | Belum ada landing. | [Usulan] Sertakan CTA lanjutan. |
 | Error | Gagal memuat landing. Periksa koneksi lalu coba lagi. | [Usulan] Jangan tampilkan stack trace. |
 | Retry | Coba lagi | [Usulan] Pertahankan data lama bila ada. |
@@ -189,17 +195,17 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 | Token | Nilai |
 |---|---|
 | Font | Instrument Sans (W400/W600), aset lokal |
-| Warna primer | `AppColors.primaryColor` = `#1E3A5F` |
-| Aksen | `AppColors.accentColor` = `#C9A94E` |
-| Background light | `AppColors.backgroundColor` = `#F8F6F7` |
-| Surface light | `AppColors.surfaceColor` = `#FFFFFF` |
-| Background dark | `AppColors.darkBackground` = `#121212` |
-| Surface dark | `AppColors.darkSurface` = `#1E1E1E` |
+| Warna primer | `#1E3A5F` (token primer aplikasi) |
+| Aksen | `#C9A94E` |
+| Background light | `#F8F6F7` |
+| Surface light | `#FFFFFF` |
+| Background dark | `#121212` |
+| Surface dark | `#1E1E1E` |
 | Teks primer light | `#1A1A2E`; dark `#E8E8E8` |
 | Teks sekunder light | `#8E8E9A`; dark `#A0A0A0` |
 | Sukses/error/warning/info | `#10B981` / `#EF4444` / `#F59E0B` / `#3B82F6` |
 | Tipografi | `headTitle` 22/w600; `subHeadTitle` 16/w400; `h3` 14/w600; `h4` 12/w400; `description` 14/1.4 |
-| Spacing | `AppSizes` 2, 4, 8, 16, 24, 32, 48, 64 |
+| Spacing | skala 2, 4, 8, 16, 24, 32, 48, 64 |
 | Radius | card 16, button 14, input 14, avatar 28, bottom nav 24 |
 | Glass | `AppBlurBackdrop`; `blurSigma` 15; tint light `#32FFFFFF`, night `#32000000` |
 
@@ -215,7 +221,7 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 ### 8.3 Mode gelap & glass
 
 - Tema mengikuti sistem (light/dark) dan dapat di-override `ThemeProvider`.
-- Jangan hardcode warna; gunakan `AppColors`/`AppTheme` agar mode gelap bekerja.
+- Jangan hardcode warna; gunakan token/tema desain aplikasi agar mode gelap bekerja.
 - Fallback tanpa blur harus tetap kontras dan terbaca.
 - Hormati reduce-motion; animasi 3D/parallax tidak boleh menjadi satu-satunya pembeda state.
 
@@ -230,10 +236,13 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 | `error` | Request gagal | Pesan ramah + tombol coba lagi | Retry |
 | `offline` | Koneksi putus | Banner/empty offline | Coba lagi saat online |
 | `submitting` | Pengguna menekan aksi utama | Tombol disabled + progress | Selesai atau tampilkan error |
+| `belum setuju (tombol Google nonaktif)` | Kondisi domain | Tampilkan status yang jelas dan aksi pemulihan. | Ikuti aksi pemulihan pada pesan |
+| `loading (`AuthLoading`)` | Kondisi domain | Skeleton/spinner; blokir aksi ganda. | Ikuti aksi pemulihan pada pesan |
 | `login gagal` | Kondisi domain | Pesan ramah + retry; pertahankan input pengguna. | Ikuti aksi pemulihan pada pesan |
 | `2FA diperlukan` | Kondisi domain | Tampilkan status yang jelas dan aksi pemulihan. | Ikuti aksi pemulihan pada pesan |
-| `akun terkunci` | Kondisi domain | Tampilkan countdown/instruksi pemulihan; jangan bocorkan detail. | Ikuti aksi pemulihan pada pesan |
-| `guest` | Kondisi domain | Tampilkan `GuestAuthPrompt`; jangan panggil endpoint privat. | Ikuti aksi pemulihan pada pesan |
+| `OTP/Complete Profile` | Kondisi domain | Tampilkan status yang jelas dan aksi pemulihan. | Ikuti aksi pemulihan pada pesan |
+| `guest chat` | Kondisi domain | Tampilkan prompt autentikasi tamu; jangan panggil endpoint privat. | Ikuti aksi pemulihan pada pesan |
+| `app lock` | Kondisi domain | Tampilkan status yang jelas dan aksi pemulihan. | Ikuti aksi pemulihan pada pesan |
 
 **Aturan umum:** setiap request harus melewati `idle → loading → success/empty/failure`; jangan merender hasil request langsung di `build()`.
 
@@ -243,36 +252,11 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 
 | # | Method | Path | Controller | Auth | Kegunaan |
 |---|---|---|---|---|---|
-| 1 | `ANY` | `/login` | `-` | Tidak ada | Masuk dengan email dan password |
-| 2 | `ANY` | `/register` | `-` | Tidak ada | Registrasi akun baru |
-| 3 | `POST` | `/auth/google` | `AuthController@googleLogin` | Publik | Login Google memakai Firebase ID token |
-| 4 | `POST` | `/auth/facebook` | `AuthController@facebookLogin` | Publik | Login Facebook |
-| 5 | `POST` | `/auth/apple` | `AuthController@appleLogin` | Publik | Login Apple |
-| 6 | `POST` | `/auth/send-otp` | `AuthController@sendOtp` | Publik | Mengirim OTP email/WhatsApp |
-| 7 | `POST` | `/auth/verify-otp` | `AuthController@verifyOtp` | Publik | Memverifikasi OTP |
-| 8 | `POST` | `/auth/two-factor/verify` | `AuthController@verifyTwoFactor` | Publik | Memverifikasi tantangan 2FA |
+| 1 | `POST` | `/auth/google` | `AuthController@googleLogin` | Publik | Login Google memakai Firebase ID token |
 
 ### 10.2 Detail per endpoint
 
-#### 10.2.1 `ANY /login`
-
-- **Controller:** `-`
-- **Auth:** Tidak ada
-- **Kegunaan:** Masuk dengan email dan password
-- **Catatan:** Rute belum terdaftar di backend.
-- **Field request:** tidak ada aturan validasi field yang terdeteksi otomatis (GET, validasi di service, atau `FormRequest` lain). Periksa controller sebelum menulis kode.
-- **Mismatch:** konstanta client belum cocok dengan route backend; lihat [Known Gaps](../../06-reference/KNOWN-GAPS.md).
-
-#### 10.2.2 `ANY /register`
-
-- **Controller:** `-`
-- **Auth:** Tidak ada
-- **Kegunaan:** Registrasi akun baru
-- **Catatan:** Rute belum terdaftar di backend.
-- **Field request:** tidak ada aturan validasi field yang terdeteksi otomatis (GET, validasi di service, atau `FormRequest` lain). Periksa controller sebelum menulis kode.
-- **Mismatch:** konstanta client belum cocok dengan route backend; lihat [Known Gaps](../../06-reference/KNOWN-GAPS.md).
-
-#### 10.2.3 `POST /auth/google`
+#### 10.2.1 `POST /auth/google`
 
 - **Controller:** `AuthController@googleLogin`
 - **Auth:** Publik
@@ -281,88 +265,12 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 
 | Field request | Aturan | Wajib |
 |---|---|---|
-| `firebase_id_token` | `required|string` | Ya |
+| `firebase_id_token` | `nullable|string` | Tidak |
+| `google_id_token` | `nullable|string` | Tidak |
+| `id_token` | `nullable|string` | Tidak |
 
 - **Response top-level:** `status`, `message`, `data`, `error_code`
-- **Pesan error terbaca:** “Token Firebase tidak valid atau sudah kedaluwarsa”; “Akun Google tidak memiliki email yang dapat digunakan”; “Login berhasil”; “Akun Google kamu sudah terdaftar. Silakan masuk dengan email dan password.”
-
-#### 10.2.4 `POST /auth/facebook`
-
-- **Controller:** `AuthController@facebookLogin`
-- **Auth:** Publik
-- **Kegunaan:** Login Facebook
-- **Sumber aturan:** `../Mobile-And-Backend/app/Http/Controllers/Api/User/AuthController/AuthController.php`
-
-| Field request | Aturan | Wajib |
-|---|---|---|
-| `access_token` | `required|string` | Ya |
-| `fields` | `id,name,email,picture` | Tidak |
-
-- **Response top-level:** `status`, `message`, `error_code`
-- **Pesan error terbaca:** “Gagal memverifikasi token Facebook”; “Token Facebook tidak valid”; “Akun Facebook kamu sudah terdaftar. Silakan masuk dengan email dan password.”
-
-#### 10.2.5 `POST /auth/apple`
-
-- **Controller:** `AuthController@appleLogin`
-- **Auth:** Publik
-- **Kegunaan:** Login Apple
-- **Sumber aturan:** `../Mobile-And-Backend/app/Http/Controllers/Api/User/AuthController/AuthController.php`
-
-| Field request | Aturan | Wajib |
-|---|---|---|
-| `identity_token` | `required|string` | Ya |
-
-- **Response top-level:** `status`, `message`
-- **Pesan error terbaca:** “Token Apple tidak valid”
-
-#### 10.2.6 `POST /auth/send-otp`
-
-- **Controller:** `AuthController@sendOtp`
-- **Auth:** Publik
-- **Kegunaan:** Mengirim OTP email/WhatsApp
-- **Sumber aturan:** `../Mobile-And-Backend/app/Http/Controllers/Api/User/AuthController/AuthController.php`
-
-| Field request | Aturan | Wajib |
-|---|---|---|
-| `email` | `required_without:whatsapp|email` | Ya |
-| `whatsapp` | `required_without:email|string` | Ya |
-| `purpose` | `required|string|in:google_register,forgot_password,verify_email,reset_app_lock,verify_whatsapp` | Ya |
-
-- **Response top-level:** `status`, `message`
-- **Pesan error terbaca:** “Tujuan OTP tidak valid”; “Format nomor WhatsApp tidak valid”; “Kode OTP berhasil dikirim ke WhatsApp”; “User tidak ditemukan”
-
-#### 10.2.7 `POST /auth/verify-otp`
-
-- **Controller:** `AuthController@verifyOtp`
-- **Auth:** Publik
-- **Kegunaan:** Memverifikasi OTP
-- **Sumber aturan:** `../Mobile-And-Backend/app/Http/Controllers/Api/User/AuthController/AuthController.php`
-
-| Field request | Aturan | Wajib |
-|---|---|---|
-| `email` | `required_without:whatsapp|email` | Ya |
-| `whatsapp` | `required_without:email|string` | Ya |
-| `otp` | `required|string|size:6` | Ya |
-| `purpose` | `required|string|in:google_register,forgot_password,verify_email,reset_app_lock,verify_whatsapp` | Ya |
-
-- **Response top-level:** `status`, `message`, `data`
-- **Pesan error terbaca:** “Tujuan OTP tidak valid”; “Kode OTP tidak valid atau sudah kedaluwarsa”; “OTP berhasil diverifikasi”
-
-#### 10.2.8 `POST /auth/two-factor/verify`
-
-- **Controller:** `AuthController@verifyTwoFactor`
-- **Auth:** Publik
-- **Kegunaan:** Memverifikasi tantangan 2FA
-- **Sumber aturan:** `../Mobile-And-Backend/app/Http/Controllers/Api/User/AuthController/AuthController.php`
-
-| Field request | Aturan | Wajib |
-|---|---|---|
-| `challenge_token` | `required|string` | Ya |
-| `code` | `required|string|max:12` | Ya |
-| `method` | `nullable|string|in:` | Tidak |
-
-- **Response top-level:** `status`, `message`, `errors`, `error`, `token`, `user`, `data`
-- **Pesan error terbaca:** “Validasi gagal”; “Kode yang Anda masukkan tidak cocok atau sudah kadaluarsa.”; “Verifikasi Berhasil”
+- **Pesan error terbaca:** “Token Firebase tidak valid atau sudah kedaluwarsa”; “Login berhasil”; “Akun Google kamu sudah terdaftar. Silakan masuk dengan email dan password.”; “Registrasi berhasil”
 
 **Envelope acuan** (periksa controller untuk variasi):
 
@@ -389,8 +297,6 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 |---|---|---|---|
 | `users` | Akun, profil, KYC, preferensi, dan pengaturan keamanan. | Baca/tulis (indikasi) | `id`, `full_name`, `first_name`, `mid_name`, `last_name`, `username`, `email`, `balance`, `email_verified_at`, `password` … |
 | `personal_access_tokens` | Token Sanctum perangkat. | Baca/tulis (indikasi) | `id`, `tokenable_type`, `tokenable_id`, `name`, `token`, `abilities`, `last_used_at`, `expires_at`, `created_at`, `updated_at` |
-| `whatsapp_otps` | Kode OTP dan masa berlaku. | Baca/tulis (indikasi) | `id`, `whatsapp`, `otp_code`, `expires_at`, `verified_at`, `created_at`, `updated_at` |
-| `backup_codes` | Kode pemulihan 2FA. | Baca/tulis (indikasi) | `id`, `user_id`, `code`, `used`, `used_at`, `created_at`, `updated_at` |
 
 Akses tabel di atas adalah **indikasi dari endpoint**; verifikasi controller/service untuk memastikan operasi baca/tulis yang sebenarnya.
 
@@ -398,35 +304,25 @@ Akses tabel di atas adalah **indikasi dari endpoint**; verifikasi controller/ser
 
 - Jangan menampilkan data dari cache setelah logout.
 - Nominal, stok, status pesanan, dan kepemilikan resource **wajib** divalidasi backend.
-- Jangan mengakses PostgreSQL dari Flutter; gunakan endpoint Laravel.
+- Jangan mengakses PostgreSQL langsung dari klien; gunakan endpoint Laravel.
 - Filter data milik pengguna dilakukan server-side (`user_id` dari token), bukan di client.
-- Preferensi lokal disimpan di `SharedPreferences`; token tetap di `FlutterSecureStorage`.
+- Preferensi lokal disimpan di penyimpanan lokal; token tetap di secure storage.
 
 ## 12. Aturan Bisnis & Validasi
 
 ### 12.1 Acceptance dari registry
 
-- Login sukses menyimpan token dan membuka Home/AppLock.
-- Guest dapat masuk tanpa token.
+- Tombol Google hanya aktif bila checkbox persetujuan dicentang dan tidak sedang loading.
+- Login Google sukses menyimpan token Sanctum lalu membuka Home/AppLock.
+- Layar ini tidak menampilkan form email/password, tombol daftar, maupun tombol guest.
 
 ### 12.2 Validasi server yang terbaca dari controller
 
 | Field | Aturan | Endpoint |
 |---|---|---|
-| `firebase_id_token` | `required|string` | `/auth/google` |
-| `access_token` | `required|string` | `/auth/facebook` |
-| `fields` | `id,name,email,picture` | `/auth/facebook` |
-| `identity_token` | `required|string` | `/auth/apple` |
-| `email` | `required_without:whatsapp|email` | `/auth/send-otp` |
-| `whatsapp` | `required_without:email|string` | `/auth/send-otp` |
-| `purpose` | `required|string|in:google_register,forgot_password,verify_email,reset_app_lock,verify_whatsapp` | `/auth/send-otp` |
-| `email` | `required_without:whatsapp|email` | `/auth/verify-otp` |
-| `whatsapp` | `required_without:email|string` | `/auth/verify-otp` |
-| `otp` | `required|string|size:6` | `/auth/verify-otp` |
-| `purpose` | `required|string|in:google_register,forgot_password,verify_email,reset_app_lock,verify_whatsapp` | `/auth/verify-otp` |
-| `challenge_token` | `required|string` | `/auth/two-factor/verify` |
-| `code` | `required|string|max:12` | `/auth/two-factor/verify` |
-| `method` | `nullable|string|in:` | `/auth/two-factor/verify` |
+| `firebase_id_token` | `nullable|string` | `/auth/google` |
+| `google_id_token` | `nullable|string` | `/auth/google` |
+| `id_token` | `nullable|string` | `/auth/google` |
 
 ### 12.3 Validasi client yang terdeteksi
 
@@ -436,8 +332,8 @@ Akses tabel di atas adalah **indikasi dari endpoint**; verifikasi controller/ser
 
 - Disable tombol submit selama request berjalan untuk mencegah duplikasi.
 - Terapkan `Accept-Language` dari `localeProvider` pada setiap request.
-- Gunakan `DioClient`/repository yang sudah ada; jangan membuat instance Dio baru.
-- Guest tidak boleh memanggil endpoint privat; tampilkan `GuestAuthPrompt`.
+- Gunakan HTTP client/data source/repository yang sudah ada; jangan membuat client baru di komponen UI.
+- Guest tidak boleh memanggil endpoint privat; tampilkan prompt autentikasi tamu.
 - Konten statis tetap harus memiliki loading/error state bila berasal dari API.
 
 ## 13. Error Handling
@@ -451,12 +347,13 @@ Pemetaan status HTTP mengikuti `.docs/02-architecture/STATE-AND-ERRORS.md` (liha
 - 401 → bersihkan token dan arahkan ke Landing/login.
 - 403 → tampilkan akses ditolak tanpa logout otomatis.
 - 5xx → error server + retry; jangan menampilkan stack trace.
-- Gap: `POST /login` dan `/register` tidak tersedia di backend (GAP-01).
-- Gap: Login Google memakai Firebase ID token, sesi tetap Sanctum.
+- Gap: Persetujuan diwajibkan lewat checkbox di UI sebelum autentikasi Google dimulai.
+- Gap: Layar ini hanya memakai satu endpoint (`/auth/google`); jalur email/password tetap ada di backend tetapi tidak dimount dari Landing.
+- Gap: Login Google memakai Firebase ID token, sesi tetap Sanctum (bukan sesi Firebase).
 
 ## 14. Keamanan & Privasi
 
-- Token hanya di `FlutterSecureStorage`; jangan di `SharedPreferences` atau log.
+- Token hanya di secure storage; jangan di penyimpanan lokal atau log.
 - Jangan menampilkan stack trace, query database, atau detail internal pada pengguna.
 - Jangan mengirim PII ke analytics/crash report.
 - Validasi kepemilikan resource di backend; client tidak boleh menentukan `user_id`.
@@ -495,9 +392,10 @@ Belum diverifikasi apakah event berikut sudah diimplementasikan. Jangan mengirim
 
 ### 18.1 Fungsional
 
-- [ ] Login sukses menyimpan token dan membuka Home/AppLock.
-- [ ] Guest dapat masuk tanpa token.
-- [ ] Tombol utama menjalankan aksi: Masuk sebagai guest.
+- [ ] Tombol Google hanya aktif bila checkbox persetujuan dicentang dan tidak sedang loading.
+- [ ] Login Google sukses menyimpan token Sanctum lalu membuka Home/AppLock.
+- [ ] Layar ini tidak menampilkan form email/password, tombol daftar, maupun tombol guest.
+- [ ] Tombol utama menjalankan aksi: Lanjutkan.
 
 ### 18.2 Navigasi
 
@@ -528,7 +426,7 @@ Belum diverifikasi apakah event berikut sudah diimplementasikan. Jangan mengirim
 
 ### 18.6 Kualitas
 
-- [ ] `flutter analyze` bersih untuk file yang diubah.
+- [ ] Analisis statis/lint sesuai toolchain target bersih untuk bagian yang diubah.
 - [ ] Test happy path dan minimal satu error path ditambahkan/diperbarui.
 - [ ] PRD/SKILL diperbarui bila route, endpoint, atau tabel berubah.
 
@@ -555,54 +453,46 @@ Belum diverifikasi apakah event berikut sudah diimplementasikan. Jangan mengirim
 
 ### 20.1 Gap terdokumentasi
 
-- `POST /login` dan `/register` tidak tersedia di backend (GAP-01).
-- Login Google memakai Firebase ID token, sesi tetap Sanctum.
+- Persetujuan diwajibkan lewat checkbox di UI sebelum autentikasi Google dimulai.
+- Layar ini hanya memakai satu endpoint (`/auth/google`); jalur email/password tetap ada di backend tetapi tidak dimount dari Landing.
+- Login Google memakai Firebase ID token, sesi tetap Sanctum (bukan sesi Firebase).
 
 ### 20.2 Risiko
 
 | Risiko | Peluang | Dampak | Mitigasi |
 |---|---|---|---|
-| `POST /login` dan `/register` tidak tersedia di backend (GAP-01). | Sedang | Tinggi | Tangani gap sebelum menganggap layar selesai. |
+| Persetujuan diwajibkan lewat checkbox di UI sebelum autentikasi Google dimulai. | Sedang | Tinggi | Tangani gap sebelum menganggap layar selesai. |
 
 ### 20.3 Dependensi
 
 | Jenis | Item | Catatan |
 |---|---|---|
-| Endpoint | ANY /login | - |
-| Endpoint | ANY /register | - |
 | Endpoint | POST /auth/google | AuthController@googleLogin |
-| Endpoint | POST /auth/facebook | AuthController@facebookLogin |
-| Endpoint | POST /auth/apple | AuthController@appleLogin |
-| Endpoint | POST /auth/send-otp | AuthController@sendOtp |
-| Endpoint | POST /auth/verify-otp | AuthController@verifyOtp |
-| Endpoint | POST /auth/two-factor/verify | AuthController@verifyTwoFactor |
-| Database | users | Jangan query langsung dari Flutter. |
-| Database | personal_access_tokens | Jangan query langsung dari Flutter. |
-| Database | whatsapp_otps | Jangan query langsung dari Flutter. |
-| Database | backup_codes | Jangan query langsung dari Flutter. |
-| Provider | authProvider | lib/Features/Auth/Presentation/Providers/AuthProvider/AuthProvider.dart |
-| Provider | currentAccountEmailProvider | lib/Features/Auth/Presentation/Providers/BiometricSettingsProvider/BiometricSettingsProvider.dart |
-| Provider | localeProvider | lib/Core/Providers/LocaleProvider/LocaleProvider.dart |
-| Route | /landing | Terdaftar di `AppRouter`. |
+| Database | users | Jangan query langsung dari klien. |
+| Database | personal_access_tokens | Jangan query langsung dari klien. |
+| State/dependency | authProvider | Komponen state/dependency terkait |
+| State/dependency | currentAccountEmailProvider | Komponen state/dependency terkait |
+| State/dependency | localeProvider | Komponen state/dependency terkait |
+| Route | /landing | Terdaftar di konfigurasi router aplikasi. |
 
 Rujukan global: [Known Gaps](../../06-reference/KNOWN-GAPS.md).
 
 ## 21. Peta Implementasi & Simbol
 
-| Layer | File/Simbol | Catatan |
+| Layer | Komponen/Referensi | Catatan |
 |---|---|---|
-| Screen | `lib/Features/Splash/Presentation/Screens/Landing/LandingScreen.dart` · `LandingScreen` | 289 baris |
-| Provider | `authProvider` | `lib/Features/Auth/Presentation/Providers/AuthProvider/AuthProvider.dart` |
-| Provider | `currentAccountEmailProvider` | `lib/Features/Auth/Presentation/Providers/BiometricSettingsProvider/BiometricSettingsProvider.dart` |
-| Provider | `localeProvider` | `lib/Core/Providers/LocaleProvider/LocaleProvider.dart` |
-| Widget inti | `AppBlurBackdrop` | `lib/Core/Widgets/AppBlurBackdrop/` |
-| Widget fitur | `SocialLoginButton` | Berada di `Presentation/Widgets/` fitur terkait |
-| Widget fitur | `AuthModals` | Berada di `Presentation/Widgets/` fitur terkait |
-| Test | `test/Features/Splash/` | Tambahkan test sesuai §19 |
+| Layar/UI | `LandingScreen` | Implementasi referensi aplikasi saat ini |
+| State/dependency | `authProvider` | Komponen state/dependency terkait |
+| State/dependency | `currentAccountEmailProvider` | Komponen state/dependency terkait |
+| State/dependency | `localeProvider` | Komponen state/dependency terkait |
+| Komponen UI bersama | `AppBlurBackdrop` | Komponen UI reusable |
+| Komponen UI fitur | `SocialSignInButton` | Komponen UI khusus fitur |
+| Komponen UI fitur | `AuthModals` | Komponen UI khusus fitur |
+| Test | Sesuai platform target | Tambahkan test sesuai §19 |
 | Dokumen | `.docs/screens/splash/landing.md` | PRD ini |
 | Prompt | `.skills/screens/splash/landing/SKILL.md` | Skill layar |
 
-**Metode internal terdeteksi:** `_markOnboardingSeen`, `_routeAfterAuth`, `_buildLandingUI`, `_openCs`, `_blob`, `_buildButtons`, `_buildFooter`.
+**Metode internal terdeteksi:** `_setAgreedToTerms`, `_markOnboardingSeen`, `_routeAfterAuth`, `_buildLandingUI`, `_openCs`, `_blob`, `_buildButtons`, `_buildFooter`.
 
 ## 22. Referensi & Riwayat
 
@@ -615,4 +505,4 @@ Rujukan global: [Known Gaps](../../06-reference/KNOWN-GAPS.md).
 
 | Tanggal | Perubahan | Sumber |
 |---|---|---|
-| 6 November 2026 | Regenerasi detail: arsitektur, state machine, kontrak API, validasi, a11y, test plan | Kode Flutter, route Laravel, skema PostgreSQL |
+| 6 November 2026 | Regenerasi detail: arsitektur, state machine, kontrak API, validasi, a11y, test plan | Implementasi aplikasi, route Laravel, skema PostgreSQL |

@@ -1,9 +1,9 @@
 # Keranjang
 
 > **Fitur:** Keranjang · **Route:** `/cart` · **Akses:** Sanctum · **Tipe:** Konten / navigasi
-> **Implementasi:** `lib/Features/Cart/Presentation/Screens/Cart/CartScreen.dart` — `CartScreen` (430 baris) · **State:** Riverpod (`ConsumerWidget`) · **Pola:** request-response
+> **Implementasi referensi (aplikasi saat ini):** `CartScreen` · **State:** State management terpusat · **Pola:** request-response
 > **API:** 5 endpoint · **Tabel:** 4 · **Model:** 0
-> Diverifikasi 6 November 2026 dari kode Flutter, route Laravel, dan skema PostgreSQL. Bagian bertanda **[Usulan]** adalah rekomendasi, bukan perilaku yang sudah diverifikasi.
+> Diverifikasi 6 November 2026 dari implementasi aplikasi saat ini, route Laravel, dan skema PostgreSQL. Bagian bertanda **[Usulan]** adalah rekomendasi, bukan perilaku yang sudah diverifikasi.
 
 ## 0. Ringkasan Eksekutif
 
@@ -47,7 +47,7 @@
 | Parameter/extra | Tidak ada parameter khusus. |
 | Guard | Butuh Bearer token valid. 401 harus membersihkan token dan mengarahkan pengguna ke Landing/login. |
 | Keluar ke | `/checkout` |
-| Perilaku back | State tab dipertahankan oleh `StatefulShellRoute.indexedStack`; kembali tidak boleh mereset cabang lain. [Usulan] |
+| Perilaku back | State tab dipertahankan oleh navigasi tab/shell; kembali tidak boleh mereset cabang lain. [Usulan] |
 
 ## 3. Alur Pengguna
 
@@ -76,33 +76,33 @@ flowchart TD
 
 | Aspek | Nilai |
 |---|---|
-| File | `lib/Features/Cart/Presentation/Screens/Cart/CartScreen.dart` |
-| Kelas layar | `CartScreen` |
-| Base widget | `ConsumerWidget` |
-| State management | Riverpod (`ConsumerWidget`) |
+| Komponen/layar | `CartScreen` |
+| Identifier | `CartScreen` |
+| Tipe komponen | Komponen UI |
+| State management | State management terpusat |
 | Pola data | request-response |
-| Provider | `authProvider`, `cartProvider` |
-| Repository | Tidak terdeteksi |
+| State/dependency | `authProvider`, `cartProvider` |
+| Data source/repository | Tidak terdeteksi |
 | Service | Tidak terdeteksi |
-| Widget inti | `AppButton`, `AppEmptyState`, `GuestAuthPrompt`, `AppBreadcrumbs`, `AppActionSheet` |
-| Widget fitur | Tidak terdeteksi |
+| Komponen UI bersama | `AppButton`, `AppEmptyState`, `GuestAuthPrompt`, `AppBreadcrumbs`, `AppActionSheet` |
+| Komponen UI fitur | Tidak terdeteksi |
 | Model | Tidak terdeteksi |
 
 ### 4.3 Alur data
 
 ```text
-Widget / State
+UI / State layar
    ↓ baca/tulis
-Provider Riverpod
+State management / dependency
    ↓
-Repository / DioClient
+Repository / HTTP client
    ↓ REST
 Controller Laravel → PostgreSQL (4 tabel terkait)
 ```
 
 ## 5. Blueprint UI
 
-Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti file implementasi.
+Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti implementasi aplikasi.
 
 ```text
 ┌────────────────────────────────────────────────────────────────────┐
@@ -141,7 +141,7 @@ Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti file im
 | Dropdown | 0 |
 | Switch/toggle | 0 |
 | Validator client | 0 |
-| Field password (`obscureText`) | 0 |
+| Field password (teks tersamar) | 0 |
 | maxLength | Tidak terdeteksi |
 | Keyboard | Tidak terdeteksi |
 | Input formatter | Tidak terdeteksi |
@@ -154,7 +154,7 @@ Wireframe konseptual dari daftar elemen registry. Urutan final mengikuti file im
 
 ## 7. Copywriting & Microcopy
 
-Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocalizations` dan mengikuti gaya bahasa layar lain.
+Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai sistem lokalisasi/i18n yang konsisten dan mengikuti gaya bahasa layar lain.
 
 | Lokasi | Draft copy | Catatan |
 |---|---|---|
@@ -174,17 +174,17 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 | Token | Nilai |
 |---|---|
 | Font | Instrument Sans (W400/W600), aset lokal |
-| Warna primer | `AppColors.primaryColor` = `#1E3A5F` |
-| Aksen | `AppColors.accentColor` = `#C9A94E` |
-| Background light | `AppColors.backgroundColor` = `#F8F6F7` |
-| Surface light | `AppColors.surfaceColor` = `#FFFFFF` |
-| Background dark | `AppColors.darkBackground` = `#121212` |
-| Surface dark | `AppColors.darkSurface` = `#1E1E1E` |
+| Warna primer | `#1E3A5F` (token primer aplikasi) |
+| Aksen | `#C9A94E` |
+| Background light | `#F8F6F7` |
+| Surface light | `#FFFFFF` |
+| Background dark | `#121212` |
+| Surface dark | `#1E1E1E` |
 | Teks primer light | `#1A1A2E`; dark `#E8E8E8` |
 | Teks sekunder light | `#8E8E9A`; dark `#A0A0A0` |
 | Sukses/error/warning/info | `#10B981` / `#EF4444` / `#F59E0B` / `#3B82F6` |
 | Tipografi | `headTitle` 22/w600; `subHeadTitle` 16/w400; `h3` 14/w600; `h4` 12/w400; `description` 14/1.4 |
-| Spacing | `AppSizes` 2, 4, 8, 16, 24, 32, 48, 64 |
+| Spacing | skala 2, 4, 8, 16, 24, 32, 48, 64 |
 | Radius | card 16, button 14, input 14, avatar 28, bottom nav 24 |
 | Glass | `AppBlurBackdrop`; `blurSigma` 15; tint light `#32FFFFFF`, night `#32000000` |
 
@@ -200,7 +200,7 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 ### 8.3 Mode gelap & glass
 
 - Tema mengikuti sistem (light/dark) dan dapat di-override `ThemeProvider`.
-- Jangan hardcode warna; gunakan `AppColors`/`AppTheme` agar mode gelap bekerja.
+- Jangan hardcode warna; gunakan token/tema desain aplikasi agar mode gelap bekerja.
 - Fallback tanpa blur harus tetap kontras dan terbaca.
 - Hormati reduce-motion; animasi 3D/parallax tidak boleh menjadi satu-satunya pembeda state.
 
@@ -218,7 +218,7 @@ Semua teks di bawah ini adalah **usulan**. Implementasi wajib memakai `AppLocali
 | `submitting` | Pengguna menekan aksi utama | Tombol disabled + progress | Selesai atau tampilkan error |
 | `refreshing` | Pull to refresh | Spinner di atas konten | Selesai; reset halaman |
 | `kosong` | Kondisi domain | Empty state dengan penjelasan dan CTA lanjutan. | Ikuti aksi pemulihan pada pesan |
-| `guest` | Kondisi domain | Tampilkan `GuestAuthPrompt`; jangan panggil endpoint privat. | Ikuti aksi pemulihan pada pesan |
+| `guest` | Kondisi domain | Tampilkan prompt autentikasi tamu; jangan panggil endpoint privat. | Ikuti aksi pemulihan pada pesan |
 | `stok habis` | Kondisi domain | Tampilkan badge stok habis dan nonaktifkan aksi beli. | Ikuti aksi pemulihan pada pesan |
 | `undo gagal` | Kondisi domain | Pesan ramah + retry; pertahankan input pengguna. | Ikuti aksi pemulihan pada pesan |
 
@@ -336,7 +336,7 @@ Akses tabel di atas adalah **indikasi dari endpoint**; verifikasi controller/ser
 
 - Jangan menampilkan data dari cache setelah logout.
 - Nominal, stok, status pesanan, dan kepemilikan resource **wajib** divalidasi backend.
-- Jangan mengakses PostgreSQL dari Flutter; gunakan endpoint Laravel.
+- Jangan mengakses PostgreSQL langsung dari klien; gunakan endpoint Laravel.
 - Filter data milik pengguna dilakukan server-side (`user_id` dari token), bukan di client.
 
 ## 12. Aturan Bisnis & Validasi
@@ -366,8 +366,8 @@ Akses tabel di atas adalah **indikasi dari endpoint**; verifikasi controller/ser
 
 - Disable tombol submit selama request berjalan untuk mencegah duplikasi.
 - Terapkan `Accept-Language` dari `localeProvider` pada setiap request.
-- Gunakan `DioClient`/repository yang sudah ada; jangan membuat instance Dio baru.
-- Guest tidak boleh memanggil endpoint privat; tampilkan `GuestAuthPrompt`.
+- Gunakan HTTP client/data source/repository yang sudah ada; jangan membuat client baru di komponen UI.
+- Guest tidak boleh memanggil endpoint privat; tampilkan prompt autentikasi tamu.
 - Konten statis tetap harus memiliki loading/error state bila berasal dari API.
 
 ## 13. Error Handling
@@ -386,7 +386,7 @@ Pemetaan status HTTP mengikuti `.docs/02-architecture/STATE-AND-ERRORS.md` (liha
 
 ## 14. Keamanan & Privasi
 
-- Token hanya di `FlutterSecureStorage`; jangan di `SharedPreferences` atau log.
+- Token hanya di secure storage; jangan di penyimpanan lokal atau log.
 - Jangan menampilkan stack trace, query database, atau detail internal pada pengguna.
 - Jangan mengirim PII ke analytics/crash report.
 - Validasi kepemilikan resource di backend; client tidak boleh menentukan `user_id`.
@@ -462,7 +462,7 @@ Belum diverifikasi apakah event berikut sudah diimplementasikan. Jangan mengirim
 
 ### 18.6 Kualitas
 
-- [ ] `flutter analyze` bersih untuk file yang diubah.
+- [ ] Analisis statis/lint sesuai toolchain target bersih untuk bagian yang diubah.
 - [ ] Test happy path dan minimal satu error path ditambahkan/diperbarui.
 - [ ] PRD/SKILL diperbarui bila route, endpoint, atau tabel berubah.
 
@@ -508,29 +508,29 @@ Belum diverifikasi apakah event berikut sudah diimplementasikan. Jangan mengirim
 | Endpoint | PUT /cart/{cart} | CartController@update |
 | Endpoint | DELETE /cart/{cart} | CartController@destroy |
 | Endpoint | POST /Favorite/toggle | FavoriteController@toggle |
-| Database | carts | Jangan query langsung dari Flutter. |
-| Database | catalogs | Jangan query langsung dari Flutter. |
-| Database | packages | Jangan query langsung dari Flutter. |
-| Database | favorites | Jangan query langsung dari Flutter. |
-| Provider | authProvider | lib/Features/Auth/Presentation/Providers/AuthProvider/AuthProvider.dart |
-| Provider | cartProvider | lib/Features/Cart/Presentation/Providers/CartProvider/CartProvider.dart |
-| Route | /cart | Terdaftar di `AppRouter`. |
+| Database | carts | Jangan query langsung dari klien. |
+| Database | catalogs | Jangan query langsung dari klien. |
+| Database | packages | Jangan query langsung dari klien. |
+| Database | favorites | Jangan query langsung dari klien. |
+| State/dependency | authProvider | Komponen state/dependency terkait |
+| State/dependency | cartProvider | Komponen state/dependency terkait |
+| Route | /cart | Terdaftar di konfigurasi router aplikasi. |
 
 Rujukan global: [Known Gaps](../../06-reference/KNOWN-GAPS.md).
 
 ## 21. Peta Implementasi & Simbol
 
-| Layer | File/Simbol | Catatan |
+| Layer | Komponen/Referensi | Catatan |
 |---|---|---|
-| Screen | `lib/Features/Cart/Presentation/Screens/Cart/CartScreen.dart` · `CartScreen` | 430 baris |
-| Provider | `authProvider` | `lib/Features/Auth/Presentation/Providers/AuthProvider/AuthProvider.dart` |
-| Provider | `cartProvider` | `lib/Features/Cart/Presentation/Providers/CartProvider/CartProvider.dart` |
-| Widget inti | `AppButton` | `lib/Core/Widgets/AppButton/` |
-| Widget inti | `AppEmptyState` | `lib/Core/Widgets/AppEmptyState/` |
-| Widget inti | `GuestAuthPrompt` | `lib/Core/Widgets/GuestAuthPrompt/` |
-| Widget inti | `AppBreadcrumbs` | `lib/Core/Widgets/AppBreadcrumbs/` |
-| Widget inti | `AppActionSheet` | `lib/Core/Widgets/AppActionSheet/` |
-| Test | `test/Features/Keranjang/` | Tambahkan test sesuai §19 |
+| Layar/UI | `CartScreen` | Implementasi referensi aplikasi saat ini |
+| State/dependency | `authProvider` | Komponen state/dependency terkait |
+| State/dependency | `cartProvider` | Komponen state/dependency terkait |
+| Komponen UI bersama | `AppButton` | Komponen UI reusable |
+| Komponen UI bersama | `AppEmptyState` | Komponen UI reusable |
+| Komponen UI bersama | `GuestAuthPrompt` | Komponen UI reusable |
+| Komponen UI bersama | `AppBreadcrumbs` | Komponen UI reusable |
+| Komponen UI bersama | `AppActionSheet` | Komponen UI reusable |
+| Test | Sesuai platform target | Tambahkan test sesuai §19 |
 | Dokumen | `.docs/screens/cart/cart.md` | PRD ini |
 | Prompt | `.skills/screens/cart/cart/SKILL.md` | Skill layar |
 
@@ -545,4 +545,4 @@ Rujukan global: [Known Gaps](../../06-reference/KNOWN-GAPS.md).
 
 | Tanggal | Perubahan | Sumber |
 |---|---|---|
-| 6 November 2026 | Regenerasi detail: arsitektur, state machine, kontrak API, validasi, a11y, test plan | Kode Flutter, route Laravel, skema PostgreSQL |
+| 6 November 2026 | Regenerasi detail: arsitektur, state machine, kontrak API, validasi, a11y, test plan | Implementasi aplikasi, route Laravel, skema PostgreSQL |

@@ -2821,7 +2821,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get welcome => 'Welcome';
 
   @override
-  String get welcomeToShopFloralDecorations => 'Welcome to Timeless Florals';
+  String get welcomeToShopTimelessFlorals => 'Welcome to Shop Timeless Florals';
 
   @override
   String get whatsapp => 'WhatsApp';
