@@ -59,3 +59,6 @@ build_debug.txt
 test_run.json
 
 **/java_pid*.hprof
+
+# Log helper Hyper-V lokal (berisi info mesin, jangan di-commit)
+scripts/enable_hyperv_log.txt
